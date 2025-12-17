@@ -1,4 +1,0 @@
-[[redirect]]
-from = "/*"
-to = "/index"
-status = 200

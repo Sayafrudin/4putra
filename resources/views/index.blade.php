@@ -9,7 +9,7 @@
 
     <style>
         body {
-            background-color: #2F2F2F;
+            background-color: white;
         }
     </style>
 </head>
@@ -18,17 +18,16 @@
 
     <x-navbar></x-navbar>
 
-    <section>
+    <section class="w-full">
         <main
-            class="flex flex-col max-md:gap-20 md:flex-row pb-20 items-center justify-between mt-27 px-4 md:px-32 lg:px-48 xl:px-64 pt-10">
-            <div class="flex flex-col items-center md:items-start">
+            class="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-16 lg:gap-24 max-w-7xl mx-auto px-6 md:px-12 lg:px-16 pt-40 pb-20">
+            <div class="flex flex-col items-center md:items-start flex-1 text-center md:text-left">
                 <h1
-                    class="text-center md:text-left text-4xl leading-[46px] md:text-5xl md:leading-[68px] font-semibold max-w-xl text-white">
-                    WELCOME TO OUR
-                    <br>
-                    <span class="text-[#E62C37]">AVIARY</span>
+                    class="text-4xl leading-tight md:text-5xl md:leading-tight lg:text-6xl lg:leading-tight font-bold text-gray-900">
+                    WELCOME TO OUR <span class="text-[#E62C37]">AVIARY</span>
                 </h1>
-                <p class="text-center md:text-left text-sm text-white max-w-lg mt-2">
+
+                <p class="text-gray-800 mt-6 text-base md:text-base leading-relaxed max-w-2xl">
                     Peternakan kami memulai perjalanannya pada tahun 2019 di Surabaya Barat dengan nama 4 Putra Parrot.
                     Pada awalnya kami mengawali langkah dengan fokus utama pada budidaya Lovebird. Namun seiring dengan
                     bertambahnya pengalaman serta pendalaman kami terhadap karakteristik paruh bengkok, kami
@@ -45,13 +44,20 @@
                     paruh bengkok secara legal, dan mematuhi aturan yang ditetapkan oleh pemerintah Indonesia dalam
                     menangkar burung dilindungi maupun tidak dilindungi.
                 </p>
+
             </div>
-            <img src="https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/hero/hero-section-showcase-5.png"
-                alt="hero" class="max-w-sm sm:max-w-md lg:max-w-lg 2xl:max-w-xl transition-all duration-300">
+
+            <div class="flex-1 flex justify-center md:justify-end relative">
+                <img src="https://img.sanishtech.com/u/6534cd5e25264afb7730a08c54fbd081.png" alt="hero"
+                    class="max-w-xs md:max-w-sm lg:max-w-md xl:max-w-lg transition-all duration-300">
+            </div>
         </main>
 
     </section>
 
+    <section>
+
+    </section>
 
 </body>
 

@@ -74,9 +74,10 @@
     </svg>
 
     <div class="hidden md:flex items-center gap-4 lg:gap-8 nav-items-container">
-        <a href="/" class="nav-link group flex flex-col gap-0.5 text-black">
+        <a href="/" class=" nav-link group flex flex-col gap-0.5 text-black">
             Home
-            <div class="line-indicator bg-[#E62C37] h-0.5 w-0 group-hover:w-full transition-all duration-300">
+            <div
+                class="{{ request()->is('/') ? 'w-full' : 'w-0' }} line-indicator bg-[#E62C37] h-0.5 w-0 group-hover:w-full transition-all duration-300">
             </div>
         </a>
         <a href="/" class="nav-link group flex flex-col gap-0.5 text-black">

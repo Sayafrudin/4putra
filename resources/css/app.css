@@ -1,0 +1,7 @@
+@import url('https://rsms.me/inter/inter.css');
+@import "tailwindcss";
+
+html {
+    font-family: 'Inter', sans-serif;
+    scroll-behavior: smooth;
+}

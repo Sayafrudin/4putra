@@ -95,13 +95,6 @@
                 <li><a href="/" class="hover:text-[#E62C37] transition">About</a></li>
             </ul>
         </div>
-        <div>
-            <p class="text-black font-semibold">Legal</p>
-            <ul class="mt-2 space-y-2">
-                <li><a href="/" class="hover:text-[#E62C37] transition">Privacy</a></li>
-                <li><a href="/" class="hover:text-[#E62C37] transition">Terms</a></li>
-            </ul>
-        </div>
     </div>
     <div class="flex flex-col max-md:items-center max-md:text-center gap-2 items-center">
         <p class="max-w-60">Making every customer feel valued —no matter the size of your audience <br><span
@@ -112,7 +105,7 @@
 
                     <button
                         class="bg-blue-50 cursor-pointer rounded-md shadow-md shadow-transparent transition-all duration-300 hover:shadow-indigo-200">
-                        <a href="">
+                        <a href="https://www.facebook.com/putra.parrot.54/" target="_blank" rel="noopener noreferrer">
                             <svg class="" xmlns="http://www.w3.org/2000/svg" width="48" height="48"
                                 viewBox="0 0 92 92" fill="none">
                                 <rect x="0.138672" width="" height="" rx="15" fill="#EDF4FF" />
@@ -125,7 +118,8 @@
 
                     <button
                         class="w-12 h-12 flex items-center justify-center bg-gradient-to-tr from-red-50 to-pink-50 cursor-pointer rounded-md shadow-md shadow-transparent transition-all duration-300 hover:shadow-red-200">
-                        <a href="">
+                        <a href="https://www.instagram.com/4_putra_parrot_surabaya/" target="_blank"
+                            rel="noopener noreferrer">
                             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"
                                 viewBox="0 0 51 51" fill="none">
                                 <path
@@ -154,7 +148,7 @@
 
                     <button
                         class="w-12 h-12 flex items-center justify-center bg-gray-100 cursor-pointer rounded-md shadow-md shadow-transparent transition-all duration-300 hover:shadow-indigo-200">
-                        <a href="">
+                        <a href="https://www.tiktok.com/@4_putra_parrot" target="_blank">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="28"
                                 viewBox="0 0 42 47" fill="none">
                                 <path fill-rule="evenodd" clip-rule="evenodd"
@@ -173,7 +167,7 @@
                     <svg class="cursor-pointer rounded-md shadow-md shadow-transparent transition-all duration-300 hover:shadow-green-200"
                         xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 93 92"
                         fill="none">
-                        <a href="">
+                        <a href="https://wa.me/6282132267308" target="_blank">
                             <rect x="1.13867" width="91.5618" height="91.5618" rx="15" fill="#ECFFF5" />
                             <path
                                 d="M23.5762 66.8405L26.8608 54.6381C24.2118 49.8847 23.3702 44.3378 24.4904 39.0154C25.6106 33.693 28.6176 28.952 32.9594 25.6624C37.3012 22.3729 42.6867 20.7554 48.1276 21.1068C53.5685 21.4582 58.6999 23.755 62.5802 27.5756C66.4604 31.3962 68.8292 36.4844 69.2519 41.9065C69.6746 47.3286 68.1228 52.7208 64.8813 57.0938C61.6399 61.4668 56.9261 64.5271 51.605 65.7133C46.284 66.8994 40.7125 66.1318 35.9131 63.5513L23.5762 66.8405ZM36.508 58.985L37.2709 59.4365C40.7473 61.4918 44.8076 62.3423 48.8191 61.8555C52.8306 61.3687 56.5681 59.5719 59.4489 56.7452C62.3298 53.9185 64.1923 50.2206 64.7463 46.2279C65.3002 42.2351 64.5143 38.1717 62.5113 34.6709C60.5082 31.1701 57.4003 28.4285 53.6721 26.8734C49.9438 25.3184 45.8045 25.0372 41.8993 26.0736C37.994 27.11 34.5422 29.4059 32.0817 32.6035C29.6212 35.801 28.2903 39.7206 28.2963 43.7514C28.293 47.0937 29.2197 50.3712 30.9732 53.2192L31.4516 54.0061L29.6153 60.8167L36.508 58.985Z"

@@ -74,28 +74,10 @@
     </svg>
 
     <div class="hidden md:flex items-center gap-4 lg:gap-8 nav-items-container">
-        <a href="/" class=" nav-link group flex flex-col gap-0.5 text-black">
-            Home
-            <div
-                class="{{ request()->is('/') ? 'w-full' : 'w-0' }} line-indicator bg-[#E62C37] h-0.5 w-0 group-hover:w-full transition-all duration-300">
-            </div>
-        </a>
-        <a href="/" class="nav-link group flex flex-col gap-0.5 text-black">
-            Products
-            <div class="line-indicator bg-[#E62C37] h-0.5 w-0 group-hover:w-full transition-all duration-300">
-            </div>
-        </a>
-        <a href="/" class="nav-link group flex flex-col gap-0.5 text-black">
-            Contact
-            <div class="line-indicator bg-[#E62C37] h-0.5 w-0 group-hover:w-full transition-all duration-300">
-            </div>
-        </a>
-        <a href="/" class="nav-link group flex flex-col gap-0.5 text-black">
-            About
-            <div class="line-indicator bg-[#E62C37] h-0.5 w-0 group-hover:w-full transition-all duration-300">
-            </div>
-        </a>
-
+        <x-nav-link href="/" :active="request()->is('/')">Home</x-nav-link>
+        <x-nav-link href="/collections" :active="request()->is('collections')">Collections</x-nav-link>
+        <x-nav-link href="/contact" :active="request()->is('contact')">Contact</x-nav-link>
+        <x-nav-link href="/about" :active="request()->is('about')">About</x-nav-link>
     </div>
 
     <div class="flex items-center gap-3 md:hidden">
@@ -115,7 +97,6 @@
                 <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
         </button>
-
         <a href="/" class="mobile-link">Home</a>
         <a href="/" class="mobile-link">Products</a>
         <a href="/" class="mobile-link">Contact</a>

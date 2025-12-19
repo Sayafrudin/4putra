@@ -1,5 +1,6 @@
 @import url('https://rsms.me/inter/inter.css');
 @import "tailwindcss";
+@import "./styles.css";
 
 html {
     font-family: 'Inter', sans-serif;

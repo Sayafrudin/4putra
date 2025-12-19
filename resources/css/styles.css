@@ -1,0 +1,19 @@
+@keyframes marqueeScroll {
+    0% {
+        transform: translateX(0%);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+.marquee-inner {
+    animation: marqueeScroll linear infinite;
+    will-change: transform;
+}
+
+/* Sembunyikan scrollbar untuk kerapian */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}

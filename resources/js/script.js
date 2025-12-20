@@ -1,19 +1,19 @@
 // 1. Data Definition (Single Source of Truth)
 const cardData = [{
     title: "Sun Conure",
-    image: "https://img.sanishtech.com/u/a7ad485e6d61e81a397bd88edd29a569.png",
+    image: "/img/sunc.png",
 },
 {
     title: "African Grey",
-    image: "https://img.sanishtech.com/u/c80d736a40fd81ac769888b4ad873066.png",
+    image: "/img/afgrey.png",
 },
 {
     title: "Verde Macaw",
-    image: "https://img.sanishtech.com/u/19bc6276b3078cab7a8eb6072b1ae04f.png",
+    image: "/img/verde.png",
 },
 {
     title: "Buffon Macaw",
-    image: "https://img.sanishtech.com/u/27644595b50ffb75fdd1141f0969830d.png",
+    image: "/img/buffon2.png",
 },
 ];
 

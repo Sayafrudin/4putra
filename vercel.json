@@ -6,11 +6,11 @@
     },
     "routes": [
         {
-            "src": "/(css|js|images|storage|build)/(.*)",
+            "src": "/(css|js|images|img|storage|build)/(.*)",
             "dest": "/public/$1/$2"
         },
         {
-            "src": "/(.*)",
+            "src": "/((?!public/).*)",
             "dest": "/api/index.php"
         }
     ],

@@ -4,9 +4,9 @@
         <div class="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-16 lg:gap-24 max-w-7xl mx-auto">
             <div class="flex flex-col items-center md:items-start flex-1 text-center md:text-left">
                 <h1 class="text-4xl leading-tight md:text-5xl md:leading-tight lg:text-6xl lg:leading-tight font-bold">
-                    WELCOME TO OUR <span class="text-[#E62C37] font-light">AVIARY</span>
+                    WELCOME TO OUR <span class="text-[#E62C37] font-normal">AVIARY</span>
                 </h1>
-                <p class="text-gray-700 mt-6 text-base md:text-md leading-relaxed max-w-2xl">
+                <p class="text-gray-700 mt-6 text-justify md:text-md leading-relaxed max-w-2xl">
                     Peternakan kami memulai perjalanannya pada tahun 2019 di Surabaya Barat dengan nama 4 Putra
                     Parrot.
                     Pada awalnya kami mengawali langkah dengan fokus utama pada budidaya Lovebird. Namun seiring
@@ -25,7 +25,7 @@
             </div>
 
             <div class="flex-1 flex justify-center md:justify-end relative">
-                <img src="https://img.sanishtech.com/u/6534cd5e25264afb7730a08c54fbd081.png" alt="hero"
+                <img src="{{ asset('img/buffont.png') }}" alt="hero"
                     class="max-w-xs md:max-w-sm lg:max-w-md xl:max-w-lg transition-all duration-300 drop-shadow-xl">
             </div>
         </div>
@@ -41,11 +41,11 @@
                 <h1
                     class="text-4xl lg:text-5xl font-black text-gray-900 leading-tight md:text-5xl md:leading-tight lg:leading-tight">
                     EXPLORE OUR <br>
-                    <span class="bg-clip-text text-[#E62C37] font-light">
+                    <span class="bg-clip-text text-[#E62C37] font-normal">
                         Popular Parrots
                     </span>
                 </h1>
-                <p class="text-gray-500 text-md leading-relaxed">
+                <p class="text-gray-500 text-md leading-relaxed text-justify">
                     Temukan koleksi burung paruh bengkok favorit kami, mulai dari Sun Conure yang lincah hingga
                     Macaw yang gagah, semuanya hasil tangkaran sendiri yang jinak dan siap menjadi teman barumu.
                 </p>

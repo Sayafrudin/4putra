@@ -1,0 +1,42 @@
+{
+    "_comment1": "English language translations",
+    "Home": "Home",
+    "Collections": "Collections",
+    "Contact": "Contact",
+    "About": "About",
+    "Welcome Message": "Welcome to Our Aviary",
+
+
+    "_comment2": "Index page translations",
+    "home.hero_welcome": "WELCOME TO OUR",
+    "home.hero_aviary": "AVIARY",
+    "home.hero_desc_1": "Our farm started its journey in 2019 in West Surabaya under the name 4 Putra Parrot. Initially, we focused on breeding Lovebirds. However, as our experience grew and our understanding of parrot characteristics deepened, we confidently expanded into breeding various parrot species.",
+    "home.hero_desc_2": "We maintained this consistency until we successfully developed large parrots such as the Blue & Gold Macaw and other Macaw variants.",
+    "home.hero_desc_3": "In 2025, we changed our breeding business name to PT 4 Putra Vertex Aviary. This change signifies our seriousness in legally breeding parrots.",
+    
+    "home.explore_title": "EXPLORE OUR",
+    "home.popular_parrots": "Popular Parrots",
+    "home.popular_desc": "Discover our favorite parrot collections, from the agile Sun Conure to the majestic Macaw, all captive-bred, tame, and ready to be your new companion.",
+    
+    "home.btn_view_more": "View More Collections",
+
+
+    "_comment3": "Collections page translations",
+    
+    "collections.title_prefix": "Meet Our Bird",
+    "collections.title_suffix": "Collections",
+    "collections.desc": "Parrot Collections in Our Aviary",
+    "category.conure": "Conure",
+    "category.macaw": "Macaw",
+
+    "bird.sun_conure": "Sun Conure",
+    "bird.golden_conure": "Golden Conure",
+    "bird.patagonian": "Patagonian",
+    "bird.verde_macaw": "Verde Macaw",
+    "bird.buffon_macaw": "Buffon Macaw",
+    "bird.scarlet_macaw": "Scarlet Macaw",
+    "bird.greenwing_macaw": "Greenwing Macaw",
+    "bird.catalina_macaw": "Catalina Macaw",
+    "bird.miligold_macaw": "Miligold Macaw"
+
+}

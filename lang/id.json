@@ -1,0 +1,41 @@
+{
+    "_comment1": "Indonesian language translations",
+    "Home": "Beranda",
+    "Collections": "Koleksi",
+    "Contact": "Kontak",
+    "About": "Tentang Kami",
+    "Welcome Message": "Selamat Datang di Penangkaran Kami",
+
+
+    "_comment2": "Index page translations",
+    "home.hero_welcome": "SELAMAT DATANG DI",
+    "home.hero_aviary": "AVIARY KAMI",
+    "home.hero_desc_1": "Peternakan kami memulai perjalanannya pada tahun 2019 di Surabaya Barat dengan nama 4 Putra Parrot. Pada awalnya kami mengawali langkah dengan fokus utama pada budidaya Lovebird. Namun seiring dengan bertambahnya pengalaman serta pendalaman kami terhadap karakteristik paruh bengkok, kami mempercayakan diri budidaya paruh bengkok dengan banyak spesies.",
+    "home.hero_desc_2": "Konsistensi tersebut terus kami jaga hingga akhirnya kami mampu mengembangkan paruh bengkok besar seperti Blue & Gold Macaw beserta varian Macaw lainnya.",
+    "home.hero_desc_3": "Pada tahun 2025 Kami mengubah nama usaha penangkaran kami menjadi PT 4 Putra Vertex Aviary. Perubahan nama menjadi PT. 4 Putra Vertex Aviary sebagai bentuk keseriusan kami dalam menangkar paruh bengkok secara legal.",
+    
+    "home.explore_title": "JELAJAHI",
+    "home.popular_parrots": "Parrot Populer Kami",
+    "home.popular_desc": "Temukan koleksi burung paruh bengkok favorit kami, mulai dari Sun Conure yang lincah hingga Macaw yang gagah, semuanya hasil tangkaran sendiri yang jinak dan siap menjadi teman barumu.",
+    
+    "home.btn_view_more": "Lihat Koleksi Lainnya",
+
+
+    "_comment3": "Collections page translations",
+    "collections.title_prefix": "Temukan Koleksi",
+    "collections.title_suffix": "Burung Kami",
+    "collections.desc": "Koleksi Parrot di Aviary Kami",
+    "category.conure": "Conure",
+    "category.macaw": "Macaw",
+
+    "bird.sun_conure": "Sun Conure",
+    "bird.golden_conure": "Golden Conure",
+    "bird.patagonian": "Patagonian",
+    "bird.verde_macaw": "Verde Macaw",
+    "bird.buffon_macaw": "Buffon Macaw",
+    "bird.scarlet_macaw": "Scarlet Macaw",
+    "bird.greenwing_macaw": "Greenwing Macaw",
+    "bird.catalina_macaw": "Catalina Macaw",
+    "bird.miligold_macaw": "Miligold Macaw"
+
+}

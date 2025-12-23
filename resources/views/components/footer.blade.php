@@ -3,12 +3,12 @@
     <div class="flex flex-wrap items-start gap-4 md:gap-[60px] xl:gap-[100px]">
         <x-logo class="w-35"></x-logo>
         <div>
-            <p class="text-black font-semibold">Product</p>
+            <p class="text-black font-semibold">Navigation</p>
             <ul class="mt-2 space-y-2">
                 <li><a href="/" class="hover:text-[#E62C37] transition">Home</a></li>
-                <li><a href="/" class="hover:text-[#E62C37] transition">Support</a></li>
-                <li><a href="/" class="hover:text-[#E62C37] transition">Pricing</a></li>
-                <li><a href="/" class="hover:text-[#E62C37] transition">Affiliate</a></li>
+                <li><a href="/collections" class="hover:text-[#E62C37] transition">Collection</a></li>
+                <li><a href="/about" class="hover:text-[#E62C37] transition">About</a></li>
+                <li><a href="/contact" class="hover:text-[#E62C37] transition">Contact</a></li>
             </ul>
         </div>
         <div>

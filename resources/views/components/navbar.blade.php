@@ -45,15 +45,24 @@
     </div>
 
     <button id="hamburger-btn"
-        class="group inline-flex w-12 h-12 md:hidden text-[#E62C37] text-center items-center justify-center focus:outline-none"
+        class="group inline-flex w-12 h-12 md:hidden text-[#E62C37] text-center items-center justify-center focus:outline-none transition-colors duration-300"
         aria-pressed="false">
+
         <svg class="w-6 h-6 fill-current pointer-events-none" viewBox="0 0 16 16">
-            <rect class="origin-center -translate-y-[5px] translate-x-[7px] transition-all duration-300" y="7"
-                width="9" height="2" rx="1"></rect>
-            <rect class="origin-center transition-all duration-300" y="7" width="16" height="2" rx="1">
-            </rect>
-            <rect class="origin-center translate-y-[5px] transition-all duration-300" y="7" width="9"
-                height="2" rx="1"></rect>
+            <rect
+                class="origin-center -translate-y-[5px] translate-x-[7px] transition-all duration-300 ease-[cubic-bezier(.5,.85,.25,1.1)] 
+                     group-aria-pressed:translate-x-0 group-aria-pressed:translate-y-0 group-aria-pressed:rotate-[315deg]"
+                y="7" width="9" height="2" rx="1"></rect>
+
+            <rect
+                class="origin-center transition-all duration-300 ease-[cubic-bezier(.5,.85,.25,1.8)] 
+                     group-aria-pressed:rotate-45"
+                y="7" width="16" height="2" rx="1"></rect>
+
+            <rect
+                class="origin-center translate-y-[5px] transition-all duration-300 ease-[cubic-bezier(.5,.85,.25,1.1)] 
+                     group-aria-pressed:translate-y-0 group-aria-pressed:rotate-[135deg]"
+                y="7" width="9" height="2" rx="1"></rect>
         </svg>
     </button>
 
@@ -205,9 +214,16 @@
         };
 
         if (hamburgerBtn && mobileMenu) {
-            // Toggle Klik
             hamburgerBtn.addEventListener('click', () => {
                 const isOpen = !mobileMenu.classList.contains('invisible');
+
+                // --- TAMBAHAN LOGIC ANIMASI ICON ---
+                // Kita toggle status aria-pressed (true/false)
+                // CSS Tailwind akan otomatis membaca perubahan ini dan menjalankan animasi
+                const isPressed = hamburgerBtn.getAttribute('aria-pressed') === 'true';
+                hamburgerBtn.setAttribute('aria-pressed', !isPressed);
+
+                // Logic Menu Buka/Tutup (Yang lama)
                 if (isOpen) {
                     closeMenu();
                 } else {
@@ -215,13 +231,17 @@
                 }
             });
 
-            // RESIZE WATCHER: Ini obatnya, Bro!
-            // Kalau layar digedein > 768px, paksa tutup menu
-            window.addEventListener('resize', () => {
-                if (window.innerWidth >= 768) {
-                    closeMenu();
+            // ... sisa code resize watcher dll ...
+
+            // PENTING: Update juga fungsi closeMenu biar iconnya balik normal kalau menu ketutup otomatis
+            const closeMenu = () => {
+                if (mobileMenu && !mobileMenu.classList.contains('invisible')) {
+                    mobileMenu.classList.add('invisible', 'opacity-0', '-translate-y-2');
+
+                    // RESET ICON JADI HAMBURGER BIASA
+                    hamburgerBtn.setAttribute('aria-pressed', 'false');
                 }
-            });
+            };
         }
     });
 </script>

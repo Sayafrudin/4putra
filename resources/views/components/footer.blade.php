@@ -1,31 +1,38 @@
 <footer
     class="flex flex-wrap justify-center lg:justify-between overflow-hidden gap-10 md:gap-20 py-16 px-6 md:px-16 lg:px-24 xl:px-32 text-[13px] text-gray-700 bg-transparent">
+
     <div class="flex flex-wrap items-start gap-4 md:gap-[60px] xl:gap-[100px]">
         <x-logo class="w-35"></x-logo>
+
         <div>
-            <p class="text-black font-semibold">Navigation</p>
+            <p class="text-black font-semibold">{{ __('footer.product') }}</p>
             <ul class="mt-2 space-y-2">
-                <li><a href="/" class="hover:text-[#E62C37] transition">Home</a></li>
-                <li><a href="/collections" class="hover:text-[#E62C37] transition">Collection</a></li>
-                <li><a href="/about" class="hover:text-[#E62C37] transition">About</a></li>
-                <li><a href="/contact" class="hover:text-[#E62C37] transition">Contact</a></li>
+                <li><a href="/" class="hover:text-[#E62C37] transition">{{ __('footer.home') }}</a></li>
+                <li><a href="/" class="hover:text-[#E62C37] transition">{{ __('footer.support') }}</a></li>
+                <li><a href="/" class="hover:text-[#E62C37] transition">{{ __('footer.pricing') }}</a></li>
+                <li><a href="/" class="hover:text-[#E62C37] transition">{{ __('footer.affiliate') }}</a></li>
             </ul>
         </div>
+
         <div>
-            <p class="text-black font-semibold">Resources</p>
+            <p class="text-black font-semibold">{{ __('footer.resources') }}</p>
             <ul class="mt-2 space-y-2">
-                <li><a href="/" class="hover:text-[#E62C37] transition">Company</a></li>
-                <li><a href="/" class="hover:text-[#E62C37] transition">Blogs</a></li>
-                <li><a href="/" class="hover:text-[#E62C37] transition">Community</a></li>
-                <li><a href="/" class="hover:text-[#E62C37] transition">Careers</a>
-                </li>
-                <li><a href="/" class="hover:text-[#E62C37] transition">About</a></li>
+                <li><a href="/" class="hover:text-[#E62C37] transition">{{ __('footer.company') }}</a></li>
+                <li><a href="/" class="hover:text-[#E62C37] transition">{{ __('footer.blogs') }}</a></li>
+                <li><a href="/" class="hover:text-[#E62C37] transition">{{ __('footer.community') }}</a></li>
+                <li><a href="/" class="hover:text-[#E62C37] transition">{{ __('footer.careers') }}</a></li>
+                <li><a href="/about" class="hover:text-[#E62C37] transition">{{ __('footer.about') }}</a></li>
             </ul>
         </div>
     </div>
+
     <div class="flex flex-col max-md:items-center max-md:text-center gap-2 items-center">
-        <p class="max-w-60">Making every customer feel valued —no matter the size of your audience <br><span
-                class="font-bold text-[#E62C37]">#PARROTASAFRIEND</span></p>
+        <p class="max-w-60">
+            {{ __('footer.slogan') }}
+            <br>
+            <span class="font-bold text-[#E62C37]">#PARROTASAFRIEND</span>
+        </p>
+
         <div class="flex items-center gap-4 mt-3">
             <div class="bg-white w-full h-auto flex items-center justify-center gap-4 flex-wrap">
                 <div class="bg-white w-full h-auto flex items-center justify-center gap-4 flex-wrap">
@@ -107,4 +114,5 @@
                 </div>
             </div>
         </div>
+    </div>
 </footer>

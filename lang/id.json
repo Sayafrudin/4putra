@@ -36,6 +36,24 @@
     "bird.scarlet_macaw": "Scarlet Macaw",
     "bird.greenwing_macaw": "Greenwing Macaw",
     "bird.catalina_macaw": "Catalina Macaw",
-    "bird.miligold_macaw": "Miligold Macaw"
+    "bird.miligold_macaw": "Miligold Macaw",
+
+
+    "_comment4": "Footer translations",
+    "footer.product": "Produk",
+    "footer.resources": "Sumber Daya",
+    
+    "footer.home": "Beranda",
+    "footer.support": "Dukungan",
+    "footer.pricing": "Harga",
+    "footer.affiliate": "Afiliasi",
+    
+    "footer.company": "Perusahaan",
+    "footer.blogs": "Blog",
+    "footer.community": "Komunitas",
+    "footer.careers": "Karir",
+    "footer.about": "Tentang Kami",
+    
+    "footer.slogan": "Membuat setiap pelanggan merasa berharga - tidak peduli seberapa besar audiens Anda"
 
 }

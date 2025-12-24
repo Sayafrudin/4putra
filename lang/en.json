@@ -2,8 +2,9 @@
     "_comment1": "English language translations",
     "Home": "Home",
     "Collections": "Collections",
+    "Achievements": "Achievements",
     "Contact": "Contact",
-    "About": "About",
+    "About": "About Us",
     "Welcome Message": "Welcome to Our Aviary",
 
 
@@ -54,5 +55,19 @@
     "footer.careers": "Careers",
     "footer.about": "About",
     
-    "footer.slogan": "Making every customer feel valued - no matter the size of your audience"
+    "footer.slogan": "Making every customer feel valued - no matter the size of your audience",
+
+
+    "_comment5": "Achievements page translations",
+    "achievements.hero_welcome": "EXHIBITION AND EDUCATION ON CURVED-BILLED BIRDS AT",
+    "achievements.hero_aviary": "DINAMIKA UNIVERSITY (STIKOM SURABAYA)",
+    "achievements.hero_desc_1": "4Putra Vertex Aviary had the opportunity to hold an educational exhibition at Dinamika University. It was not just a visual exhibition; we presented an interactive experience where students could interact directly with our exotic collection, from cheerful Galah to majestic Macaws.",
+    "achievements.hero_desc_2": "This activity is a tangible manifestation of our commitment to not only be breeders, but also educators. We share insights about the unique characteristics of curved-beak birds, the importance of animal welfare, and the legality of keeping exotic animals in Indonesia.",
+    "achievements.hero_desc_3": "Surabaya, 24 July 2025",
+    
+    "achievements.explore_title": "EXPLORE OUR",
+    "achievements.popular_parrots": "Popular Parrots",
+    "achievements.popular_desc": "Discover our favorite parrot collections, from the agile Sun Conure to the majestic Macaw, all captive-bred, tame, and ready to be your new companion.",
+    
+    "achievements.btn_view_more": "View More Collections"
 }

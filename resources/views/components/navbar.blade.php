@@ -1,5 +1,5 @@
 <nav id="navbar"
-    class="fixed top-0 left-0 bg-transparent w-full flex items-center justify-between px-4 md:px-32 lg:px-48 xl:px-64 transition-all duration-500 z-50 py-8 md:py-12 text-white">
+    class="fixed top-0 left-0 bg-transparent w-full flex items-center justify-between px-4 md:px-32 lg:px-48 xl:px-64 transition-all duration-500 z-50 text-white">
 
     <a href="/">
         <x-logo id="nav-logo" class="w-40 transition-colors duration-300"></x-logo>
@@ -13,6 +13,10 @@
         <a href="/collections"
             class="nav-link font-medium transition-colors duration-300 border-b-2 {{ request()->is('collections') ? 'border-[#E62C37]' : 'border-transparent hover:border-[#E62C37]' }} text-gray-900">
             {{ __('Collections') }}
+        </a>
+        <a href="/achievements"
+            class="nav-link font-medium transition-colors duration-300 border-b-2 {{ request()->is('achievements') ? 'border-[#E62C37]' : 'border-transparent hover:border-[#E62C37]' }} text-gray-900">
+            {{ __('Achievements') }}
         </a>
         <a href="/about"
             class="nav-link font-medium transition-colors duration-300 border-b-2 {{ request()->is('about') ? 'border-[#E62C37]' : 'border-transparent hover:border-[#E62C37]' }} text-gray-900">
@@ -73,7 +77,7 @@
 
             <li>
                 <a href="/"
-                    class="block py-3 px-4 transition-all duration-300 rounded-r-lg
+                    class="block py-3 px-4 transition-all duration-300
                {{ request()->is('/')
                    ? 'border-l-[5px] border-[#E62C37] bg-red-50 text-[#E62C37] font-bold'
                    : 'border-l-[5px] border-transparent hover:bg-gray-50 hover:text-[#E62C37]' }}">
@@ -83,7 +87,7 @@
 
             <li>
                 <a href="/collections"
-                    class="block py-3 px-4 transition-all duration-300 rounded-r-lg
+                    class="block py-3 px-4 transition-all duration-300
                {{ request()->is('collections')
                    ? 'border-l-[5px] border-[#E62C37] bg-red-50 text-[#E62C37] font-bold'
                    : 'border-l-[5px] border-transparent hover:bg-gray-50 hover:text-[#E62C37]' }}">
@@ -92,22 +96,32 @@
             </li>
 
             <li>
-                <a href="/contact"
-                    class="block py-3 px-4 transition-all duration-300 rounded-r-lg
-               {{ request()->is('contact')
+                <a href="/achievements"
+                    class="block py-3 px-4 transition-all duration-300 
+               {{ request()->is('achievements')
                    ? 'border-l-[5px] border-[#E62C37] bg-red-50 text-[#E62C37] font-bold'
                    : 'border-l-[5px] border-transparent hover:bg-gray-50 hover:text-[#E62C37]' }}">
-                    {{ __('Contact') }}
+                    {{ __('Achievements') }}
                 </a>
             </li>
 
             <li>
                 <a href="/about"
-                    class="block py-3 px-4 transition-all duration-300 rounded-r-lg
+                    class="block py-3 px-4 transition-all duration-300 
                {{ request()->is('about')
                    ? 'border-l-[5px] border-[#E62C37] bg-red-50 text-[#E62C37] font-bold'
                    : 'border-l-[5px] border-transparent hover:bg-gray-50 hover:text-[#E62C37]' }}">
-                    {{ __('About') }}
+                    {{ __('About Us') }}
+                </a>
+            </li>
+
+            <li>
+                <a href="/contact"
+                    class="block py-3 px-4 transition-all duration-300
+               {{ request()->is('contact')
+                   ? 'border-l-[5px] border-[#E62C37] bg-red-50 text-[#E62C37] font-bold'
+                   : 'border-l-[5px] border-transparent hover:bg-gray-50 hover:text-[#E62C37]' }}">
+                    {{ __('Contact') }}
                 </a>
             </li>
 
@@ -231,7 +245,11 @@
                 }
             });
 
-            // ... sisa code resize watcher dll ...
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 768) {
+                    closeMenu();
+                }
+            });
 
             // PENTING: Update juga fungsi closeMenu biar iconnya balik normal kalau menu ketutup otomatis
             const closeMenu = () => {

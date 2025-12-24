@@ -22,7 +22,6 @@
 
 
     "_comment3": "Collections page translations",
-    
     "collections.title_prefix": "Meet Our Bird",
     "collections.title_suffix": "Collections",
     "collections.desc": "Parrot Collections in Our Aviary",
@@ -37,6 +36,23 @@
     "bird.scarlet_macaw": "Scarlet Macaw",
     "bird.greenwing_macaw": "Greenwing Macaw",
     "bird.catalina_macaw": "Catalina Macaw",
-    "bird.miligold_macaw": "Miligold Macaw"
+    "bird.miligold_macaw": "Miligold Macaw",
 
+
+    "_comment4": "Footer translations",
+    "footer.product": "Product",
+    "footer.resources": "Resources",
+    
+    "footer.home": "Home",
+    "footer.support": "Support",
+    "footer.pricing": "Pricing",
+    "footer.affiliate": "Affiliate",
+    
+    "footer.company": "Company",
+    "footer.blogs": "Blogs",
+    "footer.community": "Community",
+    "footer.careers": "Careers",
+    "footer.about": "About",
+    
+    "footer.slogan": "Making every customer feel valued - no matter the size of your audience"
 }

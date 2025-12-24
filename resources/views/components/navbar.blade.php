@@ -111,9 +111,9 @@
                 </a>
             </li>
 
-            <li class="border-t pt-4 mt-2 flex gap-4 px-4 items-center justify-center">
+            <li class="border-t border-gray-500/50 pt-4 mt-2 flex gap-4 px-4 items-center justify-center">
                 <a href="{{ route('lang.switch', 'id') }}"
-                    class="px-4 py-2 transition-colors {{ app()->getLocale() == 'id' ? 'bg-[#E62C37] opacity-50 text-white font-bold shadow-md' : 'text-gray-500 hover:bg-gray-100' }}">
+                    class="px-4 py-2 transition-colors {{ app()->getLocale() == 'id' ? 'bg-[#E62C37] text-white font-bold shadow-md' : 'text-gray-500 hover:bg-gray-100' }}">
                     Indonesia
                 </a>
                 <span class="text-gray-300">|</span>

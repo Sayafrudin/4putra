@@ -1,5 +1,5 @@
 <x-layout>
-    <section class="w-full px-6 md:px-12 lg:px-16 pb-10">
+    <section class="w-full px-6 md:px-12 lg:px-16 pb-10 pt-10">
         <h1 class="text-4xl font-bold text-slate-800 text-center">
             {{ __('collections.title_prefix') }}
             <span class="font-medium text-[#E62C37]">

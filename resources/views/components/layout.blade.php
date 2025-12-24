@@ -12,7 +12,7 @@
 
     <x-navbar></x-navbar>
 
-    <main class="grow w-full pt-28 md:pt-36">
+    <main class="w-full pt-28 md:pt-36">
         <!-- Konten utama di sini -->
         {{ $slot }}
     </main>

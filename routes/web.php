@@ -11,12 +11,16 @@ Route::get('/collections', function () {
     return view('collections');
 });
 
-Route::get('/contact', function () {
-    return view('contact');
+Route::get('/achievements', function () {
+    return view('achievements');
 });
 
 Route::get('/about', function () {
     return view('about');
+});
+
+Route::get('/contact', function () {
+    return view('contact');
 });
 
 Route::get('lang/{locale}', function ($locale) {

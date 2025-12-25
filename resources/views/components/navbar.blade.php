@@ -111,7 +111,7 @@
                {{ request()->is('about')
                    ? 'border-l-[5px] border-[#E62C37] bg-red-50 text-[#E62C37] font-bold'
                    : 'border-l-[5px] border-transparent hover:bg-gray-50 hover:text-[#E62C37]' }}">
-                    {{ __('About Us') }}
+                    {{ __('About') }}
                 </a>
             </li>
 

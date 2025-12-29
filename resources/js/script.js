@@ -37,7 +37,7 @@ const initMarquee = () => {
     container.innerHTML = renderData.map((card, index) => `
                 <div class="w-56 mx-4 h-[20rem] relative group hover:scale-90 transition-all duration-300 shrink-0">
                     <img src="${card.image}" alt="card" class="w-full h-full object-cover" loading="lazy" />
-                    <div class="flex items-center justify-center px-4 opacity-0 group-hover:opacity-100 transition-all duration-300 absolute bottom-0 backdrop-blur-md left-0 w-full h-full bg-black/20 rounded-lg">
+                    <div class="flex items-center justify-center px-4 opacity-0 group-hover:opacity-100 transition-all duration-300 absolute bottom-0 backdrop-blur-md left-0 w-full h-full bg-black/20">
                         <p class="text-white text-xl font-semibold text-center">${card.title}</p>
                     </div>
                 </div>

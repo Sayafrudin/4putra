@@ -1,6 +1,6 @@
 <x-layout>
 
-    <section class="w-full px-6 md:px-12 lg:px-16 pb-20">
+    <section class="w-full px-6 md:px-12 lg:px-16 pb-20 pt-10">
         <div class="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-16 lg:gap-24 max-w-7xl mx-auto">
 
             <div class="flex flex-col items-center md:items-start flex-1 text-center md:text-left">

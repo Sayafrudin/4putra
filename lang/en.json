@@ -41,13 +41,14 @@
 
 
     "_comment4": "Footer translations",
-    "footer.product": "Product",
+    "footer.navigation": "Navigation",
     "footer.resources": "Resources",
     
     "footer.home": "Home",
-    "footer.support": "Support",
-    "footer.pricing": "Pricing",
-    "footer.affiliate": "Affiliate",
+    "footer.collection": "Collection",
+    "footer.achievements": "Achievements",
+    "footer.aboutus": "About Us",
+    "footer.contact": "Contact",
     
     "footer.company": "Company",
     "footer.blogs": "Blogs",
@@ -56,6 +57,7 @@
     "footer.about": "About",
     
     "footer.slogan": "Making every customer feel valued - no matter the size of your audience",
+    "footer.socialmedia": "Follow us on social media",
 
 
     "_comment5": "Achievements page translations",

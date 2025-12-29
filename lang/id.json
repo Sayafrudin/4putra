@@ -41,14 +41,15 @@
 
 
     "_comment4": "Footer translations",
-    "footer.product": "Produk",
+    "footer.navigation": "Navigasi",
     "footer.resources": "Sumber Daya",
     
     "footer.home": "Beranda",
-    "footer.support": "Dukungan",
-    "footer.pricing": "Harga",
-    "footer.affiliate": "Afiliasi",
-    
+    "footer.collection": "Koleksi",
+    "footer.achievements": "Pencapaian",
+    "footer.aboutus": "Tentang Kami",
+    "footer.contact": "Kontak",
+
     "footer.company": "Perusahaan",
     "footer.blogs": "Blog",
     "footer.community": "Komunitas",
@@ -56,6 +57,7 @@
     "footer.about": "Tentang Kami",
     
     "footer.slogan": "Membuat setiap pelanggan merasa berharga - tidak peduli seberapa besar audiens Anda",
+    "footer.socialmedia": "Ikuti kami di media sosial",
 
 
     "_comment5": "Achievements page translations",

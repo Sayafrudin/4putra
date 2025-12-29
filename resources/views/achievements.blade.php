@@ -21,14 +21,14 @@
             <div class="w-full lg:w-5/12 flex flex-col space-y-4" x-data="{ activeImage: 'img/achievement1.jpg' }">
 
                 <div
-                    class="w-full aspect-[4/3] md:aspect-[5/4] bg-gray-100 rounded-xl overflow-hidden shadow-lg relative group shrink-0 grow-0 border border-gray-100">
+                    class="w-full aspect-[4/3] md:aspect-[5/4] bg-gray-100 overflow-hidden shadow-lg relative group shrink-0 border border-gray-100">
 
                     <img :src="activeImage" x-transition:enter="transition ease-out duration-300"
                         x-transition:enter-start="opacity-50" x-transition:enter-end="opacity-100"
                         class="w-full h-full object-cover object-center transition-all duration-500"
                         alt="Main Featured Image">
 
-                    <div class="absolute inset-0 ring-1 ring-black/5 rounded-xl pointer-events-none"></div>
+                    <div class="absolute inset-0 pointer-events-none"></div>
                 </div>
 
                 <div class="w-full">
@@ -40,7 +40,7 @@
                                 ?
                                 'border-[#E62C37] opacity-100 ring-2 ring-[#E62C37]/30' :
                                 'border-transparent opacity-60 hover:opacity-100'"
-                            class="thumb shrink-0 w-16 h-12 md:w-20 md:h-16 rounded-md object-cover border-2 transition-all duration-200 snap-start shadow-sm"
+                            class="thumb shrink-0 w-16 h-12 md:w-20 md:h-16 object-cover border-2 transition-all duration-200 snap-start shadow-sm"
                             alt="Thumb 1">
 
                         <img @click="activeImage = 'img/achievement2.jpeg'" src="img/achievement2.jpeg"
@@ -48,7 +48,7 @@
                                 ?
                                 'border-[#E62C37] opacity-100 ring-2 ring-[#E62C37]/30' :
                                 'border-transparent opacity-60 hover:opacity-100'"
-                            class="thumb shrink-0 w-16 h-12 md:w-20 md:h-16 rounded-md object-cover border-2 transition-all duration-200 snap-start shadow-sm"
+                            class="thumb shrink-0 w-16 h-12 md:w-20 md:h-16 object-cover border-2 transition-all duration-200 snap-start shadow-sm"
                             alt="Thumb 2">
 
                         <img @click="activeImage = 'img/achievement3.jpeg'" src="img/achievement3.jpeg"
@@ -56,7 +56,7 @@
                                 ?
                                 'border-[#E62C37] opacity-100 ring-2 ring-[#E62C37]/30' :
                                 'border-transparent opacity-60 hover:opacity-100'"
-                            class="thumb shrink-0 w-16 h-12 md:w-20 md:h-16 rounded-md object-cover border-2 transition-all duration-200 snap-start shadow-sm"
+                            class="thumb shrink-0 w-16 h-12 md:w-20 md:h-16 object-cover border-2 transition-all duration-200 snap-start shadow-sm"
                             alt="Thumb 3">
 
                         <img @click="activeImage = 'img/achievement4.jpeg'" src="img/achievement4.jpeg"
@@ -64,7 +64,7 @@
                                 ?
                                 'border-[#E62C37] opacity-100 ring-2 ring-[#E62C37]/30' :
                                 'border-transparent opacity-60 hover:opacity-100'"
-                            class="thumb shrink-0 w-16 h-12 md:w-20 md:h-16 rounded-md object-cover border-2 transition-all duration-200 snap-start shadow-sm"
+                            class="thumb shrink-0 w-16 h-12 md:w-20 md:h-16 object-cover border-2 transition-all duration-200 snap-start shadow-sm"
                             alt="Thumb 4">
 
                         <img @click="activeImage = 'img/achievement5.jpg'" src="img/achievement5.jpg"
@@ -72,8 +72,8 @@
                                 ?
                                 'border-[#E62C37] opacity-100 ring-2 ring-[#E62C37]/30' :
                                 'border-transparent opacity-60 hover:opacity-100'"
-                            class="thumb shrink-0 w-16 h-12 md:w-20 md:h-16 rounded-md object-cover border-2 transition-all duration-200 snap-start shadow-sm"
-                            alt="Thumb 4">
+                            class="thumb shrink-0 w-16 h-12 md:w-20 md:h-16 object-cover border-2 transition-all duration-200 snap-start shadow-sm"
+                            alt="Thumb 5">
                     </div>
                 </div>
             </div>

@@ -8,11 +8,11 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="flex flex-col min-h-screen bg-white">
+<body class="flex flex-col min-h-screen bg-white antialiased">
 
     <x-navbar></x-navbar>
 
-    <main class="w-full pt-28 md:pt-36">
+    <main class="grow w-full pt-28 md:pt-36">
         <!-- Konten utama di sini -->
         {{ $slot }}
     </main>

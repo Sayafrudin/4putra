@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>4Putra Vertex Aviary</title>
+    <link rel="icon" href="img/4Putraico.png" type="image/png">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 

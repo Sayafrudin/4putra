@@ -1,20 +1,26 @@
 @props(['gambar', 'name', 'SName'])
-<div class="max-w-80 bg-black text-white">
-    <div class="relative -mt-px overflow-hidden">
+
+<div class="w-72 bg-black text-white overflow-hidden flex flex-col shadow-lg group">
+
+    <div class="relative w-full aspect-[4/5] overflow-hidden">
         @if (isset($gambar))
             <img src="{{ $gambar }}"
-                class="h-67.5 w-62.5 hover:scale-105 transition-all duration-300 object-cover object-top">
+                class="w-full h-full object-cover object-top group-hover:scale-105 transition-all duration-500">
         @else
-            <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=600&h=600&auto=format&fit=crop"
+            <img src="https://images.unsplash.com/photo-1534030347209-467a5b0ad3e6?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTl8fHBvdHJhaXR8ZW58MHwxfDB8fHww"
                 alt="Default Image"
-                class="h-67.5 w-62.5 hover:scale-105 transition-all duration-300 object-cover object-top">
+                class="w-full h-full object-cover object-top group-hover:scale-105 transition-all duration-500">
         @endif
-        <div class="absolute bottom-0 z-10 h-30 w-full bg-linear-to-t pointer-events-none from-black to-transparent">
+
+        <div
+            class="absolute bottom-0 z-10 h-2/3 w-full bg-gradient-to-t from-black via-black/20 to-transparent pointer-events-none">
         </div>
     </div>
-    <div class="px-4 pb-6 text-center">
-        <p class="mt-4 text-lg font-bold">{{ $name }}</p>
-        <p class="text-sm font-medium text-[#E62C37]">
-            {{ $SName }}</p>
+
+    <div class="px-4 pb-5 pt-2 text-center z-20 relative bg-black flex-1 flex flex-col justify-end">
+        <p class="text-xl font-bold leading-tight text-white">{{ $name }}</p>
+        <p class="text-sm font-medium text-[#E62C37] mt-1 uppercase tracking-wide">
+            {{ $SName }}
+        </p>
     </div>
 </div>

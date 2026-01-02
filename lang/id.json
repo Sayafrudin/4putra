@@ -71,6 +71,22 @@
     "achievements.popular_parrots": "Popular Parrots",
     "achievements.popular_desc": "Discover our favorite parrot collections, from the agile Sun Conure to the majestic Macaw, all captive-bred, tame, and ready to be your new companion.",
     
-    "achievements.btn_view_more": "View More Collections"
+    "achievements.btn_view_more": "View More Collections",
 
+
+    "_comment6": "About page translations",
+    "about.hero_welcome": "SIAPA",
+    "about.hero_aviary": "KAMI",
+    "about.hero_desc_1": "Perjalanan kami dimulai pada tahun 2019 dengan nama 4Putra Exotic Parrots. Seiring dengan pertumbuhan bisnis kami dan semakin kuatnya komitmen kami terhadap profesionalisme, kami mengubah identitas dan status hukum kami menjadi PT 4Putra Vertex Aviary. Perubahan struktur bisnis ini mencerminkan keseriusan kami dalam menyediakan standar pengelolaan avikultur yang lebih tinggi dan lebih andal di wilayah Surabaya Barat.",
+    "about.hero_desc_2": "Kami menggabungkan pengalaman praktis yang telah kami bangun sejak 2019 dengan pendekatan manajemen modern. Fokus utama kami meliputi konservasi dan pemeliharaan spesies eksotis seperti Macaw, Afgrey, dan berbagai jenis burung parrot lainnya. Tim kami terdiri dari profesional yang berkomitmen untuk memastikan setiap hewan mendapat nutrisi yang tepat dan lingkungan hidup yang higienis.",
+    "about.hero_desc_3": "Kesejahteraan hewan selalu menjadi prioritas utama kami dalam setiap aspek operasional kami. Oleh karena itu, fasilitas kami dilengkapi dengan teknologi inkubasi modern untuk mendukung keberhasilan program pemeliharaan kami. Kami telah berhasil memelihara spesies seperti Blue & Gold Macaw, African Grey, dan Sun Conure secara mandiri. Sebagai jaminan kualitas dan kepatuhan hukum, setiap burung yang kami pelihara dilengkapi dengan cincin tertutup untuk memastikan validitas data dan kemudahan pelacakan silsilah.",
+    
+    "about.team_title": "Kenali",
+    "about.team_leadership": "Pimpinan Kami",
+    "about.team_desc": "4Putra Vertex Aviary dikelola oleh tim profesional yang berkomitmen untuk keunggulan dalam bidang avikultur.",
+    
+    "about.team_devide": "Dewan Eksekutif",
+    "about.team_role1": "Direktur",
+    "about.team_role2": "Komisaris",
+    "about.team_role3": "Manajer"
 }

@@ -71,5 +71,22 @@
     "achievements.popular_parrots": "Popular Parrots",
     "achievements.popular_desc": "Discover our favorite parrot collections, from the agile Sun Conure to the majestic Macaw, all captive-bred, tame, and ready to be your new companion.",
     
-    "achievements.btn_view_more": "View More Collections"
+    "achievements.btn_view_more": "View More Collections",
+
+
+    "_comment6": "About page translations",
+    "about.hero_welcome": "WHO WE",
+    "about.hero_aviary": "ARE",
+    "about.hero_desc_1": "Our journey began in 2019 under the name 4Putra Exotic Parrots. As our business grew and our commitment to professionalism deepened, we transformed our identity and legal status into PT 4Putra Vertex Aviary. This change in business structure underscores our seriousness in delivering higher and more reliable standards of aviculture management in the West Surabaya area.",
+    "about.hero_desc_2": "We combine the practical experience we have built since 2019 with a modern management approach. Our main focus includes the conservation and breeding of exotic species such as Macaws, Afgreys, and various other types of parrots. Our team consists of dedicated professionals who ensure that each animal receives precise nutrition and a hygienic living environment.",
+    "about.hero_desc_3": "Animal welfare is always our top priority in every aspect of our operations. Therefore, our facilities are equipped with modern hatching technology to support the success of our breeding program. We have successfully bred species such as Blue & Gold Macaws, African Greys, and Sun Conures independently. As a guarantee of quality and legal compliance, each bird we breed is fitted with a closed ring to ensure data validity and ease of pedigree tracking.",
+    
+    "about.team_title": "Meet Our",
+    "about.team_leadership": "Leadership",
+    "about.team_desc": "4Putra Vertex Aviary is managed by a team of dedicated professionals committed to aviculture excellence.",
+    
+    "about.team_devide": "Executive Board",
+    "about.team_role1": "Director",
+    "about.team_role2": "Commissioner",
+    "about.team_role3": "Manager"
 }

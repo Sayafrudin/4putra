@@ -67,8 +67,8 @@
                             class="thumb shrink-0 w-16 h-12 md:w-20 md:h-16 object-cover border-2 transition-all duration-200 snap-start shadow-sm"
                             alt="Thumb 4">
 
-                        <img @click="activeImage = 'img/achievement5.jpg'" src="img/achievement5.jpg"
-                            :class="activeImage === 'img/achievement5.jpg'
+                        <img @click="activeImage = 'img/achievement5.jpeg'" src="img/achievement5.jpeg"
+                            :class="activeImage === 'img/achievement5.jpeg'
                                 ?
                                 'border-[#E62C37] opacity-100 ring-2 ring-[#E62C37]/30' :
                                 'border-transparent opacity-60 hover:opacity-100'"

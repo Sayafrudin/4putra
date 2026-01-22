@@ -41,6 +41,11 @@
         <x-divider>{{ __('about.team_devide') }}</x-divider>
 
         <div class="flex flex-wrap items-center justify-center gap-10">
+
+            <x-card gambar="{{ asset('img/manager.png') }}" name="Rachmad Hidayat"
+                SName="{{ __('about.team_role3') }}">
+            </x-card>
+
             <x-card gambar="{{ asset('img/direktur.png') }}" name="Dedy Murya Budi, SE"
                 SName="{{ __('about.team_role1') }}">
             </x-card>
@@ -49,9 +54,7 @@
                 SName="{{ __('about.team_role2') }}">
             </x-card>
 
-            <x-card gambar="{{ asset('img/manager.png') }}" name="Rachmad Hidayat"
-                SName="{{ __('about.team_role3') }}">
-            </x-card>
+
         </div>
 
         {{-- <x-divider>Operational</x-divider>

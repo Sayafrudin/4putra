@@ -67,11 +67,12 @@
     "achievements.hero_desc_2": "This activity is a tangible manifestation of our commitment to not only be breeders, but also educators. We share insights about the unique characteristics of curved-beak birds, the importance of animal welfare, and the legality of keeping exotic animals in Indonesia.",
     "achievements.hero_desc_3": "Surabaya, 24 July 2025",
     
-    "achievements.explore_title": "EXPLORE OUR",
-    "achievements.popular_parrots": "Popular Parrots",
-    "achievements.popular_desc": "Discover our favorite parrot collections, from the agile Sun Conure to the majestic Macaw, all captive-bred, tame, and ready to be your new companion.",
-    
-    "achievements.btn_view_more": "View More Collections",
+
+    "achievements2.hero_welcome": "SOCIALIZATION RELATED TO PARROT BREEDING, PARROT HEALTH, AND OTHER MATTERS CONCERNING PARROTS AMONG RESIDENTS OF ",
+    "achievements2.hero_aviary": "GRESIK, DUNGUS VILLAGE",
+    "achievements2.hero_desc_1": "4Putra Vertex Aviary greeted the residents of Dungus Village, Gresik, through a casual conversation full of knowledge. We did not come alone, but brought along a young licensed veterinarian to provide valid medical explanations directly to the residents.",
+    "achievements2.hero_desc_2": "This activity is our way of “kulonuwun” (paying respects) and building trust with the local villagers. We want to alleviate their concerns with facts, starting from a thorough explanation of hygienic cage design, proper waste disposal procedures, to expert explanations that our birds are safe from infectious diseases. In essence, we want to prove that breeding businesses can coexist harmoniously and safely with residential areas.",
+    "achievements2.hero_desc_3": "Surabaya, 04 January 2026",
 
 
     "_comment6": "About page translations",
@@ -88,5 +89,20 @@
     "about.team_devide": "Executive Board",
     "about.team_role1": "Director",
     "about.team_role2": "Commissioner",
-    "about.team_role3": "Manager"
+    "about.team_role3": "Owner",
+
+
+
+    "_comment7": "Contact page translations",
+    "contact.hero_welcome": "Get in",
+    "contact.hero_welcome2": "touch",
+    "contact.hero_desc_1": "Want to visit or ask about our bird collection? Our team is ready to help you.",
+
+    "contact.card1_desc_1": "Contact us for collaboration",
+
+    "contact.card2_desc_1": "Aviary location",
+    "contact.card2_desc_2": "Visit our farm directly",
+
+    "contact.card3_desc_1": "Phone & WhatsApp",
+    "contact.card4_desc_2": "Monday - Sunday (08:00 - 17:00)"
 }

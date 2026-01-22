@@ -67,11 +67,12 @@
     "achievements.hero_desc_2": "Kegiatan ini merupakan wujud nyata komitmen kami untuk tidak hanya menjadi penangkar, tetapi juga edukator. Kami berbagi wawasan mengenai karakteristik unik burung paruh bengkok, pentingnya kesejahteraan satwa, serta legalitas dalam pemeliharaan satwa eksotis di Indonesia.",
     "achievements.hero_desc_3": "Surabaya, 24 Juli 2025",
     
-    "achievements.explore_title": "EXPLORE OUR",
-    "achievements.popular_parrots": "Popular Parrots",
-    "achievements.popular_desc": "Discover our favorite parrot collections, from the agile Sun Conure to the majestic Macaw, all captive-bred, tame, and ready to be your new companion.",
-    
-    "achievements.btn_view_more": "View More Collections",
+
+    "achievements2.hero_welcome": "SOSIALISASI TERKAIT PETERNAKAN PARROT, KESEHATAN PARROT, DAN LAIN LAIN SEPUTAR PARROT PADA WARGA ",
+    "achievements2.hero_aviary": "GRESIK, DESA DUNGUS",
+    "achievements2.hero_desc_1": "4Putra Vertex Aviary menyapa warga Desa Dungus, Gresik, lewat obrolan santai yang penuh ilmu. Kami tidak datang sendiri, tetapi menggandeng dokter hewan muda berlisensi untuk memberikan penjelasan medis yang valid langsung di hadapan warga.",
+    "achievements2.hero_desc_2": "Kegiatan ini adalah cara kami \"kulonuwun\" dan membangun kepercayaan terhadap warga desa, kami ingin menghapus rasa cemas warga lewat fakta yang ada, Mulai dari bedah tuntas desain kandang yang higienis, alur pembuangan limbah yang rapi, hingga penjelasan ahli bahwa burung kami aman dari penyakit menular, Intinya, kami ingin membuktikan bahwa bisnis penangkaran bisa berdampingan harmonis dan aman dengan pemukiman warga.",
+    "achievements2.hero_desc_3": "Surabaya, 04 Januari 2026",
 
 
     "_comment6": "About page translations",
@@ -88,5 +89,20 @@
     "about.team_devide": "Dewan Eksekutif",
     "about.team_role1": "Direktur",
     "about.team_role2": "Komisaris",
-    "about.team_role3": "Manajer"
+    "about.team_role3": "Pemilik",
+
+
+
+    "_comment7": "Contact page translations",
+    "contact.hero_welcome": "Hubungi",
+    "contact.hero_welcome2": "kami",
+    "contact.hero_desc_1": "Ingin berkunjung atau bertanya seputar koleksi burung kami? Tim kami siap membantu Anda.",
+
+    "contact.card1_desc_1": "Hubungi kami untuk kolaborasi",
+
+    "contact.card2_desc_1": "Lokasi penangkaran kami",
+    "contact.card2_desc_2": "Datang langsung ke farm kami",
+
+    "contact.card3_desc_1": "Telepon & WhatsApp",
+    "contact.card4_desc_2": "Senin - Minggu (08:00 - 17:00)"
 }

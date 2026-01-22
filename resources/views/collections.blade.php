@@ -7,7 +7,7 @@
             </span>
         </h1>
 
-        <p class="text-gray-700 text-center">
+        <p class="text-gray-700 text-center mt-3">
             {{ __('collections.desc') }}
         </p>
 

@@ -144,4 +144,5 @@
             </div>
         </div>
     </section>
+    <x-whatsapp />
 </x-layout>

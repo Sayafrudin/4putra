@@ -76,5 +76,5 @@
         </div>
 
     </section>
-
+    <x-whatsapp />
 </x-layout>

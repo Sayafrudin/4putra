@@ -49,4 +49,5 @@
                 SName="Ara militaris"></x-card>
         </div>
     </section>
+    <x-whatsapp />
 </x-layout>

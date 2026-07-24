@@ -1,58 +1,56 @@
-// 1. Data Definition (Single Source of Truth)
-const cardData = [{
-    title: "Sun Conure",
-    image: "/img/sunc.png",
-},
-{
-    title: "African Grey",
-    image: "/img/afgrey.png",
-},
-{
-    title: "Verde Macaw",
-    image: "/img/verde.png",
-},
-{
-    title: "Buffon Macaw",
-    image: "/img/buffon2.png",
-},
+// Data Definition
+const cardData = [
+    { title: "Sun Conure", image: "/img/sunc.png" },
+    { title: "African Grey", image: "/img/afgrey.png" },
+    { title: "Verde Macaw", image: "/img/verde.png" },
+    { title: "Buffon Macaw", image: "/img/buffon2.png" },
 ];
 
-// 2. Logic Initialization
+// Logic Initialization dengan optimasi performa
 const initMarquee = () => {
     const wrapper = document.getElementById('marquee-wrapper');
     const track = document.getElementById('marquee-track');
     const container = document.getElementById('cards-container');
 
-    // Kita menduplikasi data array agar looping animasi translateX(-50%) berjalan mulus
-    // Konsep: [A, B, C, D] -> [A, B, C, D, A, B, C, D]
-    const renderData = [...cardData, ...cardData];
+    if (!wrapper || !track || !container) return;
 
-    // 3. Dynamic Duration Calculation
-    // Sesuai logic React: cardData.length (asli) * 2500ms
+    // Build HTML sekali saja
+    const renderData = [...cardData, ...cardData];
+    const html = renderData.map((card) => `
+        <div class="card-item w-56 mx-4 h-[20rem] relative group shrink-0 transition-transform duration-300 hover:scale-90">
+            <img src="${card.image}" alt="${card.title}" class="w-full h-full object-cover" loading="lazy" decoding="async" />
+            <div class="card-overlay flex items-center justify-center px-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 absolute bottom-0 backdrop-blur-md left-0 w-full h-full bg-black/20">
+                <p class="text-white text-xl font-semibold text-center">${card.title}</p>
+            </div>
+        </div>
+    `).join('');
+
+    container.innerHTML = html;
+
+    // CSS Animation untuk marquee
     const duration = cardData.length * 2500;
     track.style.animationDuration = `${duration}ms`;
 
-    // 4. Efficient DOM Injection
-    // Menggunakan map dan join string jauh lebih cepat daripada createElement satu per satu
-    container.innerHTML = renderData.map((card, index) => `
-                <div class="w-56 mx-4 h-[20rem] relative group hover:scale-90 transition-all duration-300 shrink-0">
-                    <img src="${card.image}" alt="card" class="w-full h-full object-cover" loading="lazy" />
-                    <div class="flex items-center justify-center px-4 opacity-0 group-hover:opacity-100 transition-all duration-300 absolute bottom-0 backdrop-blur-md left-0 w-full h-full bg-black/20">
-                        <p class="text-white text-xl font-semibold text-center">${card.title}</p>
-                    </div>
-                </div>
-            `).join('');
-
-    // 5. Event Listeners untuk Pause/Play
-    // Ini jauh lebih ringan daripada React State re-render
+    // Gunakan event delegation untuk hover
+    let isPaused = false;
     wrapper.addEventListener('mouseenter', () => {
-        track.style.animationPlayState = 'paused';
-    });
+        if (!isPaused) {
+            track.style.animationPlayState = 'paused';
+            isPaused = true;
+        }
+    }, { passive: true });
 
     wrapper.addEventListener('mouseleave', () => {
-        track.style.animationPlayState = 'running';
-    });
+        if (isPaused) {
+            track.style.animationPlayState = 'running';
+            isPaused = false;
+        }
+    }, { passive: true });
 };
 
-// Execute saat DOM ready
-document.addEventListener('DOMContentLoaded', initMarquee);
+// Jalankan saat DOM ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMarquee);
+} else {
+    initMarquee();
+}

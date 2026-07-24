@@ -1,13 +1,36 @@
 {
+  "_alpine-A8h-QRCZ.js": {
+    "file": "assets/alpine-A8h-QRCZ.js",
+    "name": "alpine"
+  },
+  "_firebase-BqLH3y0R.js": {
+    "file": "assets/firebase-BqLH3y0R.js",
+    "name": "firebase"
+  },
   "resources/css/app.css": {
-    "file": "assets/app-CDCAxV6J.css",
+    "file": "assets/app-CMWcH7me.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-CAiCLEjY.js",
+    "file": "assets/app-kVoxUG0J.js",
     "name": "app",
     "src": "resources/js/app.js",
-    "isEntry": true
+    "isEntry": true,
+    "imports": [
+      "_alpine-A8h-QRCZ.js"
+    ],
+    "css": [
+      "assets/app-CIgf0F6L.css"
+    ]
+  },
+  "resources/js/chat.js": {
+    "file": "assets/chat-CZ2_Y-v4.js",
+    "name": "chat",
+    "src": "resources/js/chat.js",
+    "isEntry": true,
+    "imports": [
+      "_firebase-BqLH3y0R.js"
+    ]
   }
 }

@@ -1,4 +1,4 @@
-<x-layout>
+<x-site.layout>
     <section class="w-full px-6 md:px-12 lg:px-16 pb-20 pt-10">
         <div class="flex flex-col md:flex-row items-center justify-center gap-10 lg:gap-12 max-w-7xl mx-auto">
             <div class="flex flex-col items-center md:items-start flex-1 text-center md:text-left">
@@ -8,7 +8,7 @@
                     <span class="text-[#E62C37] font-normal">{{ __('about.hero_aviary') }}</span>
                 </h1>
 
-                <p class="text-gray-700 mt-6 text-justify md:text-md leading-relaxed">
+                <p class="text-gray-700 mt-6 md:text-md leading-relaxed">
                     {{ __('about.hero_desc_1') }}
                     <br><br>
                     {{ __('about.hero_desc_2') }}
@@ -38,37 +38,37 @@
             {{ __('about.team_desc') }}
         </p>
 
-        <x-divider>{{ __('about.team_devide') }}</x-divider>
+        <x-site.divider>{{ __('about.team_devide') }}</x-site.divider>
 
         <div class="flex flex-wrap items-center justify-center gap-10">
 
-            <x-card gambar="{{ asset('img/manager.png') }}" name="Rachmad Hidayat"
+            <x-site.card gambar="{{ asset('img/manager.png') }}" name="Rachmad Hidayat"
                 SName="{{ __('about.team_role3') }}">
-            </x-card>
+            </x-site.card>
 
-            <x-card gambar="{{ asset('img/direktur.png') }}" name="Dedy Murya Budi, SE"
+            <x-site.card gambar="{{ asset('img/direktur.png') }}" name="Dedy Murya Budi, SE"
                 SName="{{ __('about.team_role1') }}">
-            </x-card>
+            </x-site.card>
 
-            <x-card gambar="{{ asset('img/komisaris.png') }}" name="Syafrudin Hendra Lumanto"
+            <x-site.card gambar="{{ asset('img/komisaris.png') }}" name="Syafrudin Hendra Lumanto"
                 SName="{{ __('about.team_role2') }}">
-            </x-card>
+            </x-site.card>
 
 
         </div>
 
-        {{-- <x-divider>Operational</x-divider>
+        {{-- <x-site.divider>Operational</x-site.divider>
 
         <div class="flex flex-wrap items-center justify-center gap-10">
-            <x-card name="..." SName="...">
-            </x-card>
+            <x-site.card name="..." SName="...">
+            </x-site.card>
 
-            <x-card name="..." SName="...">
-            </x-card>
+            <x-site.card name="..." SName="...">
+            </x-site.card>
 
-            <x-card name="..." SName="...">
-            </x-card>
+            <x-site.card name="..." SName="...">
+            </x-site.card>
         </div> --}}
     </section>
-    <x-whatsapp />
-</x-layout>
+    <x-site.whatsapp />
+</x-site.layout>

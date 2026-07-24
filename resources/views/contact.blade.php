@@ -1,4 +1,4 @@
-<x-layout>
+<x-site.layout>
     {{-- <section class="bg-white dark:bg-gray-900">
         <div class="container px-6 py-12 mx-auto">
             <div>
@@ -144,5 +144,5 @@
             </div>
         </div>
     </section>
-    <x-whatsapp />
-</x-layout>
+    <x-site.whatsapp />
+</x-site.layout>

@@ -57,6 +57,7 @@ return [
             'options' => extension_loaded('pdo_mysql') ? (
                 str_contains(env('DB_HOST', ''), 'tidbcloud.com')
                     ? [
+                        PDO::MYSQL_ATTR_SSL_CA => '/etc/ssl/certs/ca-certificates.crt',
                         PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
                     ]
                     : array_filter([

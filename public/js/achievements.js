@@ -119,8 +119,9 @@
             const thumb = document.createElement('div');
             thumb.className = 'relative group';
             thumb.dataset.imageId = img.id;
+            var imgSrc = img.image_path.startsWith('http') ? img.image_path : CFG.storageUrl + '/' + img.image_path;
             thumb.innerHTML =
-                '<img src="' + CFG.storageUrl + '/' + img.image_path + '" ' +
+                '<img src="' + imgSrc + '" ' +
                 'class="w-16 h-16 rounded border border-gray-700 object-cover cursor-pointer" ' +
                 'loading="lazy" alt="Foto tersimpan">' +
                 '<button type="button" title="Hapus foto ini" ' +

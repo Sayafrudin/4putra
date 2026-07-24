@@ -25,7 +25,8 @@
                 
                 <div class="w-full max-w-md overflow-hidden shadow-xl aspect-[4/3] relative group rounded-lg">
                     @if($achievement->images->isNotEmpty())
-                        <img src="{{ asset('storage/achievements/' . $achievement->images->first()->image_path) }}" 
+                        @php $firstImg = str_starts_with($achievement->images->first()->image_path, 'http') ? $achievement->images->first()->image_path : asset('storage/achievements/' . $achievement->images->first()->image_path); @endphp
+                        <img src="{{ $firstImg }}" 
                              alt="{{ $achievement->title }}"
                              class="w-full h-full object-cover transition-all duration-500 hover:scale-105">
                     @else
@@ -37,8 +38,9 @@
                 @if($achievement->images->count() > 1)
                 <div class="flex flex-wrap gap-2 mt-2 justify-center md:justify-end max-w-md">
                     @foreach($achievement->images as $index => $img)
+                        @php $thumbUrl = str_starts_with($img->image_path, 'http') ? $img->image_path : asset('storage/achievements/' . $img->image_path); @endphp
                         <div class="w-16 h-12 overflow-hidden rounded border border-gray-200 shadow-sm cursor-pointer hover:opacity-80">
-                            <img src="{{ asset('storage/achievements/' . $img->image_path) }}" 
+                            <img src="{{ $thumbUrl }}" 
                                  alt="Galeri {{ $achievement->title }}" 
                                  class="w-full h-full object-cover">
                         </div>

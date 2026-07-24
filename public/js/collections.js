@@ -155,8 +155,9 @@
         // Render existing photo
         var photoWrap = document.getElementById('edit-col-existing-photo');
         if (col.image_path) {
+            var imgSrc = col.image_path.startsWith('http') ? col.image_path : CFG.storageUrl + '/' + col.image_path;
             photoWrap.innerHTML = '<div class="relative group" data-photo-id="' + col.id + '">' +
-                '<img src="' + CFG.storageUrl + '/' + col.image_path + '" class="w-20 h-16 rounded border border-gray-700 object-cover">' +
+                '<img src="' + imgSrc + '" class="w-20 h-16 rounded border border-gray-700 object-cover">' +
                 '<button type="button" title="Hapus foto" class="btn-delete-col-photo absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-[#E62C37] text-white text-xs font-bold shadow hover:bg-red-700 transition-colors">&times;</button></div>';
         } else {
             photoWrap.innerHTML = '<p class="text-xs text-gray-500 py-2">Belum ada foto.</p>';

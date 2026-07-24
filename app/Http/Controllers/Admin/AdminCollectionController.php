@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Collection;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -29,9 +30,10 @@ class AdminCollectionController extends Controller
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $filename = time().'_'.$request->file('image')->getClientOriginalName();
-            $request->file('image')->storeAs('public/collections', $filename);
-            $imagePath = $filename;
+            $uploaded = Cloudinary::upload($request->file('image')->getRealPath(), [
+                'folder' => '4putra/collections',
+            ]);
+            $imagePath = $uploaded->getSecurePath();
         }
 
         Collection::create([
@@ -50,7 +52,7 @@ class AdminCollectionController extends Controller
             'Collections',
             null,
             ['name' => $request->name, 'category' => $request->category, 'scientific_name' => $request->scientific_name],
-            $imagePath ? ['storage/collections/'.$imagePath] : null
+            $imagePath ? [$imagePath] : null
         );
 
         return response()->json(['success' => true, 'message' => 'Koleksi berhasil ditambahkan.']);
@@ -70,20 +72,15 @@ class AdminCollectionController extends Controller
         $imagePreviews = [];
 
         if ($request->input('remove_image') == '1') {
-            if ($collection->image_path) {
-                Storage::delete('public/collections/'.$collection->image_path);
-            }
             $data['image_path'] = null;
         }
 
         if ($request->hasFile('image')) {
-            if ($collection->image_path) {
-                Storage::delete('public/collections/'.$collection->image_path);
-            }
-            $filename = time().'_'.$request->file('image')->getClientOriginalName();
-            $request->file('image')->storeAs('public/collections', $filename);
-            $data['image_path'] = $filename;
-            $imagePreviews[] = 'storage/collections/'.$filename;
+            $uploaded = Cloudinary::upload($request->file('image')->getRealPath(), [
+                'folder' => '4putra/collections',
+            ]);
+            $data['image_path'] = $uploaded->getSecurePath();
+            $imagePreviews[] = $data['image_path'];
         }
 
         $collection->update($data);
@@ -104,8 +101,7 @@ class AdminCollectionController extends Controller
     {
         $imagePreviews = [];
         if ($collection->image_path) {
-            $imagePreviews[] = 'storage/collections/'.$collection->image_path;
-            Storage::delete('public/collections/'.$collection->image_path);
+            $imagePreviews[] = $collection->image_path;
         }
 
         $this->logDataChange(

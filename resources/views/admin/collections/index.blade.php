@@ -39,7 +39,8 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-4">
                                     @if ($collection->image_path)
-                                        <img src="{{ asset('storage/collections/' . $collection->image_path) }}"
+                                        @php $colImg = str_starts_with($collection->image_path, 'http') ? $collection->image_path : asset('storage/collections/' . $collection->image_path); @endphp
+                                        <img src="{{ $colImg }}"
                                             class="w-12 h-12 rounded border border-gray-700 object-cover cursor-pointer hover:scale-125 hover:z-10 hover:border-[#E62C37] shadow-sm transition-all duration-200 relative"
                                             onclick="zoomImage(this.src)" alt="{{ $collection->name }}">
                                     @else

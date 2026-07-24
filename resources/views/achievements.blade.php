@@ -125,7 +125,7 @@
                                 @endif
 
                                 @foreach ($achievement->images as $index => $img)
-                                    @php $imgUrl = asset('storage/achievements/' . $img->image_path); @endphp
+                                    @php $imgUrl = str_starts_with($img->image_path, 'http') ? $img->image_path : asset('storage/achievements/' . $img->image_path); @endphp
                                     <img x-show="activeMedia === 'img-{{ $index }}'" :src="'{{ $imgUrl }}'"
                                         x-transition:enter="transition ease-out duration-300"
                                         x-transition:enter-start="opacity-50" x-transition:enter-end="opacity-100"
@@ -164,7 +164,7 @@
                                     @endif
 
                                     @foreach ($achievement->images as $index => $img)
-                                        @php $imgUrl = asset('storage/achievements/' . $img->image_path); @endphp
+                                        @php $imgUrl = str_starts_with($img->image_path, 'http') ? $img->image_path : asset('storage/achievements/' . $img->image_path); @endphp
                                         <img @click="activeMedia = 'img-{{ $index }}'" src="{{ $imgUrl }}"
                                             :class="activeMedia === 'img-{{ $index }}'
                                                 ? 'border-[#E62C37] opacity-100 ring-2 ring-[#E62C37]/30'

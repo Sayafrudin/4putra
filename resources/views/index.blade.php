@@ -1,4 +1,4 @@
-<x-layout>
+<x-site.layout>
 
     <section class="w-full px-6 md:px-12 lg:px-16 pb-20 pt-10">
         <div class="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-16 lg:gap-24 max-w-7xl mx-auto">
@@ -10,7 +10,7 @@
                     <span class="text-[#E62C37] font-normal">{{ __('home.hero_aviary') }}</span>
                 </h1>
 
-                <p class="text-gray-700 mt-6 text-justify md:text-md leading-relaxed max-w-2xl">
+                <p class="text-gray-700 mt-6 md:text-md leading-relaxed max-w-2xl">
                     {{ __('home.hero_desc_1') }}
                     <br><br>
                     {{ __('home.hero_desc_2') }}
@@ -37,7 +37,7 @@
                         {{ __('home.popular_parrots') }}
                     </span>
                 </h1>
-                <p class="text-gray-700 text-md leading-relaxed text-justify">
+                <p class="text-gray-700 text-md leading-relaxed ">
                     {{ __('home.popular_desc') }}
                 </p>
             </div>
@@ -76,5 +76,5 @@
         </div>
 
     </section>
-    <x-whatsapp />
-</x-layout>
+    <x-site.whatsapp />
+</x-site.layout>

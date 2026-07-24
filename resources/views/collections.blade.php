@@ -1,4 +1,4 @@
-<x-layout>
+<x-site.layout>
     <section class="w-full px-6 md:px-12 lg:px-16 pb-10 pt-10">
         <h1 class="text-4xl font-bold text-slate-800 text-center">
             {{ __('collections.title_prefix') }}
@@ -11,43 +11,29 @@
             {{ __('collections.desc') }}
         </p>
 
-        <x-divider>{{ __('category.conure') }}</x-divider>
+        @forelse($collections as $category => $items)
+            @php
+                $catName =
+                    app()->getLocale() == 'en' && $items->first()->category_en
+                        ? $items->first()->category_en
+                        : $category;
+            @endphp
+            <x-site.divider>{{ $catName }}</x-site.divider>
 
-        <div class="flex flex-wrap items-center justify-center gap-10">
-            <x-card gambar="{{ asset('img/sunc.png') }}" name="{{ __('bird.sun_conure') }}" SName="Aratinga solstitialis">
-            </x-card>
-
-            <x-card gambar="{{ asset('img/goldc.png') }}" name="{{ __('bird.golden_conure') }}" SName="Guaruba guarouba">
-            </x-card>
-
-            <x-card gambar="{{ asset('img/pata.png') }}" name="{{ __('bird.patagonian') }}"
-                SName="Cyanoliseus patagonus">
-            </x-card>
-        </div>
+            <div class="flex flex-wrap items-center justify-center gap-10">
+                @foreach ($items as $item)
+                    <x-card
+                        gambar="{{ $item->image_path ? asset('storage/collections/' . $item->image_path) : asset('img/placeholder.jpg') }}"
+                        name="{{ app()->getLocale() == 'en' && $item->name_en ? $item->name_en : $item->name }}"
+                        SName="{{ $item->scientific_name ?: '' }}">
+                    </x-card>
+                @endforeach
+            </div>
+        @empty
+            <section class="w-full px-6 py-20 text-center">
+                <p class="text-gray-500 text-lg">Belum ada koleksi burung yang tersedia.</p>
+            </section>
+        @endforelse
     </section>
-
-    <x-divider>{{ __('category.macaw') }}</x-divider>
-
-    <section class="w-full px-6 md:px-12 lg:px-16 pb-10">
-        <div class="flex flex-wrap items-center justify-center gap-10">
-            <x-card gambar="{{ asset('img/verde.png') }}" name="{{ __('bird.verde_macaw') }}"
-                SName="Ara ambiguus"></x-card>
-
-            <x-card gambar="{{ asset('img/buffon1.png') }}" name="{{ __('bird.buffon_macaw') }}"
-                SName="Ara ambiguus"></x-card>
-
-            <x-card gambar="{{ asset('img/scarlet.png') }}" name="{{ __('bird.scarlet_macaw') }}"
-                SName="Ara macao"></x-card>
-
-            <x-card gambar="{{ asset('img/gw.png') }}" name="{{ __('bird.greenwing_macaw') }}"
-                SName="Ara chloropterus"></x-card>
-
-            <x-card gambar="{{ asset('img/catalina.png') }}" name="{{ __('bird.catalina_macaw') }}"
-                SName="Ara ararauna"></x-card>
-
-            <x-card gambar="{{ asset('img/miligold.png') }}" name="{{ __('bird.miligold_macaw') }}"
-                SName="Ara militaris"></x-card>
-        </div>
-    </section>
-    <x-whatsapp />
-</x-layout>
+    <x-site.whatsapp />
+</x-site.layout>

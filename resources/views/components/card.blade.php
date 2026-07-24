@@ -5,10 +5,16 @@
     <div class="relative w-full aspect-[4/5] overflow-hidden">
         @if (isset($gambar))
             <img src="{{ $gambar }}"
-                class="w-full h-full object-cover object-top group-hover:scale-105 transition-all duration-500">
+                alt="{{ $name }}"
+                loading="lazy"
+                decoding="async"
+                onclick="zoomMedia(this.src)"
+                class="w-full h-full object-cover object-top group-hover:scale-105 transition-all duration-500 cursor-pointer">
         @else
-            <img src="https://images.unsplash.com/photo-1534030347209-467a5b0ad3e6?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTl8fHBvdHJhaXR8ZW58MHwxfDB8fHww"
+            <img src="{{ asset('img/placeholder.jpg') }}"
                 alt="Default Image"
+                loading="lazy"
+                decoding="async"
                 class="w-full h-full object-cover object-top group-hover:scale-105 transition-all duration-500">
         @endif
 

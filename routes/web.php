@@ -1,19 +1,32 @@
 <?php
 
+use App\Http\Controllers\AchievementController;
+use App\Http\Controllers\Admin\AdminAchievementController;
+use App\Http\Controllers\Admin\AdminCollectionController;
+use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\ChatbotController;
+use App\Http\Controllers\Admin\ChatController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\CollectionController;
+use App\Http\Controllers\StorageController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
+
+Route::get('/storage/{path}', [StorageController::class, 'serve'])
+    ->where('path', '.*')
+    ->name('storage.serve');
 
 Route::get('/', function () {
     return view('index');
 });
 
-Route::get('/collections', function () {
-    return view('collections');
-});
-
-Route::get('/achievements', function () {
-    return view('achievements');
-});
+Route::get('/collections', [CollectionController::class, 'index'])->name('collections');
+Route::get('/achievements', [AchievementController::class, 'publicIndex'])->name('achievements');
 
 Route::get('/about', function () {
     return view('about');
@@ -23,9 +36,111 @@ Route::get('/contact', function () {
     return view('contact');
 });
 
+// Midtrans webhook callback (tanpa auth, dipanggil oleh Midtrans server)
+Route::post('/midtrans/callback', [ChatbotController::class, 'midtransCallback'])->name('midtrans.callback');
+Route::post('/midtrans/status', [ChatbotController::class, 'midtransCheckStatus'])->name('midtrans.status');
+
 Route::get('lang/{locale}', function ($locale) {
     if (in_array($locale, ['en', 'id'])) {
         Session::put('locale', $locale);
     }
+
     return redirect()->back();
 })->name('lang.switch');
+
+// Autentikasi
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [LoginController::class, 'show'])->name('login');
+    Route::post('/login', [LoginController::class, 'login']);
+    Route::get('/register', [RegisterController::class, 'show'])->name('register');
+    Route::post('/register', [RegisterController::class, 'register']);
+});
+
+Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('auth.google.redirect');
+Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('auth.google.callback');
+
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [LogoutController::class, 'logout'])->name('logout');
+});
+
+// Midtrans callback (public, tanpa auth — dipanggil oleh server Midtrans)
+Route::post('/midtrans/callback-laravel', [ChatbotController::class, 'midtransCallback'])->name('midtrans.callback.laravel');
+Route::get('/midtrans/test/{order_id}', [ChatbotController::class, 'midtransTestApi'])->name('midtrans.test');
+
+// Grup Rute Dashboard Admin PT 4Putra Vertex Aviary
+Route::prefix('admin')->middleware(['admin.auth', 'admin.domain'])->group(function () {
+
+    Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
+
+    // Profil akun
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('admin.profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('admin.profile.update');
+
+    // Chat API
+    Route::get('/chat/contacts', [ChatController::class, 'contacts'])->name('admin.chat.contacts');
+    Route::get('/chat/users', [ChatController::class, 'users'])->name('admin.chat.users');
+
+    // Hapus gambar achievement
+    Route::delete('/achievements/images/{image}', [AchievementController::class, 'destroyImage'])
+        ->name('admin.achievements.images.destroy');
+
+    // CRUD Achievements
+    Route::resource('achievements', AdminAchievementController::class)->names([
+        'index' => 'admin.achievements.index',
+        'create' => 'admin.achievements.create',
+        'store' => 'admin.achievements.store',
+        'edit' => 'admin.achievements.edit',
+        'update' => 'admin.achievements.update',
+        'destroy' => 'admin.achievements.destroy',
+    ]);
+
+    // CRUD Collections
+    Route::resource('collections', AdminCollectionController::class)->names([
+        'index' => 'admin.collections.index',
+        'create' => 'admin.collections.create',
+        'store' => 'admin.collections.store',
+        'edit' => 'admin.collections.edit',
+        'update' => 'admin.collections.update',
+        'destroy' => 'admin.collections.destroy',
+    ]);
+
+    // Manajemen User (hanya admin)
+    Route::middleware('admin.only')->group(function () {
+        Route::resource('users', AdminUserController::class)->names([
+            'index' => 'admin.users.index',
+            'create' => 'admin.users.create',
+            'store' => 'admin.users.store',
+            'edit' => 'admin.users.edit',
+            'update' => 'admin.users.update',
+            'destroy' => 'admin.users.destroy',
+        ]);
+
+        Route::get('/users/{user}/activity', [AdminUserController::class, 'activity'])->name('admin.users.activity');
+        Route::post('/activity/{activity}/comment', [AdminUserController::class, 'commentActivity'])->name('admin.activity.comment');
+    });
+
+    // Chatbot WhatsApp (hanya admin)
+    Route::middleware('admin.only')->prefix('chatbot')->group(function () {
+        Route::get('/', [ChatbotController::class, 'index'])->name('admin.chatbot.index');
+        Route::get('/inventaris', [ChatbotController::class, 'inventaris'])->name('admin.chatbot.inventaris');
+        Route::post('/inventaris', [ChatbotController::class, 'inventarisStore'])->name('admin.chatbot.inventaris.store');
+        Route::put('/inventaris/{inventari}', [ChatbotController::class, 'inventarisUpdate'])->name('admin.chatbot.inventaris.update');
+        Route::delete('/inventaris/{inventari}', [ChatbotController::class, 'inventarisDestroy'])->name('admin.chatbot.inventaris.destroy');
+        Route::get('/transaksi', [ChatbotController::class, 'transaksi'])->name('admin.chatbot.transaksi');
+        Route::get('/transaksi/export/excel', [ChatbotController::class, 'transaksiExportExcel'])->name('admin.chatbot.transaksi.export.excel');
+        Route::get('/transaksi/export/pdf', [ChatbotController::class, 'transaksiExportPdf'])->name('admin.chatbot.transaksi.export.pdf');
+        Route::get('/transaksi/{transaksi}/invoice', [ChatbotController::class, 'transaksiInvoicePdf'])->name('admin.chatbot.transaksi.invoice');
+        Route::post('/transaksi/{transaksi}/update-status', [ChatbotController::class, 'transaksiUpdateStatus'])->name('admin.chatbot.transaksi.update-status');
+        Route::post('/transaksi/{transaksi}/force-paid', [ChatbotController::class, 'transaksiForcePaid'])->name('admin.chatbot.transaksi.force-paid');
+        Route::post('/transaksi/status', [ChatbotController::class, 'transaksiStatusPolling'])->name('admin.chatbot.transaksi.status');
+        Route::get('/percakapan/{pelanggan}', [ChatbotController::class, 'percakapan'])->name('admin.chatbot.percakapan');
+        Route::post('/notifikasi/{notifikasi}/baca', [ChatbotController::class, 'notifikasiBaca'])->name('admin.chatbot.notifikasi.baca');
+
+        // WhatsApp Chat (Bot ↔ Human)
+        Route::get('/chat', [ChatbotController::class, 'chat'])->name('admin.chatbot.chat');
+        Route::get('/chat/{pelanggan}/messages', [ChatbotController::class, 'chatMessages'])->name('admin.chatbot.chat.messages');
+        Route::post('/chat/send', [ChatbotController::class, 'chatSend'])->name('admin.chatbot.chat.send');
+        Route::post('/chat/toggle', [ChatbotController::class, 'chatToggle'])->name('admin.chatbot.chat.toggle');
+        Route::delete('/chat/{pelanggan}/clear', [ChatbotController::class, 'chatClear'])->name('admin.chatbot.chat.clear');
+    });
+});

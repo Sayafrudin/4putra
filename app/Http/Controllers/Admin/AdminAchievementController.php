@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Achievement;
 use App\Models\AchievementImage;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -64,17 +65,20 @@ class AdminAchievementController extends Controller
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $file) {
-                $filename = time().'_'.$file->getClientOriginalName();
                 $ext = strtolower($file->getClientOriginalExtension());
 
                 if (in_array($ext, ['mp4', 'mov', 'webm', 'avi'])) {
-                    $file->storeAs('public/achievements/videos', $filename);
-                    $achievement->update(['video_file' => $filename]);
+                    $uploaded = Cloudinary::uploadVideo($file->getRealPath(), [
+                        'folder' => '4putra/achievements/videos',
+                    ]);
+                    $achievement->update(['video_file' => $uploaded->getSecurePath()]);
                 } else {
-                    $file->storeAs('public/achievements', $filename);
+                    $uploaded = Cloudinary::upload($file->getRealPath(), [
+                        'folder' => '4putra/achievements',
+                    ]);
                     AchievementImage::create([
                         'achievement_id' => $achievement->id,
-                        'image_path' => $filename,
+                        'image_path' => $uploaded->getSecurePath(),
                     ]);
                 }
             }
@@ -86,7 +90,7 @@ class AdminAchievementController extends Controller
             'Achievements',
             null,
             $achievement->getAttributes(),
-            $achievement->images->pluck('image_path')->map(fn ($p) => 'storage/achievements/'.$p)->toArray()
+            $achievement->images->pluck('image_path')->toArray()
         );
 
         return response()->json([
@@ -101,11 +105,7 @@ class AdminAchievementController extends Controller
 
         $imagePreviews = [];
         foreach ($achievement->images as $image) {
-            $imagePreviews[] = 'storage/achievements/'.$image->image_path;
-            Storage::delete('public/achievements/'.$image->image_path);
-        }
-        if ($achievement->video_file) {
-            Storage::delete('public/achievements/videos/'.$achievement->video_file);
+            $imagePreviews[] = $image->image_path;
         }
 
         $this->logDataChange(
@@ -159,25 +159,24 @@ class AdminAchievementController extends Controller
         $imagePreviews = [];
 
         if ($request->input('remove_video') == '1' && $achievement->video_file) {
-            Storage::delete('public/achievements/videos/'.$achievement->video_file);
             $achievement->update(['video_file' => null]);
         }
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $file) {
-                $filename = time().'_'.$file->getClientOriginalName();
                 $ext = strtolower($file->getClientOriginalExtension());
 
                 if (in_array($ext, ['mp4', 'mov', 'webm', 'avi'])) {
-                    if ($achievement->video_file) {
-                        Storage::delete('public/achievements/videos/'.$achievement->video_file);
-                    }
-                    $file->storeAs('public/achievements/videos', $filename);
-                    $achievement->update(['video_file' => $filename]);
+                    $uploaded = Cloudinary::uploadVideo($file->getRealPath(), [
+                        'folder' => '4putra/achievements/videos',
+                    ]);
+                    $achievement->update(['video_file' => $uploaded->getSecurePath()]);
                 } else {
-                    $file->storeAs('public/achievements', $filename);
-                    AchievementImage::create(['achievement_id' => $achievement->id, 'image_path' => $filename]);
-                    $imagePreviews[] = 'storage/achievements/'.$filename;
+                    $uploaded = Cloudinary::upload($file->getRealPath(), [
+                        'folder' => '4putra/achievements',
+                    ]);
+                    AchievementImage::create(['achievement_id' => $achievement->id, 'image_path' => $uploaded->getSecurePath()]);
+                    $imagePreviews[] = $uploaded->getSecurePath();
                 }
             }
         }

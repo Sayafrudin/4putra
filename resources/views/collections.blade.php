@@ -23,7 +23,7 @@
             <div class="flex flex-wrap items-center justify-center gap-10">
                 @foreach ($items as $item)
                     <x-card
-                        gambar="{{ $item->image_path ? asset('storage/collections/' . $item->image_path) : asset('img/placeholder.jpg') }}"
+                        gambar="{{ $item->image_path ? (str_starts_with($item->image_path, 'http') ? $item->image_path : asset('storage/collections/' . $item->image_path)) : asset('img/placeholder.jpg') }}"
                         name="{{ app()->getLocale() == 'en' && $item->name_en ? $item->name_en : $item->name }}"
                         SName="{{ $item->scientific_name ?: '' }}">
                     </x-card>

@@ -48,7 +48,8 @@
                                     @if ($achievement->images->count() > 0)
                                         <div class="flex flex-wrap gap-1.5 max-w-[180px]">
                                             @foreach ($achievement->images as $image)
-                                                <img src="{{ asset('storage/achievements/' . $image->image_path) }}"
+                                                @php $achImg = str_starts_with($image->image_path, 'http') ? $image->image_path : asset('storage/achievements/' . $image->image_path); @endphp
+                                                <img src="{{ $achImg }}"
                                                     onclick="zoomImage(this.src)"
                                                     class="w-11 h-11 rounded border border-gray-700 object-cover cursor-pointer hover:scale-125 hover:z-10 hover:border-[#E62C37] shadow-sm transition-all duration-200 relative"
                                                     alt="Foto {{ $achievement->title }}" title="Klik untuk preview">

@@ -78,6 +78,9 @@ Route::prefix('admin')->middleware(['admin.auth', 'admin.domain'])->group(functi
 
     Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
 
+    // Logout dari admin domain
+    Route::post('/logout', [LogoutController::class, 'logout'])->name('admin.logout');
+
     // Profil akun
     Route::get('/profile', [ProfileController::class, 'edit'])->name('admin.profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('admin.profile.update');

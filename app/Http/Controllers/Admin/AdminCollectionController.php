@@ -29,15 +29,12 @@ class AdminCollectionController extends Controller
                 'name' => 'required|string|max:255',
                 'category' => 'required|string|max:255',
                 'scientific_name' => 'nullable|string|max:255',
-                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             ]);
 
+            // Gambar di-upload langsung dari browser ke Cloudinary
             $imagePath = null;
-            if ($request->hasFile('image')) {
-                $uploaded = Cloudinary::upload($request->file('image')->getRealPath(), [
-                    'folder' => '4putra/collections',
-                ]);
-                $imagePath = $uploaded->getSecurePath();
+            if ($request->has('cloudinary_urls') && !empty($request->cloudinary_urls[0])) {
+                $imagePath = $request->cloudinary_urls[0];
             }
 
             Collection::create([
@@ -78,7 +75,6 @@ class AdminCollectionController extends Controller
                 'name' => 'required|string|max:255',
                 'category' => 'required|string|max:255',
                 'scientific_name' => 'nullable|string|max:255',
-                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             ]);
 
             $oldValues = $collection->getOriginal();
@@ -86,18 +82,12 @@ class AdminCollectionController extends Controller
             $imagePreviews = [];
 
             if ($request->input('remove_image') == '1') {
-                // Hapus gambar lama dari Cloudinary
-                if ($collection->image_path && str_starts_with($collection->image_path, 'http')) {
-                    $this->deleteCloudinaryImage($collection->image_path);
-                }
                 $data['image_path'] = null;
             }
 
-            if ($request->hasFile('image')) {
-                $uploaded = Cloudinary::upload($request->file('image')->getRealPath(), [
-                    'folder' => '4putra/collections',
-                ]);
-                $data['image_path'] = $uploaded->getSecurePath();
+            // Gambar di-upload langsung dari browser ke Cloudinary
+            if ($request->has('cloudinary_urls') && !empty($request->cloudinary_urls[0])) {
+                $data['image_path'] = $request->cloudinary_urls[0];
                 $imagePreviews[] = $data['image_path'];
             }
 

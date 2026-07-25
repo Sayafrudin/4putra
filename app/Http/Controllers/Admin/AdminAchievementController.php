@@ -31,10 +31,8 @@ class AdminAchievementController extends Controller
                 'year' => 'required|integer',
                 'date' => 'required|date',
                 'description' => 'required|string',
-                'images.*' => 'file|mimes:jpeg,png,jpg,gif,mp4,mov,webm,avi|max:51200',
             ]);
 
-            // Proses external link: pastikan format JSON array
             $externalLinks = $request->external_link;
             if (is_string($externalLinks)) {
                 $externalLinks = json_decode($externalLinks, true) ?: [];
@@ -44,7 +42,6 @@ class AdminAchievementController extends Controller
             }
             $externalLinks = array_values(array_filter($externalLinks, fn ($l) => filter_var($l, FILTER_VALIDATE_URL)));
 
-            // Proses video URL: pastikan format JSON array
             $videoUrls = $request->video_url;
             if (is_string($videoUrls)) {
                 $videoUrls = json_decode($videoUrls, true) ?: [];
@@ -67,24 +64,19 @@ class AdminAchievementController extends Controller
                 'external_link' => !empty($externalLinks) ? json_encode($externalLinks) : null,
             ]);
 
-            if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $file) {
-                    $ext = strtolower($file->getClientOriginalExtension());
+            // Gambar/video di-upload langsung dari browser ke Cloudinary
+            $cloudUrls = $request->input('cloudinary_urls', []);
+            $cloudTypes = $request->input('cloudinary_types', []);
 
-                    if (in_array($ext, ['mp4', 'mov', 'webm', 'avi'])) {
-                        $uploaded = Cloudinary::uploadVideo($file->getRealPath(), [
-                            'folder' => '4putra/achievements/videos',
-                        ]);
-                        $achievement->update(['video_file' => $uploaded->getSecurePath()]);
-                    } else {
-                        $uploaded = Cloudinary::upload($file->getRealPath(), [
-                            'folder' => '4putra/achievements',
-                        ]);
-                        AchievementImage::create([
-                            'achievement_id' => $achievement->id,
-                            'image_path' => $uploaded->getSecurePath(),
-                        ]);
-                    }
+            foreach ($cloudUrls as $i => $url) {
+                $type = $cloudTypes[$i] ?? 'image';
+                if ($type === 'video') {
+                    $achievement->update(['video_file' => $url]);
+                } else {
+                    AchievementImage::create([
+                        'achievement_id' => $achievement->id,
+                        'image_path' => $url,
+                    ]);
                 }
             }
 
@@ -143,7 +135,6 @@ class AdminAchievementController extends Controller
             $achievement = Achievement::findOrFail($id);
             $oldValues = $achievement->getOriginal();
 
-            // Proses external link: pastikan format JSON array
             $externalLinks = $request->external_link;
             if (is_string($externalLinks)) {
                 $externalLinks = json_decode($externalLinks, true) ?: [];
@@ -153,7 +144,6 @@ class AdminAchievementController extends Controller
             }
             $externalLinks = array_values(array_filter($externalLinks, fn ($l) => filter_var($l, FILTER_VALIDATE_URL)));
 
-            // Proses video URL: pastikan format JSON array
             $videoUrls = $request->video_url;
             if (is_string($videoUrls)) {
                 $videoUrls = json_decode($videoUrls, true) ?: [];
@@ -178,22 +168,17 @@ class AdminAchievementController extends Controller
                 $achievement->update(['video_file' => null]);
             }
 
-            if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $file) {
-                    $ext = strtolower($file->getClientOriginalExtension());
+            // Gambar/video di-upload langsung dari browser ke Cloudinary
+            $cloudUrls = $request->input('cloudinary_urls', []);
+            $cloudTypes = $request->input('cloudinary_types', []);
 
-                    if (in_array($ext, ['mp4', 'mov', 'webm', 'avi'])) {
-                        $uploaded = Cloudinary::uploadVideo($file->getRealPath(), [
-                            'folder' => '4putra/achievements/videos',
-                        ]);
-                        $achievement->update(['video_file' => $uploaded->getSecurePath()]);
-                    } else {
-                        $uploaded = Cloudinary::upload($file->getRealPath(), [
-                            'folder' => '4putra/achievements',
-                        ]);
-                        AchievementImage::create(['achievement_id' => $achievement->id, 'image_path' => $uploaded->getSecurePath()]);
-                        $imagePreviews[] = $uploaded->getSecurePath();
-                    }
+            foreach ($cloudUrls as $i => $url) {
+                $type = $cloudTypes[$i] ?? 'image';
+                if ($type === 'video') {
+                    $achievement->update(['video_file' => $url]);
+                } else {
+                    AchievementImage::create(['achievement_id' => $achievement->id, 'image_path' => $url]);
+                    $imagePreviews[] = $url;
                 }
             }
 

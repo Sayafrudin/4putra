@@ -2,38 +2,51 @@
  * achievements.js
  * Logic untuk halaman Monitoring Data Achievements (Admin Dashboard).
  * File ini MURNI JavaScript -- tidak ada syntax Blade di sini.
- * Data dinamis dari Laravel diambil dari window.AchievementsConfig
- * (didefinisikan lewat inline script kecil di index.blade.php).
+ * Data dinamis dari Laravel diambil dari window.AchievementsConfig.
  *
- * Toast notification menggunakan shared toast.js (dimuat sebelum file ini).
- *
- * Taruh file ini di: public/js/achievements.js
+ * Upload gambar/video langsung dari browser ke Cloudinary (client-side),
+ * bypass server Vercel untuk file upload.
  */
 
 (function () {
     'use strict';
 
-    const CFG = window.AchievementsConfig || {};
+    var CFG = window.AchievementsConfig || {};
+    var CLOUD_NAME = 'kjcs8wz3';
+    var UPLOAD_PRESET = '4putra_unsigned';
+
     function showToast(type, title, msg) {
         if (window.showToast) { window.showToast(type, title, msg); }
         else { console.warn('[TOAST]', type, title, msg); }
     }
 
-    // =============================================
-    // CACHE DOM REFERENCES SEKALI SAJA
-    // =============================================
-    const els = {
+    function uploadToCloudinary(file, folder) {
+        var url = 'https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/upload';
+        var fd = new FormData();
+        fd.append('file', file);
+        fd.append('upload_preset', UPLOAD_PRESET);
+        if (folder) fd.append('folder', folder);
+
+        return fetch(url, { method: 'POST', body: fd })
+            .then(function (res) {
+                if (!res.ok) throw new Error('Upload Cloudinary gagal: HTTP ' + res.status);
+                return res.json();
+            })
+            .then(function (data) {
+                if (!data.secure_url) throw new Error('Cloudinary tidak mengembalikan URL');
+                return { url: data.secure_url, resource_type: data.resource_type || 'image' };
+            });
+    }
+
+    var els = {
         formCreate: document.getElementById('form-create-achievements'),
         formEdit: document.getElementById('form-edit-action'),
         formDelete: document.getElementById('form-delete-action'),
     };
 
-    let dzCreate = null;
-    let dzEdit = null;
+    var dzCreate = null;
+    var dzEdit = null;
 
-    // =============================================
-    // MODAL HELPERS (optimized — no animation overhead)
-    // =============================================
     function showModal(type) {
         var modal = document.getElementById('modal-' + type);
         if (!modal) return;
@@ -51,7 +64,6 @@
 
     function openCreateModal() {
         showModal('create');
-        // Init Dropzone SETELAH modal visible
         requestAnimationFrame(function () {
             initDzCreate();
             if (dzCreate) { try { dzCreate.removeAllFiles(true); } catch (e) {} }
@@ -64,9 +76,6 @@
         showModal('delete');
     }
 
-    // =============================================
-    // EDIT MODAL: isi form + render galeri foto lama
-    // =============================================
     function openEditModal(achievement) {
         document.getElementById('edit-title').value = achievement.title;
         document.getElementById('edit-title-en').value = achievement.title_en || '';
@@ -78,13 +87,9 @@
         document.getElementById('edit-description-en').value = achievement.description_en || '';
         els.formEdit.action = CFG.achievementsBaseUrl + '/' + achievement.id;
 
-        // Populate video URLs (multi)
         populateLinkList('edit-video-url-list', achievement.video_url);
-
-        // Populate external links (multi)
         populateLinkList('edit-external-link-list', achievement.external_link);
 
-        // Tampilkan info video yang sudah ada
         var videoWrap = document.getElementById('edit-existing-video-wrap');
         var videoName = document.getElementById('edit-video-name');
         if (videoWrap && videoName) {
@@ -98,7 +103,6 @@
 
         renderExistingPhotos(achievement.images || []);
         showModal('edit');
-        // Init Dropzone SETELAH modal visible
         requestAnimationFrame(function () {
             initDzEdit();
             if (dzEdit) { try { dzEdit.removeAllFiles(true); } catch (e) {} }
@@ -106,7 +110,7 @@
     }
 
     function renderExistingPhotos(images) {
-        const wrap = document.getElementById('edit-existing-photos');
+        var wrap = document.getElementById('edit-existing-photos');
         wrap.innerHTML = '';
 
         if (!images.length) {
@@ -114,9 +118,9 @@
             return;
         }
 
-        const frag = document.createDocumentFragment();
+        var frag = document.createDocumentFragment();
         images.forEach(function (img) {
-            const thumb = document.createElement('div');
+            var thumb = document.createElement('div');
             thumb.className = 'relative group';
             thumb.dataset.imageId = img.id;
             var imgSrc = img.image_path.startsWith('http') ? img.image_path : CFG.storageUrl + '/' + img.image_path;
@@ -132,91 +136,63 @@
         wrap.appendChild(frag);
     }
 
-    // Event delegation: 1 listener untuk semua tombol hapus foto
-    let pendingDeleteThumb = null;
-    let pendingDeleteImageId = null;
+    var pendingDeleteThumb = null;
+    var pendingDeleteImageId = null;
 
-    const existingPhotosWrap = document.getElementById('edit-existing-photos');
+    var existingPhotosWrap = document.getElementById('edit-existing-photos');
     if (existingPhotosWrap) {
         existingPhotosWrap.addEventListener('click', function (e) {
-            const btn = e.target.closest('.btn-delete-existing-photo');
+            var btn = e.target.closest('.btn-delete-existing-photo');
             if (!btn) return;
-
-            const thumb = btn.closest('[data-image-id]');
-            const imageId = thumb.dataset.imageId;
-
-            // Simpan state dan tampilkan modal konfirmasi
+            var thumb = btn.closest('[data-image-id]');
             pendingDeleteThumb = thumb;
-            pendingDeleteImageId = imageId;
+            pendingDeleteImageId = thumb.dataset.imageId;
             showModal('confirm-delete-photo');
         });
     }
 
-    // Tombol konfirmasi hapus foto di modal
-    const confirmDeletePhotoBtn = document.getElementById('confirm-delete-photo-btn');
+    var confirmDeletePhotoBtn = document.getElementById('confirm-delete-photo-btn');
     if (confirmDeletePhotoBtn) {
         confirmDeletePhotoBtn.addEventListener('click', function () {
             if (!pendingDeleteThumb || !pendingDeleteImageId) return;
-
             closeModal('confirm-delete-photo');
-            const thumb = pendingDeleteThumb;
-            const imageId = pendingDeleteImageId;
-            const btn = thumb.querySelector('.btn-delete-existing-photo');
-
+            var thumb = pendingDeleteThumb;
+            var imageId = pendingDeleteImageId;
+            var btn = thumb.querySelector('.btn-delete-existing-photo');
             pendingDeleteThumb = null;
             pendingDeleteImageId = null;
-
             btn.disabled = true;
             thumb.style.opacity = '0.4';
 
             fetch(CFG.imagesDeleteBaseUrl + '/' + imageId, {
                 method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': CFG.csrfToken,
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                }
+                headers: { 'X-CSRF-TOKEN': CFG.csrfToken, 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
             })
                 .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
-                .then(function () {
-                    thumb.remove();
-                    showToast('success', 'Terhapus', 'Foto berhasil dihapus dari galeri.');
-                })
+                .then(function () { thumb.remove(); showToast('success', 'Terhapus', 'Foto berhasil dihapus dari galeri.'); })
                 .catch(function (err) {
                     console.error('Delete photo error:', err);
-                    thumb.style.opacity = '1';
-                    btn.disabled = false;
+                    thumb.style.opacity = '1'; btn.disabled = false;
                     showToast('error', 'Gagal', 'Foto gagal dihapus, coba lagi.');
                 });
         });
     }
 
-    // =============================================
-    // ZOOM IMAGE (tombol close + Esc)
-    // =============================================
-
-    // Hapus video handler — tampilkan modal konfirmasi dulu
     var btnDeleteVideo = document.getElementById('btn-delete-video');
     if (btnDeleteVideo) {
-        btnDeleteVideo.addEventListener('click', function () {
-            showModal('confirm-delete-video');
-        });
+        btnDeleteVideo.addEventListener('click', function () { showModal('confirm-delete-video'); });
     }
 
     var confirmDeleteVideoBtn = document.getElementById('confirm-delete-video-btn');
     if (confirmDeleteVideoBtn) {
         confirmDeleteVideoBtn.addEventListener('click', function () {
             closeModal('confirm-delete-video');
-            // Tambah hidden input untuk flag hapus video
             var existing = els.formEdit.querySelector('input[name="remove_video"]');
             if (!existing) {
                 var input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'remove_video';
-                input.value = '1';
+                input.type = 'hidden'; input.name = 'remove_video'; input.value = '1';
                 els.formEdit.appendChild(input);
             }
-            // Sembunyikan video wrap
             var videoWrap = document.getElementById('edit-existing-video-wrap');
             if (videoWrap) videoWrap.classList.add('hidden');
             showToast('success', 'Siap', 'Video akan dihapus saat Anda menyimpan perubahan.');
@@ -224,15 +200,14 @@
     }
 
     function zoomImage(src) {
-        const overlay = document.createElement('div');
+        var overlay = document.createElement('div');
         overlay.className = 'fixed inset-0 z-[100] bg-gray-950/90 flex items-center justify-center p-4 cursor-zoom-out';
         overlay.innerHTML =
             '<button type="button" id="zoom-close-btn" ' +
             'class="absolute top-5 right-5 w-11 h-11 flex items-center justify-center bg-[#2d3748] hover:bg-[#E62C37] text-white rounded shadow-lg font-bold text-2xl z-[101]">&times;</button>' +
             '<img src="' + src + '" id="zoomed-img" class="max-w-full max-h-[85vh] shadow-2xl rounded border border-gray-800 opacity-0 transition-opacity duration-300">';
         document.body.appendChild(overlay);
-
-        const img = overlay.querySelector('#zoomed-img');
+        var img = overlay.querySelector('#zoomed-img');
         img.addEventListener('error', function () { img.style.border = '2px solid #E62C37'; });
         requestAnimationFrame(function () { img.style.opacity = '1'; });
 
@@ -241,26 +216,22 @@
             document.removeEventListener('keydown', escHandler);
         }
         function escHandler(e) { if (e.key === 'Escape') closeZoom(); }
-
         overlay.addEventListener('click', closeZoom);
-        overlay.querySelector('#zoom-close-btn').addEventListener('click', function (e) {
-            e.stopPropagation();
-            closeZoom();
-        });
+        overlay.querySelector('#zoom-close-btn').addEventListener('click', function (e) { e.stopPropagation(); closeZoom(); });
         document.addEventListener('keydown', escHandler);
     }
 
     // =============================================
     // VALIDASI CREATE
     // =============================================
-    const submitCreateBtn = document.getElementById('submit-create-btn');
+    var submitCreateBtn = document.getElementById('submit-create-btn');
     if (submitCreateBtn) {
         submitCreateBtn.addEventListener('click', function () {
-            let isValid = true;
-            const title = document.getElementById('create-input-title').value.trim();
-            const year = document.getElementById('create-input-year').value.trim();
-            const date = document.getElementById('create-input-date').value.trim();
-            const desc = document.getElementById('create-input-description').value.trim();
+            var isValid = true;
+            var title = document.getElementById('create-input-title').value.trim();
+            var year = document.getElementById('create-input-year').value.trim();
+            var date = document.getElementById('create-input-date').value.trim();
+            var desc = document.getElementById('create-input-description').value.trim();
 
             document.querySelectorAll('[id^="error-create-"]').forEach(function (el) { el.classList.add('hidden'); });
 
@@ -278,25 +249,59 @@
                 return;
             }
 
-            if (dzCreate && dzCreate.getQueuedFiles().length > 0) {
-                dzCreate.processQueue();
-            } else {
-                els.formCreate.submit();
-            }
+            var btn = submitCreateBtn;
+            btn.disabled = true;
+            btn.textContent = 'Mengupload...';
+
+            var files = dzCreate.getQueuedFiles();
+            var folder = '4putra/achievements';
+
+            var uploads = files.map(function (f) { return uploadToCloudinary(f, folder); });
+            Promise.all(uploads)
+                .then(function (results) {
+                    var fd = new FormData(els.formCreate);
+                    results.forEach(function (r) {
+                        fd.append('cloudinary_urls[]', r.url);
+                        fd.append('cloudinary_types[]', r.resource_type);
+                    });
+                    fd.delete('images');
+
+                    return fetch(CFG.storeUrl, {
+                        method: 'POST',
+                        body: fd,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': CFG.csrfToken },
+                    });
+                })
+                .then(function (r) {
+                    if (!r.ok) return r.json().then(function (e) { throw new Error(e.message || 'Server error'); });
+                    return r.json();
+                })
+                .then(function () {
+                    showToast('success', 'Berhasil!', 'Portofolio baru aviary telah ditambahkan.');
+                    setTimeout(function () { location.reload(); }, 1000);
+                })
+                .catch(function (e) {
+                    console.error('Create error:', e);
+                    showToast('error', 'Gagal!', e.message || 'Terjadi kesalahan saat upload foto.');
+                })
+                .finally(function () {
+                    btn.disabled = false;
+                    btn.textContent = 'Simpan Data';
+                });
         });
     }
 
     // =============================================
     // EDIT: validasi -> KONFIRMASI -> submit
     // =============================================
-    const submitEditBtn = document.getElementById('submit-edit-btn');
+    var submitEditBtn = document.getElementById('submit-edit-btn');
     if (submitEditBtn) {
         submitEditBtn.addEventListener('click', function () {
-            let isValid = true;
-            const title = document.getElementById('edit-title').value.trim();
-            const year = document.getElementById('edit-year').value.trim();
-            const date = document.getElementById('edit-date').value.trim();
-            const desc = document.getElementById('edit-description').value.trim();
+            var isValid = true;
+            var title = document.getElementById('edit-title').value.trim();
+            var year = document.getElementById('edit-year').value.trim();
+            var date = document.getElementById('edit-date').value.trim();
+            var desc = document.getElementById('edit-description').value.trim();
 
             document.querySelectorAll('[id^="error-edit-"]').forEach(function (el) { el.classList.add('hidden'); });
 
@@ -314,36 +319,58 @@
         });
     }
 
-    const confirmUpdateBtn = document.getElementById('confirm-update-proceed-btn');
+    var confirmUpdateBtn = document.getElementById('confirm-update-proceed-btn');
     if (confirmUpdateBtn) {
         confirmUpdateBtn.addEventListener('click', function () {
             closeModal('confirm-update');
 
-            const form = els.formEdit;
-            if (dzEdit && dzEdit.getQueuedFiles().length > 0) {
-                dzEdit.options.url = form.action;
-                dzEdit.processQueue();
-            } else {
-                fetch(form.action, {
-                    method: 'POST',
-                    body: new FormData(form),
-                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
-                })
-                    .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
-                    .then(function () {
-                        showToast('success', 'Berhasil Diubah!', 'Data pencapaian telah diperbarui.');
-                        setTimeout(function () { location.reload(); }, 1000);
-                    })
-                    .catch(function (err) {
-                        console.error('Update error:', err);
-                        showToast('error', 'Gagal!', 'Terjadi kesalahan saat memperbarui data.');
+            var btn = submitEditBtn;
+            btn.disabled = true;
+            btn.textContent = 'Menyimpan...';
+
+            var files = dzEdit ? dzEdit.getQueuedFiles() : [];
+            var folder = '4putra/achievements';
+
+            var uploadPromise = files.length > 0
+                ? Promise.all(files.map(function (f) { return uploadToCloudinary(f, folder); }))
+                : Promise.resolve([]);
+
+            uploadPromise
+                .then(function (results) {
+                    var fd = new FormData(els.formEdit);
+                    results.forEach(function (r) {
+                        fd.append('cloudinary_urls[]', r.url);
+                        fd.append('cloudinary_types[]', r.resource_type);
                     });
-            }
+                    fd.delete('images');
+
+                    return fetch(els.formEdit.action, {
+                        method: 'POST',
+                        body: fd,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': CFG.csrfToken },
+                    });
+                })
+                .then(function (r) {
+                    if (!r.ok) return r.json().then(function (e) { throw new Error(e.message || 'Server error'); });
+                    return r.json();
+                })
+                .then(function () {
+                    showToast('success', 'Berhasil Diubah!', 'Data pencapaian telah diperbarui.');
+                    setTimeout(function () { location.reload(); }, 1000);
+                })
+                .catch(function (e) {
+                    console.error('Update error:', e);
+                    showToast('error', 'Gagal!', e.message || 'Terjadi kesalahan saat memperbarui data.');
+                })
+                .finally(function () {
+                    btn.disabled = false;
+                    btn.textContent = 'Perbarui Data';
+                });
         });
     }
 
     // =============================================
-    // DROPZONE — lazy init (setelah modal visible)
+    // DROPZONE — lazy init
     // =============================================
     var dzCreateInitialized = false;
     var dzEditInitialized = false;
@@ -352,14 +379,11 @@
         if (dzCreateInitialized) return;
         try {
             var Dropzone = window.Dropzone;
-            if (!Dropzone || !els.formCreate) {
-                console.warn('[INFO] Dropzone tidak ter-load, fallback ke form submit biasa.');
-                return;
-            }
+            if (!Dropzone || !els.formCreate) { console.warn('[INFO] Dropzone tidak ter-load.'); return; }
             Dropzone.autoDiscover = false;
 
             dzCreate = new Dropzone('#dropzone-create', {
-                url: CFG.storeUrl,
+                url: '/',
                 autoProcessQueue: false,
                 uploadMultiple: true,
                 parallelUploads: 10,
@@ -369,38 +393,6 @@
                 addRemoveLinks: true,
                 dictDefaultMessage: 'Tarik file foto/video ke sini atau klik untuk memilih',
                 dictRemoveFile: 'Hapus',
-                headers: { 'X-CSRF-TOKEN': CFG.csrfToken, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
-            });
-            dzCreate.on('sendingmultiple', function (data, xhr, fd) {
-                var formEls = els.formCreate.elements;
-                for (var i = 0; i < formEls.length; i++) {
-                    var el = formEls[i];
-                    if (!el.name || el.type === 'file') continue;
-                    if (el.type === 'checkbox' || el.type === 'radio') {
-                        if (el.checked) fd.append(el.name, el.value);
-                    } else {
-                        fd.append(el.name, el.value);
-                    }
-                }
-            });
-            dzCreate.on('successmultiple', function (files, res) {
-                showToast('success', 'Berhasil!', 'Portofolio baru aviary telah ditambahkan.');
-                setTimeout(function () { location.reload(); }, 1000);
-            });
-            dzCreate.on('errormultiple', function (files, res) {
-                console.error('Dropzone create error:', res);
-                var msg = 'Terjadi kesalahan saat upload foto.';
-                if (typeof res === 'object' && res !== null) {
-                    msg = res.message || res.error || (res.errors ? Object.values(res.errors).flat().join(', ') : msg);
-                } else if (typeof res === 'string') {
-                    try {
-                        var parsed = JSON.parse(res);
-                        msg = parsed.message || parsed.error || msg;
-                    } catch (e) {
-                        msg = res;
-                    }
-                }
-                showToast('error', 'Gagal!', msg);
             });
             dzCreateInitialized = true;
         } catch (err) {
@@ -426,23 +418,6 @@
                 addRemoveLinks: true,
                 dictDefaultMessage: 'Tarik file foto/video baru ke sini',
                 dictRemoveFile: 'Hapus',
-                headers: { 'X-CSRF-TOKEN': CFG.csrfToken, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
-            });
-            dzEdit.on('sendingmultiple', function (data, xhr, fd) {
-                var formEls = els.formEdit.elements;
-                for (var i = 0; i < formEls.length; i++) {
-                    var el = formEls[i];
-                    if (!el.name || el.type === 'file') continue;
-                    if (el.type === 'checkbox' || el.type === 'radio') {
-                        if (el.checked) fd.append(el.name, el.value);
-                    } else {
-                        fd.append(el.name, el.value);
-                    }
-                }
-            });
-            dzEdit.on('successmultiple', function () {
-                showToast('success', 'Berhasil Diubah!', 'Data pencapaian dan galeri foto telah diperbarui.');
-                setTimeout(function () { location.reload(); }, 1000);
             });
             dzEditInitialized = true;
         } catch (err) {
@@ -499,13 +474,11 @@
     window.hapusLinkItem = hapusLinkItem;
 
     // =============================================
-    // EXPOSE FUNGSI YANG DIPANGGIL DARI onclick="" DI BLADE
+    // EXPOSE FUNGSI
     // =============================================
     window.openCreateModal = openCreateModal;
     window.openEditModal = openEditModal;
     window.openDeleteModal = openDeleteModal;
     window.closeModal = closeModal;
     window.zoomImage = zoomImage;
-
-    // Session flash ditangani oleh admin.blade.php, tidak perlu duplikat di sini
 })();

@@ -2,10 +2,32 @@
     'use strict';
 
     var CFG = window.CollectionsConfig || {};
+    var CLOUD_NAME = 'kjcs8wz3';
+    var UPLOAD_PRESET = '4putra_unsigned';
+
     function showToast(type, title, msg) {
         if (window.showToast) { window.showToast(type, title, msg); }
         else { console.warn('[TOAST]', type, title, msg); }
     }
+
+    function uploadToCloudinary(file, folder) {
+        var url = 'https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/upload';
+        var fd = new FormData();
+        fd.append('file', file);
+        fd.append('upload_preset', UPLOAD_PRESET);
+        if (folder) fd.append('folder', folder);
+
+        return fetch(url, { method: 'POST', body: fd })
+            .then(function (res) {
+                if (!res.ok) throw new Error('Upload Cloudinary gagal: HTTP ' + res.status);
+                return res.json();
+            })
+            .then(function (data) {
+                if (!data.secure_url) throw new Error('Cloudinary tidak mengembalikan URL');
+                return data.secure_url;
+            });
+    }
+
     var els = {
         formCreate: document.getElementById('form-create-collection'),
         formEdit: document.getElementById('form-edit-collection'),
@@ -18,9 +40,6 @@
     var dzEditInitialized = false;
     var pendingDeletePhotoEl = null;
 
-    // =============================================
-    // MODAL HELPERS (optimized — no animation overhead)
-    // =============================================
     function showModal(type) {
         var modal = document.getElementById('modal-' + type);
         if (!modal) return;
@@ -38,9 +57,6 @@
 
     window.closeModal = closeModal;
 
-    // =============================================
-    // DROPZONE — lazy init (setelah modal visible)
-    // =============================================
     function initDzCreate() {
         if (dzCreateInitialized) return;
         var Dropzone = window.Dropzone;
@@ -48,43 +64,15 @@
         Dropzone.autoDiscover = false;
 
         dzCreate = new Dropzone('#dz-collection-create', {
-            url: CFG.storeUrl,
+            url: '/',
             autoProcessQueue: false,
             uploadMultiple: false,
             paramName: 'image',
-            maxFilesize: 2,
+            maxFilesize: 10,
             acceptedFiles: 'image/jpeg,image/png,image/jpg,image/gif,image/webp',
             addRemoveLinks: true,
             dictDefaultMessage: 'Tarik file foto ke sini atau klik untuk memilih',
             dictRemoveFile: 'Hapus',
-            headers: { 'X-CSRF-TOKEN': CFG.csrfToken, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
-        });
-        dzCreate.on('sending', function (file, xhr, fd) {
-            var formEls = els.formCreate.elements;
-            for (var i = 0; i < formEls.length; i++) {
-                var el = formEls[i];
-                if (!el.name || el.type === 'file') continue;
-                fd.append(el.name, el.value);
-            }
-        });
-        dzCreate.on('success', function (file, res) {
-            showToast('success', 'Berhasil!', 'Koleksi baru telah ditambahkan.');
-            setTimeout(function () { location.reload(); }, 1000);
-        });
-        dzCreate.on('error', function (file, res) {
-            console.error('Dropzone create error:', res);
-            var msg = 'Terjadi kesalahan saat upload.';
-            if (typeof res === 'object' && res !== null) {
-                msg = res.message || res.error || (res.errors ? Object.values(res.errors).flat().join(', ') : msg);
-            } else if (typeof res === 'string') {
-                try {
-                    var parsed = JSON.parse(res);
-                    msg = parsed.message || parsed.error || msg;
-                } catch (e) {
-                    msg = res;
-                }
-            }
-            showToast('error', 'Gagal!', msg);
         });
         dzCreateInitialized = true;
     }
@@ -100,39 +88,11 @@
             autoProcessQueue: false,
             uploadMultiple: false,
             paramName: 'image',
-            maxFilesize: 2,
+            maxFilesize: 10,
             acceptedFiles: 'image/jpeg,image/png,image/jpg,image/gif,image/webp',
             addRemoveLinks: true,
             dictDefaultMessage: 'Tarik file foto baru ke sini',
             dictRemoveFile: 'Hapus',
-            headers: { 'X-CSRF-TOKEN': CFG.csrfToken, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
-        });
-        dzEdit.on('sending', function (file, xhr, fd) {
-            var formEls = els.formEdit.elements;
-            for (var i = 0; i < formEls.length; i++) {
-                var el = formEls[i];
-                if (!el.name || el.type === 'file') continue;
-                fd.append(el.name, el.value);
-            }
-        });
-        dzEdit.on('success', function (file, res) {
-            showToast('success', 'Berhasil!', 'Data koleksi diperbarui.');
-            setTimeout(function () { location.reload(); }, 1000);
-        });
-        dzEdit.on('error', function (file, res) {
-            console.error('Dropzone edit error:', res);
-            var msg = 'Terjadi kesalahan saat upload.';
-            if (typeof res === 'object' && res !== null) {
-                msg = res.message || res.error || (res.errors ? Object.values(res.errors).flat().join(', ') : msg);
-            } else if (typeof res === 'string') {
-                try {
-                    var parsed = JSON.parse(res);
-                    msg = parsed.message || parsed.error || msg;
-                } catch (e) {
-                    msg = res;
-                }
-            }
-            showToast('error', 'Gagal!', msg);
         });
         dzEditInitialized = true;
     }
@@ -143,7 +103,6 @@
     window.openCollectionCreateModal = function () {
         if (els.formCreate) els.formCreate.reset();
         showModal('create-collection');
-        // Init Dropzone SETELAH modal visible agar dimensi terhitung
         requestAnimationFrame(function () {
             initDzCreate();
             if (dzCreate) { try { dzCreate.removeAllFiles(true); } catch (e) {} }
@@ -159,7 +118,46 @@
             if (!document.getElementById('create-col-category').value.trim()) { document.getElementById('error-create-col-category').classList.remove('hidden'); valid = false; }
             if (dzCreate && dzCreate.getQueuedFiles().length === 0) { document.getElementById('error-create-col-photo').classList.remove('hidden'); valid = false; }
             if (!valid) { showToast('warning', 'Validasi Gagal', 'Harap lengkapi kolom yang wajib.'); return; }
-            if (dzCreate && dzCreate.getQueuedFiles().length > 0) { dzCreate.processQueue(); }
+
+            var btn = submitCreateBtn;
+            btn.disabled = true;
+            btn.textContent = 'Mengupload...';
+
+            var files = dzCreate.getQueuedFiles();
+            var folder = '4putra/collections';
+
+            // Upload ke Cloudinary dulu
+            var uploads = files.map(function (f) { return uploadToCloudinary(f, folder); });
+            Promise.all(uploads)
+                .then(function (urls) {
+                    // Kirim data + URL ke Laravel
+                    var fd = new FormData(els.formCreate);
+                    urls.forEach(function (url, i) { fd.append('cloudinary_urls[]', url); });
+                    // Hapus file dari FormData (karena kita kirim URL)
+                    fd.delete('image');
+
+                    return fetch(CFG.storeUrl, {
+                        method: 'POST',
+                        body: fd,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': CFG.csrfToken },
+                    });
+                })
+                .then(function (r) {
+                    if (!r.ok) return r.json().then(function (e) { throw new Error(e.message || 'Server error'); });
+                    return r.json();
+                })
+                .then(function () {
+                    showToast('success', 'Berhasil!', 'Koleksi baru telah ditambahkan.');
+                    setTimeout(function () { location.reload(); }, 1000);
+                })
+                .catch(function (e) {
+                    console.error('Create error:', e);
+                    showToast('error', 'Gagal!', e.message || 'Terjadi kesalahan saat upload.');
+                })
+                .finally(function () {
+                    btn.disabled = false;
+                    btn.textContent = 'Simpan';
+                });
         });
     }
 
@@ -174,7 +172,6 @@
         document.getElementById('edit-col-category-en').value = col.category_en || '';
         els.formEdit.action = CFG.collectionsBaseUrl + '/' + col.id;
 
-        // Render existing photo
         var photoWrap = document.getElementById('edit-col-existing-photo');
         if (col.image_path) {
             var imgSrc = col.image_path.startsWith('http') ? col.image_path : CFG.storageUrl + '/' + col.image_path;
@@ -186,7 +183,6 @@
         }
 
         showModal('edit-collection');
-        // Init Dropzone SETELAH modal visible
         requestAnimationFrame(function () {
             initDzEdit();
             if (dzEdit) { try { dzEdit.removeAllFiles(true); } catch (e) {} }
@@ -201,15 +197,46 @@
             if (!document.getElementById('edit-col-name').value.trim()) { document.getElementById('error-edit-col-name').classList.remove('hidden'); valid = false; }
             if (!document.getElementById('edit-col-category').value.trim()) { document.getElementById('error-edit-col-category').classList.remove('hidden'); valid = false; }
             if (!valid) { showToast('warning', 'Validasi Gagal', 'Harap lengkapi kolom yang wajib.'); return; }
-            if (dzEdit && dzEdit.getQueuedFiles().length > 0) {
-                dzEdit.options.url = els.formEdit.action;
-                dzEdit.processQueue();
-            } else {
-                fetch(els.formEdit.action, { method: 'POST', body: new FormData(els.formEdit), headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
-                    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-                    .then(function () { showToast('success', 'Berhasil!', 'Data koleksi diperbarui.'); setTimeout(function () { location.reload(); }, 1000); })
-                    .catch(function (e) { console.error(e); showToast('error', 'Gagal!', 'Terjadi kesalahan.'); });
-            }
+
+            var btn = submitEditBtn;
+            btn.disabled = true;
+            btn.textContent = 'Menyimpan...';
+
+            var files = dzEdit ? dzEdit.getQueuedFiles() : [];
+            var folder = '4putra/collections';
+
+            var uploadPromise = files.length > 0
+                ? Promise.all(files.map(function (f) { return uploadToCloudinary(f, folder); }))
+                : Promise.resolve([]);
+
+            uploadPromise
+                .then(function (urls) {
+                    var fd = new FormData(els.formEdit);
+                    urls.forEach(function (url) { fd.append('cloudinary_urls[]', url); });
+                    fd.delete('image');
+
+                    return fetch(els.formEdit.action, {
+                        method: 'POST',
+                        body: fd,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': CFG.csrfToken },
+                    });
+                })
+                .then(function (r) {
+                    if (!r.ok) return r.json().then(function (e) { throw new Error(e.message || 'Server error'); });
+                    return r.json();
+                })
+                .then(function () {
+                    showToast('success', 'Berhasil!', 'Data koleksi diperbarui.');
+                    setTimeout(function () { location.reload(); }, 1000);
+                })
+                .catch(function (e) {
+                    console.error('Edit error:', e);
+                    showToast('error', 'Gagal!', e.message || 'Terjadi kesalahan.');
+                })
+                .finally(function () {
+                    btn.disabled = false;
+                    btn.textContent = 'Perbarui';
+                });
         });
     }
 
@@ -259,6 +286,4 @@
         overlay.onclick = function () { overlay.remove(); };
         document.addEventListener('keydown', function esc(e) { if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', esc); } });
     };
-
-    // Session flash ditangani oleh admin.blade.php, tidak perlu duplikat di sini
 })();

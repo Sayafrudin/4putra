@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
@@ -14,7 +15,9 @@ class AdminUserController extends Controller
 
     public function index()
     {
-        $users = User::orderBy('created_at', 'desc')->get();
+        $users = Cache::remember('admin.users', 120, function () {
+            return User::orderBy('created_at', 'desc')->get();
+        });
 
         return view('admin.users.index', compact('users'));
     }
@@ -51,6 +54,8 @@ class AdminUserController extends Controller
         if ($request->expectsJson()) {
             return response()->json(['status' => 'OK', 'message' => 'Akun berhasil ditambahkan!']);
         }
+
+        Cache::forget('admin.users');
 
         return redirect()->route('admin.users.index')->with('success', 'Akun berhasil ditambahkan!');
     }
@@ -93,6 +98,8 @@ class AdminUserController extends Controller
             return response()->json(['status' => 'OK', 'message' => 'Akun berhasil diperbarui!']);
         }
 
+        Cache::forget('admin.users');
+
         return redirect()->route('admin.users.index')->with('success', 'Akun berhasil diperbarui!');
     }
 
@@ -122,6 +129,8 @@ class AdminUserController extends Controller
         if ($request->expectsJson()) {
             return response()->json(['status' => 'OK', 'message' => 'Akun berhasil dihapus!']);
         }
+
+        Cache::forget('admin.users');
 
         return redirect()->route('admin.users.index')->with('success', 'Akun berhasil dihapus!');
     }

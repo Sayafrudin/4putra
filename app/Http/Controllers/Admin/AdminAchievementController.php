@@ -7,6 +7,7 @@ use App\Models\Achievement;
 use App\Models\AchievementImage;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class AdminAchievementController extends Controller
@@ -15,7 +16,9 @@ class AdminAchievementController extends Controller
 
     public function index()
     {
-        $achievements = Achievement::with('images')->latest()->get();
+        $achievements = Cache::remember('admin.achievements', 120, function () {
+            return Achievement::with('images')->latest()->get();
+        });
 
         return view('admin.achievements.index', compact('achievements'));
     }
@@ -93,6 +96,8 @@ class AdminAchievementController extends Controller
             $achievement->images->pluck('image_path')->toArray()
         );
 
+        Cache::forget('admin.achievements');
+
         return response()->json([
             'success' => true,
             'message' => 'Data portofolio berhasil disimpan',
@@ -118,6 +123,8 @@ class AdminAchievementController extends Controller
         );
 
         $achievement->delete();
+
+        Cache::forget('admin.achievements');
 
         return redirect()->route('admin.achievements.index')->with('success', 'Data berhasil dihapus');
     }
@@ -189,6 +196,8 @@ class AdminAchievementController extends Controller
             $achievement->fresh()->getAttributes(),
             ! empty($imagePreviews) ? $imagePreviews : null
         );
+
+        Cache::forget('admin.achievements');
 
         return response()->json(['success' => true, 'message' => 'Data berhasil diperbarui!']);
     }

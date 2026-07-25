@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Collection;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class AdminCollectionController extends Controller
@@ -14,7 +15,9 @@ class AdminCollectionController extends Controller
 
     public function index()
     {
-        $collections = Collection::orderBy('category')->orderBy('sort_order')->get();
+        $collections = Cache::remember('admin.collections', 120, function () {
+            return Collection::orderBy('category')->orderBy('sort_order')->get();
+        });
 
         return view('admin.collections.index', compact('collections'));
     }
@@ -54,6 +57,8 @@ class AdminCollectionController extends Controller
             ['name' => $request->name, 'category' => $request->category, 'scientific_name' => $request->scientific_name],
             $imagePath ? [$imagePath] : null
         );
+
+        Cache::forget('admin.collections');
 
         return response()->json(['success' => true, 'message' => 'Koleksi berhasil ditambahkan.']);
     }
@@ -98,6 +103,8 @@ class AdminCollectionController extends Controller
             ! empty($imagePreviews) ? $imagePreviews : null
         );
 
+        Cache::forget('admin.collections');
+
         return response()->json(['success' => true, 'message' => 'Koleksi berhasil diperbarui.']);
     }
 
@@ -122,6 +129,8 @@ class AdminCollectionController extends Controller
         );
 
         $collection->delete();
+
+        Cache::forget('admin.collections');
 
         return redirect()->route('admin.collections.index')->with('success', 'Koleksi berhasil dihapus.');
     }

@@ -17,17 +17,20 @@
     "env": {
         "APP_ENV": "production",
         "APP_DEBUG": "false",
-        "APP_URL": "https://4putra.vercel.app",
+        "APP_URL": "https://admin4putra.vercel.app",
         "APP_CONFIG_CACHE": "/tmp/config.php",
         "APP_EVENTS_CACHE": "/tmp/events.php",
         "APP_PACKAGES_CACHE": "/tmp/packages.php",
         "APP_ROUTES_CACHE": "/tmp/routes.php",
         "APP_SERVICES_CACHE": "/tmp/services.php",
         "VIEW_COMPILED_PATH": "/tmp",
-        "CACHE_DRIVER": "array",
+        "CACHE_DRIVER": "file",
+        "CACHE_PATH": "/tmp/cache",
         "DB_CONNECTION": "mysql",
         "LOG_CHANNEL": "stderr",
         "SESSION_DRIVER": "cookie",
+        "SESSION_LIFETIME": "120",
+        "SESSION_ENCRYPT": "false",
         "SESSION_SECURE_COOKIE": "true"
     }
 }

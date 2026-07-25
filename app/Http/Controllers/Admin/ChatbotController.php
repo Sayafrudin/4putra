@@ -10,6 +10,7 @@ use App\Models\Percakapan;
 use App\Models\TransaksiChatbot;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 class ChatbotController extends Controller
@@ -17,17 +18,19 @@ class ChatbotController extends Controller
     // Dashboard chatbot
     public function index()
     {
-        $totalPelanggan = Pelanggan::count();
-        $pelangganAktif = Pelanggan::where('sesi_aktif', '!=', 'menu')->count();
-        $percakapanHariIni = Percakapan::whereDate('created_at', today())->count();
-        $notifikasiBelum = NotifikasiAdmin::belumDibaca()->count();
-        $transaksiPending = TransaksiChatbot::where('status', 'pending')->count();
-        $transaksiPaid = TransaksiChatbot::where('status', 'paid')->count();
+        $totalPelanggan = Cache::remember('chatbot.totalPelanggan', 60, fn () => Pelanggan::count());
+        $pelangganAktif = Cache::remember('chatbot.pelangganAktif', 60, fn () => Pelanggan::where('sesi_aktif', '!=', 'menu')->count());
+        $percakapanHariIni = Cache::remember('chatbot.percakapanHariIni', 60, fn () => Percakapan::whereDate('created_at', today())->count());
+        $notifikasiBelum = Cache::remember('chatbot.notifikasiBelum', 30, fn () => NotifikasiAdmin::belumDibaca()->count());
+        $transaksiPending = Cache::remember('chatbot.transaksiPending', 60, fn () => TransaksiChatbot::where('status', 'pending')->count());
+        $transaksiPaid = Cache::remember('chatbot.transaksiPaid', 60, fn () => TransaksiChatbot::where('status', 'paid')->count());
 
-        $notifikasiTerbaru = NotifikasiAdmin::with('pelanggan')
-            ->latest()
-            ->limit(20)
-            ->get();
+        $notifikasiTerbaru = Cache::remember('chatbot.notifikasiTerbaru', 30, function () {
+            return NotifikasiAdmin::with('pelanggan')
+                ->latest()
+                ->limit(20)
+                ->get();
+        });
 
         return view('admin.chatbot.index', compact(
             'totalPelanggan',
@@ -213,6 +216,8 @@ class ChatbotController extends Controller
 
         InventarisBurung::create($validated);
 
+        Cache::forget('chatbot.totalPelanggan');
+
         if ($request->expectsJson()) {
             return response()->json(['status' => 'OK', 'message' => 'Inventaris berhasil ditambahkan!']);
         }
@@ -234,6 +239,8 @@ class ChatbotController extends Controller
 
         $inventari->update($validated);
 
+        Cache::forget('chatbot.totalPelanggan');
+
         if ($request->expectsJson()) {
             return response()->json(['status' => 'OK', 'message' => 'Inventaris berhasil diperbarui!']);
         }
@@ -245,6 +252,8 @@ class ChatbotController extends Controller
     public function inventarisDestroy(Request $request, InventarisBurung $inventari)
     {
         $inventari->delete();
+
+        Cache::forget('chatbot.totalPelanggan');
 
         if ($request->expectsJson()) {
             return response()->json(['status' => 'OK', 'message' => 'Inventaris berhasil dihapus!']);
@@ -260,10 +269,10 @@ class ChatbotController extends Controller
             ->latest()
             ->paginate(20);
 
-        // Hitung statistik
-        $totalPaid = TransaksiChatbot::where('status', 'paid')->count();
-        $totalPending = TransaksiChatbot::where('status', 'pending')->count();
-        $totalRevenue = TransaksiChatbot::where('status', 'paid')->sum('total_harga');
+        // Hitung statistik (cached)
+        $totalPaid = Cache::remember('chatbot.transaksi.paid', 60, fn () => TransaksiChatbot::where('status', 'paid')->count());
+        $totalPending = Cache::remember('chatbot.transaksi.pending', 60, fn () => TransaksiChatbot::where('status', 'pending')->count());
+        $totalRevenue = Cache::remember('chatbot.transaksi.revenue', 60, fn () => TransaksiChatbot::where('status', 'paid')->sum('total_harga'));
 
         return view('admin.chatbot.transaksi.index', compact('transaksi', 'totalPaid', 'totalPending', 'totalRevenue'));
     }
@@ -280,6 +289,9 @@ class ChatbotController extends Controller
     public function notifikasiBaca(NotifikasiAdmin $notifikasi)
     {
         $notifikasi->update(['dibaca' => true]);
+
+        Cache::forget('chatbot.notifikasiBelum');
+        Cache::forget('chatbot.notifikasiTerbaru');
 
         return response()->json(['status' => 'OK']);
     }
@@ -347,6 +359,13 @@ class ChatbotController extends Controller
             // Update status transaksi
             $transaksi->update(['status' => $statusBaru]);
 
+            // Invalidate cache transaksi
+            Cache::forget('chatbot.transaksiPending');
+            Cache::forget('chatbot.transaksiPaid');
+            Cache::forget('chatbot.transaksi.pending');
+            Cache::forget('chatbot.transaksi.paid');
+            Cache::forget('chatbot.transaksi.revenue');
+
             // Jika berhasil, kirim notifikasi ke admin + WA ke pelanggan
             if ($statusBaru === 'paid') {
                 $pelanggan = $transaksi->pelanggan;
@@ -357,6 +376,9 @@ class ChatbotController extends Controller
                     'pelanggan_id' => $transaksi->pelanggan_id,
                     'dibaca' => false,
                 ]);
+
+                Cache::forget('chatbot.notifikasiBelum');
+                Cache::forget('chatbot.notifikasiTerbaru');
 
                 // Kirim WA ke pelanggan via Baileys
                 $this->kirimNotifPembayaranSukses($transaksi, $pelanggan, $grossAmount, $paymentType);
@@ -648,6 +670,12 @@ class ChatbotController extends Controller
         $statusLama = $transaksi->status;
         $transaksi->update(['status' => $request->status]);
 
+        Cache::forget('chatbot.transaksiPending');
+        Cache::forget('chatbot.transaksiPaid');
+        Cache::forget('chatbot.transaksi.pending');
+        Cache::forget('chatbot.transaksi.paid');
+        Cache::forget('chatbot.transaksi.revenue');
+
         // Jika diubah ke paid, kirim notifikasi WA ke pelanggan
         if ($request->status === 'paid' && $statusLama !== 'paid') {
             $pelanggan = $transaksi->pelanggan;
@@ -678,6 +706,12 @@ class ChatbotController extends Controller
 
         $statusLama = $transaksi->status;
         $transaksi->update(['status' => 'paid']);
+
+        Cache::forget('chatbot.transaksiPending');
+        Cache::forget('chatbot.transaksiPaid');
+        Cache::forget('chatbot.transaksi.pending');
+        Cache::forget('chatbot.transaksi.paid');
+        Cache::forget('chatbot.transaksi.revenue');
 
         // Simpan data pembayaran manual
         $sudahAda = $transaksi->pembayaran()->where('status', 'settlement')->exists();

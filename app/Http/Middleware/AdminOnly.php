@@ -14,6 +14,10 @@ class AdminOnly
             abort(403, 'Akses ditolak. Silakan login terlebih dahulu.');
         }
 
+        if (! $request->user()->isAdmin()) {
+            abort(403, 'Akses ditolak. Hanya admin yang diizinkan.');
+        }
+
         return $next($request);
     }
 }

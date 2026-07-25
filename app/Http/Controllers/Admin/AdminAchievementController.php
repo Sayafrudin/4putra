@@ -90,6 +90,7 @@ class AdminAchievementController extends Controller
             );
 
             Cache::forget('admin.achievements');
+            Cache::forget('public.achievements');
 
             return response()->json([
                 'success' => true,
@@ -125,6 +126,7 @@ class AdminAchievementController extends Controller
         $achievement->delete();
 
         Cache::forget('admin.achievements');
+        Cache::forget('public.achievements');
 
         return redirect()->route('admin.achievements.index')->with('success', 'Data berhasil dihapus');
     }
@@ -192,6 +194,7 @@ class AdminAchievementController extends Controller
             );
 
             Cache::forget('admin.achievements');
+            Cache::forget('public.achievements');
 
             return response()->json(['success' => true, 'message' => 'Data berhasil diperbarui!']);
         } catch (\Exception $e) {

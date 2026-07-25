@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Achievement;
 use App\Models\AchievementImage;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class AchievementController extends Controller
@@ -17,11 +18,13 @@ class AchievementController extends Controller
 
     public function publicIndex()
     {
-        $achievements = Achievement::with('images')
-            ->orderBy('year', 'desc')
-            ->orderBy('date', 'desc')
-            ->get()
-            ->groupBy('year');
+        $achievements = Cache::remember('public.achievements', 300, function () {
+            return Achievement::with('images')
+                ->orderBy('year', 'desc')
+                ->orderBy('date', 'desc')
+                ->get()
+                ->groupBy('year');
+        });
 
         return view('achievements', compact('achievements'));
     }

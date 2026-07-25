@@ -393,7 +393,12 @@
                 if (typeof res === 'object' && res !== null) {
                     msg = res.message || res.error || (res.errors ? Object.values(res.errors).flat().join(', ') : msg);
                 } else if (typeof res === 'string') {
-                    msg = res;
+                    try {
+                        var parsed = JSON.parse(res);
+                        msg = parsed.message || parsed.error || msg;
+                    } catch (e) {
+                        msg = res;
+                    }
                 }
                 showToast('error', 'Gagal!', msg);
             });

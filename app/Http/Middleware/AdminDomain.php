@@ -44,7 +44,7 @@ class AdminDomain
             if ($request->getQueryString()) {
                 $adminUrl .= '?' . $request->getQueryString();
             }
-            return redirect($adminUrl, 301);
+            return redirect($adminUrl, 308);
         }
 
         // Jika mengakses route public dari domain admin → redirect ke domain public
@@ -53,7 +53,7 @@ class AdminDomain
             if ($request->getQueryString()) {
                 $publicUrl .= '?' . $request->getQueryString();
             }
-            return redirect($publicUrl, 301);
+            return redirect($publicUrl, 308);
         }
 
         return $next($request);

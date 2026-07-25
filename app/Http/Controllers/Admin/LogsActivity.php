@@ -15,7 +15,7 @@ trait LogsActivity
             'description' => $description,
             'module' => $module,
             'ip_address' => $request->ip(),
-            'metadata' => $metadata,
+            'metadata' => $metadata ? json_encode($metadata) : null,
         ]);
     }
 

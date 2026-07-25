@@ -160,3 +160,40 @@ Vercel via `vercel.json` — PHP runtime for `api/index.php`, static assets serv
 - **Push Langsung ke GitHub:** Ketika pengguna meminta push ke GitHub, lakukan langsung tanpa bertanya lagi. Jangan menunggu konfirmasi tambahan — langsung `git add`, `git commit`, dan `git push`.
 - **Branch Default:** Branch utama adalah `development`. Push ke `development` kecuali pengguna secara eksplisit meminta branch lain.
 - **Pesan Commit:** Gunakan pesan commit yang deskriptif dalam Bahasa Indonesia, singkat, dan jelas. Contoh: `fix: migrasi gambar ke Cloudinary + perbaikan domain admin`.
+
+## Aturan Wajib Testing & Validasi Sebelum Push
+
+Sebelum menyerahkan hasil pekerjaan atau melakukan push ke GitHub, AI WAJIB melakukan pengecekan menyeluruh terhadap semua aspek berikut:
+
+### Checklist Testing Wajib
+
+1. **Fungsionalitas CRUD Admin:**
+   - Pastikan semua operasi Create, Read, Update, Delete berfungsi di semua tabel (Users, Collections, Achievements, Chatbot)
+   - Pastikan upload foto/video berhasil dan gambar muncul di halaman terkait
+   - Pastikan modal konfirmasi hapus berfungsi dengan benar
+   - Pastikan validasi form menampilkan pesan error yang sesuai
+
+2. **Routing & Middleware:**
+   - Pastikan middleware `AdminOnly` memeriksa role admin (bukan hanya autentikasi)
+   - Pastikan middleware `AdminDomain` menggunakan redirect 308 (bukan 301) untuk mempreservasi method POST
+   - Pastikan tidak ada redirect loop antar domain
+
+3. **Database Compatibility (TiDB):**
+   - Pastikan semua migration kompatibel dengan TiDB Cloud
+   - Pastikan AUTO_INCREMENT berfungsi di semua tabel
+   - Pastikan kolom JSON (metadata) tersimpan dengan benar
+
+4. **Performa:**
+   - Pastikan `APP_DEBUG=false` di production
+   - Pastikan tidak ada duplikasi loading resource (font, CSS, JS)
+   - Pastikan gambar Cloudinary menggunakan transformasi `q_auto,f_auto`
+   - Pastikan Firebase/lazy-loaded resources tidak memblok render halaman
+
+5. **Environment Variables:**
+   - Pastikan semua env vars yang diperlukan tersedia di `vercel.json` atau Vercel Dashboard
+   - Jangan masukkan secrets (API keys, passwords) ke dalam `vercel.json` — gunakan Vercel Dashboard
+
+6. **Error Handling:**
+   - Pastikan tidak ada error 500 di halaman manapun
+   - Pastikan error handling di JavaScript (fetch/AJAX) menampilkan pesan yang jelas
+   - Pastikan `filemtime()` tidak digunakan di template Blade (gagal di Vercel)

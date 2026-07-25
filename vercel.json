@@ -25,12 +25,11 @@
         "APP_SERVICES_CACHE": "/tmp/services.php",
         "VIEW_COMPILED_PATH": "/tmp",
         "CACHE_DRIVER": "array",
+        "DB_CONNECTION": "mysql",
         "LOG_CHANNEL": "stderr",
         "SESSION_DRIVER": "database",
         "SESSION_DOMAIN": ".vercel.app",
         "SESSION_SECURE_COOKIE": "true",
-        "SESSION_SAME_SITE": "lax",
-        "GOOGLE_CLIENT_ID": "220531608266-vsfb9o8i6kpo27qp2k1kuie05ko01mk2.apps.googleusercontent.com",
-        "GOOGLE_REDIRECT_URI": "https://4putra.vercel.app/auth/google/callback"
+        "SESSION_SAME_SITE": "lax"
     }
 }

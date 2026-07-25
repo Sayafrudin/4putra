@@ -28,8 +28,26 @@ class AchievementController extends Controller
 
     public function destroyImage(AchievementImage $image)
     {
-        if (Storage::disk('public')->exists('achievements/'.$image->image_path)) {
-            Storage::disk('public')->delete('achievements/'.$image->image_path);
+        // Hapus dari Cloudinary jika URL cloudinary
+        if (str_starts_with($image->image_path, 'http')) {
+            try {
+                // Ekstrak public_id dari URL Cloudinary
+                $url = $image->image_path;
+                $parts = parse_url($url);
+                $path = $parts['path'] ?? '';
+                // Hapus versi dan ekstensi: /image/upload/v1234/4putra/achievements/filename.jpg
+                $path = preg_replace('#^/image/upload/v\d+/#', '', $path);
+                $publicId = pathinfo($path, PATHINFO_DIRNAME) . '/' . pathinfo($path, PATHINFO_FILENAME);
+                $publicId = trim($publicId, '/');
+
+                \CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary::destroy($publicId);
+            } catch (\Exception $e) {
+                \Log::warning('Gagal hapus gambar Cloudinary: ' . $e->getMessage());
+            }
+        }
+        // Hapus dari storage lokal jika file lokal
+        elseif (Storage::disk('public')->exists('achievements/' . $image->image_path)) {
+            Storage::disk('public')->delete('achievements/' . $image->image_path);
         }
 
         $image->delete();

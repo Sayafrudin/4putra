@@ -72,6 +72,10 @@ class AdminCollectionController extends Controller
         $imagePreviews = [];
 
         if ($request->input('remove_image') == '1') {
+            // Hapus gambar lama dari Cloudinary
+            if ($collection->image_path && str_starts_with($collection->image_path, 'http')) {
+                $this->deleteCloudinaryImage($collection->image_path);
+            }
             $data['image_path'] = null;
         }
 
@@ -102,6 +106,10 @@ class AdminCollectionController extends Controller
         $imagePreviews = [];
         if ($collection->image_path) {
             $imagePreviews[] = $collection->image_path;
+            // Hapus gambar dari Cloudinary
+            if (str_starts_with($collection->image_path, 'http')) {
+                $this->deleteCloudinaryImage($collection->image_path);
+            }
         }
 
         $this->logDataChange(
@@ -116,5 +124,22 @@ class AdminCollectionController extends Controller
         $collection->delete();
 
         return redirect()->route('admin.collections.index')->with('success', 'Koleksi berhasil dihapus.');
+    }
+
+    /**
+     * Hapus gambar dari Cloudinary berdasarkan URL.
+     */
+    protected function deleteCloudinaryImage(string $url): void
+    {
+        try {
+            $parts = parse_url($url);
+            $path = $parts['path'] ?? '';
+            $path = preg_replace('#^/image/upload/v\d+/#', '', $path);
+            $publicId = pathinfo($path, PATHINFO_DIRNAME) . '/' . pathinfo($path, PATHINFO_FILENAME);
+            $publicId = trim($publicId, '/');
+            \CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary::destroy($publicId);
+        } catch (\Exception $e) {
+            \Log::warning('Gagal hapus gambar Cloudinary: ' . $e->getMessage());
+        }
     }
 }

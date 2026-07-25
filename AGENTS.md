@@ -154,3 +154,9 @@ Vercel via `vercel.json` — PHP runtime for `api/index.php`, static assets serv
     - **Aspek/Kode yang Diubah:** [Nama file, komponen, fungsi logika, implementasi baru, atau package baru yang dimodifikasi/ditambahkan]
     - **Status Fungsionalitas Sistem:** [Berjalan Normal / Tepat Sasaran / Mengalami Kendala][cite: 1]
     - **Bukti/Alur Tes:** [Penjelasan langkah demi langkah bagaimana perubahan, penambahan fitur, atau package baru tersebut diuji secara mandiri dan dibuktikan sukses tanpa merusak fitur lainnya]
+
+## Aturan Git & Deployment
+
+- **Push Langsung ke GitHub:** Ketika pengguna meminta push ke GitHub, lakukan langsung tanpa bertanya lagi. Jangan menunggu konfirmasi tambahan — langsung `git add`, `git commit`, dan `git push`.
+- **Branch Default:** Branch utama adalah `development`. Push ke `development` kecuali pengguna secara eksplisit meminta branch lain.
+- **Pesan Commit:** Gunakan pesan commit yang deskriptif dalam Bahasa Indonesia, singkat, dan jelas. Contoh: `fix: migrasi gambar ke Cloudinary + perbaikan domain admin`.

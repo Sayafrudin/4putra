@@ -17,13 +17,13 @@
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/chat.js'])
 
     {{-- Shared toast notification system --}}
-    <script src="{{ asset('js/toast.js') }}?v={{ filemtime(public_path('js/toast.js')) }}" defer></script>
+    <script src="{{ asset('js/toast.js') }}" defer></script>
 
     {{-- Session timeout auto-logout --}}
-    <script src="{{ asset('js/session-timeout.js') }}?v={{ filemtime(public_path('js/session-timeout.js')) }}" defer></script>
+    <script src="{{ asset('js/session-timeout.js') }}" defer></script>
 
     {{-- Client-side table search --}}
-    <script src="{{ asset('js/table-search.js') }}?v={{ filemtime(public_path('js/table-search.js')) }}" defer></script>
+    <script src="{{ asset('js/table-search.js') }}" defer></script>
 </head>
 
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">

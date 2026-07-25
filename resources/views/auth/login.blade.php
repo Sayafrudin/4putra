@@ -7,7 +7,7 @@
     <title>Login - 4Putra Vertex Aviary</title>
     <link rel="icon" href="{{ asset('img/4Putraico.png') }}" type="image/png">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script src="{{ asset('js/toast.js') }}?v={{ filemtime(public_path('js/toast.js')) }}"></script>
+    <script src="{{ asset('js/toast.js') }}"></script>
 </head>
 
 <body class="min-h-screen bg-gray-50 flex flex-col items-center justify-center antialiased">

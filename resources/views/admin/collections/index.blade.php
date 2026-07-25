@@ -244,5 +244,5 @@
             }
         };
     </script>
-    <script src="{{ asset('js/collections.js') }}?v={{ filemtime(public_path('js/collections.js')) }}"></script>
+    <script src="{{ asset('js/collections.js') }}"></script>
 @endsection

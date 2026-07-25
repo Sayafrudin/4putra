@@ -4,14 +4,18 @@
 @php
     $chatNotifications = [];
     if ($user->isAdmin()) {
-        $pendingNotifications = \App\Models\ActivityLog::where('user_id', '!=', $user->id)
-            ->whereNotNull('metadata')
-            ->latest()
-            ->take(10)
-            ->get()
-            ->filter(function ($notif) {
-                return isset($notif->metadata['chat_notification']);
-            });
+        // Cek notifikasi yang belum diproses (cached 30 detik)
+        $cacheKey = 'chat_notifications_' . $user->id;
+        $pendingNotifications = \Illuminate\Support\Facades\Cache::remember($cacheKey, 30, function () {
+            return \App\Models\ActivityLog::where('user_id', '!=', auth()->id())
+                ->whereNotNull('metadata')
+                ->latest()
+                ->take(10)
+                ->get()
+                ->filter(function ($notif) {
+                    return isset($notif->metadata['chat_notification']);
+                });
+        });
 
         foreach ($pendingNotifications as $notif) {
             if (isset($notif->metadata['chat_notification'])) {

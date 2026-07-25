@@ -28,8 +28,6 @@
         "DB_CONNECTION": "mysql",
         "LOG_CHANNEL": "stderr",
         "SESSION_DRIVER": "cookie",
-        "SESSION_DOMAIN": ".vercel.app",
-        "SESSION_SECURE_COOKIE": "true",
-        "SESSION_SAME_SITE": "lax"
+        "SESSION_SECURE_COOKIE": "true"
     }
 }

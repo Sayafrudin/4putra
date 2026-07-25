@@ -51,11 +51,11 @@ class AdminUserController extends Controller
             ['name' => $validated['name'], 'email' => $validated['email'], 'role' => $validated['role']]
         );
 
+        Cache::forget('admin.users');
+
         if ($request->expectsJson()) {
             return response()->json(['status' => 'OK', 'message' => 'Akun berhasil ditambahkan!']);
         }
-
-        Cache::forget('admin.users');
 
         return redirect()->route('admin.users.index')->with('success', 'Akun berhasil ditambahkan!');
     }
@@ -94,11 +94,11 @@ class AdminUserController extends Controller
             $user->fresh()->getAttributes()
         );
 
+        Cache::forget('admin.users');
+
         if ($request->expectsJson()) {
             return response()->json(['status' => 'OK', 'message' => 'Akun berhasil diperbarui!']);
         }
-
-        Cache::forget('admin.users');
 
         return redirect()->route('admin.users.index')->with('success', 'Akun berhasil diperbarui!');
     }
@@ -126,11 +126,11 @@ class AdminUserController extends Controller
 
         $user->delete();
 
+        Cache::forget('admin.users');
+
         if ($request->expectsJson()) {
             return response()->json(['status' => 'OK', 'message' => 'Akun berhasil dihapus!']);
         }
-
-        Cache::forget('admin.users');
 
         return redirect()->route('admin.users.index')->with('success', 'Akun berhasil dihapus!');
     }

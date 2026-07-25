@@ -57,7 +57,7 @@
             addRemoveLinks: true,
             dictDefaultMessage: 'Tarik file foto ke sini atau klik untuk memilih',
             dictRemoveFile: 'Hapus',
-            headers: { 'X-CSRF-TOKEN': CFG.csrfToken },
+            headers: { 'X-CSRF-TOKEN': CFG.csrfToken, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
         });
         dzCreate.on('sending', function (file, xhr, fd) {
             var formEls = els.formCreate.elements;
@@ -67,13 +67,19 @@
                 fd.append(el.name, el.value);
             }
         });
-        dzCreate.on('success', function () {
+        dzCreate.on('success', function (file, res) {
             showToast('success', 'Berhasil!', 'Koleksi baru telah ditambahkan.');
             setTimeout(function () { location.reload(); }, 1000);
         });
         dzCreate.on('error', function (file, res) {
             console.error('Dropzone create error:', res);
-            showToast('error', 'Gagal!', 'Terjadi kesalahan saat upload.');
+            var msg = 'Terjadi kesalahan saat upload.';
+            if (typeof res === 'object' && res !== null) {
+                msg = res.message || res.error || (res.errors ? Object.values(res.errors).flat().join(', ') : msg);
+            } else if (typeof res === 'string') {
+                msg = res;
+            }
+            showToast('error', 'Gagal!', msg);
         });
         dzCreateInitialized = true;
     }
@@ -94,7 +100,7 @@
             addRemoveLinks: true,
             dictDefaultMessage: 'Tarik file foto baru ke sini',
             dictRemoveFile: 'Hapus',
-            headers: { 'X-CSRF-TOKEN': CFG.csrfToken },
+            headers: { 'X-CSRF-TOKEN': CFG.csrfToken, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
         });
         dzEdit.on('sending', function (file, xhr, fd) {
             var formEls = els.formEdit.elements;
@@ -104,13 +110,19 @@
                 fd.append(el.name, el.value);
             }
         });
-        dzEdit.on('success', function () {
+        dzEdit.on('success', function (file, res) {
             showToast('success', 'Berhasil!', 'Data koleksi diperbarui.');
             setTimeout(function () { location.reload(); }, 1000);
         });
         dzEdit.on('error', function (file, res) {
             console.error('Dropzone edit error:', res);
-            showToast('error', 'Gagal!', 'Terjadi kesalahan saat upload.');
+            var msg = 'Terjadi kesalahan saat upload.';
+            if (typeof res === 'object' && res !== null) {
+                msg = res.message || res.error || (res.errors ? Object.values(res.errors).flat().join(', ') : msg);
+            } else if (typeof res === 'string') {
+                msg = res;
+            }
+            showToast('error', 'Gagal!', msg);
         });
         dzEditInitialized = true;
     }

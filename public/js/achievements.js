@@ -369,7 +369,7 @@
                 addRemoveLinks: true,
                 dictDefaultMessage: 'Tarik file foto/video ke sini atau klik untuk memilih',
                 dictRemoveFile: 'Hapus',
-                headers: { 'X-CSRF-TOKEN': CFG.csrfToken },
+                headers: { 'X-CSRF-TOKEN': CFG.csrfToken, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
             });
             dzCreate.on('sendingmultiple', function (data, xhr, fd) {
                 var formEls = els.formCreate.elements;
@@ -383,13 +383,19 @@
                     }
                 }
             });
-            dzCreate.on('successmultiple', function () {
+            dzCreate.on('successmultiple', function (files, res) {
                 showToast('success', 'Berhasil!', 'Portofolio baru aviary telah ditambahkan.');
                 setTimeout(function () { location.reload(); }, 1000);
             });
             dzCreate.on('errormultiple', function (files, res) {
                 console.error('Dropzone create error:', res);
-                showToast('error', 'Gagal!', 'Terjadi kesalahan saat upload foto.');
+                var msg = 'Terjadi kesalahan saat upload foto.';
+                if (typeof res === 'object' && res !== null) {
+                    msg = res.message || res.error || (res.errors ? Object.values(res.errors).flat().join(', ') : msg);
+                } else if (typeof res === 'string') {
+                    msg = res;
+                }
+                showToast('error', 'Gagal!', msg);
             });
             dzCreateInitialized = true;
         } catch (err) {
@@ -415,7 +421,7 @@
                 addRemoveLinks: true,
                 dictDefaultMessage: 'Tarik file foto/video baru ke sini',
                 dictRemoveFile: 'Hapus',
-                headers: { 'X-CSRF-TOKEN': CFG.csrfToken },
+                headers: { 'X-CSRF-TOKEN': CFG.csrfToken, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
             });
             dzEdit.on('sendingmultiple', function (data, xhr, fd) {
                 var formEls = els.formEdit.elements;

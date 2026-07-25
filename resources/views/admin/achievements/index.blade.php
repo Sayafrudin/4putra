@@ -478,6 +478,6 @@
     </script>
 
     {{-- File JS terpisah -- taruh di public/js/achievements.js --}}
-    <script type="module" src="{{ asset('js/achievements.js') }}?v={{ filemtime(public_path('js/achievements.js')) }}">
+    <script type="module" src="{{ asset('js/achievements.js') }}">
     </script>
 @endsection

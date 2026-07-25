@@ -118,8 +118,11 @@
                                             <p class="text-xs text-gray-400 mb-2 font-medium">Gambar Terkait:</p>
                                             <div class="flex flex-wrap gap-2">
                                                 @foreach($activity->metadata['image_previews'] as $img)
-                                                    <a href="{{ asset($img) }}" target="_blank" class="block">
-                                                        <img src="{{ asset($img) }}" class="w-16 h-16 object-cover rounded-lg border border-gray-600 hover:border-[#E62C37] transition-colors" loading="lazy">
+                                                    @php
+                                                        $imgUrl = str_starts_with($img, 'http') ? $img : asset($img);
+                                                    @endphp
+                                                    <a href="{{ $imgUrl }}" target="_blank" class="block">
+                                                        <img src="{{ $imgUrl }}" class="w-16 h-16 object-cover rounded-lg border border-gray-600 hover:border-[#E62C37] transition-colors" loading="lazy">
                                                     </a>
                                                 @endforeach
                                             </div>

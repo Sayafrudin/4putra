@@ -22,6 +22,12 @@ Route::get('/storage/{path}', [StorageController::class, 'serve'])
     ->name('storage.serve');
 
 Route::get('/', function () {
+    // Redirect admin domain root ke dashboard admin
+    $host = request()->getHost();
+    if (in_array($host, ['admin4putra.vercel.app'])) {
+        return redirect('/admin');
+    }
+
     return view('index');
 });
 

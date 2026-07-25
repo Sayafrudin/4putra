@@ -27,14 +27,35 @@
 </head>
 
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-    <div class="flex h-screen overflow-hidden">
+    <div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: false }">
+        {{-- Overlay mobile --}}
+        <div x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300"
+            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+            x-transition:leave="transition-opacity ease-linear duration-300"
+            x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+            @click="sidebarOpen = false"
+            class="fixed inset-0 z-30 bg-black/50 lg:hidden"></div>
+
         <x-admin.sidebar />
 
         <div class="flex flex-col flex-1 w-full">
-            <header class="z-10 py-4 bg-white shadow-md dark:bg-gray-800">
-                <div class="container flex items-center justify-between h-full px-6 mx-auto text-purple-600 dark:text-purple-300">
+            <header class="z-10 py-3 px-4 bg-white shadow-md dark:bg-gray-800 lg:py-4 lg:px-6">
+                <div class="flex items-center justify-between h-full">
+                    {{-- Hamburger mobile --}}
+                    <button @click="sidebarOpen = !sidebarOpen"
+                        class="lg:hidden p-2 -ml-2 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+
+                    {{-- Logo mobile (tampil di header saat sidebar hidden) --}}
+                    <a href="{{ route('admin.dashboard') }}" class="lg:hidden font-extrabold text-lg tracking-wider text-gray-900 dark:text-white">
+                        4PUTRA<span class="text-[#E62C37]">.</span>
+                    </a>
+
                     <div class="flex flex-1"></div>
-                    <ul class="flex items-center flex-shrink-0 space-x-6">
+                    <ul class="flex items-center flex-shrink-0 space-x-4 lg:space-x-6">
                         <li class="flex">
                             <button class="rounded-md focus:outline-none focus:shadow-outline-purple text-gray-500 dark:text-gray-400"
                                 @click="toggleTheme" aria-label="Toggle color mode">
@@ -55,7 +76,7 @@
             </header>
 
             <main class="h-full overflow-y-auto bg-gray-50 dark:bg-gray-900">
-                <div class="container px-6 mx-auto grid">
+                <div class="container px-4 py-4 mx-auto lg:px-6 lg:py-0 lg:grid">
                     @yield('content')
                 </div>
             </main>

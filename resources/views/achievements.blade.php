@@ -103,16 +103,16 @@
                                             x-transition:enter-start="opacity-50" x-transition:enter-end="opacity-100"
                                             class="w-full h-full flex items-center justify-center bg-black absolute inset-0">
                                             @if ($ytId)
-                                                <iframe class="w-full h-full" src="https://www.youtube.com/embed/{{ $ytId }}"
+                                                <iframe class="w-full h-full" loading="lazy" src="https://www.youtube.com/embed/{{ $ytId }}"
                                                     frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                                             @elseif ($gdriveId)
-                                                <iframe class="w-full h-full" src="https://drive.google.com/file/d/{{ $gdriveId }}/preview"
+                                                <iframe class="w-full h-full" loading="lazy" src="https://drive.google.com/file/d/{{ $gdriveId }}/preview"
                                                     frameborder="0" allow="autoplay" allowfullscreen></iframe>
                                             @elseif ($vimeoId)
-                                                <iframe class="w-full h-full" src="https://player.vimeo.com/video/{{ $vimeoId }}"
+                                                <iframe class="w-full h-full" loading="lazy" src="https://player.vimeo.com/video/{{ $vimeoId }}"
                                                     frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
                                             @elseif ($dmId)
-                                                <iframe class="w-full h-full" src="https://www.dailymotion.com/embed/video/{{ $dmId }}"
+                                                <iframe class="w-full h-full" loading="lazy" src="https://www.dailymotion.com/embed/video/{{ $dmId }}"
                                                     frameborder="0" allowfullscreen></iframe>
                                             @else
                                                 <a href="{{ $vUrl }}" target="_blank" class="text-white flex flex-col items-center gap-2">

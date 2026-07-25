@@ -57,6 +57,7 @@ class AdminCollectionController extends Controller
             );
 
             Cache::forget('admin.collections');
+            Cache::forget('public.collections');
 
             return response()->json(['success' => true, 'message' => 'Koleksi berhasil ditambahkan.']);
         } catch (\Exception $e) {
@@ -103,6 +104,7 @@ class AdminCollectionController extends Controller
             );
 
             Cache::forget('admin.collections');
+            Cache::forget('public.collections');
 
             return response()->json(['success' => true, 'message' => 'Koleksi berhasil diperbarui.']);
         } catch (\Exception $e) {

@@ -24,88 +24,104 @@ class AdminCollectionController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'category' => 'required|string|max:255',
-            'scientific_name' => 'nullable|string|max:255',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-        ]);
-
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            $uploaded = Cloudinary::upload($request->file('image')->getRealPath(), [
-                'folder' => '4putra/collections',
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'category' => 'required|string|max:255',
+                'scientific_name' => 'nullable|string|max:255',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             ]);
-            $imagePath = $uploaded->getSecurePath();
+
+            $imagePath = null;
+            if ($request->hasFile('image')) {
+                $uploaded = Cloudinary::upload($request->file('image')->getRealPath(), [
+                    'folder' => '4putra/collections',
+                ]);
+                $imagePath = $uploaded->getSecurePath();
+            }
+
+            Collection::create([
+                'name' => $request->name,
+                'name_en' => $request->name_en,
+                'scientific_name' => $request->scientific_name,
+                'category' => $request->category,
+                'category_en' => $request->category_en,
+                'image_path' => $imagePath,
+                'sort_order' => $request->sort_order ?? 0,
+            ]);
+
+            $this->logDataChange(
+                $request, 'create',
+                'Menambahkan koleksi: '.$request->name,
+                'Collections',
+                null,
+                ['name' => $request->name, 'category' => $request->category, 'scientific_name' => $request->scientific_name],
+                $imagePath ? [$imagePath] : null
+            );
+
+            Cache::forget('admin.collections');
+
+            return response()->json(['success' => true, 'message' => 'Koleksi berhasil ditambahkan.']);
+        } catch (\Exception $e) {
+            \Log::error('Collection store error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menyimpan: ' . $e->getMessage(),
+            ], 500);
         }
-
-        Collection::create([
-            'name' => $request->name,
-            'name_en' => $request->name_en,
-            'scientific_name' => $request->scientific_name,
-            'category' => $request->category,
-            'category_en' => $request->category_en,
-            'image_path' => $imagePath,
-            'sort_order' => $request->sort_order ?? 0,
-        ]);
-
-        $this->logDataChange(
-            $request, 'create',
-            'Menambahkan koleksi: '.$request->name,
-            'Collections',
-            null,
-            ['name' => $request->name, 'category' => $request->category, 'scientific_name' => $request->scientific_name],
-            $imagePath ? [$imagePath] : null
-        );
-
-        Cache::forget('admin.collections');
-
-        return response()->json(['success' => true, 'message' => 'Koleksi berhasil ditambahkan.']);
     }
 
     public function update(Request $request, Collection $collection)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'category' => 'required|string|max:255',
-            'scientific_name' => 'nullable|string|max:255',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-        ]);
-
-        $oldValues = $collection->getOriginal();
-        $data = $request->only(['name', 'name_en', 'scientific_name', 'category', 'category_en', 'sort_order']);
-        $imagePreviews = [];
-
-        if ($request->input('remove_image') == '1') {
-            // Hapus gambar lama dari Cloudinary
-            if ($collection->image_path && str_starts_with($collection->image_path, 'http')) {
-                $this->deleteCloudinaryImage($collection->image_path);
-            }
-            $data['image_path'] = null;
-        }
-
-        if ($request->hasFile('image')) {
-            $uploaded = Cloudinary::upload($request->file('image')->getRealPath(), [
-                'folder' => '4putra/collections',
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'category' => 'required|string|max:255',
+                'scientific_name' => 'nullable|string|max:255',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             ]);
-            $data['image_path'] = $uploaded->getSecurePath();
-            $imagePreviews[] = $data['image_path'];
+
+            $oldValues = $collection->getOriginal();
+            $data = $request->only(['name', 'name_en', 'scientific_name', 'category', 'category_en', 'sort_order']);
+            $imagePreviews = [];
+
+            if ($request->input('remove_image') == '1') {
+                // Hapus gambar lama dari Cloudinary
+                if ($collection->image_path && str_starts_with($collection->image_path, 'http')) {
+                    $this->deleteCloudinaryImage($collection->image_path);
+                }
+                $data['image_path'] = null;
+            }
+
+            if ($request->hasFile('image')) {
+                $uploaded = Cloudinary::upload($request->file('image')->getRealPath(), [
+                    'folder' => '4putra/collections',
+                ]);
+                $data['image_path'] = $uploaded->getSecurePath();
+                $imagePreviews[] = $data['image_path'];
+            }
+
+            $collection->update($data);
+
+            $this->logDataChange(
+                $request, 'update',
+                'Memperbarui koleksi: '.$collection->name,
+                'Collections',
+                $oldValues,
+                $collection->fresh()->getAttributes(),
+                ! empty($imagePreviews) ? $imagePreviews : null
+            );
+
+            Cache::forget('admin.collections');
+
+            return response()->json(['success' => true, 'message' => 'Koleksi berhasil diperbarui.']);
+        } catch (\Exception $e) {
+            \Log::error('Collection update error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memperbarui: ' . $e->getMessage(),
+            ], 500);
         }
-
-        $collection->update($data);
-
-        $this->logDataChange(
-            $request, 'update',
-            'Memperbarui koleksi: '.$collection->name,
-            'Collections',
-            $oldValues,
-            $collection->fresh()->getAttributes(),
-            ! empty($imagePreviews) ? $imagePreviews : null
-        );
-
-        Cache::forget('admin.collections');
-
-        return response()->json(['success' => true, 'message' => 'Koleksi berhasil diperbarui.']);
     }
 
     public function destroy(Collection $collection)

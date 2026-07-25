@@ -10,22 +10,49 @@
         else { console.warn('[TOAST]', type, title, msg); }
     }
 
-    function uploadToCloudinary(file, folder) {
+    function uploadToCloudinary(file, folder, dzInstance) {
         var url = 'https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/upload';
         var fd = new FormData();
         fd.append('file', file);
         fd.append('upload_preset', UPLOAD_PRESET);
         if (folder) fd.append('folder', folder);
 
-        return fetch(url, { method: 'POST', body: fd })
-            .then(function (res) {
-                if (!res.ok) throw new Error('Upload Cloudinary gagal: HTTP ' + res.status);
-                return res.json();
-            })
-            .then(function (data) {
-                if (!data.secure_url) throw new Error('Cloudinary tidak mengembalikan URL');
-                return data.secure_url;
-            });
+        return new Promise(function (resolve, reject) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', url);
+
+            xhr.upload.onprogress = function (e) {
+                if (e.lengthComputable && dzInstance) {
+                    var pct = Math.round((e.loaded / e.total) * 100);
+                    dzInstance.emit('uploadprogress', file, pct, e.loaded);
+                }
+            };
+
+            xhr.onload = function () {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    var data = JSON.parse(xhr.responseText);
+                    if (data.secure_url) {
+                        if (dzInstance) {
+                            dzInstance.emit('success', file);
+                            dzInstance.emit('complete', file);
+                        }
+                        resolve(data.secure_url);
+                    } else {
+                        reject(new Error('Cloudinary tidak mengembalikan URL'));
+                    }
+                } else {
+                    reject(new Error('Upload Cloudinary gagal: HTTP ' + xhr.status));
+                }
+            };
+
+            xhr.onerror = function () {
+                reject(new Error('Network error saat upload ke Cloudinary'));
+            };
+
+            file.status = 'uploading';
+            if (dzInstance) dzInstance.emit('processing', file);
+            xhr.send(fd);
+        });
     }
 
     var els = {
@@ -127,7 +154,7 @@
             var folder = '4putra/collections';
 
             // Upload ke Cloudinary dulu
-            var uploads = files.map(function (f) { return uploadToCloudinary(f, folder); });
+            var uploads = files.map(function (f) { return uploadToCloudinary(f, folder, dzCreate); });
             Promise.all(uploads)
                 .then(function (urls) {
                     // Kirim data + URL ke Laravel
@@ -206,7 +233,7 @@
             var folder = '4putra/collections';
 
             var uploadPromise = files.length > 0
-                ? Promise.all(files.map(function (f) { return uploadToCloudinary(f, folder); }))
+                ? Promise.all(files.map(function (f) { return uploadToCloudinary(f, folder, dzEdit); }))
                 : Promise.resolve([]);
 
             uploadPromise

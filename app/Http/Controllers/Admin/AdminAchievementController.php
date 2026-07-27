@@ -17,7 +17,9 @@ class AdminAchievementController extends Controller
     public function index()
     {
         $achievements = Cache::remember('admin.achievements', 120, function () {
-            return Achievement::with('images')->latest()->get();
+            return Achievement::with('images:id,achievement_id,image_path')
+                ->select('id', 'title', 'title_en', 'title_highlight', 'title_highlight_en', 'year', 'description', 'description_en', 'date', 'video_url', 'video_file', 'external_link')
+                ->latest()->get();
         });
 
         return view('admin.achievements.index', compact('achievements'));

@@ -10,7 +10,8 @@ class CollectionController extends Controller
     public function index()
     {
         $collections = Cache::remember('public.collections', 300, function () {
-            return Collection::orderBy('sort_order')->get()->groupBy('category');
+            return Collection::select('id', 'name', 'name_en', 'scientific_name', 'category', 'category_en', 'image_path', 'sort_order')
+                ->orderBy('sort_order')->get()->groupBy('category');
         });
 
         return view('collections', compact('collections'));

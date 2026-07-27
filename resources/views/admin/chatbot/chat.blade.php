@@ -12,10 +12,11 @@
         </a>
     </div>
 
-    <div class="flex gap-4 mb-10" style="height: calc(100vh - 220px); min-height: 500px;">
+    <div class="flex gap-4 mb-10" style="height: calc(100vh - 220px); min-height: 500px;" x-data="{ showChat: {{ $selectedPelanggan ? 'true' : 'false' }} }">
 
         {{-- ==================== KIRI: Daftar Pelanggan ==================== --}}
-        <div class="w-80 flex-shrink-0 bg-[#1e2530] border border-gray-800 rounded-lg flex flex-col overflow-hidden">
+        <div class="w-full lg:w-80 flex-shrink-0 bg-[#1e2530] border border-gray-800 rounded-lg flex flex-col overflow-hidden"
+            :class="{ 'hidden lg:flex': showChat, 'flex': !showChat }">
             <div class="px-4 py-3 border-b border-gray-800">
                 <h3 class="text-sm font-bold text-white uppercase tracking-wider">Pelanggan</h3>
                 <input type="text" id="searchPelanggan" placeholder="Cari nama/nomor..."
@@ -24,6 +25,7 @@
             <div id="daftarPelanggan" class="flex-1 overflow-y-auto divide-y divide-gray-800">
                 @forelse($pelangganList as $p)
                     <a href="{{ route('admin.chatbot.chat', ['pelanggan_id' => $p->id]) }}"
+                        @click="showChat = true"
                         class="flex items-center gap-3 px-4 py-3 hover:bg-[#151a22] transition-colors {{ optional($selectedPelanggan)->id === $p->id ? 'bg-[#151a22] border-l-2 border-[#E62C37]' : '' }}"
                         data-nama="{{ strtolower($p->nama ?? $p->nomor_wa) }}">
                         <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold
@@ -79,12 +81,16 @@
         </div>
 
         {{-- ==================== TENGAH: Chat Window ==================== --}}
-        <div class="flex-1 bg-[#1e2530] border border-gray-800 rounded-lg flex flex-col overflow-hidden">
+        <div class="flex-1 bg-[#1e2530] border border-gray-800 rounded-lg flex flex-col overflow-hidden min-w-0"
+            :class="{ 'flex': showChat, 'hidden lg:flex': !showChat }">
 
             @if($selectedPelanggan)
                 {{-- Header Chat --}}
-                <div class="px-6 py-3 border-b border-gray-800 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
+                <div class="px-4 sm:px-6 py-3 border-b border-gray-800 flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <button @click="showChat = false" class="lg:hidden shrink-0 p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-gray-700/50 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+                        </button>
                         <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold
                             {{ $selectedPelanggan->sesi_aktif === 'human' ? 'bg-green-500/20 text-green-400' : 'bg-purple-500/20 text-purple-400' }}">
                             {{ strtoupper(substr($selectedPelanggan->nama ?? $selectedPelanggan->nomor_wa, 0, 2)) }}
@@ -117,14 +123,14 @@
                     </div>
 
                     {{-- Toggle Bot ↔ Human --}}
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2 sm:gap-3 shrink-0">
                         <button onclick="clearChat()"
-                            class="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-gray-300 border border-gray-600 hover:border-gray-500 hover:text-white rounded-lg transition-colors">
-                            Clear Chat
+                            class="px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-300 border border-gray-600 hover:border-gray-500 hover:text-white rounded-lg transition-colors">
+                            Clear
                         </button>
                         <span class="text-xs font-semibold uppercase tracking-wider
                             {{ $selectedPelanggan->sesi_aktif === 'human' ? 'text-green-400' : 'text-purple-400' }}">
-                            {{ $selectedPelanggan->sesi_aktif === 'human' ? 'Admin (Human)' : 'AI Bot' }}
+                            {{ $selectedPelanggan->sesi_aktif === 'human' ? 'Admin' : 'AI' }}
                         </span>
                         <button id="toggleBtn" onclick="toggleMode()"
                             class="relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none

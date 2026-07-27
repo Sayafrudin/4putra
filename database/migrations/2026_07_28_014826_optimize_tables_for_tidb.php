@@ -10,9 +10,9 @@ return new class extends Migration
         DB::statement('SET @@tidb_allow_remove_auto_inc = ON');
 
         // ============================================================
-        // Tabel CLUSTERED sudah AUTO_RANDOM dari migration sebelumnya.
-        // Untuk tabel NONCLUSTERED: rebuild primary key sebagai CLUSTERED
-        // lalu langsung convert ke AUTO_RANDOM.
+        // LANGKAH 1: Rebuild NONCLUSTERED → CLUSTERED untuk tabel chatbot
+        // (AUTO_RANDOM tidak bisa diterapkan tanpa AUTO_INCREMENT asli,
+        //  jadi cukup CLUSTERED saja untuk performa query yang lebih baik)
         // ============================================================
 
         $nonClusteredTables = [
@@ -21,12 +21,11 @@ return new class extends Migration
         ];
 
         foreach ($nonClusteredTables as $table) {
-            // Rebuild primary key sebagai CLUSTERED + AUTO_RANDOM sekaligus
-            DB::statement("ALTER TABLE {$table} DROP PRIMARY KEY, ADD PRIMARY KEY (id) CLUSTERED AUTO_RANDOM(5)");
+            DB::statement("ALTER TABLE {$table} DROP PRIMARY KEY, ADD PRIMARY KEY (id) CLUSTERED");
         }
 
         // ============================================================
-        // INDEX untuk kolom yang sering di-query
+        // LANGKAH 2: INDEX untuk kolom yang sering di-query
         // ============================================================
 
         DB::statement('ALTER TABLE pelanggan ADD INDEX IF NOT EXISTS idx_pelanggan_sesi (sesi_aktif)');
@@ -47,7 +46,7 @@ return new class extends Migration
         DB::statement('ALTER TABLE sessions ADD INDEX IF NOT EXISTS idx_sessions_last_activity (last_activity)');
 
         // ============================================================
-        // ALTER TABLE CACHE untuk tabel kecil
+        // LANGKAH 3: ALTER TABLE CACHE untuk tabel kecil
         // ============================================================
         DB::statement('ALTER TABLE inventaris_burung CACHE');
         DB::statement('ALTER TABLE collections CACHE');
@@ -57,6 +56,7 @@ return new class extends Migration
     {
         DB::statement('SET @@tidb_allow_remove_auto_inc = ON');
 
+        // Hapus index
         $indexes = [
             ['pelanggan', 'idx_pelanggan_sesi'],
             ['pelanggan', 'idx_pelanggan_terakhir'],
@@ -80,16 +80,9 @@ return new class extends Migration
             DB::statement("ALTER TABLE {$table} DROP INDEX IF EXISTS {$index}");
         }
 
-        // Kembalikan ke NONCLUSTERED + AUTO_INCREMENT
-        $tables = [
-            'users', 'achievements', 'achievement_images', 'collections',
-            'activity_logs', 'pelanggan', 'percakapan', 'transaksi_chatbot',
-            'pembayarans', 'notifikasi_admins', 'inventaris_burung',
-        ];
-
-        foreach ($tables as $table) {
+        // Kembalikan ke NONCLUSTERED
+        foreach (['pelanggan', 'percakapan', 'transaksi_chatbot', 'pembayarans', 'notifikasi_admins', 'inventaris_burung'] as $table) {
             DB::statement("ALTER TABLE {$table} DROP PRIMARY KEY, ADD PRIMARY KEY (id) NONCLUSTERED");
-            DB::statement("ALTER TABLE {$table} MODIFY COLUMN id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT");
         }
     }
 };

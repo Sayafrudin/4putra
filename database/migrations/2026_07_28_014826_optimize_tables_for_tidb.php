@@ -8,6 +8,7 @@ return new class extends Migration
     public function up(): void
     {
         DB::statement('SET @@tidb_allow_remove_auto_inc = ON');
+        DB::statement('SET FOREIGN_KEY_CHECKS = 0');
 
         // ============================================================
         // LANGKAH 1: Rebuild NONCLUSTERED → CLUSTERED untuk tabel chatbot
@@ -50,11 +51,14 @@ return new class extends Migration
         // ============================================================
         DB::statement('ALTER TABLE inventaris_burung CACHE');
         DB::statement('ALTER TABLE collections CACHE');
+
+        DB::statement('SET FOREIGN_KEY_CHECKS = 1');
     }
 
     public function down(): void
     {
         DB::statement('SET @@tidb_allow_remove_auto_inc = ON');
+        DB::statement('SET FOREIGN_KEY_CHECKS = 0');
 
         // Hapus index
         $indexes = [
@@ -84,5 +88,7 @@ return new class extends Migration
         foreach (['pelanggan', 'percakapan', 'transaksi_chatbot', 'pembayarans', 'notifikasi_admins', 'inventaris_burung'] as $table) {
             DB::statement("ALTER TABLE {$table} DROP PRIMARY KEY, ADD PRIMARY KEY (id) NONCLUSTERED");
         }
+
+        DB::statement('SET FOREIGN_KEY_CHECKS = 1');
     }
 };

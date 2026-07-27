@@ -73,7 +73,7 @@ app.post('/midtrans/callback', async (req, res) => {
         }
 
         // Cari transaksi di database
-        const transaksi = await queryOne('SELECT * FROM transaksi_chatbot WHERE midtrans_order_id = ?', [order_id]);
+        const transaksi = await queryOne('SELECT id, pelanggan_id, inventaris_id, nominal_dp, total_harga, quantity, status, midtrans_order_id, qr_url FROM transaksi_chatbot WHERE midtrans_order_id = ?', [order_id]);
         if (!transaksi) {
             console.error('Transaksi tidak ditemukan:', order_id);
             return res.status(404).json({ error: 'Transaction not found' });
@@ -101,7 +101,7 @@ app.post('/midtrans/callback', async (req, res) => {
         // Jika pembayaran berhasil
         if (statusBaru === 'paid') {
             // Ambil data pelanggan
-            const pelanggan = await queryOne('SELECT * FROM pelanggan WHERE id = ?', [transaksi.pelanggan_id]);
+            const pelanggan = await queryOne('SELECT id, nomor_wa, nama FROM pelanggan WHERE id = ?', [transaksi.pelanggan_id]);
 
             // Kirim notifikasi ke admin
             await insert(
@@ -157,7 +157,7 @@ app.post('/midtrans/callback', async (req, res) => {
 app.get('/api/notifikasi', async (req, res) => {
     try {
         const notifikasi = await query(
-            'SELECT n.*, p.nomor_wa, p.nama as nama_pelanggan FROM notifikasi_admins n LEFT JOIN pelanggan p ON n.pelanggan_id = p.id WHERE n.dibaca = 0 ORDER BY n.created_at DESC LIMIT 50'
+            'SELECT n.id, n.tipe, n.judul, n.isi, n.pelanggan_id, n.dibaca, n.created_at, p.nomor_wa, p.nama as nama_pelanggan FROM notifikasi_admins n LEFT JOIN pelanggan p ON n.pelanggan_id = p.id WHERE n.dibaca = 0 ORDER BY n.created_at DESC LIMIT 50'
         );
         res.json(notifikasi);
     } catch (error) {
@@ -179,7 +179,7 @@ app.post('/api/notifikasi/:id/read', async (req, res) => {
 app.get('/api/notifikasi/all', async (req, res) => {
     try {
         const notifikasi = await query(
-            'SELECT n.*, p.nomor_wa, p.nama as nama_pelanggan FROM notifikasi_admins n LEFT JOIN pelanggan p ON n.pelanggan_id = p.id ORDER BY n.created_at DESC LIMIT 100'
+            'SELECT n.id, n.tipe, n.judul, n.isi, n.pelanggan_id, n.dibaca, n.created_at, p.nomor_wa, p.nama as nama_pelanggan FROM notifikasi_admins n LEFT JOIN pelanggan p ON n.pelanggan_id = p.id ORDER BY n.created_at DESC LIMIT 100'
         );
         res.json(notifikasi);
     } catch (error) {
@@ -218,7 +218,7 @@ app.get('/api/stats', async (req, res) => {
 app.get('/api/chat/pelanggan', async (req, res) => {
     try {
         const pelanggan = await query(
-            `SELECT p.*,
+            `SELECT p.id, p.nomor_wa, p.nama, p.sesi_aktif, p.pesan_terakhir,
                 (SELECT COUNT(*) FROM percakapan WHERE pelanggan_id = p.id) as total_chat,
                 (SELECT created_at FROM percakapan WHERE pelanggan_id = p.id ORDER BY created_at DESC LIMIT 1) as chat_terakhir
             FROM pelanggan p
@@ -236,7 +236,7 @@ app.get('/api/chat/messages/:pelangganId', async (req, res) => {
         const { pelangganId } = req.params;
         const { after_id } = req.query; // Untuk polling pesan baru
 
-        let sql = 'SELECT * FROM percakapan WHERE pelanggan_id = ?';
+        let sql = 'SELECT id, pelanggan_id, pesan_pengirim, pesan_balasan, sumber_balasan, terkirim, created_at FROM percakapan WHERE pelanggan_id = ?';
         const params = [pelangganId];
 
         if (after_id) {
@@ -262,7 +262,7 @@ app.post('/api/chat/send', async (req, res) => {
             return res.status(400).json({ error: 'pelanggan_id dan pesan wajib diisi' });
         }
 
-        const pelanggan = await queryOne('SELECT * FROM pelanggan WHERE id = ?', [pelanggan_id]);
+        const pelanggan = await queryOne('SELECT id, nomor_wa, nama, sesi_aktif FROM pelanggan WHERE id = ?', [pelanggan_id]);
         if (!pelanggan) {
             return res.status(404).json({ error: 'Pelanggan tidak ditemukan' });
         }
@@ -335,7 +335,7 @@ app.post('/api/chat/toggle', async (req, res) => {
             return res.status(400).json({ error: 'pelanggan_id dan mode (ai/human) wajib diisi' });
         }
 
-        const pelanggan = await queryOne('SELECT * FROM pelanggan WHERE id = ?', [pelanggan_id]);
+        const pelanggan = await queryOne('SELECT id, nomor_wa, nama, sesi_aktif FROM pelanggan WHERE id = ?', [pelanggan_id]);
         if (!pelanggan) {
             return res.status(404).json({ error: 'Pelanggan tidak ditemukan' });
         }

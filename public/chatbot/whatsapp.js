@@ -172,11 +172,11 @@ async function dapatkanPelanggan(remoteJid, pushName = '') {
     }
 
     // Cari pelanggan berdasarkan full JID
-    let pelanggan = await queryOne('SELECT * FROM pelanggan WHERE nomor_wa = ?', [remoteJid]);
+    let pelanggan = await queryOne('SELECT id, nomor_wa, nama, sesi_aktif, riwayat_konteks, pesan_terakhir FROM pelanggan WHERE nomor_wa = ?', [remoteJid]);
 
     // Jika tidak ada, coba cari berdasarkan nomor saja (untuk migrasi dari format lama)
     if (!pelanggan) {
-        pelanggan = await queryOne('SELECT * FROM pelanggan WHERE nomor_wa = ? OR nomor_wa LIKE ?',
+        pelanggan = await queryOne('SELECT id, nomor_wa, nama, sesi_aktif, riwayat_konteks, pesan_terakhir FROM pelanggan WHERE nomor_wa = ? OR nomor_wa LIKE ?',
             [nomorWa, nomorWa + '@%']);
     }
 
@@ -234,13 +234,13 @@ async function dapatkanRiwayatPercakapan(pelangganId, limit = JUMLAH_PERCAKAPAN_
 }
 
 async function dapatkanInventaris() {
-    return await query('SELECT * FROM inventaris_burung WHERE aktif = 1 AND stok > 0 ORDER BY nama_spesies, fase');
+    return await query('SELECT id, nama_spesies, fase, harga, stok, deskripsi FROM inventaris_burung WHERE aktif = 1 AND stok > 0 ORDER BY nama_spesies, fase');
 }
 
 // Ambil riwayat transaksi pelanggan
 async function dapatkanRiwayatTransaksi(pelangganId) {
     return await query(
-        `SELECT t.*, i.nama_spesies, i.fase, i.harga
+        `SELECT t.id, t.pelanggan_id, t.inventaris_id, t.nominal_dp, t.total_harga, t.quantity, t.status, t.midtrans_order_id, t.created_at, i.nama_spesies, i.fase, i.harga
          FROM transaksi_chatbot t
          LEFT JOIN inventaris_burung i ON t.inventaris_id = i.id
          WHERE t.pelanggan_id = ?
@@ -422,7 +422,7 @@ async function buatPembayaranQRIS(pelangganId, inventarisId, namaSpesies, fase, 
         console.log(`[QRIS] Transaksi tersimpan: ID=${transaksiId}`);
 
         // Buat transaksi Midtrans
-        const pelanggan = await queryOne('SELECT * FROM pelanggan WHERE id = ?', [pelangganId]);
+        const pelanggan = await queryOne('SELECT id, nomor_wa, nama FROM pelanggan WHERE id = ?', [pelangganId]);
         const namaDisplay = pelanggan?.nama || 'Pelanggan';
         const nomorDisplay = getNomorDisplay(pelanggan?.nomor_wa || '');
 

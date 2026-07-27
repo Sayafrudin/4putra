@@ -30,33 +30,34 @@
 
     <div class="w-full overflow-hidden bg-[#1e2530] border border-gray-800 shadow-sm mb-10 table-search-wrapper">
         <div class="w-full overflow-x-auto">
-            <table class="table-searchable w-full text-left border-collapse">
+            <table class="table-searchable w-full min-w-[640px] text-left border-collapse">
                 <thead>
                     <tr
                         class="text-xs font-bold uppercase tracking-wider text-gray-400 bg-[#151a22] border-b border-gray-800">
-                        <th class="px-6 py-4">Informasi Pencapaian / Judul</th>
-                        <th class="px-6 py-4 w-28">Tahun</th>
-                        <th class="px-6 py-4 w-36">Tanggal Input</th>
-                        <th class="px-6 py-4 w-40 text-right">Tindakan Kontrol</th>
+                        <th class="px-4 sm:px-6 py-4 w-[50%]">Informasi Pencapaian / Judul</th>
+                        <th class="px-4 sm:px-6 py-4 w-20 sm:w-28">Tahun</th>
+                        <th class="px-4 sm:px-6 py-4 w-28 sm:w-36">Tanggal Input</th>
+                        <th class="px-4 sm:px-6 py-4 w-28 sm:w-40 text-right">Tindakan Kontrol</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-800 text-gray-300">
                     @forelse($achievements as $achievement)
                         <tr class="hover:bg-gray-800/50 transition-colors duration-150">
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-4">
+                            <td class="px-4 sm:px-6 py-4">
+                                <div class="flex items-center gap-3 sm:gap-4">
                                     @if ($achievement->images->count() > 0)
-                                        <div class="flex flex-wrap gap-1.5 max-w-[180px]">
+                                        <div class="flex flex-wrap gap-1.5 max-w-[180px] shrink-0">
                                             @foreach ($achievement->images as $image)
                                                 @php
                                                     $achImg = str_starts_with($image->image_path, 'http')
-                                                        ? str_replace('/upload/', '/upload/w_100,c_fill,q_auto,f_auto/', $image->image_path)
+                                                        ? str_replace('/upload/', '/upload/w_100,h_100,c_fill,q_auto,f_auto/', $image->image_path)
                                                         : asset('storage/achievements/' . $image->image_path);
                                                 @endphp
                                                 <img src="{{ $achImg }}"
                                                     onclick="zoomImage(this.src)"
                                                     class="w-11 h-11 rounded border border-gray-700 object-cover cursor-pointer hover:scale-125 hover:z-10 hover:border-[#E62C37] shadow-sm transition-all duration-200 relative"
-                                                    alt="Foto {{ $achievement->title }}" title="Klik untuk preview">
+                                                    alt="Foto {{ $achievement->title }}" title="Klik untuk preview"
+                                                    loading="lazy">
                                             @endforeach
                                         </div>
                                     @else
@@ -69,26 +70,26 @@
                                             </svg>
                                         </div>
                                     @endif
-                                    <div>
-                                        <div class="font-bold text-white uppercase text-sm">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="font-bold text-white uppercase text-sm truncate">
                                             {{ $achievement->title }}
                                         </div>
-                                        <div class="text-xs text-gray-400 truncate max-w-sm mt-0.5">
+                                        <div class="text-xs text-gray-400 truncate max-w-[120px] sm:max-w-sm mt-0.5">
                                             {{ Str::limit($achievement->description, 50) }}
                                         </div>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-sm font-medium text-white">
-                                <span class="px-2.5 py-1 text-xs font-bold border border-gray-700 bg-[#151a22] rounded">
+                            <td class="px-4 sm:px-6 py-4 text-sm font-medium text-white">
+                                <span class="px-2.5 py-1 text-xs font-bold border border-gray-700 bg-[#151a22] rounded whitespace-nowrap">
                                     {{ $achievement->year }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-xs text-gray-400">
+                            <td class="px-4 sm:px-6 py-4 text-xs text-gray-400 whitespace-nowrap">
                                 {{ \Carbon\Carbon::parse($achievement->date)->format('d M Y') }}
                             </td>
-                            <td class="px-6 py-4 text-right">
-                                <div class="inline-flex items-center gap-2">
+                            <td class="px-4 sm:px-6 py-4 text-right">
+                                <div class="inline-flex items-center gap-2 whitespace-nowrap">
                                     <button onclick="openEditModal({{ json_encode($achievement) }})"
                                         class="action-btn px-3 py-1.5 text-xs font-bold uppercase tracking-wider border-2 border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-white transition-all duration-200 focus:outline-none">Ubah</button>
                                     <button
@@ -99,7 +100,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="px-6 py-12 text-sm text-center text-gray-500 bg-[#151a22]">
+                            <td colspan="4" class="px-4 sm:px-6 py-12 text-sm text-center text-gray-500 bg-[#151a22]">
                                 Sistem mendeteksi belum ada berkas pencapaian yang tersimpan di dalam database
                             </td>
                         </tr>

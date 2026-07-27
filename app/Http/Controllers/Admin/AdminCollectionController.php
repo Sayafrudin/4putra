@@ -16,7 +16,8 @@ class AdminCollectionController extends Controller
     public function index()
     {
         $collections = Cache::remember('admin.collections', 120, function () {
-            return Collection::orderBy('category')->orderBy('sort_order')->get();
+            return Collection::select('id', 'name', 'name_en', 'scientific_name', 'category', 'category_en', 'image_path', 'sort_order')
+                ->orderBy('category')->orderBy('sort_order')->get();
         });
 
         return view('admin.collections.index', compact('collections'));

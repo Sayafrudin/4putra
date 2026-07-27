@@ -138,7 +138,10 @@ Vercel via `vercel.json` — PHP runtime for `api/index.php`, static assets serv
 
 ## Aturan Universal Modifikasi Kode, UI, & Validasi Fungsi
 
+## Aturan Universal Modifikasi Kode, UI, & Validasi Fungsi
+
 - **Isolasi dan Ketepatan Perubahan:** Saat diminta melakukan modifikasi, penambahan, atau refactoring pada aspek apa pun dalam proyek—baik visual UI (modal, toast, tabel, layout), logika program (controller, middleware, database routing), maupun seluruh integrasi sistem (API, database, library bawaan, serta paket pihak ketiga mana pun tanpa terkecuali)—perubahan harus dilakukan secara presisi dan tepat sasaran sesuai Design System dan arsitektur proyek[cite: 1]. Dilarang keras merusak, menghapus, atau menyederhanakan kode fungsi eksisting yang sudah berjalan sukses tanpa persetujuan tertulis dari pengguna[cite: 1].
+- **Kemampuan Multimodal & Analisis Gambar Universal:** AI Open Code wajib memanfaatkan fitur pembacaan gambar (vision capabilities) pada model apa pun yang sedang aktif saat pengguna memberikan referensi visual (seperti tangkapan layar UI, mock-up desain, alur skema, diagram, atau foto error/bug). AI harus menganalisis elemen visual tersebut secara cermat untuk memastikan implementasi kode, tata letak UI, atau perbaikan bug berjalan presisi sesuai gambaran visual yang diberikan.
 - **Efisiensi Token & Akurasi Tinggi:** AI wajib meminimalkan penggunaan token dan kredit dalam setiap interaksi, pembacaan, maupun penulisan kode. Berikan perubahan yang ringkas, hilangkan kode bawaan yang tidak perlu diubah, dan fokus hanya pada baris kode yang relevan agar hasil eksekusi lebih akurat, presisi, serta terhindar dari bias atau kesalahan akibat pemrosesan konteks yang terlalu panjang.
 - **Standar Performa & Website Ringan:** Setiap pengembangan atau perubahan kode wajib menjaga situs tetap ringan, cepat dibuka, hemat data, dan berukuran kecil[cite: 1].
     - **Ukuran Halaman & Aset:** Usahakan total beban data teroptimasi dengan baik. Penggunaan gambar format JPG, PNG, maupun WebP diperbolehkan selama ukurannya terkompresi dan memiliki dimensi piksel yang pas. Penggunaan video juga diperbolehkan dengan kompresi yang optimal serta muatan (loading) yang tidak memberatkan halaman.
@@ -168,32 +171,32 @@ Sebelum menyerahkan hasil pekerjaan atau melakukan push ke GitHub, AI WAJIB mela
 ### Checklist Testing Wajib
 
 1. **Fungsionalitas CRUD Admin:**
-   - Pastikan semua operasi Create, Read, Update, Delete berfungsi di semua tabel (Users, Collections, Achievements, Chatbot)
-   - Pastikan upload foto/video berhasil dan gambar muncul di halaman terkait
-   - Pastikan modal konfirmasi hapus berfungsi dengan benar
-   - Pastikan validasi form menampilkan pesan error yang sesuai
+    - Pastikan semua operasi Create, Read, Update, Delete berfungsi di semua tabel (Users, Collections, Achievements, Chatbot)
+    - Pastikan upload foto/video berhasil dan gambar muncul di halaman terkait
+    - Pastikan modal konfirmasi hapus berfungsi dengan benar
+    - Pastikan validasi form menampilkan pesan error yang sesuai
 
 2. **Routing & Middleware:**
-   - Pastikan middleware `AdminOnly` memeriksa role admin (bukan hanya autentikasi)
-   - Pastikan middleware `AdminDomain` menggunakan redirect 308 (bukan 301) untuk mempreservasi method POST
-   - Pastikan tidak ada redirect loop antar domain
+    - Pastikan middleware `AdminOnly` memeriksa role admin (bukan hanya autentikasi)
+    - Pastikan middleware `AdminDomain` menggunakan redirect 308 (bukan 301) untuk mempreservasi method POST
+    - Pastikan tidak ada redirect loop antar domain
 
 3. **Database Compatibility (TiDB):**
-   - Pastikan semua migration kompatibel dengan TiDB Cloud
-   - Pastikan AUTO_INCREMENT berfungsi di semua tabel
-   - Pastikan kolom JSON (metadata) tersimpan dengan benar
+    - Pastikan semua migration kompatibel dengan TiDB Cloud
+    - Pastikan AUTO_INCREMENT berfungsi di semua tabel
+    - Pastikan kolom JSON (metadata) tersimpan dengan benar
 
 4. **Performa:**
-   - Pastikan `APP_DEBUG=false` di production
-   - Pastikan tidak ada duplikasi loading resource (font, CSS, JS)
-   - Pastikan gambar Cloudinary menggunakan transformasi `q_auto,f_auto`
-   - Pastikan Firebase/lazy-loaded resources tidak memblok render halaman
+    - Pastikan `APP_DEBUG=false` di production
+    - Pastikan tidak ada duplikasi loading resource (font, CSS, JS)
+    - Pastikan gambar Cloudinary menggunakan transformasi `q_auto,f_auto`
+    - Pastikan Firebase/lazy-loaded resources tidak memblok render halaman
 
 5. **Environment Variables:**
-   - Pastikan semua env vars yang diperlukan tersedia di `vercel.json` atau Vercel Dashboard
-   - Jangan masukkan secrets (API keys, passwords) ke dalam `vercel.json` — gunakan Vercel Dashboard
+    - Pastikan semua env vars yang diperlukan tersedia di `vercel.json` atau Vercel Dashboard
+    - Jangan masukkan secrets (API keys, passwords) ke dalam `vercel.json` — gunakan Vercel Dashboard
 
 6. **Error Handling:**
-   - Pastikan tidak ada error 500 di halaman manapun
-   - Pastikan error handling di JavaScript (fetch/AJAX) menampilkan pesan yang jelas
-   - Pastikan `filemtime()` tidak digunakan di template Blade (gagal di Vercel)
+    - Pastikan tidak ada error 500 di halaman manapun
+    - Pastikan error handling di JavaScript (fetch/AJAX) menampilkan pesan yang jelas
+    - Pastikan `filemtime()` tidak digunakan di template Blade (gagal di Vercel)

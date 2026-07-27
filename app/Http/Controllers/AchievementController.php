@@ -11,7 +11,9 @@ class AchievementController extends Controller
 {
     public function index()
     {
-        $achievements = Achievement::with('images')->latest()->get();
+        $achievements = Achievement::with('images:id,achievement_id,image_path')
+            ->select('id', 'title', 'title_en', 'title_highlight', 'title_highlight_en', 'year', 'description', 'description_en', 'date', 'video_url', 'video_file', 'external_link')
+            ->latest()->get();
 
         return view('admin.achievements.index', compact('achievements'));
     }
@@ -19,7 +21,8 @@ class AchievementController extends Controller
     public function publicIndex()
     {
         $achievements = Cache::remember('public.achievements', 300, function () {
-            return Achievement::with('images')
+            return Achievement::with('images:id,achievement_id,image_path')
+                ->select('id', 'title', 'title_en', 'title_highlight', 'title_highlight_en', 'year', 'description', 'description_en', 'date', 'video_url', 'video_file', 'external_link')
                 ->orderBy('year', 'desc')
                 ->orderBy('date', 'desc')
                 ->get()

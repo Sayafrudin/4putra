@@ -26,7 +26,8 @@ class ChatbotController extends Controller
         $transaksiPaid = Cache::remember('chatbot.transaksiPaid', 60, fn () => TransaksiChatbot::where('status', 'paid')->count());
 
         $notifikasiTerbaru = Cache::remember('chatbot.notifikasiTerbaru', 30, function () {
-            return NotifikasiAdmin::with('pelanggan')
+            return NotifikasiAdmin::with('pelanggan:id,nomor_wa,nama')
+                ->select('id', 'tipe', 'judul', 'isi', 'pelanggan_id', 'dibaca', 'created_at')
                 ->latest()
                 ->limit(20)
                 ->get();
@@ -46,7 +47,8 @@ class ChatbotController extends Controller
     // Halaman WhatsApp Chat (admin bisa balas pelanggan)
     public function chat(Request $request)
     {
-        $pelangganList = Pelanggan::withCount('percakapan as total_chat')
+        $pelangganList = Pelanggan::select('id', 'nomor_wa', 'nama', 'sesi_aktif', 'pesan_terakhir')
+            ->withCount('percakapan as total_chat')
             ->orderByDesc('pesan_terakhir')
             ->get();
 
@@ -54,9 +56,13 @@ class ChatbotController extends Controller
         $riwayat = collect();
 
         if ($request->has('pelanggan_id')) {
-            $selectedPelanggan = Pelanggan::find($request->pelanggan_id);
+            $selectedPelanggan = Pelanggan::select('id', 'nomor_wa', 'nama', 'sesi_aktif')->find($request->pelanggan_id);
             if ($selectedPelanggan) {
-                $riwayat = $selectedPelanggan->percakapan()->orderBy('created_at', 'asc')->limit(200)->get();
+                $riwayat = $selectedPelanggan->percakapan()
+                    ->select('id', 'pelanggan_id', 'pesan_pengirim', 'pesan_balasan', 'sumber_balasan', 'terkirim', 'created_at')
+                    ->orderBy('created_at', 'asc')
+                    ->limit(200)
+                    ->get();
             }
         }
 
@@ -68,7 +74,8 @@ class ChatbotController extends Controller
     {
         $afterId = $request->input('after_id', 0);
 
-        $messages = Percakapan::where('pelanggan_id', $pelanggan->id)
+        $messages = Percakapan::select('id', 'pelanggan_id', 'pesan_pengirim', 'pesan_balasan', 'sumber_balasan', 'terkirim', 'created_at')
+            ->where('pelanggan_id', $pelanggan->id)
             ->where('id', '>', $afterId)
             ->orderBy('created_at', 'asc')
             ->get();
@@ -265,7 +272,8 @@ class ChatbotController extends Controller
     // Daftar transaksi
     public function transaksi()
     {
-        $transaksi = TransaksiChatbot::with(['pelanggan', 'inventaris', 'pembayaran'])
+        $transaksi = TransaksiChatbot::with(['pelanggan:id,nomor_wa,nama', 'inventaris:id,nama_spesies,fase,harga', 'pembayaran:id,transaksi_id,nominal,status'])
+            ->select('id', 'pelanggan_id', 'inventaris_id', 'nominal_dp', 'total_harga', 'quantity', 'status', 'midtrans_order_id', 'created_at')
             ->latest()
             ->paginate(20);
 
@@ -280,7 +288,10 @@ class ChatbotController extends Controller
     // Detail percakapan pelanggan (read-only view)
     public function percakapan(Pelanggan $pelanggan)
     {
-        $riwayat = $pelanggan->percakapan()->latest()->paginate(50);
+        $riwayat = $pelanggan->percakapan()
+            ->select('id', 'pelanggan_id', 'pesan_pengirim', 'pesan_balasan', 'sumber_balasan', 'terkirim', 'created_at')
+            ->latest()
+            ->paginate(50);
 
         return view('admin.chatbot.percakapan', compact('pelanggan', 'riwayat'));
     }
@@ -462,9 +473,18 @@ class ChatbotController extends Controller
     // Polling status semua transaksi pending (dipanggil AJAX dari halaman transaksi)
     public function transaksiStatusPolling()
     {
-        $pendingTransaksis = TransaksiChatbot::where('status', 'pending')
+        $pendingCount = TransaksiChatbot::where('status', 'pending')
             ->whereNotNull('midtrans_order_id')
-            ->get();
+            ->count();
+
+        if ($pendingCount === 0) {
+            return response()->json(['status' => 'OK', 'updated' => 0, 'message' => 'Tidak ada transaksi pending.']);
+        }
+
+        $pendingTransaksis = TransaksiChatbot::select('id', 'pelanggan_id', 'total_harga', 'status', 'midtrans_order_id')
+            ->where('status', 'pending')
+            ->whereNotNull('midtrans_order_id')
+            ->cursor();
 
         if ($pendingTransaksis->isEmpty()) {
             return response()->json(['status' => 'OK', 'updated' => 0, 'message' => 'Tidak ada transaksi pending.']);
@@ -547,7 +567,7 @@ class ChatbotController extends Controller
         return response()->json([
             'status' => 'OK',
             'updated' => $updated,
-            'total_pending' => $pendingTransaksis->count(),
+            'total_pending' => $pendingCount,
             'errors' => $errors,
         ]);
     }
@@ -607,13 +627,13 @@ class ChatbotController extends Controller
     // ============================================================
     public function transaksiExportExcel()
     {
-        $transaksi = TransaksiChatbot::with(['pelanggan', 'inventaris', 'pembayaran'])
-            ->latest()
-            ->get();
-
         $csv = "Order ID,Pelanggan,Nomor WA,Spesies,Fase,Harga,Status,Tanggal\n";
 
-        foreach ($transaksi as $trx) {
+        TransaksiChatbot::with(['pelanggan:id,nomor_wa,nama', 'inventaris:id,nama_spesies,fase', 'pembayaran:id,transaksi_id,nominal,status'])
+            ->select('id', 'pelanggan_id', 'inventaris_id', 'total_harga', 'status', 'midtrans_order_id', 'created_at')
+            ->latest()
+            ->cursor()
+            ->each(function ($trx) use (&$csv) {
             $nama = '"'.str_replace('"', '""', $trx->pelanggan->nama ?? '-').'"';
             $nomor = '"'.str_replace(['@s.whatsapp.net', '@lid'], '', $trx->pelanggan->nomor_wa ?? '').'"';
             $spesies = '"'.str_replace('"', '""', $trx->inventaris?->nama_spesies ?? '-').'"';
@@ -623,7 +643,7 @@ class ChatbotController extends Controller
             $tanggal = $trx->created_at->format('Y-m-d H:i:s');
 
             $csv .= "{$trx->midtrans_order_id},{$nama},{$nomor},{$spesies},{$fase},{$harga},{$status},{$tanggal}\n";
-        }
+        });
 
         return response($csv)
             ->header('Content-Type', 'text/csv')
@@ -635,7 +655,8 @@ class ChatbotController extends Controller
     // ============================================================
     public function transaksiExportPdf()
     {
-        $transaksi = TransaksiChatbot::with(['pelanggan', 'inventaris', 'pembayaran'])
+        $transaksi = TransaksiChatbot::with(['pelanggan:id,nomor_wa,nama', 'inventaris:id,nama_spesies,fase,harga', 'pembayaran:id,transaksi_id,nominal,status'])
+            ->select('id', 'pelanggan_id', 'inventaris_id', 'nominal_dp', 'total_harga', 'quantity', 'status', 'midtrans_order_id', 'created_at')
             ->latest()
             ->get();
 

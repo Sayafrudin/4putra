@@ -1,17 +1,29 @@
 import mysql from 'mysql2/promise';
 
-// Konfigurasi koneksi MySQL — sesuaikan dengan .env Laravel
+// Konfigurasi koneksi MySQL ke TiDB Cloud Serverless
+// Menggunakan koneksi TCP (mysql2) dengan optimasi untuk serverless
+const isTiDB = (process.env.DB_HOST || '').includes('tidbcloud.com');
+
 const pool = mysql.createPool({
-    host: '127.0.0.1',
-    user: 'root',
-    password: '',
-    database: '4putra-project',
+    host: process.env.DB_HOST || '127.0.0.1',
+    user: process.env.DB_USERNAME || process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_DATABASE || '4putra-project',
+    port: parseInt(process.env.DB_PORT || '4000'),
     waitForConnections: true,
-    connectionLimit: 10,
+    connectionLimit: isTiDB ? 5 : 10,
     queueLimit: 0,
+    connectTimeout: 10000,
+    // SSL untuk TiDB Cloud
+    ...(isTiDB ? {
+        ssl: {
+            rejectUnauthorized: true,
+            ca: process.env.DB_SSL_CA || undefined,
+        },
+    } : {}),
 });
 
-// Helper untuk menjalankan query
+// Helper untuk menjalankan query — mengembalikan array baris
 export async function query(sql, params = []) {
     const [rows] = await pool.execute(sql, params);
     return rows;

@@ -119,9 +119,7 @@
             </form>
 
             <p class="text-center text-sm text-gray-500 mt-6">
-                Belum punya akun?
-                <a href="{{ route('register') }}" class="text-[#E62C37] hover:text-[#c7242f] font-medium">Daftar di
-                    sini</a>
+                Hanya untuk internal 4Putra
             </p>
         </div>
 

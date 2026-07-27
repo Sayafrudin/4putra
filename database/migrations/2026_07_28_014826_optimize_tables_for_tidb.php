@@ -7,47 +7,26 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Izinkan perubahan AUTO_INCREMENT di TiDB
         DB::statement('SET @@tidb_allow_remove_auto_inc = ON');
 
         // ============================================================
-        // LANGKAH 1: Restore AUTO_INCREMENT yang hilang di semua tabel
-        // (diperlukan sebelum bisa convert ke AUTO_RANDOM)
+        // Tabel CLUSTERED sudah AUTO_RANDOM dari migration sebelumnya.
+        // Untuk tabel NONCLUSTERED: rebuild primary key sebagai CLUSTERED
+        // lalu langsung convert ke AUTO_RANDOM.
         // ============================================================
-
-        $clusteredTables = [
-            'users', 'achievements', 'achievement_images',
-            'collections', 'activity_logs',
-        ];
 
         $nonClusteredTables = [
             'pelanggan', 'percakapan', 'transaksi_chatbot',
             'pembayarans', 'notifikasi_admins', 'inventaris_burung',
         ];
 
-        // Restore AUTO_INCREMENT untuk tabel CLUSTERED
-        foreach ($clusteredTables as $table) {
-            DB::statement("ALTER TABLE {$table} MODIFY COLUMN id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT");
-        }
-
-        // Restore AUTO_INCREMENT + rebuild sebagai CLUSTERED untuk tabel NONCLUSTERED
         foreach ($nonClusteredTables as $table) {
-            DB::statement("ALTER TABLE {$table} MODIFY COLUMN id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT");
-            // Rebuild primary key sebagai CLUSTERED agar AUTO_RANDOM bisa diterapkan
-            DB::statement("ALTER TABLE {$table} DROP PRIMARY KEY, ADD PRIMARY KEY (id) CLUSTERED");
+            // Rebuild primary key sebagai CLUSTERED + AUTO_RANDOM sekaligus
+            DB::statement("ALTER TABLE {$table} DROP PRIMARY KEY, ADD PRIMARY KEY (id) CLUSTERED AUTO_RANDOM(5)");
         }
 
         // ============================================================
-        // LANGKAH 2: Convert AUTO_INCREMENT → AUTO_RANDOM
-        // ============================================================
-
-        $allTables = array_merge($clusteredTables, $nonClusteredTables);
-        foreach ($allTables as $table) {
-            DB::statement("ALTER TABLE {$table} MODIFY COLUMN id BIGINT UNSIGNED NOT NULL AUTO_RANDOM(5)");
-        }
-
-        // ============================================================
-        // LANGKAH 3: INDEX untuk kolom yang sering di-query
+        // INDEX untuk kolom yang sering di-query
         // ============================================================
 
         DB::statement('ALTER TABLE pelanggan ADD INDEX IF NOT EXISTS idx_pelanggan_sesi (sesi_aktif)');
@@ -68,7 +47,7 @@ return new class extends Migration
         DB::statement('ALTER TABLE sessions ADD INDEX IF NOT EXISTS idx_sessions_last_activity (last_activity)');
 
         // ============================================================
-        // LANGKAH 4: ALTER TABLE CACHE untuk tabel kecil
+        // ALTER TABLE CACHE untuk tabel kecil
         // ============================================================
         DB::statement('ALTER TABLE inventaris_burung CACHE');
         DB::statement('ALTER TABLE collections CACHE');
@@ -78,7 +57,6 @@ return new class extends Migration
     {
         DB::statement('SET @@tidb_allow_remove_auto_inc = ON');
 
-        // Hapus index
         $indexes = [
             ['pelanggan', 'idx_pelanggan_sesi'],
             ['pelanggan', 'idx_pelanggan_terakhir'],
@@ -102,7 +80,7 @@ return new class extends Migration
             DB::statement("ALTER TABLE {$table} DROP INDEX IF EXISTS {$index}");
         }
 
-        // Kembalikan AUTO_RANDOM ke AUTO_INCREMENT
+        // Kembalikan ke NONCLUSTERED + AUTO_INCREMENT
         $tables = [
             'users', 'achievements', 'achievement_images', 'collections',
             'activity_logs', 'pelanggan', 'percakapan', 'transaksi_chatbot',
@@ -110,6 +88,7 @@ return new class extends Migration
         ];
 
         foreach ($tables as $table) {
+            DB::statement("ALTER TABLE {$table} DROP PRIMARY KEY, ADD PRIMARY KEY (id) NONCLUSTERED");
             DB::statement("ALTER TABLE {$table} MODIFY COLUMN id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT");
         }
     }

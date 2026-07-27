@@ -7,6 +7,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Izinkan perubahan AUTO_INCREMENT → AUTO_RANDOM di TiDB
+        DB::statement('SET @@tidb_allow_remove_auto_inc = ON');
+
         // ============================================================
         // 1. AUTO_RANDOM untuk tabel utama (mencegah hotspot di TiDB)
         //    Mengubah kolom id dari AUTO_INCREMENT ke AUTO_RANDOM
@@ -122,6 +125,8 @@ return new class extends Migration
         }
 
         // Kembalikan AUTO_RANDOM ke AUTO_INCREMENT
+        DB::statement('SET @@tidb_allow_remove_auto_inc = ON');
+
         $tables = [
             'users', 'achievements', 'achievement_images', 'collections',
             'activity_logs', 'pelanggan', 'percakapan', 'transaksi_chatbot',

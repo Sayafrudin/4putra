@@ -989,7 +989,9 @@ async function hubungkanKeWhatsApp() {
         }
     });
 }
-
+hubungkanKeWhatsApp().catch(err => {
+    console.error('Gagal koneksi WhatsApp:', err.message);
+});
 
 // ============================================================
 // HTTP SERVER UNTUK MENERIMA REQUEST DARI INDEX.JS / LARAVEL
@@ -1075,8 +1077,6 @@ img{border-radius:12px;background:#fff;padding:12px;}
 const API_PORT = process.env.PORT || 3001;
 
 // Reset auth_info untuk generate QR baru
-// Karena useMultiFileAuthState membuat file watcher internal yang tetap lock directory,
-// kita spawn child process terpisah untuk hapus auth_info SETELAH parent process exit.
 async function resetAuth() {
     const authPath = join(__dirname, 'auth_info');
     if (!fs.existsSync(authPath)) {
@@ -1096,42 +1096,34 @@ async function resetAuth() {
         isConnected = false;
     }
 
-    // Spawn child process yang akan hapus auth_info SETELAH parent exit
-    // Child process tidak punya file lock dari Baileys, jadi bisa hapus dengan bebas
-    const cleanupScript = `
-        const fs = require('fs');
-        const path = '${authPath.replace(/\\/g, '\\\\')}';
-        let retries = 0;
-        const maxRetries = 6;
-        const interval = setInterval(() => {
-            try {
-                if (fs.existsSync(path)) {
-                    fs.rmSync(path, { recursive: true, force: true });
-                    console.log('auth_info berhasil dihapus');
-                }
-                clearInterval(interval);
-                process.exit(0);
-            } catch (e) {
-                retries++;
-                console.log('Retry ' + retries + ': ' + e.message);
-                if (retries >= maxRetries) {
-                    clearInterval(interval);
-                    process.exit(1);
+    // Tunggu socket benar-benar tertutup supaya file handle lepas
+    await new Promise(r => setTimeout(r, 5000));
+
+    // Hapus isi auth_info satu per satu (bukan rmdir, untuk hindari EBUSY)
+    const maxAttempts = 3;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            const files = fs.readdirSync(authPath);
+            for (const file of files) {
+                const filePath = join(authPath, file);
+                try {
+                    fs.unlinkSync(filePath);
+                } catch (e) {
+                    // Jika unlink gagal (EBUSY), overwrite dengan data kosong
+                    try { fs.writeFileSync(filePath, '', 'utf-8'); } catch (_) {}
                 }
             }
-        }, 2000);
-    `;
+            // Coba hapus directory kosong
+            try { fs.rmSync(authPath, { recursive: true, force: true }); } catch (_) {}
+            console.log(`auth_info berhasil di-reset (percobaan ${attempt})`);
+            return { success: true };
+        } catch (e) {
+            console.log(`Percobaan ${attempt} gagal:`, e.message);
+            if (attempt < maxAttempts) await new Promise(r => setTimeout(r, 3000));
+        }
+    }
 
-    const { spawn } = await import('child_process');
-    const child = spawn(process.execPath, ['-e', cleanupScript], {
-        detached: true,
-        stdio: ['ignore', 'pipe', 'pipe'],
-    });
-    child.unref();
-
-    console.log('Cleanup child process spawned, parent akan restart...');
-
-    return { success: true };
+    return { success: false, error: 'Gagal reset auth_info setelah 3 percobaan' };
 }
 
 apiApp.post('/reset', async (req, res) => {
@@ -1195,12 +1187,6 @@ apiApp.get('/status', (req, res) => {
 
 apiApp.listen(API_PORT, '0.0.0.0', () => {
     console.log(`Baileys API berjalan di port ${API_PORT}`);
-
-    // Mulai koneksi WhatsApp SETelah server aktif agar /qr tetap bisa diakses
-    hubungkanKeWhatsApp().catch(err => {
-        console.error('Gagal koneksi WhatsApp, retry dalam 10 detik...', err.message);
-        setTimeout(() => hubungkanKeWhatsApp().catch(() => {}), 10000);
-    });
 });
 
 // Global error handler agar process tidak crash

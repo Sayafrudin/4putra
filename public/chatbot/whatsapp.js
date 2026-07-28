@@ -990,7 +990,6 @@ async function hubungkanKeWhatsApp() {
     });
 }
 
-hubungkanKeWhatsApp();
 
 // ============================================================
 // HTTP SERVER UNTUK MENERIMA REQUEST DARI INDEX.JS / LARAVEL
@@ -1197,4 +1196,18 @@ apiApp.get('/status', (req, res) => {
 
 apiApp.listen(API_PORT, '0.0.0.0', () => {
     console.log(`Baileys API berjalan di port ${API_PORT}`);
+
+    // Mulai koneksi WhatsApp SETelah server aktif agar /qr tetap bisa diakses
+    hubungkanKeWhatsApp().catch(err => {
+        console.error('Gagal koneksi WhatsApp, retry dalam 10 detik...', err.message);
+        setTimeout(() => hubungkanKeWhatsApp().catch(() => {}), 10000);
+    });
+});
+
+// Global error handler agar process tidak crash
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err.message);
+});
+process.on('unhandledRejection', (err) => {
+    console.error('Unhandled Rejection:', err?.message || err);
 });

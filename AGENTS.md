@@ -160,10 +160,11 @@ Vercel via `vercel.json` — PHP runtime for `api/index.php`, static assets serv
 
 ## Aturan Git & Deployment
 
-- **Branch `development` adalah branch utama untuk testing.** JANGAN PERNAH hapus branch `development`. Branch ini dipakai untuk menguji perubahan sebelum merge ke `main` (production).
-- **Push ke `development` dulu, lalu langsung buat PR ke `main`, dan langsung confirm/merge PR-nya.** Jangan biarkan PR menggantung tanpa di-merge.
+- **Branch `development` adalah branch default dan utama.** JANGAN PERNAH hapus branch `development`. Semua perubahan WAJIB push ke `development` dulu.
+- **Alur push ke production:** Push ke `development` → buat PR ke `main` → langsung merge PR. Jangan biarkan PR menggantung tanpa di-merge.
+- **JANGAN pernah push langsung ke `main`.** Selalu lewat `development` dulu, kecuali pengguna secara eksplisit meminta push ke `main`.
 - **Push Langsung ke GitHub:** Ketika pengguna meminta push ke GitHub, lakukan langsung tanpa bertanya lagi. Jangan menunggu konfirmasi tambahan — langsung `git add`, `git commit`, dan `git push origin development`.
-- **Branch Default:** Branch utama untuk development adalah `development`. Push ke `development` kecuali pengguna secara eksplisit meminta branch lain. Setelah push ke `development`, langsung buat PR ke `main` dan merge.
+- **Branch Default untuk checkout:** Selalu `git checkout development` di awal sesi. Jangan ke `main`.
 - **Pesan Commit:** Gunakan pesan commit yang deskriptif dalam Bahasa Indonesia, singkat, dan jelas. Contoh: `fix: migrasi gambar ke Cloudinary + perbaikan domain admin`.
 
 ## Aturan Wajib Testing & Validasi Sebelum Push

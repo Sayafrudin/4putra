@@ -105,12 +105,14 @@ class ChatbotController extends Controller
 
         $pelanggan->update(['pesan_terakhir' => now()]);
 
-        // Kirim via Baileys API (indexB.js di port 3001)
+        // Kirim via Baileys API (whatsapp.js)
         $note = '';
         $sent = false;
+        $baileysUrl = env('BAILEYS_BOT_URL', 'http://127.0.0.1:3001');
+        $metaApiUrl = env('META_API_URL', 'http://127.0.0.1:3000');
 
         try {
-            $response = Http::timeout(5)->post('http://127.0.0.1:3001/send', [
+            $response = Http::timeout(5)->post($baileysUrl.'/send', [
                 'jid' => $pelanggan->nomor_wa,
                 'pesan' => $pesan,
             ]);
@@ -126,7 +128,7 @@ class ChatbotController extends Controller
         // Fallback: coba via index.js (Meta API) jika Baileys gagal dan bukan @lid
         if (! $sent && ! str_contains($pelanggan->nomor_wa, '@lid')) {
             try {
-                $response = Http::timeout(5)->post('http://127.0.0.1:3000/api/chat/send', [
+                $response = Http::timeout(5)->post($metaApiUrl.'/api/chat/send', [
                     'pelanggan_id' => $pelanggan->id,
                     'pesan' => $pesan,
                 ]);
@@ -187,7 +189,7 @@ class ChatbotController extends Controller
 
             // Kirim via Baileys API
             try {
-                Http::timeout(5)->post('http://127.0.0.1:3001/send', [
+                Http::timeout(5)->post(env('BAILEYS_BOT_URL', 'http://127.0.0.1:3001').'/send', [
                     'jid' => $pelanggan->nomor_wa,
                     'pesan' => $pesanNotif,
                 ]);
@@ -583,9 +585,9 @@ class ChatbotController extends Controller
 
         $terkirim = false;
 
-        // Kirim via Baileys API (whatsapp.js di port 3001)
+        // Kirim via Baileys API (whatsapp.js)
         try {
-            $response = Http::timeout(5)->post('http://127.0.0.1:3001/send', [
+            $response = Http::timeout(5)->post(env('BAILEYS_BOT_URL', 'http://127.0.0.1:3001').'/send', [
                 'jid' => $pelanggan->nomor_wa,
                 'pesan' => $pesan,
             ]);
@@ -599,7 +601,7 @@ class ChatbotController extends Controller
 
             // Fallback: coba via index.js (Meta API)
             try {
-                $response = Http::timeout(5)->post('http://127.0.0.1:3000/api/chat/send', [
+                $response = Http::timeout(5)->post(env('META_API_URL', 'http://127.0.0.1:3000').'/api/chat/send', [
                     'pelanggan_id' => $trx->pelanggan_id,
                     'pesan' => $pesan,
                 ]);

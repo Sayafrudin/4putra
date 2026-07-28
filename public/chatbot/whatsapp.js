@@ -7,7 +7,6 @@ config({ path: join(__dirname, '../../.env') });
 config({ path: join(__dirname, '.env'), override: true });
 import { makeWASocket, useMultiFileAuthState, DisconnectReason } from '@whiskeysockets/baileys';
 import pino from 'pino';
-import qrcode from 'qrcode-terminal';
 import { Groq } from 'groq-sdk';
 import express from 'express';
 import { eksekusiAprioriLengkap } from './apriori.js';
@@ -29,6 +28,7 @@ const CACHE_APRIORI_TTL = 5 * 60 * 1000;
 // Simpan socket instance agar bisa dipakai dari API luar
 let sockInstance = null;
 let isConnected = false;
+let lastQrCode = null;
 
 // ============================================================
 // SYSTEM PROMPT
@@ -520,10 +520,11 @@ async function hubungkanKeWhatsApp() {
         const { connection, lastDisconnect, qr } = update;
 
         if (qr) {
+            lastQrCode = qr;
             console.log('==================================================');
-            console.log('SILAKAN SCAN QR CODE DI BAWAH INI:');
+            console.log('SCAN QR CODE DI BROWSER:');
+            console.log('http://localhost:3001/qr');
             console.log('==================================================');
-            qrcode.generate(qr, { small: true });
         }
 
         if (connection === 'close') {
@@ -533,6 +534,7 @@ async function hubungkanKeWhatsApp() {
             if (harusKonekUlang) hubungkanKeWhatsApp();
         } else if (connection === 'open') {
             isConnected = true;
+            lastQrCode = null;
             console.log('==================================================');
             console.log('BOT WHATSAPP 4PUTRA VERTEX AVIARY AKTIF!');
             console.log('==================================================');
@@ -1028,6 +1030,32 @@ apiApp.get('/health', (req, res) => {
         status: 'OK',
         bot_connected: isConnected,
     });
+});
+
+// Halaman QR code untuk scan WhatsApp
+apiApp.get('/qr', (req, res) => {
+    if (!lastQrCode) {
+        return res.send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>QR WhatsApp</title>
+<style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#1a1a2e;color:#fff;}
+.box{text-align:center;padding:40px;background:#16213e;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.3);}
+h2{margin-bottom:8px;}p{color:#a0a0a0;}</style></head><body>
+<div class="box"><h2>WhatsApp Bot</h2><p>Bot sudah terhubung atau belum ada QR code.</p>
+<p>Refresh halaman ini jika menunggu QR baru.</p></div></body></html>`);
+    }
+
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(lastQrCode)}`;
+
+    res.send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Scan QR WhatsApp</title>
+<meta http-equiv="refresh" content="30">
+<style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#1a1a2e;color:#fff;}
+.box{text-align:center;padding:40px;background:#16213e;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.3);}
+h2{margin-bottom:8px;}p{color:#a0a0a0;margin-bottom:20px;}
+img{border-radius:12px;background:#fff;padding:12px;}
+.status{margin-top:16px;padding:8px 16px;border-radius:8px;display:inline-block;font-size:14px;}
+.waiting{background:#f59e0b20;color:#f59e0b;}</style></head><body>
+<div class="box"><h2>Scan QR WhatsApp</h2><p>Buka WhatsApp di HP → Settings → Linked Devices → Link a Device</p>
+<img src="${qrUrl}" alt="QR Code" width="300" height="300">
+<p class="status waiting">Menunggu scan... (auto-refresh 30 detik)</p></div></body></html>`);
 });
 
 const API_PORT = 3001;

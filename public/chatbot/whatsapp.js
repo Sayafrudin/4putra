@@ -1075,7 +1075,7 @@ img{border-radius:12px;background:#fff;padding:12px;}
 
 const API_PORT = process.env.PORT || 3001;
 
-// Reset auth_info untuk generate QR baru
+// Reset auth_info untuk generate QR baru (POST untuk API, GET untuk browser)
 apiApp.post('/reset', (req, res) => {
     const authPath = join(__dirname, 'auth_info');
     try {
@@ -1084,11 +1084,46 @@ apiApp.post('/reset', (req, res) => {
             console.log('auth_info dihapus, bot akan restart...');
         }
         res.json({ status: 'OK', message: 'Auth dihapus. Bot akan restart dan generate QR baru.' });
-        // Restart proses
         setTimeout(() => process.exit(0), 1000);
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
+});
+
+apiApp.get('/reset', (req, res) => {
+    const authPath = join(__dirname, 'auth_info');
+    const hasAuth = fs.existsSync(authPath);
+
+    if (req.query.confirm === '1') {
+        try {
+            if (fs.existsSync(authPath)) {
+                fs.rmSync(authPath, { recursive: true, force: true });
+                console.log('auth_info dihapus, bot akan restart...');
+            }
+            res.send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reset Berhasil</title>
+<style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#1a1a2e;color:#fff;}
+.box{text-align:center;padding:40px;background:#16213e;border-radius:16px;}</style></head><body>
+<div class="box"><h2>Auth Dihapus!</h2><p>Bot akan restart dalam 5 detik.</p>
+<p>Setelah restart, buka <a href="/qr" style="color:#22c55e">/qr</a> untuk scan QR baru.</p>
+<script>setTimeout(()=>window.location.href='/qr',5000)</script></div></body></html>`);
+            setTimeout(() => process.exit(0), 1000);
+        } catch (e) {
+            res.status(500).send('Error: ' + e.message);
+        }
+        return;
+    }
+
+    res.send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reset WhatsApp Auth</title>
+<style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#1a1a2e;color:#fff;}
+.box{text-align:center;padding:40px;background:#16213e;border-radius:16px;max-width:400px;}
+h2{margin-bottom:8px;}p{color:#a0a0a0;margin-bottom:20px;}
+a.btn{display:inline-block;padding:12px 24px;background:#ef4444;color:#fff;text-decoration:none;border-radius:8px;font-weight:bold;}
+a.btn:hover{background:#dc2626;}
+.ok{color:#22c55e;}</style></head><body>
+<div class="box"><h2>Reset WhatsApp Auth</h2>
+<p>Auth saat ini: ${hasAuth ? '<span style="color:#f59e0b">Ada (credential lama)</span>' : '<span class="ok">Tidak ada</span>'}</p>
+<p>Ini akan menghapus credential WhatsApp dan memaksa generate QR baru. Bot akan restart.</p>
+<a class="btn" href="/reset?confirm=1">Ya, Reset Sekarang</a></div></body></html>`);
 });
 
 // Status detail bot

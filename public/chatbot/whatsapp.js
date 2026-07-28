@@ -1,6 +1,7 @@
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { config } from 'dotenv';
+import fs from 'fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 config({ path: join(__dirname, '../../.env') });
@@ -1060,6 +1061,35 @@ img{border-radius:12px;background:#fff;padding:12px;}
 });
 
 const API_PORT = process.env.PORT || 3001;
+
+// Reset auth_info untuk generate QR baru
+apiApp.post('/reset', (req, res) => {
+    const authPath = join(__dirname, 'auth_info');
+    try {
+        if (fs.existsSync(authPath)) {
+            fs.rmSync(authPath, { recursive: true, force: true });
+            console.log('auth_info dihapus, bot akan restart...');
+        }
+        res.json({ status: 'OK', message: 'Auth dihapus. Bot akan restart dan generate QR baru.' });
+        // Restart proses
+        setTimeout(() => process.exit(0), 1000);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Status detail bot
+apiApp.get('/status', (req, res) => {
+    const authExists = fs.existsSync(join(__dirname, 'auth_info'));
+    res.json({
+        status: 'OK',
+        bot_connected: isConnected,
+        has_auth: authExists,
+        has_qr: !!lastQrCode,
+        port: API_PORT,
+    });
+});
+
 apiApp.listen(API_PORT, '0.0.0.0', () => {
     console.log(`Baileys API berjalan di port ${API_PORT}`);
 });

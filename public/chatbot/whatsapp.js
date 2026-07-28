@@ -1,4 +1,10 @@
-import 'dotenv/config';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+import { config } from 'dotenv';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+config({ path: join(__dirname, '../../.env') });
+config({ path: join(__dirname, '.env'), override: true });
 import { makeWASocket, useMultiFileAuthState, DisconnectReason } from '@whiskeysockets/baileys';
 import pino from 'pino';
 import qrcode from 'qrcode-terminal';

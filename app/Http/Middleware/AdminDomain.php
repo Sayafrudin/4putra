@@ -40,19 +40,21 @@ class AdminDomain
 
         // Jika mengakses /admin/* dari domain public → redirect ke domain admin
         if ($isPublicDomain && str_starts_with($path, 'admin')) {
-            $adminUrl = 'https://' . $this->adminDomains[0] . '/' . $path;
+            $adminUrl = 'https://'.$this->adminDomains[0].'/'.$path;
             if ($request->getQueryString()) {
-                $adminUrl .= '?' . $request->getQueryString();
+                $adminUrl .= '?'.$request->getQueryString();
             }
+
             return redirect($adminUrl, 308);
         }
 
         // Jika mengakses route public dari domain admin → redirect ke domain public
-        if ($isAdminDomain && !str_starts_with($path, 'admin')) {
-            $publicUrl = 'https://' . $this->publicDomains[0] . '/' . $path;
+        if ($isAdminDomain && ! str_starts_with($path, 'admin')) {
+            $publicUrl = 'https://'.$this->publicDomains[0].'/'.$path;
             if ($request->getQueryString()) {
-                $publicUrl .= '?' . $request->getQueryString();
+                $publicUrl .= '?'.$request->getQueryString();
             }
+
             return redirect($publicUrl, 308);
         }
 

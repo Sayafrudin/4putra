@@ -8,7 +8,6 @@ use App\Models\AchievementImage;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
 
 class AdminAchievementController extends Controller
 {
@@ -39,7 +38,7 @@ class AdminAchievementController extends Controller
             if (is_string($externalLinks)) {
                 $externalLinks = json_decode($externalLinks, true) ?: [];
             }
-            if (!is_array($externalLinks)) {
+            if (! is_array($externalLinks)) {
                 $externalLinks = $externalLinks ? [$externalLinks] : [];
             }
             $externalLinks = array_values(array_filter($externalLinks, fn ($l) => filter_var($l, FILTER_VALIDATE_URL)));
@@ -48,7 +47,7 @@ class AdminAchievementController extends Controller
             if (is_string($videoUrls)) {
                 $videoUrls = json_decode($videoUrls, true) ?: [];
             }
-            if (!is_array($videoUrls)) {
+            if (! is_array($videoUrls)) {
                 $videoUrls = $videoUrls ? [$videoUrls] : [];
             }
             $videoUrls = array_values(array_filter($videoUrls, fn ($l) => filter_var($l, FILTER_VALIDATE_URL)));
@@ -62,8 +61,8 @@ class AdminAchievementController extends Controller
                 'date' => $request->date,
                 'description' => $request->description,
                 'description_en' => $request->description_en,
-                'video_url' => !empty($videoUrls) ? json_encode($videoUrls) : null,
-                'external_link' => !empty($externalLinks) ? json_encode($externalLinks) : null,
+                'video_url' => ! empty($videoUrls) ? json_encode($videoUrls) : null,
+                'external_link' => ! empty($externalLinks) ? json_encode($externalLinks) : null,
             ]);
 
             // Gambar/video di-upload langsung dari browser ke Cloudinary
@@ -99,10 +98,11 @@ class AdminAchievementController extends Controller
                 'message' => 'Data portofolio berhasil disimpan',
             ], 200);
         } catch (\Exception $e) {
-            \Log::error('Achievement store error: ' . $e->getMessage());
+            \Log::error('Achievement store error: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menyimpan: ' . $e->getMessage(),
+                'message' => 'Gagal menyimpan: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -143,7 +143,7 @@ class AdminAchievementController extends Controller
             if (is_string($externalLinks)) {
                 $externalLinks = json_decode($externalLinks, true) ?: [];
             }
-            if (!is_array($externalLinks)) {
+            if (! is_array($externalLinks)) {
                 $externalLinks = $externalLinks ? [$externalLinks] : [];
             }
             $externalLinks = array_values(array_filter($externalLinks, fn ($l) => filter_var($l, FILTER_VALIDATE_URL)));
@@ -152,7 +152,7 @@ class AdminAchievementController extends Controller
             if (is_string($videoUrls)) {
                 $videoUrls = json_decode($videoUrls, true) ?: [];
             }
-            if (!is_array($videoUrls)) {
+            if (! is_array($videoUrls)) {
                 $videoUrls = $videoUrls ? [$videoUrls] : [];
             }
             $videoUrls = array_values(array_filter($videoUrls, fn ($l) => filter_var($l, FILTER_VALIDATE_URL)));
@@ -161,8 +161,8 @@ class AdminAchievementController extends Controller
                 'title', 'title_en', 'title_highlight', 'title_highlight_en',
                 'year', 'date', 'description', 'description_en',
             ]);
-            $data['video_url'] = !empty($videoUrls) ? json_encode($videoUrls) : null;
-            $data['external_link'] = !empty($externalLinks) ? json_encode($externalLinks) : null;
+            $data['video_url'] = ! empty($videoUrls) ? json_encode($videoUrls) : null;
+            $data['external_link'] = ! empty($externalLinks) ? json_encode($externalLinks) : null;
 
             $achievement->update($data);
 
@@ -200,10 +200,11 @@ class AdminAchievementController extends Controller
 
             return response()->json(['success' => true, 'message' => 'Data berhasil diperbarui!']);
         } catch (\Exception $e) {
-            \Log::error('Achievement update error: ' . $e->getMessage());
+            \Log::error('Achievement update error: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memperbarui: ' . $e->getMessage(),
+                'message' => 'Gagal memperbarui: '.$e->getMessage(),
             ], 500);
         }
     }

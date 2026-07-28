@@ -17,7 +17,7 @@ class TrackActivity
             $cacheKey = "last_active_{$userId}";
 
             // Hanya update DB setiap 5 menit, bukan setiap request
-            if (!Cache::has($cacheKey)) {
+            if (! Cache::has($cacheKey)) {
                 Auth::user()->update(['last_active_at' => now()]);
                 Cache::put($cacheKey, true, 300); // 5 menit
             }

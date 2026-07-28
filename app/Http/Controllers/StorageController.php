@@ -14,10 +14,10 @@ class StorageController extends Controller
      */
     public function serve(Request $request, $path)
     {
-        $fullPath = 'public/' . $path;
+        $fullPath = 'public/'.$path;
 
         // Cek file exists
-        if (!Storage::exists($fullPath)) {
+        if (! Storage::exists($fullPath)) {
             abort(404);
         }
 
@@ -49,7 +49,7 @@ class StorageController extends Controller
         if ($referer) {
             $refererHost = parse_url($referer, PHP_URL_HOST);
             foreach ($allowedDomains as $domain) {
-                if ($refererHost === $domain || str_ends_with($refererHost, '.' . $domain)) {
+                if ($refererHost === $domain || str_ends_with($refererHost, '.'.$domain)) {
                     $refererAllowed = true;
                     break;
                 }
@@ -57,7 +57,7 @@ class StorageController extends Controller
         }
 
         // Jika tidak ada referer atau referer tidak diizinkan, tolak
-        if (!$refererAllowed) {
+        if (! $refererAllowed) {
             return response('', 403);
         }
 

@@ -1036,13 +1036,26 @@ apiApp.get('/health', (req, res) => {
 
 // Halaman QR code untuk scan WhatsApp
 apiApp.get('/qr', (req, res) => {
-    if (!lastQrCode) {
+    // Bot sudah terhubung
+    if (isConnected && !lastQrCode) {
         return res.send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>QR WhatsApp</title>
+<meta http-equiv="refresh" content="10">
 <style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#1a1a2e;color:#fff;}
 .box{text-align:center;padding:40px;background:#16213e;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.3);}
-h2{margin-bottom:8px;}p{color:#a0a0a0;}</style></head><body>
-<div class="box"><h2>WhatsApp Bot</h2><p>Bot sudah terhubung atau belum ada QR code.</p>
-<p>Refresh halaman ini jika menunggu QR baru.</p></div></body></html>`);
+h2{margin-bottom:8px;}p{color:#a0a0a0;}.ok{background:#22c55e20;color:#22c55e;padding:8px 16px;border-radius:8px;display:inline-block;}</style></head><body>
+<div class="box"><h2>WhatsApp Bot</h2><p class="ok">Bot sudah terhubung dan aktif!</p>
+<p>Tidak perlu scan QR lagi.</p></div></body></html>`);
+    }
+
+    // Menunggu QR (bot reconnecting)
+    if (!lastQrCode) {
+        return res.send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>QR WhatsApp</title>
+<meta http-equiv="refresh" content="5">
+<style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#1a1a2e;color:#fff;}
+.box{text-align:center;padding:40px;background:#16213e;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.3);}
+h2{margin-bottom:8px;}p{color:#a0a0a0;}.wait{background:#f59e0b20;color:#f59e0b;padding:8px 16px;border-radius:8px;display:inline-block;}</style></head><body>
+<div class="box"><h2>WhatsApp Bot</h2><p class="wait">Bot sedang reconnecting...</p>
+<p>Halaman auto-refresh setiap 5 detik. Tunggu sampai QR muncul.</p></div></body></html>`);
     }
 
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(lastQrCode)}`;

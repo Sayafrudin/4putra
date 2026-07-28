@@ -1076,16 +1076,19 @@ img{border-radius:12px;background:#fff;padding:12px;}
 const API_PORT = process.env.PORT || 3001;
 
 // Reset auth_info untuk generate QR baru
+// Karena useMultiFileAuthState membuat file watcher internal yang tetap lock directory,
+// kita spawn child process terpisah untuk hapus auth_info SETELAH parent process exit.
 async function resetAuth() {
-    // Tutup socket dulu sebelum hapus auth_info
+    const authPath = join(__dirname, 'auth_info');
+    if (!fs.existsSync(authPath)) {
+        return { success: true };
+    }
+
+    // Tutup socket untuk putus koneksi WhatsApp
     if (sockInstance) {
         try {
-            // Remove all listeners agar tidak ada file write setelah hapus
             sockInstance.ev.removeAllListeners();
-            // Force close WebSocket connection
-            if (sockInstance.ws) {
-                sockInstance.ws.close();
-            }
+            if (sockInstance.ws) sockInstance.ws.close();
             sockInstance.end();
         } catch (e) {
             console.log('Warning saat tutup socket:', e.message);
@@ -1094,33 +1097,51 @@ async function resetAuth() {
         isConnected = false;
     }
 
-    const authPath = join(__dirname, 'auth_info');
-    if (!fs.existsSync(authPath)) {
-        return { success: true };
-    }
-
-    // Retry hapus auth_info sampai 3x dengan delay bertambah
-    const delays = [3000, 5000, 7000];
-    for (let i = 0; i < delays.length; i++) {
-        await new Promise(resolve => setTimeout(resolve, delays[i]));
-        try {
-            fs.rmSync(authPath, { recursive: true, force: true });
-            console.log(`auth_info berhasil dihapus (percobaan ${i + 1})`);
-            return { success: true };
-        } catch (e) {
-            console.log(`Percobaan ${i + 1} gagal hapus auth_info:`, e.message);
-            if (i === delays.length - 1) {
-                return { success: false, error: e.message };
+    // Spawn child process yang akan hapus auth_info SETELAH parent exit
+    // Child process tidak punya file lock dari Baileys, jadi bisa hapus dengan bebas
+    const cleanupScript = `
+        const fs = require('fs');
+        const path = '${authPath.replace(/\\/g, '\\\\')}';
+        let retries = 0;
+        const maxRetries = 6;
+        const interval = setInterval(() => {
+            try {
+                if (fs.existsSync(path)) {
+                    fs.rmSync(path, { recursive: true, force: true });
+                    console.log('auth_info berhasil dihapus');
+                }
+                clearInterval(interval);
+                process.exit(0);
+            } catch (e) {
+                retries++;
+                console.log('Retry ' + retries + ': ' + e.message);
+                if (retries >= maxRetries) {
+                    clearInterval(interval);
+                    process.exit(1);
+                }
             }
-        }
-    }
+        }, 2000);
+    `;
+
+    const { spawn } = await import('child_process');
+    const child = spawn(process.execPath, ['-e', cleanupScript], {
+        detached: true,
+        stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    child.unref();
+
+    console.log('Cleanup child process spawned, parent akan restart...');
+
+    // Parent langsung exit, Railway akan restart dengan fresh process
+    setTimeout(() => process.exit(0), 500);
+
+    return { success: true };
 }
 
 apiApp.post('/reset', async (req, res) => {
     const result = await resetAuth();
     if (result.success) {
         res.json({ status: 'OK', message: 'Auth dihapus. Bot akan restart.' });
-        setTimeout(() => process.exit(0), 1000);
     } else {
         res.status(500).json({ error: result.error });
     }
@@ -1136,10 +1157,9 @@ apiApp.get('/reset', async (req, res) => {
             res.send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reset Berhasil</title>
 <style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#1a1a2e;color:#fff;}
 .box{text-align:center;padding:40px;background:#16213e;border-radius:16px;}</style></head><body>
-<div class="box"><h2>Auth Dihapus!</h2><p>Bot akan restart dalam 5 detik.</p>
+<div class="box"><h2>Auth Dihapus!</h2><p>Bot sedang restart...</p>
 <p>Buka <a href="/qr" style="color:#22c55e">/qr</a> setelah restart untuk scan QR baru.</p>
 <script>setTimeout(()=>window.location.href='/qr',8000)</script></div></body></html>`);
-            setTimeout(() => process.exit(0), 1000);
         } else {
             res.status(500).send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Error</title>
 <style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#1a1a2e;color:#fff;}

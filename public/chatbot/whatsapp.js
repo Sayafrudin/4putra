@@ -521,8 +521,7 @@ async function hubungkanKeWhatsApp() {
 
         if (qr) {
             lastQrCode = qr;
-            const port = process.env.PORT || 3001;
-            const host = process.env.RAILWAY_PUBLIC_DOMAIN || `localhost:${port}`;
+            const host = process.env.RAILWAY_PUBLIC_DOMAIN || `localhost:${process.env.PORT || 3001}`;
             const protocol = process.env.RAILWAY_PUBLIC_DOMAIN ? 'https' : 'http';
             console.log('==================================================');
             console.log('SCAN QR CODE DI BROWSER:');

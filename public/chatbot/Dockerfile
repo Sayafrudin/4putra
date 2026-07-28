@@ -7,6 +7,6 @@ RUN npm install --production
 
 COPY . .
 
-EXPOSE ${PORT:-3001}
+EXPOSE 8080
 
 CMD ["node", "whatsapp.js"]

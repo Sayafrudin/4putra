@@ -15,6 +15,7 @@ class Percakapan extends Model
         'pesan_balasan',
         'sumber_balasan',
         'terkirim',
+        'dibaca_admin',
     ];
 
     public function pelanggan(): BelongsTo

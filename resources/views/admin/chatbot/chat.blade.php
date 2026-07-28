@@ -180,16 +180,15 @@
                                         {{-- Indikator centang untuk pesan admin --}}
                                         @if($chat->sumber_balasan === 'admin')
                                             @if($chat->terkirim)
-                                                {{-- Centang 2 abu-abu = berhasil terkirim ke WA user --}}
-                                                <svg class="w-4 h-4 text-gray-500" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <svg class="w-4 h-4 text-green-400" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                                     <path d="M1 8l4 4L13 4"></path>
                                                     <path d="M7 8l4 4L19 4"></path>
                                                 </svg>
                                             @else
-                                                {{-- Centang 1 abu-abu = belum terkirim (user offline/no internet) --}}
-                                                <svg class="w-4 h-4 text-gray-500" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                                     <path d="M1 8l4 4L13 4"></path>
                                                 </svg>
+                                                <span class="text-[9px] text-yellow-400 ml-0.5">!</span>
                                             @endif
                                         @endif
                                     </div>
@@ -472,8 +471,10 @@
                 if (res.ok && data.status === 'OK') {
                     tambahPesanKeChat(pesan, data.message_id, 'admin', data.sent);
                     input.value = '';
-                    if (data.note) {
-                        showToast('success', 'Terkirim', data.note);
+                    if (data.sent) {
+                        showToast('success', 'Terkirim', data.note || 'Pesan terkirim via WhatsApp');
+                    } else {
+                        showToast('warning', 'Tersimpan', data.note || 'Pesan disimpan tapi belum terkirim ke WhatsApp. Pastikan bot WhatsApp sedang berjalan.');
                     }
                 } else {
                     showToast('error', 'Gagal', data.error || data.message || 'Gagal mengirim pesan');
@@ -518,14 +519,16 @@
                 let checkmark = '';
 
                 if (sumber === 'admin') {
-                    bgColor = 'bg-[#E62C37]/20 border border-[#E62C37]/30';
-                    labelColor = 'text-[#E62C37]';
-                    label = 'Admin';
-                    // Centang 2 = terkirim, Centang 1 = belum terkirim
                     if (sent) {
-                        checkmark = '<svg class="w-4 h-4 text-gray-500" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8l4 4L13 4"></path><path d="M7 8l4 4L19 4"></path></svg>';
+                        bgColor = 'bg-[#E62C37]/20 border border-[#E62C37]/30';
+                        labelColor = 'text-[#E62C37]';
+                        label = 'Admin';
+                        checkmark = '<svg class="w-4 h-4 text-green-400" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8l4 4L13 4"></path><path d="M7 8l4 4L19 4"></path></svg>';
                     } else {
-                        checkmark = '<svg class="w-4 h-4 text-gray-500" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8l4 4L13 4"></path></svg>';
+                        bgColor = 'bg-yellow-500/10 border border-yellow-500/20';
+                        labelColor = 'text-yellow-400';
+                        label = 'Admin (belum terkirim)';
+                        checkmark = '<svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8l4 4L13 4"></path></svg><span class="text-[9px] text-yellow-400 ml-0.5">!</span>';
                     }
                 } else if (sumber === 'groq_ai') {
                     bgColor = 'bg-purple-500/20 border border-purple-500/30';

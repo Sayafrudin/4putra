@@ -1080,25 +1080,39 @@ async function resetAuth() {
     // Tutup socket dulu sebelum hapus auth_info
     if (sockInstance) {
         try {
+            // Remove all listeners agar tidak ada file write setelah hapus
+            sockInstance.ev.removeAllListeners();
+            // Force close WebSocket connection
+            if (sockInstance.ws) {
+                sockInstance.ws.close();
+            }
             sockInstance.end();
-        } catch (e) {}
+        } catch (e) {
+            console.log('Warning saat tutup socket:', e.message);
+        }
         sockInstance = null;
         isConnected = false;
     }
 
-    // Tunggu socket benar-benar tertutup
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
     const authPath = join(__dirname, 'auth_info');
-    try {
-        if (fs.existsSync(authPath)) {
-            fs.rmSync(authPath, { recursive: true, force: true });
-            console.log('auth_info berhasil dihapus');
-        }
+    if (!fs.existsSync(authPath)) {
         return { success: true };
-    } catch (e) {
-        console.error('Gagal hapus auth_info:', e.message);
-        return { success: false, error: e.message };
+    }
+
+    // Retry hapus auth_info sampai 3x dengan delay bertambah
+    const delays = [3000, 5000, 7000];
+    for (let i = 0; i < delays.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, delays[i]));
+        try {
+            fs.rmSync(authPath, { recursive: true, force: true });
+            console.log(`auth_info berhasil dihapus (percobaan ${i + 1})`);
+            return { success: true };
+        } catch (e) {
+            console.log(`Percobaan ${i + 1} gagal hapus auth_info:`, e.message);
+            if (i === delays.length - 1) {
+                return { success: false, error: e.message };
+            }
+        }
     }
 }
 

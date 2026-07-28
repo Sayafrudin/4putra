@@ -521,9 +521,12 @@ async function hubungkanKeWhatsApp() {
 
         if (qr) {
             lastQrCode = qr;
+            const port = process.env.PORT || 3001;
+            const host = process.env.RAILWAY_PUBLIC_DOMAIN || `localhost:${port}`;
+            const protocol = process.env.RAILWAY_PUBLIC_DOMAIN ? 'https' : 'http';
             console.log('==================================================');
             console.log('SCAN QR CODE DI BROWSER:');
-            console.log('http://localhost:3001/qr');
+            console.log(`${protocol}://${host}/qr`);
             console.log('==================================================');
         }
 
@@ -1058,7 +1061,7 @@ img{border-radius:12px;background:#fff;padding:12px;}
 <p class="status waiting">Menunggu scan... (auto-refresh 30 detik)</p></div></body></html>`);
 });
 
-const API_PORT = 3001;
-apiApp.listen(API_PORT, () => {
+const API_PORT = process.env.PORT || 3001;
+apiApp.listen(API_PORT, '0.0.0.0', () => {
     console.log(`Baileys API berjalan di port ${API_PORT}`);
 });

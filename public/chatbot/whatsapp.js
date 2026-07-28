@@ -28,6 +28,7 @@ const CACHE_APRIORI_TTL = 5 * 60 * 1000;
 
 // Simpan socket instance agar bisa dipakai dari API luar
 let sockInstance = null;
+let isConnected = false;
 
 // ============================================================
 // SYSTEM PROMPT
@@ -526,10 +527,12 @@ async function hubungkanKeWhatsApp() {
         }
 
         if (connection === 'close') {
+            isConnected = false;
             const harusKonekUlang = (lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut);
             console.log('Koneksi terputus:', lastDisconnect?.error || 'Unknown', '. Konek ulang:', harusKonekUlang);
             if (harusKonekUlang) hubungkanKeWhatsApp();
         } else if (connection === 'open') {
+            isConnected = true;
             console.log('==================================================');
             console.log('BOT WHATSAPP 4PUTRA VERTEX AVIARY AKTIF!');
             console.log('==================================================');
@@ -999,12 +1002,15 @@ apiApp.post('/send', async (req, res) => {
             return res.status(400).json({ error: 'jid dan pesan wajib diisi' });
         }
 
-        if (!sockInstance) {
+        if (!sockInstance || !isConnected) {
             return res.status(503).json({ error: 'Bot WhatsApp belum terhubung' });
         }
 
+        // Konversi @lid ke @s.whatsapp.net agar bisa dikirim
         let fullJid = jid;
-        if (!fullJid.includes('@')) {
+        if (fullJid.includes('@lid')) {
+            fullJid = fullJid.replace('@lid', '@s.whatsapp.net');
+        } else if (!fullJid.includes('@')) {
             fullJid = jid + '@s.whatsapp.net';
         }
 
@@ -1020,7 +1026,7 @@ apiApp.post('/send', async (req, res) => {
 apiApp.get('/health', (req, res) => {
     res.json({
         status: 'OK',
-        bot_connected: !!sockInstance,
+        bot_connected: isConnected,
     });
 });
 

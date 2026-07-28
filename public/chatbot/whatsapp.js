@@ -1010,11 +1010,10 @@ apiApp.post('/send', async (req, res) => {
             return res.status(503).json({ error: 'Bot WhatsApp belum terhubung' });
         }
 
-        // Konversi @lid ke @s.whatsapp.net agar bisa dikirim
+        // JID bisa @s.whatsapp.net (nomor) atau @lid (linked device)
+        // Jangan dikonversi — kirim apa adanya
         let fullJid = jid;
-        if (fullJid.includes('@lid')) {
-            fullJid = fullJid.replace('@lid', '@s.whatsapp.net');
-        } else if (!fullJid.includes('@')) {
+        if (!fullJid.includes('@')) {
             fullJid = jid + '@s.whatsapp.net';
         }
 

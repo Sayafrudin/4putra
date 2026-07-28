@@ -1131,9 +1131,6 @@ async function resetAuth() {
 
     console.log('Cleanup child process spawned, parent akan restart...');
 
-    // Parent langsung exit, Railway akan restart dengan fresh process
-    setTimeout(() => process.exit(0), 500);
-
     return { success: true };
 }
 
@@ -1141,6 +1138,7 @@ apiApp.post('/reset', async (req, res) => {
     const result = await resetAuth();
     if (result.success) {
         res.json({ status: 'OK', message: 'Auth dihapus. Bot akan restart.' });
+        setTimeout(() => process.exit(0), 1000);
     } else {
         res.status(500).json({ error: result.error });
     }
@@ -1159,6 +1157,7 @@ apiApp.get('/reset', async (req, res) => {
 <div class="box"><h2>Auth Dihapus!</h2><p>Bot sedang restart...</p>
 <p>Buka <a href="/qr" style="color:#22c55e">/qr</a> setelah restart untuk scan QR baru.</p>
 <script>setTimeout(()=>window.location.href='/qr',8000)</script></div></body></html>`);
+            setTimeout(() => process.exit(0), 1000);
         } else {
             res.status(500).send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Error</title>
 <style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#1a1a2e;color:#fff;}

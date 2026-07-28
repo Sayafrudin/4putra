@@ -1075,40 +1075,63 @@ img{border-radius:12px;background:#fff;padding:12px;}
 
 const API_PORT = process.env.PORT || 3001;
 
-// Reset auth_info untuk generate QR baru (POST untuk API, GET untuk browser)
-apiApp.post('/reset', (req, res) => {
+// Reset auth_info untuk generate QR baru
+async function resetAuth() {
+    // Tutup socket dulu sebelum hapus auth_info
+    if (sockInstance) {
+        try {
+            sockInstance.end();
+        } catch (e) {}
+        sockInstance = null;
+        isConnected = false;
+    }
+
+    // Tunggu socket benar-benar tertutup
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
     const authPath = join(__dirname, 'auth_info');
     try {
         if (fs.existsSync(authPath)) {
             fs.rmSync(authPath, { recursive: true, force: true });
-            console.log('auth_info dihapus, bot akan restart...');
+            console.log('auth_info berhasil dihapus');
         }
-        res.json({ status: 'OK', message: 'Auth dihapus. Bot akan restart dan generate QR baru.' });
-        setTimeout(() => process.exit(0), 1000);
+        return { success: true };
     } catch (e) {
-        res.status(500).json({ error: e.message });
+        console.error('Gagal hapus auth_info:', e.message);
+        return { success: false, error: e.message };
+    }
+}
+
+apiApp.post('/reset', async (req, res) => {
+    const result = await resetAuth();
+    if (result.success) {
+        res.json({ status: 'OK', message: 'Auth dihapus. Bot akan restart.' });
+        setTimeout(() => process.exit(0), 1000);
+    } else {
+        res.status(500).json({ error: result.error });
     }
 });
 
-apiApp.get('/reset', (req, res) => {
+apiApp.get('/reset', async (req, res) => {
     const authPath = join(__dirname, 'auth_info');
     const hasAuth = fs.existsSync(authPath);
 
     if (req.query.confirm === '1') {
-        try {
-            if (fs.existsSync(authPath)) {
-                fs.rmSync(authPath, { recursive: true, force: true });
-                console.log('auth_info dihapus, bot akan restart...');
-            }
+        const result = await resetAuth();
+        if (result.success) {
             res.send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reset Berhasil</title>
 <style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#1a1a2e;color:#fff;}
 .box{text-align:center;padding:40px;background:#16213e;border-radius:16px;}</style></head><body>
 <div class="box"><h2>Auth Dihapus!</h2><p>Bot akan restart dalam 5 detik.</p>
-<p>Setelah restart, buka <a href="/qr" style="color:#22c55e">/qr</a> untuk scan QR baru.</p>
-<script>setTimeout(()=>window.location.href='/qr',5000)</script></div></body></html>`);
+<p>Buka <a href="/qr" style="color:#22c55e">/qr</a> setelah restart untuk scan QR baru.</p>
+<script>setTimeout(()=>window.location.href='/qr',8000)</script></div></body></html>`);
             setTimeout(() => process.exit(0), 1000);
-        } catch (e) {
-            res.status(500).send('Error: ' + e.message);
+        } else {
+            res.status(500).send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Error</title>
+<style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#1a1a2e;color:#fff;}
+.box{text-align:center;padding:40px;background:#16213e;border-radius:16px;max-width:400px;}</style></head><body>
+<div class="box"><h2 style="color:#ef4444">Error</h2><p>${result.error}</p>
+<a href="/reset" style="color:#22c55e">Coba lagi</a></div></body></html>`);
         }
         return;
     }

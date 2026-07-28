@@ -5,13 +5,13 @@ namespace App\Console\Commands;
 use App\Models\AchievementImage;
 use App\Models\Collection;
 use Cloudinary\Cloudinary as CloudinarySDK;
-use Cloudinary\Transformation\Format;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 
 class MigrateImagesToCloudinary extends Command
 {
     protected $signature = 'images:migrate-cloudinary {--dry-run : Hanya tampilkan tanpa upload}';
+
     protected $description = 'Migrasi semua gambar lokal (collections & achievements) ke Cloudinary dan update database';
 
     public function handle(): int
@@ -38,20 +38,23 @@ class MigrateImagesToCloudinary extends Command
             if (str_starts_with($col->image_path, 'http')) {
                 $this->line("  SKIP (sudah URL): {$col->name}");
                 $colSkip++;
+
                 continue;
             }
 
-            $localPath = 'public/collections/' . $col->image_path;
+            $localPath = 'public/collections/'.$col->image_path;
 
-            if (!Storage::exists($localPath)) {
+            if (! Storage::exists($localPath)) {
                 $this->warn("  FAIL (file tidak ada): {$col->image_path}");
                 $colFail++;
+
                 continue;
             }
 
             if ($dryRun) {
                 $this->line("  DRY-RUN: {$col->image_path} → Cloudinary/4putra/collections/");
                 $colSuccess++;
+
                 continue;
             }
 
@@ -92,20 +95,23 @@ class MigrateImagesToCloudinary extends Command
             if (str_starts_with($img->image_path, 'http')) {
                 $this->line("  SKIP (sudah URL): {$img->image_path}");
                 $achSkip++;
+
                 continue;
             }
 
-            $localPath = 'public/achievements/' . $img->image_path;
+            $localPath = 'public/achievements/'.$img->image_path;
 
-            if (!Storage::exists($localPath)) {
+            if (! Storage::exists($localPath)) {
                 $this->warn("  FAIL (file tidak ada): {$img->image_path}");
                 $achFail++;
+
                 continue;
             }
 
             if ($dryRun) {
                 $this->line("  DRY-RUN: {$img->image_path} → Cloudinary/4putra/achievements/");
                 $achSuccess++;
+
                 continue;
             }
 

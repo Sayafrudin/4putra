@@ -7,7 +7,6 @@ use App\Models\Collection;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
 
 class AdminCollectionController extends Controller
 {
@@ -34,7 +33,7 @@ class AdminCollectionController extends Controller
 
             // Gambar di-upload langsung dari browser ke Cloudinary
             $imagePath = null;
-            if ($request->has('cloudinary_urls') && !empty($request->cloudinary_urls[0])) {
+            if ($request->has('cloudinary_urls') && ! empty($request->cloudinary_urls[0])) {
                 $imagePath = $request->cloudinary_urls[0];
             }
 
@@ -62,10 +61,11 @@ class AdminCollectionController extends Controller
 
             return response()->json(['success' => true, 'message' => 'Koleksi berhasil ditambahkan.']);
         } catch (\Exception $e) {
-            \Log::error('Collection store error: ' . $e->getMessage());
+            \Log::error('Collection store error: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menyimpan: ' . $e->getMessage(),
+                'message' => 'Gagal menyimpan: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -88,7 +88,7 @@ class AdminCollectionController extends Controller
             }
 
             // Gambar di-upload langsung dari browser ke Cloudinary
-            if ($request->has('cloudinary_urls') && !empty($request->cloudinary_urls[0])) {
+            if ($request->has('cloudinary_urls') && ! empty($request->cloudinary_urls[0])) {
                 $data['image_path'] = $request->cloudinary_urls[0];
                 $imagePreviews[] = $data['image_path'];
             }
@@ -109,10 +109,11 @@ class AdminCollectionController extends Controller
 
             return response()->json(['success' => true, 'message' => 'Koleksi berhasil diperbarui.']);
         } catch (\Exception $e) {
-            \Log::error('Collection update error: ' . $e->getMessage());
+            \Log::error('Collection update error: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memperbarui: ' . $e->getMessage(),
+                'message' => 'Gagal memperbarui: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -153,11 +154,11 @@ class AdminCollectionController extends Controller
             $parts = parse_url($url);
             $path = $parts['path'] ?? '';
             $path = preg_replace('#^/image/upload/v\d+/#', '', $path);
-            $publicId = pathinfo($path, PATHINFO_DIRNAME) . '/' . pathinfo($path, PATHINFO_FILENAME);
+            $publicId = pathinfo($path, PATHINFO_DIRNAME).'/'.pathinfo($path, PATHINFO_FILENAME);
             $publicId = trim($publicId, '/');
             \CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary::destroy($publicId);
         } catch (\Exception $e) {
-            \Log::warning('Gagal hapus gambar Cloudinary: ' . $e->getMessage());
+            \Log::warning('Gagal hapus gambar Cloudinary: '.$e->getMessage());
         }
     }
 }

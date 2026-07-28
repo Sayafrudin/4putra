@@ -634,16 +634,16 @@ class ChatbotController extends Controller
             ->latest()
             ->cursor()
             ->each(function ($trx) use (&$csv) {
-            $nama = '"'.str_replace('"', '""', $trx->pelanggan->nama ?? '-').'"';
-            $nomor = '"'.str_replace(['@s.whatsapp.net', '@lid'], '', $trx->pelanggan->nomor_wa ?? '').'"';
-            $spesies = '"'.str_replace('"', '""', $trx->inventaris?->nama_spesies ?? '-').'"';
-            $fase = $trx->inventaris?->fase === 'anakan' ? 'Baby' : ($trx->inventaris?->fase ?? '-');
-            $harga = $trx->total_harga;
-            $status = $trx->status;
-            $tanggal = $trx->created_at->format('Y-m-d H:i:s');
+                $nama = '"'.str_replace('"', '""', $trx->pelanggan->nama ?? '-').'"';
+                $nomor = '"'.str_replace(['@s.whatsapp.net', '@lid'], '', $trx->pelanggan->nomor_wa ?? '').'"';
+                $spesies = '"'.str_replace('"', '""', $trx->inventaris?->nama_spesies ?? '-').'"';
+                $fase = $trx->inventaris?->fase === 'anakan' ? 'Baby' : ($trx->inventaris?->fase ?? '-');
+                $harga = $trx->total_harga;
+                $status = $trx->status;
+                $tanggal = $trx->created_at->format('Y-m-d H:i:s');
 
-            $csv .= "{$trx->midtrans_order_id},{$nama},{$nomor},{$spesies},{$fase},{$harga},{$status},{$tanggal}\n";
-        });
+                $csv .= "{$trx->midtrans_order_id},{$nama},{$nomor},{$spesies},{$fase},{$harga},{$status},{$tanggal}\n";
+            });
 
         return response($csv)
             ->header('Content-Type', 'text/csv')

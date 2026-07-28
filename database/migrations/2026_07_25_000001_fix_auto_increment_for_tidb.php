@@ -23,7 +23,7 @@ return new class extends Migration
         ];
 
         foreach ($tables as $table) {
-            if (!\Illuminate\Support\Facades\Schema::hasTable($table)) {
+            if (! \Illuminate\Support\Facades\Schema::hasTable($table)) {
                 continue;
             }
 

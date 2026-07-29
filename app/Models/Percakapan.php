@@ -11,6 +11,7 @@ class Percakapan extends Model
 
     protected $fillable = [
         'pelanggan_id',
+        'wa_message_id',
         'pesan_pengirim',
         'pesan_balasan',
         'sumber_balasan',
@@ -18,6 +19,8 @@ class Percakapan extends Model
         'media_url',
         'media_type',
         'is_forwarded',
+        'deleted_for_admin',
+        'deleted_for_pelanggan',
         'terkirim',
         'dibaca_admin',
     ];

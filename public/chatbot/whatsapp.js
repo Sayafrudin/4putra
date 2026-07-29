@@ -231,10 +231,10 @@ async function cekRateLimit(pelangganId) {
 }
 
 async function simpanPercakapan(pelangganId, pesanPengirim, pesanBalasan, sumber, extra = {}) {
-    const { replyToId = null, mediaUrl = null, mediaType = null, isForwarded = false } = extra;
+    const { replyToId = null, mediaUrl = null, mediaType = null, isForwarded = false, waMessageId = null } = extra;
     await insert(
-        'INSERT INTO percakapan (pelanggan_id, pesan_pengirim, pesan_balasan, sumber_balasan, reply_to_id, media_url, media_type, is_forwarded, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())',
-        [pelangganId, pesanPengirim, pesanBalasan, sumber, replyToId, mediaUrl, mediaType, isForwarded]
+        'INSERT INTO percakapan (pelanggan_id, wa_message_id, pesan_pengirim, pesan_balasan, sumber_balasan, reply_to_id, media_url, media_type, is_forwarded, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())',
+        [pelangganId, waMessageId, pesanPengirim, pesanBalasan, sumber, replyToId, mediaUrl, mediaType, isForwarded]
     );
 }
 
@@ -559,6 +559,47 @@ async function hubungkanKeWhatsApp() {
     sock.ev.on('creds.update', saveCreds);
 
     // ============================================================
+    // EVENT HAPUS PESAN DARI PELANGGAN (delete for everyone)
+    // ============================================================
+    sock.ev.on('messages.delete', async (deletion) => {
+        try {
+            // deletion bisa berupa { keys: [...] } atau { jid, ... }
+            const keys = deletion.keys || [];
+            for (const key of keys) {
+                if (key.fromMe) continue; // Skip pesan dari bot
+                const waMsgId = key.id;
+                const remoteJid = key.remoteJid;
+
+                // Cari pesan di database
+                const chat = await queryOne(
+                    'SELECT id, pelanggan_id, pesan_pengirim, media_url FROM percakapan WHERE wa_message_id = ? LIMIT 1',
+                    [waMsgId]
+                );
+                if (!chat) continue;
+
+                // Update pesan jadi "telah dihapus"
+                await update(
+                    'UPDATE percakapan SET pesan_pengirim = ?, media_url = NULL, media_type = NULL, deleted_for_pelanggan = true WHERE id = ?',
+                    ['🚫 Pesan ini telah dihapus oleh pengirim', chat.id]
+                );
+
+                // Hapus media file jika ada
+                if (chat.media_url) {
+                    const relativePath = chat.media_url.replace('/storage/', '');
+                    const fullPath = join(__dirname, '../storage/app/public/', relativePath);
+                    if (fs.existsSync(fullPath)) {
+                        try { fs.unlinkSync(fullPath); } catch (e) {}
+                    }
+                }
+
+                console.log(`[DELETE] Pesan ${waMsgId} dari ${remoteJid} dihapus untuk semua`);
+            }
+        } catch (err) {
+            console.error('Gagal handle message delete:', err.message);
+        }
+    });
+
+    // ============================================================
     // EVENT PENERIMAAN PESAN MASUK
     // ============================================================
     sock.ev.on('messages.upsert', async (m) => {
@@ -574,26 +615,27 @@ async function hubungkanKeWhatsApp() {
             // Ambil nama dari pushName (nama WhatsApp user)
             const pushName = msg.pushName || '';
 
+            // Simpan wa_message_id dari pesan masuk
+            const incomingWaId = msg.key.id || null;
+
             const tipePesan = Object.keys(msg.message)[0];
 
             // Deteksi pesan diteruskan (forwarded)
+            // Baileys v7: forwardingScore > 0 ATAU contextInfo.isForwarded
             let isForwarded = false;
-            if (msg.message.extendedTextMessage?.contextInfo?.isForwarded) isForwarded = true;
-            if (msg.message.imageMessage?.contextInfo?.isForwarded) isForwarded = true;
-            if (msg.message.videoMessage?.contextInfo?.isForwarded) isForwarded = true;
-            if (msg.message.documentMessage?.contextInfo?.isForwarded) isForwarded = true;
-            if (msg.message.audioMessage?.contextInfo?.isForwarded) isForwarded = true;
-
-            // Deteksi reply context
-            let replyToId = null;
-            const contextInfo = msg.message.extendedTextMessage?.contextInfo ||
+            const msgContextInfo = msg.message.extendedTextMessage?.contextInfo ||
                 msg.message.imageMessage?.contextInfo ||
                 msg.message.videoMessage?.contextInfo ||
                 msg.message.documentMessage?.contextInfo ||
                 msg.message.audioMessage?.contextInfo;
-            if (contextInfo?.stanzaId) {
-                // Cari pesan asli berdasarkan ID WhatsApp
-                const originalMsg = await queryOne('SELECT id FROM percakapan WHERE id = ? LIMIT 1', [contextInfo.stanzaId]);
+            if (msgContextInfo?.forwardingScore > 0) isForwarded = true;
+            if (msgContextInfo?.isForwarded) isForwarded = true;
+
+            // Deteksi reply context
+            let replyToId = null;
+            if (msgContextInfo?.stanzaId) {
+                // Cari pesan asli berdasarkan wa_message_id
+                const originalMsg = await queryOne('SELECT id FROM percakapan WHERE wa_message_id = ? LIMIT 1', [msgContextInfo.stanzaId]);
                 if (originalMsg) replyToId = originalMsg.id;
             }
 
@@ -952,7 +994,7 @@ async function hubungkanKeWhatsApp() {
                     return;
                 }
 
-                await simpanPercakapan(pelanggan.id, teksMasuk, null, 'manual', { replyToId, mediaUrl, mediaType, isForwarded });
+                await simpanPercakapan(pelanggan.id, teksMasuk, null, 'manual', { replyToId, mediaUrl, mediaType, isForwarded, waMessageId: incomingWaId });
                 await buatNotifikasi(
                     'pesan_masuk',
                     'Pesan dari pelanggan (mode manual)',
@@ -978,7 +1020,7 @@ async function hubungkanKeWhatsApp() {
                 }
 
                 // Simpan pesan saja, bot tidak membalas
-                await simpanPercakapan(pelanggan.id, teksMasuk, null, 'human', { replyToId, mediaUrl, mediaType, isForwarded });
+                await simpanPercakapan(pelanggan.id, teksMasuk, null, 'human', { replyToId, mediaUrl, mediaType, isForwarded, waMessageId: incomingWaId });
                 await buatNotifikasi(
                     'pesan_masuk',
                     'Pesan dari pelanggan (admin takeover)',
@@ -1060,7 +1102,7 @@ apiApp.use(express.json());
 // Endpoint untuk kirim pesan dari admin dashboard
 apiApp.post('/send', async (req, res) => {
     try {
-        const { jid, pesan } = req.body;
+        const { jid, pesan, quoted_wa_id } = req.body;
 
         if (!jid || !pesan) {
             return res.status(400).json({ error: 'jid dan pesan wajib diisi' });
@@ -1070,16 +1112,35 @@ apiApp.post('/send', async (req, res) => {
             return res.status(503).json({ error: 'Bot WhatsApp belum terhubung' });
         }
 
-        // JID bisa @s.whatsapp.net (nomor) atau @lid (linked device)
-        // Jangan dikonversi — kirim apa adanya
         let fullJid = jid;
         if (!fullJid.includes('@')) {
             fullJid = jid + '@s.whatsapp.net';
         }
 
-        await sockInstance.sendMessage(fullJid, { text: pesan });
+        const msgOptions = { text: pesan };
 
-        res.json({ status: 'OK', sent_to: fullJid });
+        // Tambah quoted message jika ada
+        if (quoted_wa_id) {
+            try {
+                // Cari pesan asli dari store
+                const msgs = await sockInstance.store?.loadMessages?.(fullJid, 100);
+                const quotedMsg = msgs?.find(m => m.key.id === quoted_wa_id);
+                if (quotedMsg) {
+                    msgOptions.quoted = quotedMsg;
+                }
+            } catch (e) {
+                // Fallback: buat quoted message manual
+                msgOptions.quoted = {
+                    key: { id: quoted_wa_id, remoteJid: fullJid, fromMe: false },
+                    message: { conversation: pesan },
+                };
+            }
+        }
+
+        const result = await sockInstance.sendMessage(fullJid, msgOptions);
+        const waMessageId = result?.key?.id || null;
+
+        res.json({ status: 'OK', sent_to: fullJid, wa_message_id: waMessageId });
     } catch (error) {
         console.error('Gagal kirim pesan via Baileys:', error.message);
         res.status(500).json({ error: error.message });
@@ -1092,7 +1153,7 @@ const upload = multer({ dest: '/tmp/chat-upload/' });
 
 apiApp.post('/send-media', upload.single('file'), async (req, res) => {
     try {
-        const { jid, caption, media_type } = req.body;
+        const { jid, caption, media_type, quoted_wa_id } = req.body;
 
         if (!jid || !req.file) {
             return res.status(400).json({ error: 'jid dan file wajib diisi' });
@@ -1121,14 +1182,62 @@ apiApp.post('/send-media', upload.single('file'), async (req, res) => {
             msgOptions = { document: fileBuffer, mimetype: req.file.mimetype, fileName: req.file.originalname };
         }
 
-        await sockInstance.sendMessage(fullJid, msgOptions);
+        // Tambah quoted message jika ada
+        if (quoted_wa_id) {
+            try {
+                const msgs = await sockInstance.store?.loadMessages?.(fullJid, 100);
+                const quotedMsg = msgs?.find(m => m.key.id === quoted_wa_id);
+                if (quotedMsg) msgOptions.quoted = quotedMsg;
+            } catch (e) {
+                msgOptions.quoted = {
+                    key: { id: quoted_wa_id, remoteJid: fullJid, fromMe: false },
+                    message: { conversation: caption || '' },
+                };
+            }
+        }
+
+        const result = await sockInstance.sendMessage(fullJid, msgOptions);
+        const waMessageId = result?.key?.id || null;
 
         // Hapus file temporary
         fs.unlinkSync(req.file.path);
 
-        res.json({ status: 'OK', sent_to: fullJid });
+        res.json({ status: 'OK', sent_to: fullJid, wa_message_id: waMessageId });
     } catch (error) {
         console.error('Gagal kirim media via Baileys:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Endpoint untuk hapus pesan (delete for everyone)
+apiApp.post('/delete', async (req, res) => {
+    try {
+        const { jid, wa_message_id } = req.body;
+
+        if (!jid || !wa_message_id) {
+            return res.status(400).json({ error: 'jid dan wa_message_id wajib diisi' });
+        }
+
+        if (!sockInstance || !isConnected) {
+            return res.status(503).json({ error: 'Bot WhatsApp belum terhubung' });
+        }
+
+        let fullJid = jid;
+        if (!fullJid.includes('@')) {
+            fullJid = jid + '@s.whatsapp.net';
+        }
+
+        await sockInstance.sendMessage(fullJid, {
+            delete: {
+                id: wa_message_id,
+                remoteJid: fullJid,
+                fromMe: true,
+            }
+        });
+
+        res.json({ status: 'OK' });
+    } catch (error) {
+        console.error('Gagal hapus pesan via Baileys:', error.message);
         res.status(500).json({ error: error.message });
     }
 });

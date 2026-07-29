@@ -158,7 +158,7 @@
 
                         {{-- Pesan dari pelanggan --}}
                         @if($isIncoming)
-                            <div class="flex justify-start mb-1" data-msg-id="{{ $chat->id }}" data-msg-text="{{ e($chat->pesan_pengirim) }}" data-msg-sender="pelanggan">
+                            <div class="flex justify-start mb-1" data-msg-id="{{ $chat->id }}" data-msg-text="{{ e($chat->pesan_pengirim) }}" data-msg-sender="pelanggan" oncontextmenu="showContextMenu(event, {{ $chat->id }})">
                                 <div class="max-w-[75%] bg-[#2a3343] rounded-2xl rounded-tl-sm px-3 py-2 relative group">
                                     {{-- Forward indicator --}}
                                     @if($chat->is_forwarded)
@@ -211,7 +211,7 @@
 
                         {{-- Balasan dari bot/admin/system --}}
                         @if($isOutgoing)
-                            <div class="flex justify-end mb-1" data-msg-id="{{ $chat->id }}" data-msg-text="{{ e($chat->pesan_balasan) }}" data-msg-sender="admin">
+                            <div class="flex justify-end mb-1" data-msg-id="{{ $chat->id }}" data-msg-text="{{ e($chat->pesan_balasan) }}" data-msg-sender="admin" oncontextmenu="showContextMenu(event, {{ $chat->id }})">
                                 <div class="max-w-[75%] rounded-2xl rounded-tr-sm px-3 py-2 relative group
                                     {{ $isAdmin ? 'bg-[#E62C37]/20 border border-[#E62C37]/30' : '' }}
                                     {{ $isAi ? 'bg-purple-500/20 border border-purple-500/30' : '' }}
@@ -399,12 +399,41 @@
         </div>
     </div>
 
+    {{-- Modal Hapus Pesan --}}
+    <div id="modalDeleteMsg" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="bg-[#1e2530] border border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-5">
+            <h3 class="text-base font-bold text-white mb-4">Hapus Pesan</h3>
+            <div class="space-y-2">
+                <button onclick="hapusPesan('self')" class="w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-[#151a22] rounded-xl transition-colors flex items-center gap-3">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    Hapus untuk saya
+                </button>
+                <button onclick="hapusPesan('all')" class="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 rounded-xl transition-colors flex items-center gap-3">
+                    <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                    Hapus untuk semua
+                </button>
+            </div>
+            <button onclick="tutupModalHapus()" class="mt-4 w-full px-4 py-2.5 text-sm font-semibold text-gray-300 bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">
+                Batal
+            </button>
+        </div>
+    </div>
+
+    {{-- Context Menu Hapus Pesan --}}
+    <div id="contextMenuMsg" class="fixed z-40 hidden bg-[#1e2530] border border-gray-700 rounded-xl shadow-2xl py-1 min-w-[140px]">
+        <button onclick="bukaModalHapus()" class="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+            Hapus
+        </button>
+    </div>
+
     {{-- Data untuk JavaScript --}}
     <script>
         const SELECTED_PELANGGAN_ID = {{ optional($selectedPelanggan)->id ?? 'null' }};
         const CHAT_SEND_URL = '{{ route("admin.chatbot.chat.send") }}';
         const CHAT_TOGGLE_URL = '{{ route("admin.chatbot.chat.toggle") }}';
         const CHAT_CLEAR_URL = '{{ route("admin.chatbot.chat.clear", ["pelanggan" => "__ID__"]) }}';
+        const CHAT_DELETE_URL = '{{ route("admin.chatbot.chat.delete", ["pelanggan" => "__ID__"]) }}';
         const CHAT_MESSAGES_URL = '{{ route("admin.chatbot.chat.messages", ["pelanggan" => "__ID__"]) }}';
         const CHAT_MARK_READ_URL = '{{ route("admin.chatbot.chat.mark-read", ["pelanggan" => "__ID__"]) }}';
         const CSRF_TOKEN = '{{ csrf_token() }}';
@@ -417,6 +446,9 @@
 
         // Media state
         let selectedMedia = null;
+
+        // Delete state
+        let deleteMsgId = null;
 
         // Scroll ke bawah
         function scrollToBottom() {
@@ -447,6 +479,97 @@
         function cancelReply() {
             replyToId = null;
             document.getElementById('replyBar').classList.add('hidden');
+        }
+
+        // Context menu untuk hapus pesan
+        function showContextMenu(e, msgId) {
+            e.preventDefault();
+            e.stopPropagation();
+            deleteMsgId = msgId;
+            const menu = document.getElementById('contextMenuMsg');
+            menu.style.left = e.pageX + 'px';
+            menu.style.top = e.pageY + 'px';
+            menu.classList.remove('hidden');
+
+            // Tutup menu saat klik di luar
+            const closeMenu = function(ev) {
+                if (!menu.contains(ev.target)) {
+                    menu.classList.add('hidden');
+                    document.removeEventListener('click', closeMenu);
+                }
+            };
+            setTimeout(() => document.addEventListener('click', closeMenu), 10);
+        }
+
+        // Tutup context menu
+        function closeContextMenu() {
+            document.getElementById('contextMenuMsg').classList.add('hidden');
+        }
+
+        // Buka modal hapus pesan
+        function bukaModalHapus() {
+            closeContextMenu();
+            if (!deleteMsgId) return;
+            const modal = document.getElementById('modalDeleteMsg');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // Tutup modal hapus pesan
+        function tutupModalHapus() {
+            deleteMsgId = null;
+            const modal = document.getElementById('modalDeleteMsg');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
+        // Eksekusi hapus pesan
+        async function hapusPesan(mode) {
+            if (!deleteMsgId || !SELECTED_PELANGGAN_ID) return;
+            tutupModalHapus();
+
+            try {
+                const url = CHAT_DELETE_URL.replace('__ID__', SELECTED_PELANGGAN_ID);
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': CSRF_TOKEN,
+                    },
+                    body: JSON.stringify({
+                        message_id: deleteMsgId,
+                        mode: mode,
+                    }),
+                });
+
+                const data = await res.json();
+                if (res.ok && data.status === 'OK') {
+                    if (mode === 'self') {
+                        // Hapus elemen dari DOM
+                        const el = document.querySelector(`[data-msg-id="${deleteMsgId}"]`);
+                        if (el) el.remove();
+                        showToast('success', 'Berhasil', 'Pesan dihapus untuk Anda');
+                    } else {
+                        // Update tampilan pesan jadi "telah dihapus"
+                        const el = document.querySelector(`[data-msg-id="${deleteMsgId}"]`);
+                        if (el) {
+                            const bubble = el.querySelector('.bg-\\[\\#2a3343\\], .bg-\\[\\#E62C37\\/20\\], .bg-purple-500\\/20, .bg-gray-600\\/20, .bg-green-500\\/20');
+                            if (bubble) {
+                                const inner = bubble.querySelector('p.text-sm');
+                                if (inner) inner.textContent = '🚫 Pesan ini telah dihapus';
+                            }
+                        }
+                        showToast('success', 'Berhasil', 'Pesan dihapus untuk semua');
+                    }
+                } else {
+                    showToast('error', 'Gagal', data.message || 'Gagal menghapus pesan');
+                }
+            } catch (e) {
+                showToast('error', 'Gagal', 'Gagal menghapus pesan: ' + e.message);
+            }
+
+            deleteMsgId = null;
         }
 
         // Handle file select
@@ -496,23 +619,36 @@
             return (bytes / 1048576).toFixed(1) + ' MB';
         }
 
-        // Drag & drop
+        // Drag & drop (debounced to prevent flickering)
+        let dragTimer = null;
         function handleDragOver(e) {
             e.preventDefault();
-            document.getElementById('dropZone').classList.remove('hidden');
-            document.getElementById('dropZone').classList.add('flex');
+            e.stopPropagation();
+            if (dragTimer) { clearTimeout(dragTimer); dragTimer = null; }
+            const dz = document.getElementById('dropZone');
+            dz.classList.remove('hidden');
+            dz.classList.add('flex');
         }
 
         function handleDragLeave(e) {
             e.preventDefault();
-            document.getElementById('dropZone').classList.add('hidden');
-            document.getElementById('dropZone').classList.remove('flex');
+            e.stopPropagation();
+            if (dragTimer) clearTimeout(dragTimer);
+            dragTimer = setTimeout(() => {
+                const dz = document.getElementById('dropZone');
+                dz.classList.add('hidden');
+                dz.classList.remove('flex');
+                dragTimer = null;
+            }, 100);
         }
 
         function handleDrop(e) {
             e.preventDefault();
-            document.getElementById('dropZone').classList.add('hidden');
-            document.getElementById('dropZone').classList.remove('flex');
+            e.stopPropagation();
+            if (dragTimer) { clearTimeout(dragTimer); dragTimer = null; }
+            const dz = document.getElementById('dropZone');
+            dz.classList.add('hidden');
+            dz.classList.remove('flex');
             const file = e.dataTransfer.files[0];
             if (file) showMediaPreview(file);
         }

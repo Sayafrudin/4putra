@@ -60,8 +60,9 @@ class ChatbotController extends Controller
             $selectedPelanggan = Pelanggan::select('id', 'nomor_wa', 'nama', 'sesi_aktif')->find($request->pelanggan_id);
             if ($selectedPelanggan) {
                 $riwayat = $selectedPelanggan->percakapan()
-                    ->select('id', 'pelanggan_id', 'pesan_pengirim', 'pesan_balasan', 'sumber_balasan', 'terkirim', 'reply_to_id', 'media_url', 'media_type', 'is_forwarded', 'created_at')
+                    ->select('id', 'pelanggan_id', 'wa_message_id', 'pesan_pengirim', 'pesan_balasan', 'sumber_balasan', 'terkirim', 'reply_to_id', 'media_url', 'media_type', 'is_forwarded', 'deleted_for_admin', 'deleted_for_pelanggan', 'created_at')
                     ->with('replyTo:id,pesan_pengirim,pesan_balasan,sumber_balasan,media_type')
+                    ->where('deleted_for_admin', false)
                     ->orderBy('created_at', 'asc')
                     ->limit(200)
                     ->get();
@@ -76,9 +77,10 @@ class ChatbotController extends Controller
     {
         $afterId = $request->input('after_id', 0);
 
-        $messages = Percakapan::select('id', 'pelanggan_id', 'pesan_pengirim', 'pesan_balasan', 'sumber_balasan', 'terkirim', 'reply_to_id', 'media_url', 'media_type', 'is_forwarded', 'created_at')
+        $messages = Percakapan::select('id', 'pelanggan_id', 'wa_message_id', 'pesan_pengirim', 'pesan_balasan', 'sumber_balasan', 'terkirim', 'reply_to_id', 'media_url', 'media_type', 'is_forwarded', 'deleted_for_admin', 'deleted_for_pelanggan', 'created_at')
             ->where('pelanggan_id', $pelanggan->id)
             ->where('id', '>', $afterId)
+            ->where('deleted_for_admin', false)
             ->orderBy('created_at', 'asc')
             ->get();
 
@@ -168,6 +170,13 @@ class ChatbotController extends Controller
             return response()->json(['error' => 'Pesan atau media harus diisi'], 422);
         }
 
+        // Cari wa_message_id dari pesan yang di-reply (untuk quoted message di WhatsApp)
+        $quotedWaId = null;
+        if ($request->reply_to_id) {
+            $replyTo = Percakapan::find($request->reply_to_id);
+            $quotedWaId = $replyTo?->wa_message_id;
+        }
+
         // Simpan ke database terlebih dahulu
         $chatBaru = Percakapan::create([
             'pelanggan_id' => $pelanggan->id,
@@ -188,26 +197,32 @@ class ChatbotController extends Controller
         $baileysUrl = env('BAILEYS_BOT_URL', 'http://127.0.0.1:3001');
 
         try {
+            $payload = [
+                'jid' => $pelanggan->nomor_wa,
+            ];
+            if ($quotedWaId) $payload['quoted_wa_id'] = $quotedWaId;
+
             if ($mediaUrl) {
-                // Kirim media via Baileys
                 $absolutePath = public_path($mediaUrl);
                 $response = Http::timeout(10)->attach(
                     'file', file_get_contents($absolutePath), $filename
-                )->post($baileysUrl . '/send-media', [
-                    'jid' => $pelanggan->nomor_wa,
+                )->post($baileysUrl . '/send-media', array_merge($payload, [
                     'caption' => $pesan !== '[' . ucfirst($mediaType) . ']' ? $pesan : '',
                     'media_type' => $mediaType,
-                ]);
+                ]));
             } else {
-                $response = Http::timeout(5)->post($baileysUrl . '/send', [
-                    'jid' => $pelanggan->nomor_wa,
+                $response = Http::timeout(5)->post($baileysUrl . '/send', array_merge($payload, [
                     'pesan' => $pesan,
-                ]);
+                ]));
             }
 
             if ($response->successful() && $response->json('status') === 'OK') {
                 $sent = true;
                 $note = 'Pesan terkirim via WhatsApp';
+                // Simpan wa_message_id dari Baileys
+                if ($response->json('wa_message_id')) {
+                    $chatBaru->update(['wa_message_id' => $response->json('wa_message_id')]);
+                }
             }
         } catch (\Exception $e) {
             // Baileys offline
@@ -382,15 +397,81 @@ class ChatbotController extends Controller
         return response()->json(['status' => 'OK']);
     }
 
-    // Hapus semua percakapan pelanggan
+    // Hapus semua percakapan pelanggan (termasuk media files)
     public function chatClear(Pelanggan $pelanggan)
     {
+        // Hapus media files dari storage
+        $mediaChats = $pelanggan->percakapan()->whereNotNull('media_url')->pluck('media_url');
+        foreach ($mediaChats as $mediaUrl) {
+            $relativePath = str_replace('/storage/', '', $mediaUrl);
+            $fullPath = storage_path('app/public/' . $relativePath);
+            if (file_exists($fullPath)) {
+                @unlink($fullPath);
+            }
+        }
+
         $pelanggan->percakapan()->delete();
 
         return response()->json([
             'status' => 'OK',
             'message' => 'Semua percakapan berhasil dihapus.',
         ]);
+    }
+
+    // Hapus pesan (untuk diri sendiri / untuk semua)
+    public function chatDelete(Request $request, Pelanggan $pelanggan)
+    {
+        $request->validate([
+            'message_id' => 'required|exists:percakapan,id',
+            'mode' => 'required|in:self,all',
+        ]);
+
+        $chat = Percakapan::where('id', $request->message_id)
+            ->where('pelanggan_id', $pelanggan->id)
+            ->firstOrFail();
+
+        if ($request->mode === 'self') {
+            // Hapus untuk diri sendiri (admin only)
+            $chat->update(['deleted_for_admin' => true]);
+            return response()->json(['status' => 'OK', 'action' => 'deleted_self']);
+        }
+
+        // Hapus untuk semua
+        // Kirim delete ke WhatsApp jika ada wa_message_id
+        $sent = false;
+        if ($chat->wa_message_id) {
+            try {
+                $baileysUrl = env('BAILEYS_BOT_URL', 'http://127.0.0.1:3001');
+                $response = Http::timeout(5)->post($baileysUrl . '/delete', [
+                    'jid' => $pelanggan->nomor_wa,
+                    'wa_message_id' => $chat->wa_message_id,
+                ]);
+                $sent = $response->successful();
+            } catch (\Exception $e) {
+                // Baileys offline
+            }
+        }
+
+        // Hapus media file jika ada
+        if ($chat->media_url) {
+            $relativePath = str_replace('/storage/', '', $chat->media_url);
+            $fullPath = storage_path('app/public/' . $relativePath);
+            if (file_exists($fullPath)) {
+                @unlink($fullPath);
+            }
+        }
+
+        // Update pesan menjadi "telah dihapus" untuk kedua belah pihak
+        $chat->update([
+            'pesan_pengirim' => $chat->pesan_pengirim ? '🚫 Pesan ini telah dihapus' : null,
+            'pesan_balasan' => $chat->pesan_balasan ? '🚫 Pesan ini telah dihapus' : null,
+            'media_url' => null,
+            'media_type' => null,
+            'deleted_for_admin' => true,
+            'deleted_for_pelanggan' => true,
+        ]);
+
+        return response()->json(['status' => 'OK', 'action' => 'deleted_all', 'sent' => $sent]);
     }
 
     // ============================================================

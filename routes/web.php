@@ -150,5 +150,6 @@ Route::prefix('admin')->middleware(['admin.auth', 'admin.domain'])->group(functi
         Route::post('/chat/send', [ChatbotController::class, 'chatSend'])->name('admin.chatbot.chat.send');
         Route::post('/chat/toggle', [ChatbotController::class, 'chatToggle'])->name('admin.chatbot.chat.toggle');
         Route::delete('/chat/{pelanggan}/clear', [ChatbotController::class, 'chatClear'])->name('admin.chatbot.chat.clear');
+        Route::post('/chat/{pelanggan}/delete', [ChatbotController::class, 'chatDelete'])->name('admin.chatbot.chat.delete');
     });
 });

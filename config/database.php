@@ -40,7 +40,7 @@ return [
         ],
 
         'mysql' => [
-            'driver' => 'tidb',
+            'driver' => 'mysql',
             'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '4000'),
@@ -57,7 +57,7 @@ return [
             'options' => extension_loaded('pdo_mysql') ? (
                 str_contains(env('DB_HOST', ''), 'tidbcloud.com')
                     ? [
-                        PDO::MYSQL_ATTR_SSL_CA => '/etc/ssl/certs/ca-certificates.crt',
+                        PDO::MYSQL_ATTR_SSL_CA => env('DB_SSL_CA', null),
                         PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
                         PDO::ATTR_PERSISTENT => true,
                     ]

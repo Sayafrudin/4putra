@@ -90,41 +90,6 @@
     {{-- Chat JS loaded lazily (tidak memblok render halaman) --}}
     <script type="module" src="{{ asset('build/assets/chat-CZ2_Y-v4.js') }}" defer></script>
 
-    {{-- Polling unread WhatsApp messages untuk badge sidebar --}}
-    <script>
-        (function() {
-            const badge = document.getElementById('sidebarChatBadge');
-            if (!badge) return;
-
-            const unreadUrl = '{{ route("admin.chatbot.chat.unread") }}';
-            const csrfToken = '{{ csrf_token() }}';
-            let prevTotal = 0;
-
-            async function cekUnread() {
-                try {
-                    const res = await fetch(unreadUrl, {
-                        headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken }
-                    });
-                    if (!res.ok) return;
-                    const data = await res.json();
-                    const total = data.reduce(function(sum, item) { return sum + item.jumlah; }, 0);
-
-                    if (total > 0) {
-                        badge.textContent = total > 99 ? '99+' : total;
-                        badge.classList.remove('hidden');
-                    } else {
-                        badge.classList.add('hidden');
-                    }
-                    prevTotal = total;
-                } catch (e) {}
-            }
-
-            // Cek setiap 5 detik
-            setInterval(cekUnread, 5000);
-            cekUnread();
-        })();
-    </script>
-
     @if (session('success'))
         <script>
             document.addEventListener('DOMContentLoaded', function () {

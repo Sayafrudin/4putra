@@ -100,7 +100,6 @@
                             @php
                                 $nomorRaw = str_replace(['@s.whatsapp.net', '@lid'], '', $selectedPelanggan->nomor_wa);
                                 $isLid = str_contains($selectedPelanggan->nomor_wa, '@lid');
-                                // Format nomor HP: 628xxx -> +62 8xxx atau 08xxx
                                 $nomorFormatted = '';
                                 if (!$isLid && strlen($nomorRaw) > 5) {
                                     if (str_starts_with($nomorRaw, '62')) {
@@ -144,41 +143,134 @@
                 </div>
 
                 {{-- Pesan --}}
-                <div id="chatContainer" class="flex-1 overflow-y-auto px-6 py-4 space-y-3">
+                <div id="chatContainer" class="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-1" ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragleave="handleDragLeave(event)">
                     @foreach($riwayat as $chat)
+                        @php
+                            $isOutgoing = !empty($chat->pesan_balasan);
+                            $isIncoming = !empty($chat->pesan_pengirim);
+                            $sumber = $chat->sumber_balasan;
+                            $isAdmin = $sumber === 'admin';
+                            $isAi = $sumber === 'groq_ai';
+                            $isSystem = $sumber === 'system';
+                            $isApriori = $sumber === 'apriori';
+                            $hasMedia = !empty($chat->media_url);
+                        @endphp
+
                         {{-- Pesan dari pelanggan --}}
-                        @if($chat->pesan_pengirim)
-                            <div class="flex justify-start" data-msg-id="{{ $chat->id }}">
-                                <div class="max-w-[70%] bg-[#2a3343] rounded-2xl rounded-tl-sm px-4 py-2.5">
-                                    <p class="text-sm text-gray-200 whitespace-pre-line">{{ $chat->pesan_pengirim }}</p>
+                        @if($isIncoming)
+                            <div class="flex justify-start mb-1" data-msg-id="{{ $chat->id }}" data-msg-text="{{ e($chat->pesan_pengirim) }}" data-msg-sender="pelanggan">
+                                <div class="max-w-[75%] bg-[#2a3343] rounded-2xl rounded-tl-sm px-3 py-2 relative group">
+                                    {{-- Forward indicator --}}
+                                    @if($chat->is_forwarded)
+                                        <div class="flex items-center gap-1 mb-1 text-[10px] text-gray-400 italic">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                            Diteruskan
+                                        </div>
+                                    @endif
+
+                                    {{-- Reply context --}}
+                                    @if($chat->replyTo)
+                                        <div class="mb-1.5 px-2.5 py-1.5 bg-[#1a1f2e] border-l-2 border-[#E62C37] rounded text-[11px] cursor-pointer" onclick="scrollToMsg({{ $chat->replyTo->id }})">
+                                            <p class="text-[#E62C37] font-semibold text-[10px]">
+                                                {{ $chat->replyTo->sumber_balasan === 'admin' ? 'Admin' : ($chat->replyTo->sumber_balasan === 'groq_ai' ? 'AI Bot' : 'Pelanggan') }}
+                                            </p>
+                                            <p class="text-gray-400 truncate">{{ Str::limit($chat->replyTo->pesan_pengirim ?? $chat->replyTo->pesan_balasan ?? '[Media]', 60) }}</p>
+                                        </div>
+                                    @endif
+
+                                    {{-- Media --}}
+                                    @if($hasMedia)
+                                        @if($chat->media_type === 'image')
+                                            <a href="{{ $chat->media_url }}" target="_blank" class="block mb-1.5 rounded-lg overflow-hidden">
+                                                <img src="{{ $chat->media_url }}" alt="Gambar" class="max-w-full max-h-60 rounded-lg object-cover">
+                                            </a>
+                                        @elseif($chat->media_type === 'video')
+                                            <video controls class="max-w-full max-h-60 rounded-lg mb-1.5">
+                                                <source src="{{ $chat->media_url }}">
+                                            </video>
+                                        @else
+                                            <a href="{{ $chat->media_url }}" target="_blank" class="flex items-center gap-2 mb-1.5 px-3 py-2 bg-[#1a1f2e] rounded-lg text-gray-300 text-xs hover:bg-[#151a22] transition-colors">
+                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                                                {{ basename($chat->media_url) }}
+                                            </a>
+                                        @endif
+                                    @endif
+
+                                    @if($chat->pesan_pengirim && $chat->pesan_pengirim !== '[Image]' && $chat->pesan_pengirim !== '[Video]' && $chat->pesan_pengirim !== '[Document]' && $chat->pesan_pengirim !== '[Audio]')
+                                        <p class="text-sm text-gray-200 whitespace-pre-line">{{ $chat->pesan_pengirim }}</p>
+                                    @endif
                                     <p class="text-[10px] text-gray-500 mt-1 text-right">{{ $chat->created_at->format('H:i') }}</p>
+
+                                    {{-- Reply button --}}
+                                    <button onclick="setReply({{ $chat->id }}, '{{ e(Str::limit($chat->pesan_pengirim ?? '[Media]', 40)) }}', 'pelanggan')" class="absolute -right-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-500 hover:text-[#E62C37]">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>
+                                    </button>
                                 </div>
                             </div>
                         @endif
 
                         {{-- Balasan dari bot/admin/system --}}
-                        @if($chat->pesan_balasan)
-                            <div class="flex justify-end" data-msg-id="{{ $chat->id }}">
-                                <div class="max-w-[70%] rounded-2xl rounded-tr-sm px-4 py-2.5
-                                    {{ $chat->sumber_balasan === 'admin' ? 'bg-[#E62C37]/20 border border-[#E62C37]/30' : '' }}
-                                    {{ $chat->sumber_balasan === 'groq_ai' ? 'bg-purple-500/20 border border-purple-500/30' : '' }}
-                                    {{ $chat->sumber_balasan === 'system' ? 'bg-gray-600/20 border border-gray-600/30' : '' }}
-                                    {{ $chat->sumber_balasan === 'apriori' ? 'bg-green-500/20 border border-green-500/30' : '' }}
-                                    {{ $chat->sumber_balasan === 'menu' ? 'bg-gray-600/20 border border-gray-600/30' : '' }}">
+                        @if($isOutgoing)
+                            <div class="flex justify-end mb-1" data-msg-id="{{ $chat->id }}" data-msg-text="{{ e($chat->pesan_balasan) }}" data-msg-sender="admin">
+                                <div class="max-w-[75%] rounded-2xl rounded-tr-sm px-3 py-2 relative group
+                                    {{ $isAdmin ? 'bg-[#E62C37]/20 border border-[#E62C37]/30' : '' }}
+                                    {{ $isAi ? 'bg-purple-500/20 border border-purple-500/30' : '' }}
+                                    {{ $isSystem ? 'bg-gray-600/20 border border-gray-600/30' : '' }}
+                                    {{ $isApriori ? 'bg-green-500/20 border border-green-500/30' : '' }}
+                                    {{ !$isAdmin && !$isAi && !$isSystem && !$isApriori ? 'bg-gray-600/20 border border-gray-600/30' : '' }}">
+
+                                    {{-- Forward indicator --}}
+                                    @if($chat->is_forwarded)
+                                        <div class="flex items-center gap-1 mb-1 text-[10px] text-gray-400 italic">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                            Diteruskan
+                                        </div>
+                                    @endif
+
+                                    {{-- Reply context --}}
+                                    @if($chat->replyTo)
+                                        <div class="mb-1.5 px-2.5 py-1.5 bg-black/20 border-l-2 border-white/30 rounded text-[11px] cursor-pointer" onclick="scrollToMsg({{ $chat->replyTo->id }})">
+                                            <p class="text-white/60 font-semibold text-[10px]">
+                                                {{ $chat->replyTo->sumber_balasan === 'admin' ? 'Admin' : ($chat->replyTo->sumber_balasan === 'groq_ai' ? 'AI Bot' : 'Pelanggan') }}
+                                            </p>
+                                            <p class="text-white/40 truncate">{{ Str::limit($chat->replyTo->pesan_pengirim ?? $chat->replyTo->pesan_balasan ?? '[Media]', 60) }}</p>
+                                        </div>
+                                    @endif
+
                                     <div class="flex items-center gap-1.5 mb-1">
                                         <span class="text-[10px] font-bold uppercase tracking-wider
-                                            {{ $chat->sumber_balasan === 'admin' ? 'text-[#E62C37]' : '' }}
-                                            {{ $chat->sumber_balasan === 'groq_ai' ? 'text-purple-400' : '' }}
-                                            {{ $chat->sumber_balasan === 'system' ? 'text-gray-400' : '' }}
-                                            {{ $chat->sumber_balasan === 'apriori' ? 'text-green-400' : '' }}">
-                                            {{ $chat->sumber_balasan === 'admin' ? 'Admin' : ($chat->sumber_balasan === 'groq_ai' ? 'AI Bot' : ($chat->sumber_balasan === 'system' ? 'System' : ($chat->sumber_balasan === 'apriori' ? 'Rekomendasi' : 'Bot'))) }}
+                                            {{ $isAdmin ? 'text-[#E62C37]' : '' }}
+                                            {{ $isAi ? 'text-purple-400' : '' }}
+                                            {{ $isSystem ? 'text-gray-400' : '' }}
+                                            {{ $isApriori ? 'text-green-400' : '' }}">
+                                            {{ $isAdmin ? 'Admin' : ($isAi ? 'AI Bot' : ($isSystem ? 'System' : ($isApriori ? 'Rekomendasi' : 'Bot'))) }}
                                         </span>
                                     </div>
-                                    <p class="text-sm text-gray-200 whitespace-pre-line">{{ $chat->pesan_balasan }}</p>
+
+                                    {{-- Media --}}
+                                    @if($hasMedia)
+                                        @if($chat->media_type === 'image')
+                                            <a href="{{ $chat->media_url }}" target="_blank" class="block mb-1.5 rounded-lg overflow-hidden">
+                                                <img src="{{ $chat->media_url }}" alt="Gambar" class="max-w-full max-h-60 rounded-lg object-cover">
+                                            </a>
+                                        @elseif($chat->media_type === 'video')
+                                            <video controls class="max-w-full max-h-60 rounded-lg mb-1.5">
+                                                <source src="{{ $chat->media_url }}">
+                                            </video>
+                                        @else
+                                            <a href="{{ $chat->media_url }}" target="_blank" class="flex items-center gap-2 mb-1.5 px-3 py-2 bg-black/20 rounded-lg text-gray-300 text-xs hover:bg-black/30 transition-colors">
+                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                                                {{ basename($chat->media_url) }}
+                                            </a>
+                                        @endif
+                                    @endif
+
+                                    @if($chat->pesan_balasan && $chat->pesan_balasan !== '[Image]' && $chat->pesan_balasan !== '[Video]' && $chat->pesan_balasan !== '[Document]' && $chat->pesan_balasan !== '[Audio]')
+                                        <p class="text-sm text-gray-200 whitespace-pre-line">{{ $chat->pesan_balasan }}</p>
+                                    @endif
                                     <div class="flex items-center justify-end gap-1 mt-1">
                                         <span class="text-[10px] text-gray-500">{{ $chat->created_at->format('H:i') }}</span>
-                                        {{-- Indikator centang untuk pesan admin --}}
-                                        @if($chat->sumber_balasan === 'admin')
+                                        @if($isAdmin)
                                             @if($chat->terkirim)
                                                 <svg class="w-4 h-4 text-green-400" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                                     <path d="M1 8l4 4L13 4"></path>
@@ -188,7 +280,6 @@
                                                 <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                                     <path d="M1 8l4 4L13 4"></path>
                                                 </svg>
-                                                <span class="text-[9px] text-yellow-400 ml-0.5">!</span>
                                             @endif
                                         @endif
                                     </div>
@@ -196,6 +287,34 @@
                             </div>
                         @endif
                     @endforeach
+                </div>
+
+                {{-- Reply preview bar --}}
+                <div id="replyBar" class="hidden px-4 py-2 bg-[#1a1f2e] border-t border-gray-800 flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <svg class="w-4 h-4 text-[#E62C37] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>
+                        <div class="min-w-0">
+                            <p id="replyBarSender" class="text-[10px] font-bold text-[#E62C37] uppercase"></p>
+                            <p id="replyBarText" class="text-xs text-gray-400 truncate"></p>
+                        </div>
+                    </div>
+                    <button onclick="cancelReply()" class="p-1 text-gray-500 hover:text-white transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                {{-- Media preview --}}
+                <div id="mediaPreview" class="hidden px-4 py-2 bg-[#1a1f2e] border-t border-gray-800">
+                    <div class="flex items-center gap-3">
+                        <div id="mediaPreviewContent" class="shrink-0"></div>
+                        <div class="flex-1 min-w-0">
+                            <p id="mediaPreviewName" class="text-xs text-gray-300 truncate"></p>
+                            <p id="mediaPreviewSize" class="text-[10px] text-gray-500"></p>
+                        </div>
+                        <button onclick="cancelMedia()" class="p-1 text-gray-500 hover:text-white transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
                 </div>
 
                 {{-- Input Kirim Pesan --}}
@@ -211,15 +330,33 @@
                         <span class="text-sm text-purple-400">Mode AI aktif — switch ke Human untuk mengirim pesan</span>
                     </div>
 
-                    <form id="chatForm" onsubmit="kirimPesan(event)" class="{{ $isAiMode ? 'hidden' : '' }} flex gap-3">
-                        <input type="text" id="inputPesan" placeholder="Ketik pesan..."
-                            autocomplete="off"
-                            class="flex-1 px-4 py-2.5 text-sm bg-[#151a22] border border-gray-700 rounded-xl text-gray-200 placeholder-gray-500 focus:outline-none focus:border-[#E62C37]">
+                    <form id="chatForm" onsubmit="kirimPesan(event)" class="{{ $isAiMode ? 'hidden' : '' }} flex gap-2 items-end">
+                        <input type="file" id="fileInput" class="hidden" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.mp3" onchange="handleFileSelect(event)">
+
+                        <button type="button" onclick="document.getElementById('fileInput').click()"
+                            class="p-2.5 text-gray-400 hover:text-[#E62C37] transition-colors shrink-0" title="Kirim file">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13"/></svg>
+                        </button>
+
+                        <div class="flex-1 relative">
+                            <input type="text" id="inputPesan" placeholder="Ketik pesan..."
+                                autocomplete="off"
+                                class="w-full px-4 py-2.5 text-sm bg-[#151a22] border border-gray-700 rounded-xl text-gray-200 placeholder-gray-500 focus:outline-none focus:border-[#E62C37]">
+                        </div>
+
                         <button type="submit" id="btnKirim"
-                            class="px-5 py-2.5 bg-[#E62C37] hover:bg-[#c5242d] text-white text-sm font-bold rounded-xl transition-colors">
-                            Kirim
+                            class="px-4 py-2.5 bg-[#E62C37] hover:bg-[#c5242d] text-white text-sm font-bold rounded-xl transition-colors shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
                         </button>
                     </form>
+
+                    {{-- Drop zone overlay --}}
+                    <div id="dropZone" class="hidden absolute inset-0 bg-[#E62C37]/10 border-2 border-dashed border-[#E62C37] rounded-lg z-50 flex items-center justify-center">
+                        <div class="text-center">
+                            <svg class="w-12 h-12 text-[#E62C37] mx-auto mb-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+                            <p class="text-sm font-semibold text-[#E62C37]">Drop file di sini</p>
+                        </div>
+                    </div>
                 </div>
 
             @else
@@ -270,17 +407,114 @@
         const CHAT_CLEAR_URL = '{{ route("admin.chatbot.chat.clear", ["pelanggan" => "__ID__"]) }}';
         const CHAT_MESSAGES_URL = '{{ route("admin.chatbot.chat.messages", ["pelanggan" => "__ID__"]) }}';
         const CHAT_MARK_READ_URL = '{{ route("admin.chatbot.chat.mark-read", ["pelanggan" => "__ID__"]) }}';
-        const CHAT_PELANGGAN_LIST_URL = '{{ route("admin.chatbot.chat", ["pelanggan_id" => "__ID__"]) }}';
         const CSRF_TOKEN = '{{ csrf_token() }}';
         let currentMode = '{{ optional($selectedPelanggan)->sesi_aktif ?? "ai" }}';
         let lastMessageId = 0;
         let pollingInterval = null;
-        let sidebarPollingInterval = null;
+
+        // Reply state
+        let replyToId = null;
+
+        // Media state
+        let selectedMedia = null;
 
         // Scroll ke bawah
         function scrollToBottom() {
             const container = document.getElementById('chatContainer');
             if (container) container.scrollTop = container.scrollHeight;
+        }
+
+        // Scroll ke pesan tertentu
+        function scrollToMsg(msgId) {
+            const el = document.querySelector(`[data-msg-id="${msgId}"]`);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.classList.add('ring-2', 'ring-[#E62C37]', 'ring-offset-2', 'ring-offset-[#1e2530]');
+                setTimeout(() => el.classList.remove('ring-2', 'ring-[#E62C37]', 'ring-offset-2', 'ring-offset-[#1e2530]'), 2000);
+            }
+        }
+
+        // Set reply
+        function setReply(msgId, text, sender) {
+            replyToId = msgId;
+            document.getElementById('replyBar').classList.remove('hidden');
+            document.getElementById('replyBarSender').textContent = sender === 'pelanggan' ? 'Pelanggan' : 'Admin';
+            document.getElementById('replyBarText').textContent = text;
+            document.getElementById('inputPesan').focus();
+        }
+
+        // Cancel reply
+        function cancelReply() {
+            replyToId = null;
+            document.getElementById('replyBar').classList.add('hidden');
+        }
+
+        // Handle file select
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            showMediaPreview(file);
+        }
+
+        // Show media preview
+        function showMediaPreview(file) {
+            selectedMedia = file;
+            const preview = document.getElementById('mediaPreview');
+            const content = document.getElementById('mediaPreviewContent');
+            const name = document.getElementById('mediaPreviewName');
+            const size = document.getElementById('mediaPreviewSize');
+
+            name.textContent = file.name;
+            size.textContent = formatFileSize(file.size);
+
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    content.innerHTML = `<img src="${e.target.result}" class="w-12 h-12 rounded object-cover">`;
+                };
+                reader.readAsDataURL(file);
+            } else if (file.type.startsWith('video/')) {
+                content.innerHTML = `<div class="w-12 h-12 rounded bg-purple-500/20 flex items-center justify-center"><svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg></div>`;
+            } else {
+                content.innerHTML = `<div class="w-12 h-12 rounded bg-gray-600/20 flex items-center justify-center"><svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg></div>`;
+            }
+
+            preview.classList.remove('hidden');
+        }
+
+        // Cancel media
+        function cancelMedia() {
+            selectedMedia = null;
+            document.getElementById('mediaPreview').classList.add('hidden');
+            document.getElementById('fileInput').value = '';
+        }
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+
+        // Drag & drop
+        function handleDragOver(e) {
+            e.preventDefault();
+            document.getElementById('dropZone').classList.remove('hidden');
+            document.getElementById('dropZone').classList.add('flex');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            document.getElementById('dropZone').classList.add('hidden');
+            document.getElementById('dropZone').classList.remove('flex');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            document.getElementById('dropZone').classList.add('hidden');
+            document.getElementById('dropZone').classList.remove('flex');
+            const file = e.dataTransfer.files[0];
+            if (file) showMediaPreview(file);
         }
 
         // Cari pelanggan
@@ -397,10 +631,7 @@
                 }
             }
 
-            // Update input area visibility
             updateInputArea();
-
-            // Update badge di sidebar
             updateSidebarBadge(SELECTED_PELANGGAN_ID, currentMode);
         }
 
@@ -441,6 +672,36 @@
             }
         }
 
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Render reply context HTML
+        function renderReplyContext(replyTo) {
+            if (!replyTo) return '';
+            const senderName = replyTo.sumber_balasan === 'admin' ? 'Admin' : (replyTo.sumber_balasan === 'groq_ai' ? 'AI Bot' : 'Pelanggan');
+            const text = replyTo.pesan_pengirim || replyTo.pesan_balasan || '[Media]';
+            return `<div class="mb-1.5 px-2.5 py-1.5 bg-black/20 border-l-2 border-white/30 rounded text-[11px] cursor-pointer" onclick="scrollToMsg(${replyTo.id})">
+                <p class="text-white/60 font-semibold text-[10px]">${escapeHtml(senderName)}</p>
+                <p class="text-white/40 truncate">${escapeHtml(text.substring(0, 60))}</p>
+            </div>`;
+        }
+
+        // Render media HTML
+        function renderMedia(msg) {
+            if (!msg.media_url) return '';
+            if (msg.media_type === 'image') {
+                return `<a href="${msg.media_url}" target="_blank" class="block mb-1.5 rounded-lg overflow-hidden"><img src="${msg.media_url}" alt="Gambar" class="max-w-full max-h-60 rounded-lg object-cover"></a>`;
+            } else if (msg.media_type === 'video') {
+                return `<video controls class="max-w-full max-h-60 rounded-lg mb-1.5"><source src="${msg.media_url}"></video>`;
+            } else {
+                return `<a href="${msg.media_url}" target="_blank" class="flex items-center gap-2 mb-1.5 px-3 py-2 bg-black/20 rounded-lg text-gray-300 text-xs"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>${escapeHtml(msg.media_url.split('/').pop())}</a>`;
+            }
+        }
+
         // Kirim pesan
         async function kirimPesan(e) {
             e.preventDefault();
@@ -449,35 +710,38 @@
             const input = document.getElementById('inputPesan');
             const btn = document.getElementById('btnKirim');
             const pesan = input.value.trim();
-            if (!pesan) return;
+
+            if (!pesan && !selectedMedia) return;
 
             btn.disabled = true;
-            btn.textContent = '...';
+            btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-dasharray="31.42" stroke-dashoffset="10"/></svg>';
 
             try {
+                const formData = new FormData();
+                formData.append('pelanggan_id', SELECTED_PELANGGAN_ID);
+                if (pesan) formData.append('pesan', pesan);
+                if (replyToId) formData.append('reply_to_id', replyToId);
+                if (selectedMedia) formData.append('media', selectedMedia);
+
                 const res = await fetch(CHAT_SEND_URL, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': CSRF_TOKEN,
                         'Accept': 'application/json',
                     },
-                    body: JSON.stringify({
-                        pelanggan_id: SELECTED_PELANGGAN_ID,
-                        pesan: pesan,
-                    }),
+                    body: formData,
                 });
 
                 const data = await res.json();
                 if (res.ok && data.status === 'OK') {
-                    // JANGAN tambahkan bubble secara lokal — biarkan polling yang handle
-                    // untuk menghindari duplikat (race condition dengan polling 2 detik)
                     input.value = '';
+                    cancelReply();
+                    cancelMedia();
                     scrollToBottom();
                     if (data.sent) {
                         showToast('success', 'Terkirim', data.note || 'Pesan terkirim via WhatsApp');
                     } else {
-                        showToast('warning', 'Tersimpan', data.note || 'Pesan disimpan tapi belum terkirim ke WhatsApp. Pastikan bot WhatsApp sedang berjalan.');
+                        showToast('warning', 'Tersimpan', data.note || 'Pesan disimpan tapi belum terkirim ke WhatsApp.');
                     }
                 } else {
                     showToast('error', 'Gagal', data.error || data.message || 'Gagal mengirim pesan');
@@ -486,92 +750,8 @@
                 showToast('error', 'Gagal', 'Gagal mengirim pesan: ' + err.message);
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Kirim';
+                btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>';
             }
-        }
-
-        // Tambah pesan ke chat window secara lokal
-        function tambahPesanKeChat(pesan, msgId, sumber, sent) {
-            const container = document.getElementById('chatContainer');
-            if (!container) return;
-
-            // Hapus placeholder "Belum ada percakapan" jika ada
-            const placeholder = container.querySelector('.flex.items-center.justify-center.h-full');
-            if (placeholder) placeholder.remove();
-
-            const now = new Date();
-            const jam = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-
-            if (sumber === 'user') {
-                // Pesan dari pelanggan (kiri)
-                const div = document.createElement('div');
-                div.className = 'flex justify-start';
-                div.setAttribute('data-msg-id', msgId || '');
-                div.innerHTML = `
-                    <div class="max-w-[70%] bg-[#2a3343] rounded-2xl rounded-tl-sm px-4 py-2.5">
-                        <p class="text-sm text-gray-200 whitespace-pre-line">${escapeHtml(pesan)}</p>
-                        <p class="text-[10px] text-gray-500 mt-1 text-right">${jam}</p>
-                    </div>
-                `;
-                container.appendChild(div);
-            } else {
-                // Balasan (kanan)
-                let bgColor = 'bg-gray-600/20 border border-gray-600/30';
-                let labelColor = 'text-gray-400';
-                let label = 'Bot';
-                let checkmark = '';
-
-                if (sumber === 'admin') {
-                    bgColor = 'bg-blue-500/20 border border-blue-500/30';
-                    labelColor = 'text-blue-400';
-                    label = 'Admin';
-                    checkmark = sent
-                        ? '<svg class="w-4 h-4 text-green-400" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8l4 4L13 4"></path><path d="M7 8l4 4L19 4"></path></svg>'
-                        : '<svg class="w-4 h-4 text-gray-400" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8l4 4L13 4"></path></svg>';
-                } else if (sumber === 'groq_ai') {
-                    bgColor = 'bg-purple-500/20 border border-purple-500/30';
-                    labelColor = 'text-purple-400';
-                    label = 'AI Bot';
-                } else if (sumber === 'system') {
-                    bgColor = 'bg-gray-600/20 border border-gray-600/30';
-                    labelColor = 'text-gray-400';
-                    label = 'System';
-                } else if (sumber === 'apriori') {
-                    bgColor = 'bg-green-500/20 border border-green-500/30';
-                    labelColor = 'text-green-400';
-                    label = 'Rekomendasi';
-                } else if (sumber === 'menu') {
-                    bgColor = 'bg-gray-600/20 border border-gray-600/30';
-                    labelColor = 'text-gray-400';
-                    label = 'Bot';
-                }
-
-                const div = document.createElement('div');
-                div.className = 'flex justify-end';
-                div.setAttribute('data-msg-id', msgId || '');
-                div.innerHTML = `
-                    <div class="max-w-[70%] ${bgColor} rounded-2xl rounded-tr-sm px-4 py-2.5">
-                        <div class="flex items-center gap-1.5 mb-1">
-                            <span class="text-[10px] font-bold uppercase tracking-wider ${labelColor}">${label}</span>
-                        </div>
-                        <p class="text-sm text-gray-200 whitespace-pre-line">${escapeHtml(pesan)}</p>
-                        <div class="flex items-center justify-end gap-1 mt-1">
-                            <span class="text-[10px] text-gray-500">${jam}</span>
-                            ${checkmark}
-                        </div>
-                    </div>
-                `;
-                container.appendChild(div);
-            }
-
-            scrollToBottom();
-            if (msgId && typeof msgId === 'number') lastMessageId = msgId;
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
         }
 
         // Polling pesan baru
@@ -584,6 +764,8 @@
                 const messages = await res.json();
 
                 if (messages.length > 0) {
+                    const container = document.getElementById('chatContainer');
+
                     messages.forEach(function (msg) {
                         if (msg.id > lastMessageId) lastMessageId = msg.id;
 
@@ -592,13 +774,74 @@
 
                         // Pesan dari pelanggan
                         if (msg.pesan_pengirim) {
-                            tambahPesanKeChat(msg.pesan_pengirim, msg.id, 'user');
+                            const div = document.createElement('div');
+                            div.className = 'flex justify-start mb-1';
+                            div.setAttribute('data-msg-id', msg.id);
+                            div.setAttribute('data-msg-text', msg.pesan_pengirim);
+                            div.setAttribute('data-msg-sender', 'pelanggan');
+
+                            const forwardHtml = msg.is_forwarded ? '<div class="flex items-center gap-1 mb-1 text-[10px] text-gray-400 italic"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Diteruskan</div>' : '';
+                            const replyHtml = renderReplyContext(msg.reply_to);
+                            const mediaHtml = renderMedia({...msg, pesan_balasan: null});
+                            const textHtml = (msg.pesan_pengirim && !['[Image]','[Video]','[Document]','[Audio]'].includes(msg.pesan_pengirim)) ? `<p class="text-sm text-gray-200 whitespace-pre-line">${escapeHtml(msg.pesan_pengirim)}</p>` : '';
+
+                            div.innerHTML = `
+                                <div class="max-w-[75%] bg-[#2a3343] rounded-2xl rounded-tl-sm px-3 py-2 relative group">
+                                    ${forwardHtml}${replyHtml}${mediaHtml}${textHtml}
+                                    <p class="text-[10px] text-gray-500 mt-1 text-right">${new Date(msg.created_at).toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'})}</p>
+                                    <button onclick="setReply(${msg.id}, '${escapeHtml((msg.pesan_pengirim || '[Media]').substring(0, 40))}', 'pelanggan')" class="absolute -right-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-500 hover:text-[#E62C37]">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>
+                                    </button>
+                                </div>
+                            `;
+                            container.appendChild(div);
                         }
 
                         // Balasan dari bot/admin/system
                         if (msg.pesan_balasan) {
                             const isAdmin = msg.sumber_balasan === 'admin';
-                            tambahPesanKeChat(msg.pesan_balasan, msg.id, msg.sumber_balasan || 'bot', isAdmin ? msg.terkirim : true);
+                            const isAi = msg.sumber_balasan === 'groq_ai';
+                            const isSystem = msg.sumber_balasan === 'system';
+                            const isApriori = msg.sumber_balasan === 'apriori';
+
+                            let bgColor = 'bg-gray-600/20 border border-gray-600/30';
+                            let labelColor = 'text-gray-400';
+                            let label = 'Bot';
+                            if (isAdmin) { bgColor = 'bg-[#E62C37]/20 border border-[#E62C37]/30'; labelColor = 'text-[#E62C37]'; label = 'Admin'; }
+                            else if (isAi) { bgColor = 'bg-purple-500/20 border border-purple-500/30'; labelColor = 'text-purple-400'; label = 'AI Bot'; }
+                            else if (isSystem) { bgColor = 'bg-gray-600/20 border border-gray-600/30'; labelColor = 'text-gray-400'; label = 'System'; }
+                            else if (isApriori) { bgColor = 'bg-green-500/20 border border-green-500/30'; labelColor = 'text-green-400'; label = 'Rekomendasi'; }
+
+                            let checkmark = '';
+                            if (isAdmin) {
+                                checkmark = msg.terkirim
+                                    ? '<svg class="w-4 h-4 text-green-400" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8l4 4L13 4"></path><path d="M7 8l4 4L19 4"></path></svg>'
+                                    : '<svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8l4 4L13 4"></path></svg>';
+                            }
+
+                            const div = document.createElement('div');
+                            div.className = 'flex justify-end mb-1';
+                            div.setAttribute('data-msg-id', msg.id);
+                            div.setAttribute('data-msg-text', msg.pesan_balasan);
+                            div.setAttribute('data-msg-sender', 'admin');
+
+                            const forwardHtml = msg.is_forwarded ? '<div class="flex items-center gap-1 mb-1 text-[10px] text-gray-400 italic"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Diteruskan</div>' : '';
+                            const replyHtml = renderReplyContext(msg.reply_to);
+                            const mediaHtml = renderMedia(msg);
+                            const textHtml = (msg.pesan_balasan && !['[Image]','[Video]','[Document]','[Audio]'].includes(msg.pesan_balasan)) ? `<p class="text-sm text-gray-200 whitespace-pre-line">${escapeHtml(msg.pesan_balasan)}</p>` : '';
+
+                            div.innerHTML = `
+                                <div class="max-w-[75%] ${bgColor} rounded-2xl rounded-tr-sm px-3 py-2 relative group">
+                                    ${forwardHtml}${replyHtml}
+                                    <div class="flex items-center gap-1.5 mb-1"><span class="text-[10px] font-bold uppercase tracking-wider ${labelColor}">${label}</span></div>
+                                    ${mediaHtml}${textHtml}
+                                    <div class="flex items-center justify-end gap-1 mt-1">
+                                        <span class="text-[10px] text-gray-500">${new Date(msg.created_at).toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'})}</span>
+                                        ${checkmark}
+                                    </div>
+                                </div>
+                            `;
+                            container.appendChild(div);
                         }
                     });
 
@@ -614,14 +857,11 @@
             scrollToBottom();
             updateInputArea();
 
-            // Tandai pesan sudah dibaca saat admin buka chat pelanggan ini
+            // Tandai pesan sudah dibaca
             if (SELECTED_PELANGGAN_ID) {
                 fetch(CHAT_MARK_READ_URL.replace('__ID__', SELECTED_PELANGGAN_ID), {
                     method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': CSRF_TOKEN,
-                        'Accept': 'application/json',
-                    },
+                    headers: { 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json' },
                 }).catch(function () {});
             }
 
@@ -641,7 +881,6 @@
         // Hentikan polling saat pindah halaman
         window.addEventListener('beforeunload', function () {
             if (pollingInterval) clearInterval(pollingInterval);
-            if (sidebarPollingInterval) clearInterval(sidebarPollingInterval);
         });
     </script>
 @endsection

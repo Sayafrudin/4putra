@@ -60,7 +60,8 @@ class ChatbotController extends Controller
             $selectedPelanggan = Pelanggan::select('id', 'nomor_wa', 'nama', 'sesi_aktif')->find($request->pelanggan_id);
             if ($selectedPelanggan) {
                 $riwayat = $selectedPelanggan->percakapan()
-                    ->select('id', 'pelanggan_id', 'pesan_pengirim', 'pesan_balasan', 'sumber_balasan', 'terkirim', 'created_at')
+                    ->select('id', 'pelanggan_id', 'pesan_pengirim', 'pesan_balasan', 'sumber_balasan', 'terkirim', 'reply_to_id', 'media_url', 'media_type', 'is_forwarded', 'created_at')
+                    ->with('replyTo:id,pesan_pengirim,pesan_balasan,sumber_balasan,media_type')
                     ->orderBy('created_at', 'asc')
                     ->limit(200)
                     ->get();
@@ -75,11 +76,19 @@ class ChatbotController extends Controller
     {
         $afterId = $request->input('after_id', 0);
 
-        $messages = Percakapan::select('id', 'pelanggan_id', 'pesan_pengirim', 'pesan_balasan', 'sumber_balasan', 'terkirim', 'created_at')
+        $messages = Percakapan::select('id', 'pelanggan_id', 'pesan_pengirim', 'pesan_balasan', 'sumber_balasan', 'terkirim', 'reply_to_id', 'media_url', 'media_type', 'is_forwarded', 'created_at')
             ->where('pelanggan_id', $pelanggan->id)
             ->where('id', '>', $afterId)
             ->orderBy('created_at', 'asc')
             ->get();
+
+        // Load reply context
+        $messages->each(function ($msg) {
+            if ($msg->reply_to_id) {
+                $replyTo = Percakapan::select('id', 'pesan_pengirim', 'pesan_balasan', 'sumber_balasan', 'media_type')->find($msg->reply_to_id);
+                $msg->reply_to = $replyTo;
+            }
+        });
 
         return response()->json($messages);
     }
@@ -122,11 +131,42 @@ class ChatbotController extends Controller
     {
         $request->validate([
             'pelanggan_id' => 'required|exists:pelanggan,id',
-            'pesan' => 'required|string|max:1000',
+            'pesan' => 'nullable|string|max:5000',
+            'reply_to_id' => 'nullable|exists:percakapan,id',
+            'media' => 'nullable|file|max:20480|mimes:jpg,jpeg,png,gif,mp4,mp3,pdf,doc,docx,xls,xlsx,zip',
         ]);
 
         $pelanggan = Pelanggan::findOrFail($request->pelanggan_id);
-        $pesan = $request->pesan;
+        $pesan = $request->input('pesan', '');
+        $mediaUrl = null;
+        $mediaType = null;
+
+        // Handle upload media
+        if ($request->hasFile('media')) {
+            $file = $request->file('media');
+            $ext = strtolower($file->getClientOriginalExtension());
+            $filename = 'chat_' . time() . '_' . uniqid() . '.' . $ext;
+            $path = $file->storeAs('chat-media', $filename, 'public');
+            $mediaUrl = '/storage/' . $path;
+
+            if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif'])) {
+                $mediaType = 'image';
+            } elseif (in_array($ext, ['mp4'])) {
+                $mediaType = 'video';
+            } elseif (in_array($ext, ['mp3'])) {
+                $mediaType = 'audio';
+            } else {
+                $mediaType = 'document';
+            }
+
+            if (empty($pesan)) {
+                $pesan = '[' . ucfirst($mediaType) . ']';
+            }
+        }
+
+        if (empty($pesan) && !$mediaUrl) {
+            return response()->json(['error' => 'Pesan atau media harus diisi'], 422);
+        }
 
         // Simpan ke database terlebih dahulu
         $chatBaru = Percakapan::create([
@@ -134,7 +174,10 @@ class ChatbotController extends Controller
             'pesan_pengirim' => null,
             'pesan_balasan' => $pesan,
             'sumber_balasan' => 'admin',
-            'terkirim' => false, // default belum terkirim
+            'reply_to_id' => $request->reply_to_id,
+            'media_url' => $mediaUrl,
+            'media_type' => $mediaType,
+            'terkirim' => false,
         ]);
 
         $pelanggan->update(['pesan_terakhir' => now()]);
@@ -143,13 +186,24 @@ class ChatbotController extends Controller
         $note = '';
         $sent = false;
         $baileysUrl = env('BAILEYS_BOT_URL', 'http://127.0.0.1:3001');
-        $metaApiUrl = env('META_API_URL', 'http://127.0.0.1:3000');
 
         try {
-            $response = Http::timeout(5)->post($baileysUrl.'/send', [
-                'jid' => $pelanggan->nomor_wa,
-                'pesan' => $pesan,
-            ]);
+            if ($mediaUrl) {
+                // Kirim media via Baileys
+                $absolutePath = public_path($mediaUrl);
+                $response = Http::timeout(10)->attach(
+                    'file', file_get_contents($absolutePath), $filename
+                )->post($baileysUrl . '/send-media', [
+                    'jid' => $pelanggan->nomor_wa,
+                    'caption' => $pesan !== '[' . ucfirst($mediaType) . ']' ? $pesan : '',
+                    'media_type' => $mediaType,
+                ]);
+            } else {
+                $response = Http::timeout(5)->post($baileysUrl . '/send', [
+                    'jid' => $pelanggan->nomor_wa,
+                    'pesan' => $pesan,
+                ]);
+            }
 
             if ($response->successful() && $response->json('status') === 'OK') {
                 $sent = true;
@@ -159,33 +213,17 @@ class ChatbotController extends Controller
             // Baileys offline
         }
 
-        // Fallback: coba via index.js (Meta API) jika Baileys gagal dan bukan @lid
-        if (! $sent && ! str_contains($pelanggan->nomor_wa, '@lid')) {
-            try {
-                $response = Http::timeout(5)->post($metaApiUrl.'/api/chat/send', [
-                    'pelanggan_id' => $pelanggan->id,
-                    'pesan' => $pesan,
-                ]);
-
-                if ($response->successful()) {
-                    $sent = true;
-                    $note = 'Pesan terkirim via Meta API';
-                }
-            } catch (\Exception $e) {
-                // Meta API offline
-            }
-        }
-
-        if (! $sent) {
+        if (!$sent) {
             $note = 'Pesan disimpan (WhatsApp offline)';
         } else {
-            // Update status terkirim
             $chatBaru->update(['terkirim' => true]);
         }
 
         return response()->json([
             'status' => 'OK',
             'message_id' => $chatBaru->id,
+            'media_url' => $mediaUrl,
+            'media_type' => $mediaType,
             'sent' => $sent,
             'note' => $note,
         ]);
@@ -207,7 +245,8 @@ class ChatbotController extends Controller
         // Kirim notifikasi ke pelanggan via Baileys API
         $pesanNotif = '';
         if ($mode === 'human') {
-            $pesanNotif = 'Halo, Kak. Percakapan ini sekarang diambil alih oleh admin 4PUTRA, ya. Mohon tunggu sebentar, kami akan segera membalas pesan Kakak.';
+            $adminName = auth()->user()->name ?? 'Admin';
+            $pesanNotif = "Halo, Kak. Percakapan ini sekarang diambil alih oleh admin {$adminName}, ya. Admin {$adminName} akan segera menghubungi Kakak. Mohon tunggu sebentar.";
         } else {
             $pesanNotif = 'Terima kasih atas waktunya, Kak. Percakapan ini sekarang kami alihkan kembali ke mode sistem. Jika masih ada yang ingin diketahui tentang perawatan atau pemesanan parrot di 4PUTRA, silakan langsung ditanyakan.';
         }

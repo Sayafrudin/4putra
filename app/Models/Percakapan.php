@@ -14,6 +14,10 @@ class Percakapan extends Model
         'pesan_pengirim',
         'pesan_balasan',
         'sumber_balasan',
+        'reply_to_id',
+        'media_url',
+        'media_type',
+        'is_forwarded',
         'terkirim',
         'dibaca_admin',
     ];
@@ -21,5 +25,10 @@ class Percakapan extends Model
     public function pelanggan(): BelongsTo
     {
         return $this->belongsTo(Pelanggan::class);
+    }
+
+    public function replyTo(): BelongsTo
+    {
+        return $this->belongsTo(Percakapan::class, 'reply_to_id');
     }
 }

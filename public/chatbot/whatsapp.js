@@ -230,10 +230,11 @@ async function cekRateLimit(pelangganId) {
     return selisih < RATE_LIMIT_MS;
 }
 
-async function simpanPercakapan(pelangganId, pesanPengirim, pesanBalasan, sumber) {
+async function simpanPercakapan(pelangganId, pesanPengirim, pesanBalasan, sumber, extra = {}) {
+    const { replyToId = null, mediaUrl = null, mediaType = null, isForwarded = false } = extra;
     await insert(
-        'INSERT INTO percakapan (pelanggan_id, pesan_pengirim, pesan_balasan, sumber_balasan, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())',
-        [pelangganId, pesanPengirim, pesanBalasan, sumber]
+        'INSERT INTO percakapan (pelanggan_id, pesan_pengirim, pesan_balasan, sumber_balasan, reply_to_id, media_url, media_type, is_forwarded, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())',
+        [pelangganId, pesanPengirim, pesanBalasan, sumber, replyToId, mediaUrl, mediaType, isForwarded]
     );
 }
 
@@ -575,22 +576,71 @@ async function hubungkanKeWhatsApp() {
 
             const tipePesan = Object.keys(msg.message)[0];
 
-            // Ekstrak teks pesan
+            // Deteksi pesan diteruskan (forwarded)
+            let isForwarded = false;
+            if (msg.message.extendedTextMessage?.contextInfo?.isForwarded) isForwarded = true;
+            if (msg.message.imageMessage?.contextInfo?.isForwarded) isForwarded = true;
+            if (msg.message.videoMessage?.contextInfo?.isForwarded) isForwarded = true;
+            if (msg.message.documentMessage?.contextInfo?.isForwarded) isForwarded = true;
+            if (msg.message.audioMessage?.contextInfo?.isForwarded) isForwarded = true;
+
+            // Deteksi reply context
+            let replyToId = null;
+            const contextInfo = msg.message.extendedTextMessage?.contextInfo ||
+                msg.message.imageMessage?.contextInfo ||
+                msg.message.videoMessage?.contextInfo ||
+                msg.message.documentMessage?.contextInfo ||
+                msg.message.audioMessage?.contextInfo;
+            if (contextInfo?.stanzaId) {
+                // Cari pesan asli berdasarkan ID WhatsApp
+                const originalMsg = await queryOne('SELECT id FROM percakapan WHERE id = ? LIMIT 1', [contextInfo.stanzaId]);
+                if (originalMsg) replyToId = originalMsg.id;
+            }
+
+            // Ekstrak teks pesan dan media
             let teksMasuk = '';
+            let mediaUrl = null;
+            let mediaType = null;
+
             if (tipePesan === 'conversation') {
                 teksMasuk = msg.message.conversation;
             } else if (tipePesan === 'extendedTextMessage') {
                 teksMasuk = msg.message.extendedTextMessage.text;
+            } else if (tipePesan === 'imageMessage') {
+                teksMasuk = msg.message.imageMessage.caption || '[Image]';
+                mediaType = 'image';
+            } else if (tipePesan === 'videoMessage') {
+                teksMasuk = msg.message.videoMessage.caption || '[Video]';
+                mediaType = 'video';
+            } else if (tipePesan === 'documentMessage') {
+                teksMasuk = msg.message.documentMessage.fileName || '[Document]';
+                mediaType = 'document';
+            } else if (tipePesan === 'audioMessage') {
+                teksMasuk = '[Audio]';
+                mediaType = 'audio';
             } else if (tipePesan === 'buttonsResponseMessage') {
-                // Handle button response
                 teksMasuk = msg.message.buttonsResponseMessage.selectedButtonId;
             } else if (tipePesan === 'listResponseMessage') {
-                // Handle list response
                 teksMasuk = msg.message.listResponseMessage.singleSelectReply.selectedRowId;
             }
 
+            // Download media jika ada
+            if (mediaType && sockInstance) {
+                try {
+                    const buffer = await sockInstance.downloadMediaMessage(msg, 'buffer');
+                    const ext = mediaType === 'image' ? 'jpg' : (mediaType === 'video' ? 'mp4' : (mediaType === 'audio' ? 'mp3' : 'bin'));
+                    const filename = `wa_${Date.now()}_${Math.random().toString(36).substr(2, 6)}.${ext}`;
+                    const filepath = join(__dirname, '../storage/app/public/chat-media', filename);
+                    fs.mkdirSync(join(__dirname, '../storage/app/public/chat-media'), { recursive: true });
+                    fs.writeFileSync(filepath, buffer);
+                    mediaUrl = `/storage/chat-media/${filename}`;
+                } catch (dlErr) {
+                    console.error('Gagal download media:', dlErr.message);
+                }
+            }
+
             teksMasuk = teksMasuk.trim();
-            if (!teksMasuk) return;
+            if (!teksMasuk && !mediaUrl) return;
 
             const teksMasukLower = teksMasuk.toLowerCase();
 
@@ -902,7 +952,7 @@ async function hubungkanKeWhatsApp() {
                     return;
                 }
 
-                await simpanPercakapan(pelanggan.id, teksMasuk, null, 'manual');
+                await simpanPercakapan(pelanggan.id, teksMasuk, null, 'manual', { replyToId, mediaUrl, mediaType, isForwarded });
                 await buatNotifikasi(
                     'pesan_masuk',
                     'Pesan dari pelanggan (mode manual)',
@@ -928,7 +978,7 @@ async function hubungkanKeWhatsApp() {
                 }
 
                 // Simpan pesan saja, bot tidak membalas
-                await simpanPercakapan(pelanggan.id, teksMasuk, null, 'human');
+                await simpanPercakapan(pelanggan.id, teksMasuk, null, 'human', { replyToId, mediaUrl, mediaType, isForwarded });
                 await buatNotifikasi(
                     'pesan_masuk',
                     'Pesan dari pelanggan (admin takeover)',
@@ -1032,6 +1082,53 @@ apiApp.post('/send', async (req, res) => {
         res.json({ status: 'OK', sent_to: fullJid });
     } catch (error) {
         console.error('Gagal kirim pesan via Baileys:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Endpoint untuk kirim media dari admin dashboard
+import multer from 'multer';
+const upload = multer({ dest: '/tmp/chat-upload/' });
+
+apiApp.post('/send-media', upload.single('file'), async (req, res) => {
+    try {
+        const { jid, caption, media_type } = req.body;
+
+        if (!jid || !req.file) {
+            return res.status(400).json({ error: 'jid dan file wajib diisi' });
+        }
+
+        if (!sockInstance || !isConnected) {
+            return res.status(503).json({ error: 'Bot WhatsApp belum terhubung' });
+        }
+
+        let fullJid = jid;
+        if (!fullJid.includes('@')) {
+            fullJid = jid + '@s.whatsapp.net';
+        }
+
+        const fileBuffer = fs.readFileSync(req.file.path);
+        const captionText = caption && caption !== '[Image]' && caption !== '[Video]' && caption !== '[Document]' ? caption : '';
+
+        let msgOptions;
+        if (media_type === 'image') {
+            msgOptions = { image: fileBuffer, caption: captionText };
+        } else if (media_type === 'video') {
+            msgOptions = { video: fileBuffer, caption: captionText };
+        } else if (media_type === 'audio') {
+            msgOptions = { audio: fileBuffer, mimetype: 'audio/mpeg' };
+        } else {
+            msgOptions = { document: fileBuffer, mimetype: req.file.mimetype, fileName: req.file.originalname };
+        }
+
+        await sockInstance.sendMessage(fullJid, msgOptions);
+
+        // Hapus file temporary
+        fs.unlinkSync(req.file.path);
+
+        res.json({ status: 'OK', sent_to: fullJid });
+    } catch (error) {
+        console.error('Gagal kirim media via Baileys:', error.message);
         res.status(500).json({ error: error.message });
     }
 });

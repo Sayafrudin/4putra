@@ -166,6 +166,15 @@ Vercel via `vercel.json` — PHP runtime for `api/index.php`, static assets serv
 - **Push Langsung ke GitHub:** Ketika pengguna meminta push ke GitHub, lakukan langsung tanpa bertanya lagi. Jangan menunggu konfirmasi tambahan — langsung `git add`, `git commit`, dan `git push origin development`.
 - **Branch Default untuk checkout:** Selalu `git checkout development` di awal sesi. Jangan ke `main`.
 - **Pesan Commit:** Gunakan pesan commit yang deskriptif dalam Bahasa Indonesia, singkat, dan jelas. Contoh: `fix: migrasi gambar ke Cloudinary + perbaikan domain admin`.
+- **CONTOH ALUR YANG BENAR:**
+  ```
+  git checkout development
+  git add <files>
+  git commit -m "fix: perbaikan X"
+  git push origin development
+  gh pr create --base main --head development --title "fix: perbaikan X" --body "..."
+  gh pr merge <PR_NUMBER> --merge
+  ```
 
 ## Aturan Wajib Testing & Validasi Sebelum Push
 

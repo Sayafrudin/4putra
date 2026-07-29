@@ -989,9 +989,6 @@ async function hubungkanKeWhatsApp() {
         }
     });
 }
-hubungkanKeWhatsApp().catch(err => {
-    console.error('Gagal koneksi WhatsApp:', err.message);
-});
 
 // ============================================================
 // HTTP SERVER UNTUK MENERIMA REQUEST DARI INDEX.JS / LARAVEL
@@ -1187,6 +1184,15 @@ apiApp.get('/status', (req, res) => {
 
 apiApp.listen(API_PORT, '0.0.0.0', () => {
     console.log(`Baileys API berjalan di port ${API_PORT}`);
+
+    // Mulai koneksi WhatsApp SETELAH Express server aktif
+    // Jika gagal, Express tetap jalan sehingga /qr dan /status bisa diakses
+    hubungkanKeWhatsApp().catch(err => {
+        console.error('Gagal koneksi WhatsApp, retry dalam 15 detik:', err.message);
+        setTimeout(() => {
+            hubungkanKeWhatsApp().catch(e => console.error('Retry gagal:', e.message));
+        }, 15000);
+    });
 });
 
 // Global error handler agar process tidak crash

@@ -32,7 +32,7 @@
         "SESSION_LIFETIME": "120",
         "SESSION_ENCRYPT": "false",
         "SESSION_SECURE_COOKIE": "true",
-        "BAILEYS_BOT_URL": "https://4putra-production.up.railway.app",
-        "META_API_URL": "https://4putra-production.up.railway.app"
+        "BAILEYS_BOT_URL": "http://127.0.0.1:3001",
+        "META_API_URL": "http://127.0.0.1:3000"
     }
 }

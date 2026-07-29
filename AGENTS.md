@@ -185,9 +185,9 @@ Vercel via `vercel.json` — PHP runtime for `api/index.php`, static assets serv
 - **Test setelah SETIAP perubahan:** Setelah mengubah, menambah, atau memperbaiki kode apa pun, WAJIB langsung menjalankan test untuk memastikan tidak ada error baru yang muncul. Jangan menumpuk banyak perubahan lalu test di akhir — ini menyebabkan error sulit dilacak.
 - **Simulasi alur pengguna:** Jangan hanya test syntax. Jalankan alur lengkap seperti yang akan dilakukan pengguna. Contoh: jika menambah endpoint `/reset`, buka browser dan akses endpoint tersebut untuk memastikan benar-benar berfungsi, bukan hanya cek apakah kode bisa di-parse.
 - **Deteksi error segera:** Jika terdeteksi error setelah perubahan, segera perbaiki SEBELUM melakukan perubahan lain atau SEBELUM push ke GitHub. Jangan biarkan error mengendap.
-- **Test di environment yang benar:** Jika kode akan dijalankan di Railway/Vercel, pastikan juga test di lokal dulu. Perbedaan environment (Windows vs Linux, localhost vs cloud) sering menyebabkan error yang tidak terduga.
+- **Test di environment yang benar:** Pastikan test di lokal dulu sebelum deploy. Perbedaan environment (Windows vs Linux, localhost vs cloud) sering menyebabkan error yang tidak terduga.
 - **Cek resource locking:** Operasi file system (hapus, rename, write) bisa gagal jika file masih dipakai proses lain. Selalu tutup koneksi/socket/lock SEBELUM operasi file. Contoh: tutup Baileys socket sebelum hapus folder `auth_info`.
-- **Jangan asumsikan success:** Setelah push ke production (Railway/Vercel), cek apakah deploy berhasil dan fitur berfungsi. Jangan hanya percaya bahwa "kode sudah benar jadi pasti jalan".
+- **Jangan asumsikan success:** Setelah push ke production (Vercel), cek apakah deploy berhasil dan fitur berfungsi. Jangan hanya percaya bahwa "kode sudah benar jadi pasti jalan".
 
 ### Checklist Testing Wajib
 

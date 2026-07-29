@@ -15,7 +15,7 @@
         "@better-auth/infra": "^0.3.6",
         "@tailwindcss/vite": "^4.3.2",
         "@tidbcloud/serverless": "^0.3.0",
-        "@whiskeysockets/baileys": "^7.0.0-rc13",
+        "@whiskeysockets/baileys": "^7.0.0-rc14",
         "alpinejs": "^3.15.3",
         "baileys": "^7.0.0-rc13",
         "dotenv": "^17.4.2",

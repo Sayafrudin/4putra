@@ -523,8 +523,8 @@
 
                 if (sumber === 'admin') {
                     if (sent) {
-                        bgColor = 'bg-[#E62C37]/20 border border-[#E62C37]/30';
-                        labelColor = 'text-[#E62C37]';
+                        bgColor = 'bg-blue-500/20 border border-blue-500/30';
+                        labelColor = 'text-blue-400';
                         label = 'Admin';
                         checkmark = '<svg class="w-4 h-4 text-green-400" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8l4 4L13 4"></path><path d="M7 8l4 4L19 4"></path></svg>';
                     } else {

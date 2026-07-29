@@ -11,6 +11,7 @@ use App\Models\TransaksiChatbot;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 class ChatbotController extends Controller
@@ -81,6 +82,39 @@ class ChatbotController extends Controller
             ->get();
 
         return response()->json($messages);
+    }
+
+    // Ambil pelanggan yang punya pesan belum dibaca admin
+    public function unreadMessages()
+    {
+        $unread = \App\Models\Percakapan::select('pelanggan_id', DB::raw('COUNT(*) as jumlah'), DB::raw('MAX(id) as last_id'))
+            ->where('dibaca_admin', false)
+            ->whereNotNull('pesan_pengirim')
+            ->groupBy('pelanggan_id')
+            ->get()
+            ->map(function ($item) {
+                $pelanggan = Pelanggan::find($item->pelanggan_id);
+                return [
+                    'pelanggan_id' => $item->pelanggan_id,
+                    'nama' => $pelanggan?->nama ?? 'Unknown',
+                    'nomor_wa' => $pelanggan?->nomor_wa ?? '',
+                    'jumlah' => $item->jumlah,
+                    'last_id' => $item->last_id,
+                ];
+            });
+
+        return response()->json($unread);
+    }
+
+    // Tandai pesan pelanggan sebagai sudah dibaca
+    public function markAsRead(Request $request, Pelanggan $pelanggan)
+    {
+        \App\Models\Percakapan::where('pelanggan_id', $pelanggan->id)
+            ->where('dibaca_admin', false)
+            ->whereNotNull('pesan_pengirim')
+            ->update(['dibaca_admin' => true]);
+
+        return response()->json(['status' => 'OK']);
     }
 
     // Admin kirim pesan ke pelanggan

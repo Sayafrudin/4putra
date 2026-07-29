@@ -269,6 +269,7 @@
         const CHAT_TOGGLE_URL = '{{ route("admin.chatbot.chat.toggle") }}';
         const CHAT_CLEAR_URL = '{{ route("admin.chatbot.chat.clear", ["pelanggan" => "__ID__"]) }}';
         const CHAT_MESSAGES_URL = '{{ route("admin.chatbot.chat.messages", ["pelanggan" => "__ID__"]) }}';
+        const CHAT_MARK_READ_URL = '{{ route("admin.chatbot.chat.mark-read", ["pelanggan" => "__ID__"]) }}';
         const CHAT_PELANGGAN_LIST_URL = '{{ route("admin.chatbot.chat", ["pelanggan_id" => "__ID__"]) }}';
         const CSRF_TOKEN = '{{ csrf_token() }}';
         let currentMode = '{{ optional($selectedPelanggan)->sesi_aktif ?? "ai" }}';
@@ -469,8 +470,10 @@
 
                 const data = await res.json();
                 if (res.ok && data.status === 'OK') {
-                    tambahPesanKeChat(pesan, data.message_id, 'admin', data.sent);
+                    // JANGAN tambahkan bubble secara lokal — biarkan polling yang handle
+                    // untuk menghindari duplikat (race condition dengan polling 2 detik)
                     input.value = '';
+                    scrollToBottom();
                     if (data.sent) {
                         showToast('success', 'Terkirim', data.note || 'Pesan terkirim via WhatsApp');
                     } else {
@@ -615,6 +618,17 @@
         document.addEventListener('DOMContentLoaded', function () {
             scrollToBottom();
             updateInputArea();
+
+            // Tandai pesan sudah dibaca saat admin buka chat pelanggan ini
+            if (SELECTED_PELANGGAN_ID) {
+                fetch(CHAT_MARK_READ_URL.replace('__ID__', SELECTED_PELANGGAN_ID), {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': CSRF_TOKEN,
+                        'Accept': 'application/json',
+                    },
+                }).catch(function () {});
+            }
 
             // Cari lastMessageId dari pesan yang sudah ada
             const existingMsgs = document.querySelectorAll('[data-msg-id]');

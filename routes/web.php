@@ -144,7 +144,9 @@ Route::prefix('admin')->middleware(['admin.auth', 'admin.domain'])->group(functi
 
         // WhatsApp Chat (Bot ↔ Human)
         Route::get('/chat', [ChatbotController::class, 'chat'])->name('admin.chatbot.chat');
+        Route::get('/chat/unread-messages', [ChatbotController::class, 'unreadMessages'])->name('admin.chatbot.chat.unread');
         Route::get('/chat/{pelanggan}/messages', [ChatbotController::class, 'chatMessages'])->name('admin.chatbot.chat.messages');
+        Route::post('/chat/{pelanggan}/mark-read', [ChatbotController::class, 'markAsRead'])->name('admin.chatbot.chat.mark-read');
         Route::post('/chat/send', [ChatbotController::class, 'chatSend'])->name('admin.chatbot.chat.send');
         Route::post('/chat/toggle', [ChatbotController::class, 'chatToggle'])->name('admin.chatbot.chat.toggle');
         Route::delete('/chat/{pelanggan}/clear', [ChatbotController::class, 'chatClear'])->name('admin.chatbot.chat.clear');

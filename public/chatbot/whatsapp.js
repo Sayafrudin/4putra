@@ -30,6 +30,9 @@ const CACHE_APRIORI_TTL = 5 * 60 * 1000;
 let sockInstance = null;
 let isConnected = false;
 let lastQrCode = null;
+let jumlahReconnect = 0;
+const MAX_RECONNECT = 10;
+const DELAY_RECONNECT = 5000;
 
 // ============================================================
 // SYSTEM PROMPT
@@ -522,11 +525,10 @@ async function hubungkanKeWhatsApp() {
 
         if (qr) {
             lastQrCode = qr;
-            const host = process.env.RAILWAY_PUBLIC_DOMAIN || `localhost:${process.env.PORT || 3001}`;
-            const protocol = process.env.RAILWAY_PUBLIC_DOMAIN ? 'https' : 'http';
+            const host = `localhost:${process.env.PORT || 3001}`;
             console.log('==================================================');
             console.log('SCAN QR CODE DI BROWSER:');
-            console.log(`${protocol}://${host}/qr`);
+            console.log(`http://${host}/qr`);
             console.log('==================================================');
         }
 
@@ -534,9 +536,18 @@ async function hubungkanKeWhatsApp() {
             isConnected = false;
             const harusKonekUlang = (lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut);
             console.log('Koneksi terputus:', lastDisconnect?.error || 'Unknown', '. Konek ulang:', harusKonekUlang);
-            if (harusKonekUlang) hubungkanKeWhatsApp();
+            if (harusKonekUlang) {
+                jumlahReconnect++;
+                if (jumlahReconnect > MAX_RECONNECT) {
+                    console.log(`[!] Gagal konek setelah ${MAX_RECONNECT} percobaan. Bot berhenti. Jalankan ulang: node whatsapp.js`);
+                    process.exit(1);
+                }
+                console.log(`[i] Konek ulang ${jumlahReconnect}/${MAX_RECONNECT} dalam ${DELAY_RECONNECT/1000} detik...`);
+                setTimeout(() => hubungkanKeWhatsApp(), DELAY_RECONNECT);
+            }
         } else if (connection === 'open') {
             isConnected = true;
+            jumlahReconnect = 0;
             lastQrCode = null;
             console.log('==================================================');
             console.log('BOT WHATSAPP 4PUTRA VERTEX AVIARY AKTIF!');

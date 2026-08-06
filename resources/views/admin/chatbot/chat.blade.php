@@ -1,7 +1,8 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-800 pb-5">
+    <div
+        class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-800 pb-5">
         <div>
             <h2 class="text-2xl font-bold tracking-tight text-white uppercase">WhatsApp Chat</h2>
             <p class="text-sm text-gray-400 mt-1">Kelola percakapan pelanggan — ambil alih dari AI atau kembalikan ke bot</p>
@@ -24,11 +25,11 @@
             </div>
             <div id="daftarPelanggan" class="flex-1 overflow-y-auto divide-y divide-gray-800">
                 @forelse($pelangganList as $p)
-                    <a href="{{ route('admin.chatbot.chat', ['pelanggan_id' => $p->id]) }}"
-                        @click="showChat = true"
+                    <a href="{{ route('admin.chatbot.chat', ['pelanggan_id' => $p->id]) }}" @click="showChat = true"
                         class="flex items-center gap-3 px-4 py-3 hover:bg-[#151a22] transition-colors {{ optional($selectedPelanggan)->id === $p->id ? 'bg-[#151a22] border-l-2 border-[#E62C37]' : '' }}"
                         data-nama="{{ strtolower($p->nama ?? $p->nomor_wa) }}">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold
+                        <div
+                            class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold
                             {{ $p->sesi_aktif === 'human' ? 'bg-green-500/20 text-green-400' : '' }}
                             {{ $p->sesi_aktif === 'ai' ? 'bg-purple-500/20 text-purple-400' : '' }}
                             {{ $p->sesi_aktif === 'manual' ? 'bg-yellow-500/20 text-yellow-400' : '' }}
@@ -38,7 +39,8 @@
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center justify-between">
                                 <p class="text-sm font-semibold text-white truncate">{{ $p->nama ?? 'Tanpa Nama' }}</p>
-                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase
+                                <span
+                                    class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase
                                     {{ $p->sesi_aktif === 'human' ? 'bg-green-500/20 text-green-400' : '' }}
                                     {{ $p->sesi_aktif === 'ai' ? 'bg-purple-500/20 text-purple-400' : '' }}
                                     {{ $p->sesi_aktif === 'manual' ? 'bg-yellow-500/20 text-yellow-400' : '' }}
@@ -59,7 +61,7 @@
                                 }
                             @endphp
                             <p class="text-xs text-gray-400 truncate">
-                                @if($isLid)
+                                @if ($isLid)
                                     WA ID: {{ $nomorRaw }}
                                 @elseif($nomorFormatted)
                                     {{ $nomorFormatted }}
@@ -67,7 +69,7 @@
                                     {{ $nomorRaw }}
                                 @endif
                             </p>
-                            @if($p->pesan_terakhir)
+                            @if ($p->pesan_terakhir)
                                 <p class="text-[10px] text-gray-500 mt-0.5">{{ $p->pesan_terakhir->format('d M H:i') }}</p>
                             @endif
                         </div>
@@ -84,14 +86,18 @@
         <div class="flex-1 bg-[#1e2530] border border-gray-800 rounded-lg flex flex-col overflow-hidden min-w-0"
             :class="{ 'flex': showChat, 'hidden lg:flex': !showChat }">
 
-            @if($selectedPelanggan)
+            @if ($selectedPelanggan)
                 {{-- Header Chat --}}
                 <div class="px-4 sm:px-6 py-3 border-b border-gray-800 flex items-center justify-between gap-2">
                     <div class="flex items-center gap-3 min-w-0">
-                        <button @click="showChat = false" class="lg:hidden shrink-0 p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-gray-700/50 transition-colors">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+                        <button @click="showChat = false"
+                            class="lg:hidden shrink-0 p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-gray-700/50 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                            </svg>
                         </button>
-                        <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold
+                        <div
+                            class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold
                             {{ $selectedPelanggan->sesi_aktif === 'human' ? 'bg-green-500/20 text-green-400' : 'bg-purple-500/20 text-purple-400' }}">
                             {{ strtoupper(substr($selectedPelanggan->nama ?? $selectedPelanggan->nomor_wa, 0, 2)) }}
                         </div>
@@ -110,7 +116,7 @@
                                 }
                             @endphp
                             <p class="text-xs text-gray-400">
-                                @if($isLid)
+                                @if ($isLid)
                                     WA ID: {{ $nomorRaw }}
                                 @elseif($nomorFormatted)
                                     WA: {{ $nomorFormatted }}
@@ -127,7 +133,8 @@
                             class="px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-300 border border-gray-600 hover:border-gray-500 hover:text-white rounded-lg transition-colors">
                             Clear
                         </button>
-                        <span class="text-xs font-semibold uppercase tracking-wider
+                        <span
+                            class="text-xs font-semibold uppercase tracking-wider
                             {{ $selectedPelanggan->sesi_aktif === 'human' ? 'text-green-400' : 'text-purple-400' }}">
                             {{ $selectedPelanggan->sesi_aktif === 'human' ? 'Admin' : 'AI' }}
                         </span>
@@ -143,8 +150,9 @@
                 </div>
 
                 {{-- Pesan --}}
-                <div id="chatContainer" class="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-1" ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragleave="handleDragLeave(event)">
-                    @foreach($riwayat as $chat)
+                <div id="chatContainer" class="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-1"
+                    ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragleave="handleDragLeave(event)">
+                    @foreach ($riwayat as $chat)
                         @php
                             $isOutgoing = !empty($chat->pesan_balasan);
                             $isIncoming = !empty($chat->pesan_pengirim);
@@ -157,62 +165,94 @@
                         @endphp
 
                         {{-- Pesan dari pelanggan --}}
-                        @if($isIncoming)
-                            <div class="flex justify-start mb-1" data-msg-id="{{ $chat->id }}" data-msg-text="{{ e($chat->pesan_pengirim) }}" data-msg-sender="pelanggan" oncontextmenu="showContextMenu(event, {{ $chat->id }})">
+                        @if ($isIncoming)
+                            <div class="flex justify-start mb-1" data-msg-id="{{ $chat->id }}"
+                                data-msg-text="{{ e($chat->pesan_pengirim) }}" data-msg-sender="pelanggan"
+                                oncontextmenu="showContextMenu(event, {{ $chat->id }})">
                                 <div class="max-w-[75%] bg-[#2a3343] rounded-2xl rounded-tl-sm px-3 py-2 relative group">
                                     {{-- Forward indicator --}}
-                                    @if($chat->is_forwarded)
+                                    @if ($chat->is_forwarded)
                                         <div class="flex items-center gap-1 mb-1 text-[10px] text-gray-400 italic">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                            </svg>
                                             Diteruskan
                                         </div>
                                     @endif
 
                                     {{-- Reply context --}}
-                                    @if($chat->replyTo)
-                                        <div class="mb-1.5 px-2.5 py-1.5 bg-[#1a1f2e] border-l-2 border-[#E62C37] rounded text-[11px] cursor-pointer" onclick="scrollToMsg({{ $chat->replyTo->id }})">
+                                    @if ($chat->replyTo)
+                                        <div class="mb-1.5 px-2.5 py-1.5 bg-[#1a1f2e] border-l-2 border-[#E62C37] rounded text-[11px] cursor-pointer"
+                                            onclick="scrollToMsg({{ $chat->replyTo->id }})">
                                             <p class="text-[#E62C37] font-semibold text-[10px]">
                                                 {{ $chat->replyTo->sumber_balasan === 'admin' ? 'Admin' : ($chat->replyTo->sumber_balasan === 'groq_ai' ? 'AI Bot' : 'Pelanggan') }}
                                             </p>
-                                            <p class="text-gray-400 truncate">{{ Str::limit($chat->replyTo->pesan_pengirim ?? $chat->replyTo->pesan_balasan ?? '[Media]', 60) }}</p>
+                                            <p class="text-gray-400 truncate">
+                                                {{ Str::limit($chat->replyTo->pesan_pengirim ?? ($chat->replyTo->pesan_balasan ?? '[Media]'), 60) }}
+                                            </p>
                                         </div>
                                     @endif
 
                                     {{-- Media --}}
-                                    @if($hasMedia)
-                                        @if($chat->media_type === 'image')
-                                            <a href="{{ $chat->media_url }}" target="_blank" class="block mb-1.5 rounded-lg overflow-hidden">
-                                                <img src="{{ $chat->media_url }}" alt="Gambar" class="max-w-full max-h-60 rounded-lg object-cover">
+                                    @if ($hasMedia)
+                                        @if ($chat->media_type === 'image')
+                                            <a href="{{ $chat->media_url }}" target="_blank"
+                                                class="block mb-1.5 rounded-lg overflow-hidden">
+                                                <img src="{{ $chat->media_url }}" alt="Gambar"
+                                                    class="max-w-full max-h-60 rounded-lg object-cover">
                                             </a>
                                         @elseif($chat->media_type === 'video')
                                             <video controls class="max-w-full max-h-60 rounded-lg mb-1.5">
                                                 <source src="{{ $chat->media_url }}">
                                             </video>
                                         @else
-                                            <a href="{{ $chat->media_url }}" target="_blank" class="flex items-center gap-2 mb-1.5 px-3 py-2 bg-[#1a1f2e] rounded-lg text-gray-300 text-xs hover:bg-[#151a22] transition-colors">
-                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                                            <a href="{{ $chat->media_url }}" target="_blank"
+                                                class="flex items-center gap-2 mb-1.5 px-3 py-2 bg-[#1a1f2e] rounded-lg text-gray-300 text-xs hover:bg-[#151a22] transition-colors">
+                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
+                                                    stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                                                </svg>
                                                 {{ basename($chat->media_url) }}
                                             </a>
                                         @endif
                                     @endif
 
-                                    @if($chat->pesan_pengirim && $chat->pesan_pengirim !== '[Image]' && $chat->pesan_pengirim !== '[Video]' && $chat->pesan_pengirim !== '[Document]' && $chat->pesan_pengirim !== '[Audio]')
-                                        <p class="text-sm text-gray-200 whitespace-pre-line">{{ $chat->pesan_pengirim }}</p>
+                                    @if (
+                                        $chat->pesan_pengirim &&
+                                            $chat->pesan_pengirim !== '[Image]' &&
+                                            $chat->pesan_pengirim !== '[Video]' &&
+                                            $chat->pesan_pengirim !== '[Document]' &&
+                                            $chat->pesan_pengirim !== '[Audio]')
+                                        <p class="text-sm text-gray-200 whitespace-pre-line">{{ $chat->pesan_pengirim }}
+                                        </p>
                                     @endif
-                                    <p class="text-[10px] text-gray-500 mt-1 text-right">{{ $chat->created_at->format('H:i') }}</p>
+                                    <p class="text-[10px] text-gray-500 mt-1 text-right">
+                                        {{ $chat->created_at->format('H:i') }}</p>
 
                                     {{-- Reply button --}}
-                                    <button onclick="setReply({{ $chat->id }}, '{{ e(Str::limit($chat->pesan_pengirim ?? '[Media]', 40)) }}', 'pelanggan')" class="absolute -right-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-500 hover:text-[#E62C37]">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>
+                                    <button
+                                        onclick="setReply({{ $chat->id }}, '{{ e(Str::limit($chat->pesan_pengirim ?? '[Media]', 40)) }}', 'pelanggan')"
+                                        class="absolute -right-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-500 hover:text-[#E62C37]">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+                                        </svg>
                                     </button>
                                 </div>
                             </div>
                         @endif
 
                         {{-- Balasan dari bot/admin/system --}}
-                        @if($isOutgoing)
-                            <div class="flex justify-end mb-1" data-msg-id="{{ $chat->id }}" data-msg-text="{{ e($chat->pesan_balasan) }}" data-msg-sender="admin" oncontextmenu="showContextMenu(event, {{ $chat->id }})">
-                                <div class="max-w-[75%] rounded-2xl rounded-tr-sm px-3 py-2 relative group
+                        @if ($isOutgoing)
+                            <div class="flex justify-end mb-1" data-msg-id="{{ $chat->id }}"
+                                data-msg-text="{{ e($chat->pesan_balasan) }}" data-msg-sender="admin"
+                                oncontextmenu="showContextMenu(event, {{ $chat->id }})">
+                                <div
+                                    class="max-w-[75%] rounded-2xl rounded-tr-sm px-3 py-2 relative group
                                     {{ $isAdmin ? 'bg-[#E62C37]/20 border border-[#E62C37]/30' : '' }}
                                     {{ $isAi ? 'bg-purple-500/20 border border-purple-500/30' : '' }}
                                     {{ $isSystem ? 'bg-gray-600/20 border border-gray-600/30' : '' }}
@@ -220,25 +260,33 @@
                                     {{ !$isAdmin && !$isAi && !$isSystem && !$isApriori ? 'bg-gray-600/20 border border-gray-600/30' : '' }}">
 
                                     {{-- Forward indicator --}}
-                                    @if($chat->is_forwarded)
+                                    @if ($chat->is_forwarded)
                                         <div class="flex items-center gap-1 mb-1 text-[10px] text-gray-400 italic">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                            </svg>
                                             Diteruskan
                                         </div>
                                     @endif
 
                                     {{-- Reply context --}}
-                                    @if($chat->replyTo)
-                                        <div class="mb-1.5 px-2.5 py-1.5 bg-black/20 border-l-2 border-white/30 rounded text-[11px] cursor-pointer" onclick="scrollToMsg({{ $chat->replyTo->id }})">
+                                    @if ($chat->replyTo)
+                                        <div class="mb-1.5 px-2.5 py-1.5 bg-black/20 border-l-2 border-white/30 rounded text-[11px] cursor-pointer"
+                                            onclick="scrollToMsg({{ $chat->replyTo->id }})">
                                             <p class="text-white/60 font-semibold text-[10px]">
                                                 {{ $chat->replyTo->sumber_balasan === 'admin' ? 'Admin' : ($chat->replyTo->sumber_balasan === 'groq_ai' ? 'AI Bot' : 'Pelanggan') }}
                                             </p>
-                                            <p class="text-white/40 truncate">{{ Str::limit($chat->replyTo->pesan_pengirim ?? $chat->replyTo->pesan_balasan ?? '[Media]', 60) }}</p>
+                                            <p class="text-white/40 truncate">
+                                                {{ Str::limit($chat->replyTo->pesan_pengirim ?? ($chat->replyTo->pesan_balasan ?? '[Media]'), 60) }}
+                                            </p>
                                         </div>
                                     @endif
 
                                     <div class="flex items-center gap-1.5 mb-1">
-                                        <span class="text-[10px] font-bold uppercase tracking-wider
+                                        <span
+                                            class="text-[10px] font-bold uppercase tracking-wider
                                             {{ $isAdmin ? 'text-[#E62C37]' : '' }}
                                             {{ $isAi ? 'text-purple-400' : '' }}
                                             {{ $isSystem ? 'text-gray-400' : '' }}
@@ -248,36 +296,54 @@
                                     </div>
 
                                     {{-- Media --}}
-                                    @if($hasMedia)
-                                        @if($chat->media_type === 'image')
-                                            <a href="{{ $chat->media_url }}" target="_blank" class="block mb-1.5 rounded-lg overflow-hidden">
-                                                <img src="{{ $chat->media_url }}" alt="Gambar" class="max-w-full max-h-60 rounded-lg object-cover">
+                                    @if ($hasMedia)
+                                        @if ($chat->media_type === 'image')
+                                            <a href="{{ $chat->media_url }}" target="_blank"
+                                                class="block mb-1.5 rounded-lg overflow-hidden">
+                                                <img src="{{ $chat->media_url }}" alt="Gambar"
+                                                    class="max-w-full max-h-60 rounded-lg object-cover">
                                             </a>
                                         @elseif($chat->media_type === 'video')
                                             <video controls class="max-w-full max-h-60 rounded-lg mb-1.5">
                                                 <source src="{{ $chat->media_url }}">
                                             </video>
                                         @else
-                                            <a href="{{ $chat->media_url }}" target="_blank" class="flex items-center gap-2 mb-1.5 px-3 py-2 bg-black/20 rounded-lg text-gray-300 text-xs hover:bg-black/30 transition-colors">
-                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                                            <a href="{{ $chat->media_url }}" target="_blank"
+                                                class="flex items-center gap-2 mb-1.5 px-3 py-2 bg-black/20 rounded-lg text-gray-300 text-xs hover:bg-black/30 transition-colors">
+                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
+                                                    stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                                                </svg>
                                                 {{ basename($chat->media_url) }}
                                             </a>
                                         @endif
                                     @endif
 
-                                    @if($chat->pesan_balasan && $chat->pesan_balasan !== '[Image]' && $chat->pesan_balasan !== '[Video]' && $chat->pesan_balasan !== '[Document]' && $chat->pesan_balasan !== '[Audio]')
-                                        <p class="text-sm text-gray-200 whitespace-pre-line">{{ $chat->pesan_balasan }}</p>
+                                    @if (
+                                        $chat->pesan_balasan &&
+                                            $chat->pesan_balasan !== '[Image]' &&
+                                            $chat->pesan_balasan !== '[Video]' &&
+                                            $chat->pesan_balasan !== '[Document]' &&
+                                            $chat->pesan_balasan !== '[Audio]')
+                                        <p class="text-sm text-gray-200 whitespace-pre-line">{{ $chat->pesan_balasan }}
+                                        </p>
                                     @endif
                                     <div class="flex items-center justify-end gap-1 mt-1">
-                                        <span class="text-[10px] text-gray-500">{{ $chat->created_at->format('H:i') }}</span>
-                                        @if($isAdmin)
-                                            @if($chat->terkirim)
-                                                <svg class="w-4 h-4 text-green-400" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <span
+                                            class="text-[10px] text-gray-500">{{ $chat->created_at->format('H:i') }}</span>
+                                        @if ($isAdmin)
+                                            @if ($chat->terkirim)
+                                                <svg class="w-4 h-4 text-green-400" viewBox="0 0 24 16" fill="none"
+                                                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                                    stroke-linejoin="round">
                                                     <path d="M1 8l4 4L13 4"></path>
                                                     <path d="M7 8l4 4L19 4"></path>
                                                 </svg>
                                             @else
-                                                <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 16" fill="none"
+                                                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                                    stroke-linejoin="round">
                                                     <path d="M1 8l4 4L13 4"></path>
                                                 </svg>
                                             @endif
@@ -290,16 +356,23 @@
                 </div>
 
                 {{-- Reply preview bar --}}
-                <div id="replyBar" class="hidden px-4 py-2 bg-[#1a1f2e] border-t border-gray-800 flex items-center justify-between gap-2">
+                <div id="replyBar"
+                    class="hidden px-4 py-2 bg-[#1a1f2e] border-t border-gray-800 flex items-center justify-between gap-2">
                     <div class="flex items-center gap-2 min-w-0">
-                        <svg class="w-4 h-4 text-[#E62C37] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>
+                        <svg class="w-4 h-4 text-[#E62C37] shrink-0" fill="none" stroke="currentColor"
+                            stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+                        </svg>
                         <div class="min-w-0">
                             <p id="replyBarSender" class="text-[10px] font-bold text-[#E62C37] uppercase"></p>
                             <p id="replyBarText" class="text-xs text-gray-400 truncate"></p>
                         </div>
                     </div>
                     <button onclick="cancelReply()" class="p-1 text-gray-500 hover:text-white transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                     </button>
                 </div>
 
@@ -312,7 +385,10 @@
                             <p id="mediaPreviewSize" class="text-[10px] text-gray-500"></p>
                         </div>
                         <button onclick="cancelMedia()" class="p-1 text-gray-500 hover:text-white transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
                         </button>
                     </div>
                 </div>
@@ -320,51 +396,73 @@
                 {{-- Input Kirim Pesan --}}
                 <div class="px-4 py-3 border-t border-gray-800" id="inputArea">
                     @php
-                        $isAiMode = $selectedPelanggan && ($selectedPelanggan->sesi_aktif === 'ai' || $selectedPelanggan->sesi_aktif === 'menu');
+                        $isAiMode =
+                            $selectedPelanggan &&
+                            ($selectedPelanggan->sesi_aktif === 'ai' || $selectedPelanggan->sesi_aktif === 'menu');
                     @endphp
 
-                    <div id="aiModeNotice" class="{{ $isAiMode ? '' : 'hidden' }} flex items-center gap-2 px-4 py-2.5 bg-purple-500/10 border border-purple-500/20 rounded-xl">
-                        <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                    <div id="aiModeNotice"
+                        class="{{ $isAiMode ? '' : 'hidden' }} flex items-center gap-2 px-4 py-2.5 bg-purple-500/10 border border-purple-500/20 rounded-xl">
+                        <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                         </svg>
                         <span class="text-sm text-purple-400">Mode AI aktif — switch ke Human untuk mengirim pesan</span>
                     </div>
 
-                    <form id="chatForm" onsubmit="kirimPesan(event)" class="{{ $isAiMode ? 'hidden' : '' }} flex gap-2 items-end">
-                        <input type="file" id="fileInput" class="hidden" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.mp3" onchange="handleFileSelect(event)">
+                    <form id="chatForm" onsubmit="kirimPesan(event)"
+                        class="{{ $isAiMode ? 'hidden' : '' }} flex gap-2 items-end">
+                        <input type="file" id="fileInput" class="hidden"
+                            accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.mp3"
+                            onchange="handleFileSelect(event)">
 
                         <button type="button" onclick="document.getElementById('fileInput').click()"
-                            class="p-2.5 text-gray-400 hover:text-[#E62C37] transition-colors shrink-0" title="Kirim file">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13"/></svg>
+                            class="p-2.5 text-gray-400 hover:text-[#E62C37] transition-colors shrink-0"
+                            title="Kirim file">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
+                            </svg>
                         </button>
 
                         <div class="flex-1 relative">
-                            <input type="text" id="inputPesan" placeholder="Ketik pesan..."
-                                autocomplete="off"
+                            <input type="text" id="inputPesan" placeholder="Ketik pesan..." autocomplete="off"
                                 class="w-full px-4 py-2.5 text-sm bg-[#151a22] border border-gray-700 rounded-xl text-gray-200 placeholder-gray-500 focus:outline-none focus:border-[#E62C37]">
                         </div>
 
                         <button type="submit" id="btnKirim"
                             class="px-4 py-2.5 bg-[#E62C37] hover:bg-[#c5242d] text-white text-sm font-bold rounded-xl transition-colors shrink-0">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                            </svg>
                         </button>
                     </form>
 
                     {{-- Drop zone overlay --}}
-                    <div id="dropZone" class="hidden absolute inset-0 bg-[#E62C37]/10 border-2 border-dashed border-[#E62C37] rounded-lg z-50 flex items-center justify-center">
+                    <div id="dropZone"
+                        class="hidden absolute inset-0 bg-[#E62C37]/10 border-2 border-dashed border-[#E62C37] rounded-lg z-50 flex items-center justify-center">
                         <div class="text-center">
-                            <svg class="w-12 h-12 text-[#E62C37] mx-auto mb-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+                            <svg class="w-12 h-12 text-[#E62C37] mx-auto mb-2" fill="none" stroke="currentColor"
+                                stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                            </svg>
                             <p class="text-sm font-semibold text-[#E62C37]">Drop file di sini</p>
                         </div>
                     </div>
                 </div>
-
             @else
                 {{-- Placeholder jika belum pilih pelanggan --}}
                 <div class="flex-1 flex items-center justify-center">
                     <div class="text-center">
-                        <svg class="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                        <svg class="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor"
+                            stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
                         </svg>
                         <p class="text-gray-500 text-sm">Pilih pelanggan dari daftar untuk memulai percakapan</p>
                     </div>
@@ -378,8 +476,10 @@
         <div class="bg-[#1e2530] border border-gray-700 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
             <div class="flex items-center gap-3 mb-4">
                 <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                    <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" stroke-width="2"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
                     </svg>
                 </div>
                 <div>
@@ -387,12 +487,16 @@
                     <p class="text-sm text-gray-400">Tindakan ini tidak dapat dibatalkan</p>
                 </div>
             </div>
-            <p class="text-sm text-gray-300 mb-6">Apakah Anda yakin ingin menghapus <span class="font-semibold text-white">semua percakapan</span> dengan pelanggan ini? Chat yang sudah dihapus tidak bisa dikembalikan.</p>
+            <p class="text-sm text-gray-300 mb-6">Apakah Anda yakin ingin menghapus <span
+                    class="font-semibold text-white">semua percakapan</span> dengan pelanggan ini? Chat yang sudah dihapus
+                tidak bisa dikembalikan.</p>
             <div class="flex gap-3 justify-end">
-                <button onclick="tutupModalClearChat()" class="px-4 py-2.5 text-sm font-semibold text-gray-300 bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">
+                <button onclick="tutupModalClearChat()"
+                    class="px-4 py-2.5 text-sm font-semibold text-gray-300 bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">
                     Batal
                 </button>
-                <button onclick="konfirmasiClearChat()" class="px-4 py-2.5 text-sm font-bold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors">
+                <button onclick="konfirmasiClearChat()"
+                    class="px-4 py-2.5 text-sm font-bold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors">
                     Ya, Hapus Semua
                 </button>
             </div>
@@ -404,25 +508,40 @@
         <div class="bg-[#1e2530] border border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-5">
             <h3 class="text-base font-bold text-white mb-4">Hapus Pesan</h3>
             <div class="space-y-2">
-                <button onclick="hapusPesan('self')" class="w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-[#151a22] rounded-xl transition-colors flex items-center gap-3">
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                <button onclick="hapusPesan('self')"
+                    class="w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-[#151a22] rounded-xl transition-colors flex items-center gap-3">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                     Hapus untuk saya
                 </button>
-                <button onclick="hapusPesan('all')" class="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 rounded-xl transition-colors flex items-center gap-3">
-                    <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                <button onclick="hapusPesan('all')"
+                    class="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 rounded-xl transition-colors flex items-center gap-3">
+                    <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" stroke-width="2"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                    </svg>
                     Hapus untuk semua
                 </button>
             </div>
-            <button onclick="tutupModalHapus()" class="mt-4 w-full px-4 py-2.5 text-sm font-semibold text-gray-300 bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">
+            <button onclick="tutupModalHapus()"
+                class="mt-4 w-full px-4 py-2.5 text-sm font-semibold text-gray-300 bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">
                 Batal
             </button>
         </div>
     </div>
 
     {{-- Context Menu Hapus Pesan --}}
-    <div id="contextMenuMsg" class="fixed z-40 hidden bg-[#1e2530] border border-gray-700 rounded-xl shadow-2xl py-1 min-w-[140px]">
-        <button onclick="bukaModalHapus()" class="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+    <div id="contextMenuMsg"
+        class="fixed z-40 hidden bg-[#1e2530] border border-gray-700 rounded-xl shadow-2xl py-1 min-w-[140px]">
+        <button onclick="bukaModalHapus()"
+            class="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+            </svg>
             Hapus
         </button>
     </div>
@@ -430,14 +549,14 @@
     {{-- Data untuk JavaScript --}}
     <script>
         const SELECTED_PELANGGAN_ID = {{ optional($selectedPelanggan)->id ?? 'null' }};
-        const CHAT_SEND_URL = '{{ route("admin.chatbot.chat.send") }}';
-        const CHAT_TOGGLE_URL = '{{ route("admin.chatbot.chat.toggle") }}';
-        const CHAT_CLEAR_URL = '{{ route("admin.chatbot.chat.clear", ["pelanggan" => "__ID__"]) }}';
-        const CHAT_DELETE_URL = '{{ route("admin.chatbot.chat.delete", ["pelanggan" => "__ID__"]) }}';
-        const CHAT_MESSAGES_URL = '{{ route("admin.chatbot.chat.messages", ["pelanggan" => "__ID__"]) }}';
-        const CHAT_MARK_READ_URL = '{{ route("admin.chatbot.chat.mark-read", ["pelanggan" => "__ID__"]) }}';
+        const CHAT_SEND_URL = '{{ route('admin.chatbot.chat.send') }}';
+        const CHAT_TOGGLE_URL = '{{ route('admin.chatbot.chat.toggle') }}';
+        const CHAT_CLEAR_URL = '{{ route('admin.chatbot.chat.clear', ['pelanggan' => '__ID__']) }}';
+        const CHAT_DELETE_URL = '{{ route('admin.chatbot.chat.delete', ['pelanggan' => '__ID__']) }}';
+        const CHAT_MESSAGES_URL = '{{ route('admin.chatbot.chat.messages', ['pelanggan' => '__ID__']) }}';
+        const CHAT_MARK_READ_URL = '{{ route('admin.chatbot.chat.mark-read', ['pelanggan' => '__ID__']) }}';
         const CSRF_TOKEN = '{{ csrf_token() }}';
-        let currentMode = '{{ optional($selectedPelanggan)->sesi_aktif ?? "ai" }}';
+        let currentMode = '{{ optional($selectedPelanggan)->sesi_aktif ?? 'ai' }}';
         let lastMessageId = 0;
         let pollingInterval = null;
 
@@ -460,9 +579,13 @@
         function scrollToMsg(msgId) {
             const el = document.querySelector(`[data-msg-id="${msgId}"]`);
             if (el) {
-                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
                 el.classList.add('ring-2', 'ring-[#E62C37]', 'ring-offset-2', 'ring-offset-[#1e2530]');
-                setTimeout(() => el.classList.remove('ring-2', 'ring-[#E62C37]', 'ring-offset-2', 'ring-offset-[#1e2530]'), 2000);
+                setTimeout(() => el.classList.remove('ring-2', 'ring-[#E62C37]', 'ring-offset-2', 'ring-offset-[#1e2530]'),
+                    2000);
             }
         }
 
@@ -554,7 +677,9 @@
                         // Update tampilan pesan jadi "telah dihapus"
                         const el = document.querySelector(`[data-msg-id="${deleteMsgId}"]`);
                         if (el) {
-                            const bubble = el.querySelector('.bg-\\[\\#2a3343\\], .bg-\\[\\#E62C37\\/20\\], .bg-purple-500\\/20, .bg-gray-600\\/20, .bg-green-500\\/20');
+                            const bubble = el.querySelector(
+                                '.bg-\\[\\#2a3343\\], .bg-\\[\\#E62C37\\/20\\], .bg-purple-500\\/20, .bg-gray-600\\/20, .bg-green-500\\/20'
+                            );
                             if (bubble) {
                                 const inner = bubble.querySelector('p.text-sm');
                                 if (inner) inner.textContent = '🚫 Pesan ini telah dihapus';
@@ -597,9 +722,11 @@
                 };
                 reader.readAsDataURL(file);
             } else if (file.type.startsWith('video/')) {
-                content.innerHTML = `<div class="w-12 h-12 rounded bg-purple-500/20 flex items-center justify-center"><svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg></div>`;
+                content.innerHTML =
+                    `<div class="w-12 h-12 rounded bg-purple-500/20 flex items-center justify-center"><svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg></div>`;
             } else {
-                content.innerHTML = `<div class="w-12 h-12 rounded bg-gray-600/20 flex items-center justify-center"><svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg></div>`;
+                content.innerHTML =
+                    `<div class="w-12 h-12 rounded bg-gray-600/20 flex items-center justify-center"><svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg></div>`;
             }
 
             preview.classList.remove('hidden');
@@ -621,10 +748,14 @@
 
         // Drag & drop (debounced to prevent flickering)
         let dragTimer = null;
+
         function handleDragOver(e) {
             e.preventDefault();
             e.stopPropagation();
-            if (dragTimer) { clearTimeout(dragTimer); dragTimer = null; }
+            if (dragTimer) {
+                clearTimeout(dragTimer);
+                dragTimer = null;
+            }
             const dz = document.getElementById('dropZone');
             dz.classList.remove('hidden');
             dz.classList.add('flex');
@@ -645,7 +776,10 @@
         function handleDrop(e) {
             e.preventDefault();
             e.stopPropagation();
-            if (dragTimer) { clearTimeout(dragTimer); dragTimer = null; }
+            if (dragTimer) {
+                clearTimeout(dragTimer);
+                dragTimer = null;
+            }
             const dz = document.getElementById('dropZone');
             dz.classList.add('hidden');
             dz.classList.remove('flex');
@@ -654,9 +788,9 @@
         }
 
         // Cari pelanggan
-        document.getElementById('searchPelanggan')?.addEventListener('input', function () {
+        document.getElementById('searchPelanggan')?.addEventListener('input', function() {
             const q = this.value.toLowerCase();
-            document.querySelectorAll('#daftarPelanggan a[data-nama]').forEach(function (el) {
+            document.querySelectorAll('#daftarPelanggan a[data-nama]').forEach(function(el) {
                 el.style.display = el.dataset.nama.includes(q) ? '' : 'none';
             });
         });
@@ -694,7 +828,8 @@
                 const data = await res.json();
                 if (res.ok && data.status === 'OK') {
                     const container = document.getElementById('chatContainer');
-                    if (container) container.innerHTML = '<div class="flex items-center justify-center h-full"><p class="text-gray-500 text-sm">Belum ada percakapan.</p></div>';
+                    if (container) container.innerHTML =
+                        '<div class="flex items-center justify-center h-full"><p class="text-gray-500 text-sm">Belum ada percakapan.</p></div>';
                     lastMessageId = 0;
                     showToast('success', 'Berhasil', 'Semua percakapan berhasil dihapus.');
                 } else {
@@ -729,7 +864,8 @@
                 if (res.ok && data.status === 'OK') {
                     currentMode = data.new_mode;
                     updateToggleUI();
-                    showToast('success', 'Berhasil', `Mode diubah ke ${currentMode === 'human' ? 'Admin (Human)' : 'AI Bot'}`);
+                    showToast('success', 'Berhasil',
+                        `Mode diubah ke ${currentMode === 'human' ? 'Admin (Human)' : 'AI Bot'}`);
                 } else {
                     showToast('error', 'Gagal', data.error || data.message || 'Gagal mengubah mode');
                 }
@@ -800,9 +936,16 @@
             if (badge) {
                 let label = 'IDLE';
                 let colorClass = 'bg-gray-500/20 text-gray-400';
-                if (mode === 'human') { label = 'ADMIN'; colorClass = 'bg-green-500/20 text-green-400'; }
-                else if (mode === 'ai') { label = 'AI'; colorClass = 'bg-purple-500/20 text-purple-400'; }
-                else if (mode === 'manual') { label = 'MANUAL'; colorClass = 'bg-yellow-500/20 text-yellow-400'; }
+                if (mode === 'human') {
+                    label = 'ADMIN';
+                    colorClass = 'bg-green-500/20 text-green-400';
+                } else if (mode === 'ai') {
+                    label = 'AI';
+                    colorClass = 'bg-purple-500/20 text-purple-400';
+                } else if (mode === 'manual') {
+                    label = 'MANUAL';
+                    colorClass = 'bg-yellow-500/20 text-yellow-400';
+                }
                 badge.textContent = label;
                 badge.className = `px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${colorClass}`;
             }
@@ -818,7 +961,8 @@
         // Render reply context HTML
         function renderReplyContext(replyTo) {
             if (!replyTo) return '';
-            const senderName = replyTo.sumber_balasan === 'admin' ? 'Admin' : (replyTo.sumber_balasan === 'groq_ai' ? 'AI Bot' : 'Pelanggan');
+            const senderName = replyTo.sumber_balasan === 'admin' ? 'Admin' : (replyTo.sumber_balasan === 'groq_ai' ?
+                'AI Bot' : 'Pelanggan');
             const text = replyTo.pesan_pengirim || replyTo.pesan_balasan || '[Media]';
             return `<div class="mb-1.5 px-2.5 py-1.5 bg-black/20 border-l-2 border-white/30 rounded text-[11px] cursor-pointer" onclick="scrollToMsg(${replyTo.id})">
                 <p class="text-white/60 font-semibold text-[10px]">${escapeHtml(senderName)}</p>
@@ -850,7 +994,8 @@
             if (!pesan && !selectedMedia) return;
 
             btn.disabled = true;
-            btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-dasharray="31.42" stroke-dashoffset="10"/></svg>';
+            btn.innerHTML =
+                '<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-dasharray="31.42" stroke-dashoffset="10"/></svg>';
 
             try {
                 const formData = new FormData();
@@ -877,7 +1022,8 @@
                     if (data.sent) {
                         showToast('success', 'Terkirim', data.note || 'Pesan terkirim via WhatsApp');
                     } else {
-                        showToast('warning', 'Tersimpan', data.note || 'Pesan disimpan tapi belum terkirim ke WhatsApp.');
+                        showToast('warning', 'Tersimpan', data.note ||
+                            'Pesan disimpan tapi belum terkirim ke WhatsApp.');
                     }
                 } else {
                     showToast('error', 'Gagal', data.error || data.message || 'Gagal mengirim pesan');
@@ -886,7 +1032,8 @@
                 showToast('error', 'Gagal', 'Gagal mengirim pesan: ' + err.message);
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>';
+                btn.innerHTML =
+                    '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>';
             }
         }
 
@@ -902,7 +1049,7 @@
                 if (messages.length > 0) {
                     const container = document.getElementById('chatContainer');
 
-                    messages.forEach(function (msg) {
+                    messages.forEach(function(msg) {
                         if (msg.id > lastMessageId) lastMessageId = msg.id;
 
                         // Cek duplikat
@@ -916,10 +1063,19 @@
                             div.setAttribute('data-msg-text', msg.pesan_pengirim);
                             div.setAttribute('data-msg-sender', 'pelanggan');
 
-                            const forwardHtml = msg.is_forwarded ? '<div class="flex items-center gap-1 mb-1 text-[10px] text-gray-400 italic"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Diteruskan</div>' : '';
+                            const forwardHtml = msg.is_forwarded ?
+                                '<div class="flex items-center gap-1 mb-1 text-[10px] text-gray-400 italic"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Diteruskan</div>' :
+                                '';
                             const replyHtml = renderReplyContext(msg.reply_to);
-                            const mediaHtml = renderMedia({...msg, pesan_balasan: null});
-                            const textHtml = (msg.pesan_pengirim && !['[Image]','[Video]','[Document]','[Audio]'].includes(msg.pesan_pengirim)) ? `<p class="text-sm text-gray-200 whitespace-pre-line">${escapeHtml(msg.pesan_pengirim)}</p>` : '';
+                            const mediaHtml = renderMedia({
+                                ...msg,
+                                pesan_balasan: null
+                            });
+                            const textHtml = (msg.pesan_pengirim && !['[Image]', '[Video]', '[Document]',
+                                    '[Audio]'
+                                ].includes(msg.pesan_pengirim)) ?
+                                `<p class="text-sm text-gray-200 whitespace-pre-line">${escapeHtml(msg.pesan_pengirim)}</p>` :
+                                '';
 
                             div.innerHTML = `
                                 <div class="max-w-[75%] bg-[#2a3343] rounded-2xl rounded-tl-sm px-3 py-2 relative group">
@@ -943,16 +1099,29 @@
                             let bgColor = 'bg-gray-600/20 border border-gray-600/30';
                             let labelColor = 'text-gray-400';
                             let label = 'Bot';
-                            if (isAdmin) { bgColor = 'bg-[#E62C37]/20 border border-[#E62C37]/30'; labelColor = 'text-[#E62C37]'; label = 'Admin'; }
-                            else if (isAi) { bgColor = 'bg-purple-500/20 border border-purple-500/30'; labelColor = 'text-purple-400'; label = 'AI Bot'; }
-                            else if (isSystem) { bgColor = 'bg-gray-600/20 border border-gray-600/30'; labelColor = 'text-gray-400'; label = 'System'; }
-                            else if (isApriori) { bgColor = 'bg-green-500/20 border border-green-500/30'; labelColor = 'text-green-400'; label = 'Rekomendasi'; }
+                            if (isAdmin) {
+                                bgColor = 'bg-[#E62C37]/20 border border-[#E62C37]/30';
+                                labelColor = 'text-[#E62C37]';
+                                label = 'Admin';
+                            } else if (isAi) {
+                                bgColor = 'bg-purple-500/20 border border-purple-500/30';
+                                labelColor = 'text-purple-400';
+                                label = 'AI Bot';
+                            } else if (isSystem) {
+                                bgColor = 'bg-gray-600/20 border border-gray-600/30';
+                                labelColor = 'text-gray-400';
+                                label = 'System';
+                            } else if (isApriori) {
+                                bgColor = 'bg-green-500/20 border border-green-500/30';
+                                labelColor = 'text-green-400';
+                                label = 'Rekomendasi';
+                            }
 
                             let checkmark = '';
                             if (isAdmin) {
-                                checkmark = msg.terkirim
-                                    ? '<svg class="w-4 h-4 text-green-400" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8l4 4L13 4"></path><path d="M7 8l4 4L19 4"></path></svg>'
-                                    : '<svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8l4 4L13 4"></path></svg>';
+                                checkmark = msg.terkirim ?
+                                    '<svg class="w-4 h-4 text-green-400" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8l4 4L13 4"></path><path d="M7 8l4 4L19 4"></path></svg>' :
+                                    '<svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8l4 4L13 4"></path></svg>';
                             }
 
                             const div = document.createElement('div');
@@ -961,10 +1130,16 @@
                             div.setAttribute('data-msg-text', msg.pesan_balasan);
                             div.setAttribute('data-msg-sender', 'admin');
 
-                            const forwardHtml = msg.is_forwarded ? '<div class="flex items-center gap-1 mb-1 text-[10px] text-gray-400 italic"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Diteruskan</div>' : '';
+                            const forwardHtml = msg.is_forwarded ?
+                                '<div class="flex items-center gap-1 mb-1 text-[10px] text-gray-400 italic"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Diteruskan</div>' :
+                                '';
                             const replyHtml = renderReplyContext(msg.reply_to);
                             const mediaHtml = renderMedia(msg);
-                            const textHtml = (msg.pesan_balasan && !['[Image]','[Video]','[Document]','[Audio]'].includes(msg.pesan_balasan)) ? `<p class="text-sm text-gray-200 whitespace-pre-line">${escapeHtml(msg.pesan_balasan)}</p>` : '';
+                            const textHtml = (msg.pesan_balasan && !['[Image]', '[Video]', '[Document]',
+                                    '[Audio]'
+                                ].includes(msg.pesan_balasan)) ?
+                                `<p class="text-sm text-gray-200 whitespace-pre-line">${escapeHtml(msg.pesan_balasan)}</p>` :
+                                '';
 
                             div.innerHTML = `
                                 <div class="max-w-[75%] ${bgColor} rounded-2xl rounded-tr-sm px-3 py-2 relative group">
@@ -989,7 +1164,7 @@
         }
 
         // Inisialisasi
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             scrollToBottom();
             updateInputArea();
 
@@ -997,13 +1172,16 @@
             if (SELECTED_PELANGGAN_ID) {
                 fetch(CHAT_MARK_READ_URL.replace('__ID__', SELECTED_PELANGGAN_ID), {
                     method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json' },
-                }).catch(function () {});
+                    headers: {
+                        'X-CSRF-TOKEN': CSRF_TOKEN,
+                        'Accept': 'application/json'
+                    },
+                }).catch(function() {});
             }
 
             // Cari lastMessageId dari pesan yang sudah ada
             const existingMsgs = document.querySelectorAll('[data-msg-id]');
-            existingMsgs.forEach(function (el) {
+            existingMsgs.forEach(function(el) {
                 const id = parseInt(el.dataset.msgId);
                 if (id > lastMessageId) lastMessageId = id;
             });
@@ -1015,7 +1193,7 @@
         });
 
         // Hentikan polling saat pindah halaman
-        window.addEventListener('beforeunload', function () {
+        window.addEventListener('beforeunload', function() {
             if (pollingInterval) clearInterval(pollingInterval);
         });
     </script>

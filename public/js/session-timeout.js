@@ -10,11 +10,49 @@
     var WARNING_MINUTES = 2;
     var TIMEOUT_MS = TIMEOUT_MINUTES * 60 * 1000;
     var WARNING_MS = WARNING_MINUTES * 60 * 1000;
+    var PING_INTERVAL_MS = 10 * 60 * 1000; // Ping setiap 10 menit
 
     var warningTimer = null;
     var logoutTimer = null;
+    var pingTimer = null;
     var warningShown = false;
     var modalEl = null;
+
+    /**
+     * Kirim ping ke server untuk keep-alive session + refresh CSRF token
+     */
+    function pingSession() {
+        fetch('/admin/ping', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin',
+        }).then(function (res) {
+            if (res.ok) {
+                return res.json();
+            }
+            // Session sudah expired, redirect ke login
+            if (res.status === 401 || res.status === 302 || res.redirected) {
+                window.location.href = '/login';
+                return null;
+            }
+            return null;
+        }).then(function (data) {
+            if (data && data.csrf) {
+                // Update meta tag CSRF token
+                var meta = document.querySelector('meta[name="csrf-token"]');
+                if (meta) {
+                    meta.setAttribute('content', data.csrf);
+                }
+                // Update semua hidden input _token di halaman
+                document.querySelectorAll('input[name="_token"]').forEach(function (input) {
+                    input.value = data.csrf;
+                });
+            }
+        }).catch(function () {});
+    }
 
     function createModal() {
         if (modalEl) return modalEl;
@@ -117,18 +155,29 @@
         hideWarning();
         resetTimer();
 
-        // Kirim request untuk memperpanjang session ke halaman admin
-        fetch('/admin/profile', {
+        // Kirim ping untuk memperpanjang session + refresh CSRF token
+        fetch('/admin/ping', {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 'Accept': 'application/json',
             },
             credentials: 'same-origin',
         }).then(function (res) {
             if (res.ok) {
-                console.log('[Session] Sesi berhasil diperpanjang');
+                return res.json();
+            }
+            // Session sudah expired
+            window.location.href = '/login';
+            return null;
+        }).then(function (data) {
+            if (data && data.csrf) {
+                // Update meta tag CSRF token
+                var meta = document.querySelector('meta[name="csrf-token"]');
+                if (meta) {
+                    meta.setAttribute('content', data.csrf);
+                }
+                console.log('[Session] Sesi berhasil diperpanjang, CSRF token diperbarui');
             }
         }).catch(function () {});
     }
@@ -189,10 +238,14 @@
     // Mulai timer pertama kali
     resetTimer();
 
+    // Mulai periodic ping untuk keep-alive session (setiap 10 menit)
+    pingTimer = setInterval(pingSession, PING_INTERVAL_MS);
+
     // Expose untuk debugging
     window.sessionTimeout = {
         reset: resetTimer,
         showWarning: showWarning,
-        hideWarning: hideWarning
+        hideWarning: hideWarning,
+        ping: pingSession
     };
 })();

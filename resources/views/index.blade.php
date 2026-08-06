@@ -26,6 +26,10 @@
         </div>
     </section>
 
+    <script>
+        window.CarouselData = @json($carouselCollections->isNotEmpty() ? $carouselCollections : null);
+    </script>
+
     <section class="w-full max-w-7xl mx-auto py-10 px-6 flex flex-col gap-12">
         <div class="flex flex-col lg:flex-row items-center gap-10 lg:gap-20">
 

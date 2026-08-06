@@ -1,10 +1,12 @@
-// Data Definition
-const cardData = [
-    { title: "Sun Conure", image: "/img/sunc.png" },
-    { title: "African Grey", image: "/img/afgrey.png" },
-    { title: "Verde Macaw", image: "/img/verde.png" },
-    { title: "Buffon Macaw", image: "/img/buffon2.png" },
-];
+// Data Definition — gunakan data dari database jika tersedia, fallback ke hardcoded
+const cardData = window.CarouselData && window.CarouselData.length > 0
+    ? window.CarouselData
+    : [
+        { title: "Sun Conure", image: "/img/sunc.png" },
+        { title: "African Grey", image: "/img/afgrey.png" },
+        { title: "Verde Macaw", image: "/img/verde.png" },
+        { title: "Buffon Macaw", image: "/img/buffon2.png" },
+    ];
 
 // Logic Initialization dengan optimasi performa
 const initMarquee = () => {

@@ -138,8 +138,6 @@ Vercel via `vercel.json` — PHP runtime for `api/index.php`, static assets serv
 
 ## Aturan Universal Modifikasi Kode, UI, & Validasi Fungsi
 
-## Aturan Universal Modifikasi Kode, UI, & Validasi Fungsi
-
 - **Isolasi dan Ketepatan Perubahan:** Saat diminta melakukan modifikasi, penambahan, atau refactoring pada aspek apa pun dalam proyek—baik visual UI (modal, toast, tabel, layout), logika program (controller, middleware, database routing), maupun seluruh integrasi sistem (API, database, library bawaan, serta paket pihak ketiga mana pun tanpa terkecuali)—perubahan harus dilakukan secara presisi dan tepat sasaran sesuai Design System dan arsitektur proyek[cite: 1]. Dilarang keras merusak, menghapus, atau menyederhanakan kode fungsi eksisting yang sudah berjalan sukses tanpa persetujuan tertulis dari pengguna[cite: 1].
 - **Kemampuan Multimodal & Analisis Gambar Universal:** AI Open Code wajib memanfaatkan fitur pembacaan gambar (vision capabilities) pada model apa pun yang sedang aktif saat pengguna memberikan referensi visual (seperti tangkapan layar UI, mock-up desain, alur skema, diagram, atau foto error/bug). AI harus menganalisis elemen visual tersebut secara cermat untuk memastikan implementasi kode, tata letak UI, atau perbaikan bug berjalan presisi sesuai gambaran visual yang diberikan.
 - **Efisiensi Token & Akurasi Tinggi:** AI wajib meminimalkan penggunaan token dan kredit dalam setiap interaksi, pembacaan, maupun penulisan kode. Berikan perubahan yang ringkas, hilangkan kode bawaan yang tidak perlu diubah, dan fokus hanya pada baris kode yang relevan agar hasil eksekusi lebih akurat, presisi, serta terhindar dari bias atau kesalahan akibat pemrosesan konteks yang terlalu panjang.
@@ -160,34 +158,13 @@ Vercel via `vercel.json` — PHP runtime for `api/index.php`, static assets serv
 
 ## Aturan Git & Deployment
 
-- **Branch `development` adalah branch default dan utama.** JANGAN PERNAH hapus branch `development`. Semua perubahan WAJIB push ke `development` dulu.
-- **Alur push ke production:** Push ke `development` → buat PR ke `main` → langsung merge PR. Jangan biarkan PR menggantung tanpa di-merge.
-- **JANGAN pernah push langsung ke `main`.** Selalu lewat `development` dulu, kecuali pengguna secara eksplisit meminta push ke `main`.
-- **Push Langsung ke GitHub:** Ketika pengguna meminta push ke GitHub, lakukan langsung tanpa bertanya lagi. Jangan menunggu konfirmasi tambahan — langsung `git add`, `git commit`, dan `git push origin development`.
-- **Branch Default untuk checkout:** Selalu `git checkout development` di awal sesi. Jangan ke `main`.
+- **Push Langsung ke GitHub:** Ketika pengguna meminta push ke GitHub, lakukan langsung tanpa bertanya lagi. Jangan menunggu konfirmasi tambahan — langsung `git add`, `git commit`, dan `git push`.
+- **Branch Default:** Branch utama adalah `development`. Push ke `development` kecuali pengguna secara eksplisit meminta branch lain.
 - **Pesan Commit:** Gunakan pesan commit yang deskriptif dalam Bahasa Indonesia, singkat, dan jelas. Contoh: `fix: migrasi gambar ke Cloudinary + perbaikan domain admin`.
-- **CONTOH ALUR YANG BENAR:**
-  ```
-  git checkout development
-  git add <files>
-  git commit -m "fix: perbaikan X"
-  git push origin development
-  gh pr create --base main --head development --title "fix: perbaikan X" --body "..."
-  gh pr merge <PR_NUMBER> --merge
-  ```
 
 ## Aturan Wajib Testing & Validasi Sebelum Push
 
-**PRINSIP UTAMA: Setiap perubahan WAJIB diuji sebelum push. Jangan pernah menganggap kode "sudah benar" tanpa verifikasi.**
-
-### Aturan Testing Intensif
-
-- **Test setelah SETIAP perubahan:** Setelah mengubah, menambah, atau memperbaiki kode apa pun, WAJIB langsung menjalankan test untuk memastikan tidak ada error baru yang muncul. Jangan menumpuk banyak perubahan lalu test di akhir — ini menyebabkan error sulit dilacak.
-- **Simulasi alur pengguna:** Jangan hanya test syntax. Jalankan alur lengkap seperti yang akan dilakukan pengguna. Contoh: jika menambah endpoint `/reset`, buka browser dan akses endpoint tersebut untuk memastikan benar-benar berfungsi, bukan hanya cek apakah kode bisa di-parse.
-- **Deteksi error segera:** Jika terdeteksi error setelah perubahan, segera perbaiki SEBELUM melakukan perubahan lain atau SEBELUM push ke GitHub. Jangan biarkan error mengendap.
-- **Test di environment yang benar:** Pastikan test di lokal dulu sebelum deploy. Perbedaan environment (Windows vs Linux, localhost vs cloud) sering menyebabkan error yang tidak terduga.
-- **Cek resource locking:** Operasi file system (hapus, rename, write) bisa gagal jika file masih dipakai proses lain. Selalu tutup koneksi/socket/lock SEBELUM operasi file. Contoh: tutup Baileys socket sebelum hapus folder `auth_info`.
-- **Jangan asumsikan success:** Setelah push ke production (Vercel), cek apakah deploy berhasil dan fitur berfungsi. Jangan hanya percaya bahwa "kode sudah benar jadi pasti jalan".
+Sebelum menyerahkan hasil pekerjaan atau melakukan push ke GitHub, AI WAJIB melakukan pengecekan menyeluruh terhadap semua aspek berikut:
 
 ### Checklist Testing Wajib
 

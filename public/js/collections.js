@@ -166,10 +166,15 @@
                     return fetch(CFG.storeUrl, {
                         method: 'POST',
                         body: fd,
-                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': CFG.csrfToken },
+                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || CFG.csrfToken },
                     });
                 })
                 .then(function (r) {
+                    if (r.status === 419) {
+                        showToast('error', 'Sesi Berakhir', 'Sesi Anda telah berakhir. Halaman akan dimuat ulang...');
+                        setTimeout(function () { location.reload(); }, 2000);
+                        throw new Error('CSRF token expired');
+                    }
                     if (!r.ok) return r.json().then(function (e) { throw new Error(e.message || 'Server error'); });
                     return r.json();
                 })
@@ -179,7 +184,9 @@
                 })
                 .catch(function (e) {
                     console.error('Create error:', e);
-                    showToast('error', 'Gagal!', e.message || 'Terjadi kesalahan saat upload.');
+                    if (e.message !== 'CSRF token expired') {
+                        showToast('error', 'Gagal!', e.message || 'Terjadi kesalahan saat upload.');
+                    }
                 })
                 .finally(function () {
                     btn.disabled = false;
@@ -245,10 +252,15 @@
                     return fetch(els.formEdit.action, {
                         method: 'POST',
                         body: fd,
-                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': CFG.csrfToken },
+                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || CFG.csrfToken },
                     });
                 })
                 .then(function (r) {
+                    if (r.status === 419) {
+                        showToast('error', 'Sesi Berakhir', 'Sesi Anda telah berakhir. Halaman akan dimuat ulang...');
+                        setTimeout(function () { location.reload(); }, 2000);
+                        throw new Error('CSRF token expired');
+                    }
                     if (!r.ok) return r.json().then(function (e) { throw new Error(e.message || 'Server error'); });
                     return r.json();
                 })
@@ -258,7 +270,9 @@
                 })
                 .catch(function (e) {
                     console.error('Edit error:', e);
-                    showToast('error', 'Gagal!', e.message || 'Terjadi kesalahan.');
+                    if (e.message !== 'CSRF token expired') {
+                        showToast('error', 'Gagal!', e.message || 'Terjadi kesalahan.');
+                    }
                 })
                 .finally(function () {
                     btn.disabled = false;

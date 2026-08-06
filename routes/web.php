@@ -27,7 +27,24 @@ Route::get('/', function () {
         return redirect('/admin');
     }
 
-    return view('index');
+    // Ambil data koleksi untuk carousel (random)
+    $carouselCollections = \App\Models\Collection::select('name', 'name_en', 'image_path')
+        ->whereNotNull('image_path')
+        ->inRandomOrder()
+        ->limit(8)
+        ->get()
+        ->map(function ($item) {
+            $imgUrl = str_starts_with($item->image_path, 'http')
+                ? str_replace('/upload/', '/upload/w_400,c_fill,q_auto,f_auto/', $item->image_path)
+                : asset('storage/collections/'.$item->image_path);
+
+            return [
+                'title' => app()->getLocale() === 'en' && $item->name_en ? $item->name_en : $item->name,
+                'image' => $imgUrl,
+            ];
+        });
+
+    return view('index', compact('carouselCollections'));
 });
 
 Route::get('/collections', [CollectionController::class, 'index'])->name('collections');
@@ -77,6 +94,14 @@ Route::prefix('admin')->middleware(['admin.auth', 'admin.domain'])->group(functi
 
     // Logout dari admin domain
     Route::post('/logout', [LogoutController::class, 'logout'])->name('admin.logout');
+
+    // Ping session (keep-alive + refresh CSRF token)
+    Route::get('/ping', function () {
+        return response()->json([
+            'ok' => true,
+            'csrf' => csrf_token(),
+        ]);
+    })->name('admin.ping');
 
     // Profil akun
     Route::get('/profile', [ProfileController::class, 'edit'])->name('admin.profile.edit');

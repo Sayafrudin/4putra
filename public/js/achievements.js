@@ -193,7 +193,7 @@
 
             fetch(CFG.imagesDeleteBaseUrl + '/' + imageId, {
                 method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': CFG.csrfToken, 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || CFG.csrfToken, 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
             })
                 .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
                 .then(function () { thumb.remove(); showToast('success', 'Terhapus', 'Foto berhasil dihapus dari galeri.'); })
@@ -296,10 +296,15 @@
                     return fetch(CFG.storeUrl, {
                         method: 'POST',
                         body: fd,
-                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': CFG.csrfToken },
+                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || CFG.csrfToken },
                     });
                 })
                 .then(function (r) {
+                    if (r.status === 419) {
+                        showToast('error', 'Sesi Berakhir', 'Sesi Anda telah berakhir. Halaman akan dimuat ulang...');
+                        setTimeout(function () { location.reload(); }, 2000);
+                        throw new Error('CSRF token expired');
+                    }
                     if (!r.ok) return r.json().then(function (e) { throw new Error(e.message || 'Server error'); });
                     return r.json();
                 })
@@ -309,7 +314,9 @@
                 })
                 .catch(function (e) {
                     console.error('Create error:', e);
-                    showToast('error', 'Gagal!', e.message || 'Terjadi kesalahan saat upload foto.');
+                    if (e.message !== 'CSRF token expired') {
+                        showToast('error', 'Gagal!', e.message || 'Terjadi kesalahan saat upload foto.');
+                    }
                 })
                 .finally(function () {
                     btn.disabled = false;
@@ -374,10 +381,15 @@
                     return fetch(els.formEdit.action, {
                         method: 'POST',
                         body: fd,
-                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': CFG.csrfToken },
+                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || CFG.csrfToken },
                     });
                 })
                 .then(function (r) {
+                    if (r.status === 419) {
+                        showToast('error', 'Sesi Berakhir', 'Sesi Anda telah berakhir. Halaman akan dimuat ulang...');
+                        setTimeout(function () { location.reload(); }, 2000);
+                        throw new Error('CSRF token expired');
+                    }
                     if (!r.ok) return r.json().then(function (e) { throw new Error(e.message || 'Server error'); });
                     return r.json();
                 })
@@ -387,7 +399,9 @@
                 })
                 .catch(function (e) {
                     console.error('Update error:', e);
-                    showToast('error', 'Gagal!', e.message || 'Terjadi kesalahan saat memperbarui data.');
+                    if (e.message !== 'CSRF token expired') {
+                        showToast('error', 'Gagal!', e.message || 'Terjadi kesalahan saat memperbarui data.');
+                    }
                 })
                 .finally(function () {
                     btn.disabled = false;

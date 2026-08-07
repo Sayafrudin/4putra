@@ -113,11 +113,11 @@
                                 {{-- Detail Perubahan Data --}}
                                 @if($activity->metadata)
                                     {{-- Preview Gambar --}}
-                                    @if(!empty($activity->metadata['image_previews']))
+                                    @if(!empty($activity->image_previews))
                                         <div class="mt-3 pt-3 border-t border-gray-700">
                                             <p class="text-xs text-gray-400 mb-2 font-medium">Gambar Terkait:</p>
                                             <div class="flex flex-wrap gap-2">
-                                                @foreach($activity->metadata['image_previews'] as $img)
+                                                @foreach($activity->image_previews as $img)
                                                     @php
                                                         $imgUrl = str_starts_with($img, 'http') ? $img : asset($img);
                                                     @endphp
@@ -130,7 +130,7 @@
                                     @endif
 
                                     {{-- Detail Old/New Values --}}
-                                    @if(!empty($activity->metadata['old_values']) || !empty($activity->metadata['new_values']))
+                                    @if(!empty($activity->old_values) || !empty($activity->new_values))
                                         <div class="mt-3 pt-3 border-t border-gray-700" x-data="{ showChanges: false }">
                                             <button @click="showChanges = !showChanges" class="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition-colors">
                                                 <svg class="w-3.5 h-3.5 transition-transform" :class="{ 'rotate-90': showChanges }" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -140,8 +140,8 @@
                                             </button>
                                             <div x-show="showChanges" x-transition class="mt-3 space-y-2">
                                                 @php
-                                                    $oldVals = $activity->metadata['old_values'] ?? [];
-                                                    $newVals = $activity->metadata['new_values'] ?? [];
+                                                    $oldVals = $activity->old_values ?? [];
+                                                    $newVals = $activity->new_values ?? [];
                                                     $skipFields = ['password', 'updated_at', 'created_at', 'remember_token', 'google_id'];
                                                     $allKeys = array_unique(array_merge(array_keys($oldVals), array_keys($newVals)));
                                                 @endphp

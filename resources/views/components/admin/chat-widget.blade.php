@@ -7,20 +7,26 @@
         // Cek notifikasi yang belum diproses (cached 30 detik)
         $cacheKey = 'chat_notifications_' . $user->id;
         $pendingNotifications = \Illuminate\Support\Facades\Cache::remember($cacheKey, 30, function () {
-            return \App\Models\ActivityLog::where('user_id', '!=', auth()->id())
-                ->whereNotNull('metadata')
+            return \App\Models\ActivityLog::whereNotNull('metadata')
                 ->latest()
-                ->take(10)
+                ->take(20)
                 ->get()
                 ->filter(function ($notif) {
-                    return isset($notif->metadata['chat_notification']);
+                    $meta = $notif->metadata;
+                    if (is_string($meta)) {
+                        $meta = json_decode($meta, true) ?? [];
+                    }
+                    return is_array($meta) && isset($meta['chat_notification']);
                 });
         });
 
         foreach ($pendingNotifications as $notif) {
-            if (isset($notif->metadata['chat_notification'])) {
-                $chatNotifications[] = $notif->metadata['chat_notification'];
-                $meta = $notif->metadata;
+            $meta = $notif->metadata;
+            if (is_string($meta)) {
+                $meta = json_decode($meta, true) ?? [];
+            }
+            if (is_array($meta) && isset($meta['chat_notification'])) {
+                $chatNotifications[] = $meta['chat_notification'];
                 unset($meta['chat_notification']);
                 $notif->update(['metadata' => $meta]);
             }

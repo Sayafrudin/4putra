@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ActivityLog extends Model
 {
+    protected $keyType = 'string';
+
+    public $incrementing = true;
+
     protected $fillable = [
         'user_id',
         'action',
@@ -20,6 +24,7 @@ class ActivityLog extends Model
     protected function casts(): array
     {
         return [
+            'id' => 'string',
             'metadata' => 'array',
         ];
     }
@@ -30,11 +35,27 @@ class ActivityLog extends Model
     }
 
     /**
+     * Ambil metadata sebagai array (handle string JSON dari PDO).
+     */
+    private function getMetadataArray(): array
+    {
+        $raw = $this->attributes['metadata'] ?? null;
+        if (is_array($raw)) {
+            return $raw;
+        }
+        if (is_string($raw) && !empty($raw)) {
+            $decoded = json_decode($raw, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+        return [];
+    }
+
+    /**
      * Ambil nilai lama dari metadata.
      */
     public function getOldValuesAttribute(): ?array
     {
-        return $this->metadata['old_values'] ?? null;
+        return $this->getMetadataArray()['old_values'] ?? null;
     }
 
     /**
@@ -42,7 +63,7 @@ class ActivityLog extends Model
      */
     public function getNewValuesAttribute(): ?array
     {
-        return $this->metadata['new_values'] ?? null;
+        return $this->getMetadataArray()['new_values'] ?? null;
     }
 
     /**
@@ -50,6 +71,6 @@ class ActivityLog extends Model
      */
     public function getImagePreviewsAttribute(): ?array
     {
-        return $this->metadata['image_previews'] ?? null;
+        return $this->getMetadataArray()['image_previews'] ?? null;
     }
 }

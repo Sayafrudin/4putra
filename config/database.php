@@ -60,9 +60,11 @@ return [
                         PDO::MYSQL_ATTR_SSL_CA => env('DB_SSL_CA', null),
                         PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
                         PDO::ATTR_PERSISTENT => true,
+                        PDO::ATTR_STRINGIFY_FETCHES => true,
                     ]
                     : array_filter([
                         PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                        PDO::ATTR_STRINGIFY_FETCHES => true,
                     ])
             ) : [],
         ],

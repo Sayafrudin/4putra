@@ -198,3 +198,27 @@ Sebelum menyerahkan hasil pekerjaan atau melakukan push ke GitHub, AI WAJIB mela
     - Pastikan tidak ada error 500 di halaman manapun
     - Pastikan error handling di JavaScript (fetch/AJAX) menampilkan pesan yang jelas
     - Pastikan `filemtime()` tidak digunakan di template Blade (gagal di Vercel)
+
+7. **Admin Comment di Aktivitas User:**
+    - Pastikan admin bisa comment di semua aktivitas (user lain DAN admin sendiri)
+    - Pastikan URL comment menggunakan ID aktual (bukan `PHP_INT_MAX` / `9223372036854775807`)
+    - Pastikan komentar tersimpan di `metadata` activity log
+    - Pastikan komentar muncul di chat bubble (pojok kanan bawah) via Firebase
+    - Pastikan chat widget memproses notifikasi dari `chat-admin-notifications` JSON
+    - Test: Klik "Kirim" pada form comment → harus redirect back dengan pesan sukses (bukan 404)
+
+8. **PDO::ATTR_STRINGIFY_FETCHES:**
+    - Konfigurasi ini aktif di `config/database.php` untuk mencegah overflow integer besar dari TiDB
+    - Semua ID dikembalikan sebagai string oleh PDO
+    - Model `ActivityLog` menggunakan `$keyType = 'string'` dan cast `id` sebagai string
+    - Hindari strict comparison (`===`) antar ID — gunakan `==` atau cast ke string terlebih dahulu
+
+9. **Testing Intensif Setelah Perubahan:**
+    - Jalankan `php artisan migrate` setelah membuat migration baru
+    - Jalankan `php artisan test` untuk memastikan tidak ada regresi
+    - Jalankan `npm run build` jika ada perubahan frontend
+    - Test SEMUA fitur CRUD secara manual: Create, Read, Update, Delete di setiap modul
+    - Test admin comment di aktivitas user (termasuk aktivitas sendiri)
+    - Test chat bubble menerima notifikasi komentar
+    - Cek browser console untuk error JavaScript
+    - Cek network tab untuk request yang gagal (status 4xx/5xx)

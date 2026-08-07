@@ -26,7 +26,7 @@
             <div id="daftarPelanggan" class="flex-1 overflow-y-auto divide-y divide-gray-800">
                 @forelse($pelangganList as $p)
                     <a href="{{ route('admin.chatbot.chat', ['pelanggan_id' => $p->id]) }}" @click="showChat = true"
-                        class="flex items-center gap-3 px-4 py-3 hover:bg-[#151a22] transition-colors {{ optional($selectedPelanggan)->id === $p->id ? 'bg-[#151a22] border-l-2 border-[#E62C37]' : '' }}"
+                        class="flex items-center gap-3 px-4 py-3 hover:bg-[#151a22] transition-colors {{ optional($selectedPelanggan)->id == $p->id ? 'bg-[#151a22] border-l-2 border-[#E62C37]' : '' }}"
                         data-nama="{{ strtolower($p->nama ?? $p->nomor_wa) }}">
                         <div
                             class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold

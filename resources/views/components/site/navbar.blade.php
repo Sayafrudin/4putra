@@ -261,7 +261,15 @@
                 logoPaths.forEach(p => p.setAttribute('fill', 'white'));
                 darkModeBtns.forEach(btn => {
                     btn.classList.remove('text-gray-600', 'dark:text-gray-300');
-                    btn.classList.add('text-white');
+                    if (btn.classList.contains('mobile-dark-toggle')) {
+                        // Mobile: gunakan warna yang kontras dengan bg-white drawer
+                        btn.classList.add('text-gray-800', 'dark:text-gray-200');
+                    } else {
+                        // Desktop: text-white + hover translusen
+                        btn.classList.add('text-white');
+                        btn.classList.remove('hover:bg-gray-100', 'dark:hover:bg-gray-700');
+                        btn.classList.add('hover:bg-white/20');
+                    }
                 });
             } else {
                 // Mode Top (Transparan) — beda warna tergantung dark/light
@@ -293,13 +301,20 @@
                 }
                 logoPaths.forEach(p => p.setAttribute('fill', isDark ? 'white' : '#E62C37'));
                 darkModeBtns.forEach(btn => {
-                    btn.classList.remove('text-white');
-                    if (isDark) {
-                        btn.classList.remove('text-gray-600');
-                        btn.classList.add('dark:text-gray-300');
+                    btn.classList.remove('text-white', 'text-gray-800', 'dark:text-gray-200', 'hover:bg-white/20');
+                    if (btn.classList.contains('mobile-dark-toggle')) {
+                        // Mobile: kembalikan ke default
+                        btn.classList.add('text-gray-600', 'dark:text-gray-300');
                     } else {
-                        btn.classList.add('text-gray-600');
-                        btn.classList.remove('dark:text-gray-300');
+                        // Desktop: kembalikan hover asli
+                        btn.classList.add('hover:bg-gray-100', 'dark:hover:bg-gray-700');
+                        if (isDark) {
+                            btn.classList.remove('text-gray-600');
+                            btn.classList.add('dark:text-gray-300');
+                        } else {
+                            btn.classList.add('text-gray-600');
+                            btn.classList.remove('dark:text-gray-300');
+                        }
                     }
                 });
             }

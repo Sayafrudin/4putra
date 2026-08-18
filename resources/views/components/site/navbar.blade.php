@@ -7,23 +7,23 @@
 
     <div class="hidden md:flex items-center gap-4 lg:gap-8 nav-items-container">
         <a href="/"
-            class="nav-link font-medium transition-colors duration-300 border-b-2 {{ request()->is('/') ? 'border-[#E62C37]' : 'border-transparent hover:border-[#E62C37]' }} text-gray-900">
+            class="nav-link font-medium transition-colors duration-300 border-b-2 {{ request()->is('/') ? 'border-[#E62C37]' : 'border-transparent hover:border-[#E62C37]' }} text-gray-900 dark:text-white">
             {{ __('Home') }}
         </a>
         <a href="/collections"
-            class="nav-link font-medium transition-colors duration-300 border-b-2 {{ request()->is('collections') ? 'border-[#E62C37]' : 'border-transparent hover:border-[#E62C37]' }} text-gray-900">
+            class="nav-link font-medium transition-colors duration-300 border-b-2 {{ request()->is('collections') ? 'border-[#E62C37]' : 'border-transparent hover:border-[#E62C37]' }} text-gray-900 dark:text-white">
             {{ __('Collections') }}
         </a>
         <a href="/achievements"
-            class="nav-link font-medium transition-colors duration-300 border-b-2 {{ request()->is('achievements') ? 'border-[#E62C37]' : 'border-transparent hover:border-[#E62C37]' }} text-gray-900">
+            class="nav-link font-medium transition-colors duration-300 border-b-2 {{ request()->is('achievements') ? 'border-[#E62C37]' : 'border-transparent hover:border-[#E62C37]' }} text-gray-900 dark:text-white">
             {{ __('Achievements') }}
         </a>
         <a href="/about"
-            class="nav-link font-medium transition-colors duration-300 border-b-2 {{ request()->is('about') ? 'border-[#E62C37]' : 'border-transparent hover:border-[#E62C37]' }} text-gray-900">
+            class="nav-link font-medium transition-colors duration-300 border-b-2 {{ request()->is('about') ? 'border-[#E62C37]' : 'border-transparent hover:border-[#E62C37]' }} text-gray-900 dark:text-white">
             {{ __('About') }}
         </a>
         <a href="/contact"
-            class="nav-link font-medium transition-colors duration-300 border-b-2 {{ request()->is('contact') ? 'border-[#E62C37]' : 'border-transparent hover:border-[#E62C37]' }} text-gray-900">
+            class="nav-link font-medium transition-colors duration-300 border-b-2 {{ request()->is('contact') ? 'border-[#E62C37]' : 'border-transparent hover:border-[#E62C37]' }} text-gray-900 dark:text-white">
             {{ __('Contact') }}
         </a>
     </div>
@@ -46,6 +46,20 @@
         </label>
 
         <span class="lang-label ml-3 text-sm font-bold text-[#E62C37] transition-colors duration-300">EN</span>
+
+        {{-- Dark Mode Toggle --}}
+        <div class="ml-4 flex items-center">
+            <button type="button" class="hs-dark-mode-active:hidden block hs-dark-mode text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 transition-colors" data-hs-theme-click-value="dark">
+                <span class="group inline-flex shrink-0 justify-center items-center size-9">
+                    <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                </span>
+            </button>
+            <button type="button" class="hs-dark-mode-active:block hidden hs-dark-mode text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 transition-colors" data-hs-theme-click-value="light">
+                <span class="group inline-flex shrink-0 justify-center items-center size-9">
+                    <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                </span>
+            </button>
+        </div>
     </div>
 
     <button id="hamburger-btn"
@@ -71,16 +85,16 @@
     </button>
 
     <div id="mobile-menu"
-        class="absolute top-full left-0 w-full bg-white border-t border-gray-100 shadow-xl z-40 transition-all duration-300 opacity-0 invisible -translate-y-2 origin-top">
+        class="absolute top-full left-0 w-full bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 shadow-xl z-40 transition-all duration-300 opacity-0 invisible -translate-y-2 origin-top">
 
-        <ul class="flex flex-col p-4 font-medium space-y-2 text-gray-800">
+        <ul class="flex flex-col p-4 font-medium space-y-2 text-gray-800 dark:text-gray-200">
 
             <li>
                 <a href="/"
                     class="block py-3 px-4 transition-all duration-300
                {{ request()->is('/')
-                   ? 'border-l-[5px] border-[#E62C37] bg-red-50 text-[#E62C37] font-bold'
-                   : 'border-l-[5px] border-transparent hover:bg-gray-50 hover:text-[#E62C37]' }}">
+                   ? 'border-l-[5px] border-[#E62C37] bg-red-50 dark:bg-red-900/30 text-[#E62C37] font-bold'
+                   : 'border-l-[5px] border-transparent hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-[#E62C37]' }}">
                     {{ __('Home') }}
                 </a>
             </li>
@@ -89,8 +103,8 @@
                 <a href="/collections"
                     class="block py-3 px-4 transition-all duration-300
                {{ request()->is('collections')
-                   ? 'border-l-[5px] border-[#E62C37] bg-red-50 text-[#E62C37] font-bold'
-                   : 'border-l-[5px] border-transparent hover:bg-gray-50 hover:text-[#E62C37]' }}">
+                   ? 'border-l-[5px] border-[#E62C37] bg-red-50 dark:bg-red-900/30 text-[#E62C37] font-bold'
+                   : 'border-l-[5px] border-transparent hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-[#E62C37]' }}">
                     {{ __('Collections') }}
                 </a>
             </li>
@@ -99,8 +113,8 @@
                 <a href="/achievements"
                     class="block py-3 px-4 transition-all duration-300 
                {{ request()->is('achievements')
-                   ? 'border-l-[5px] border-[#E62C37] bg-red-50 text-[#E62C37] font-bold'
-                   : 'border-l-[5px] border-transparent hover:bg-gray-50 hover:text-[#E62C37]' }}">
+                   ? 'border-l-[5px] border-[#E62C37] bg-red-50 dark:bg-red-900/30 text-[#E62C37] font-bold'
+                   : 'border-l-[5px] border-transparent hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-[#E62C37]' }}">
                     {{ __('Achievements') }}
                 </a>
             </li>
@@ -109,8 +123,8 @@
                 <a href="/about"
                     class="block py-3 px-4 transition-all duration-300 
                {{ request()->is('about')
-                   ? 'border-l-[5px] border-[#E62C37] bg-red-50 text-[#E62C37] font-bold'
-                   : 'border-l-[5px] border-transparent hover:bg-gray-50 hover:text-[#E62C37]' }}">
+                   ? 'border-l-[5px] border-[#E62C37] bg-red-50 dark:bg-red-900/30 text-[#E62C37] font-bold'
+                   : 'border-l-[5px] border-transparent hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-[#E62C37]' }}">
                     {{ __('About') }}
                 </a>
             </li>
@@ -119,8 +133,8 @@
                 <a href="/contact"
                     class="block py-3 px-4 transition-all duration-300
                {{ request()->is('contact')
-                   ? 'border-l-[5px] border-[#E62C37] bg-red-50 text-[#E62C37] font-bold'
-                   : 'border-l-[5px] border-transparent hover:bg-gray-50 hover:text-[#E62C37]' }}">
+                   ? 'border-l-[5px] border-[#E62C37] bg-red-50 dark:bg-red-900/30 text-[#E62C37] font-bold'
+                   : 'border-l-[5px] border-transparent hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-[#E62C37]' }}">
                     {{ __('Contact') }}
                 </a>
             </li>
@@ -135,6 +149,20 @@
                     class="px-4 py-2 transition-colors {{ app()->getLocale() == 'en' ? 'bg-[#E62C37] text-white font-bold shadow-md' : 'text-gray-500 hover:bg-gray-100' }}">
                     English
                 </a>
+
+                <span class="text-gray-300">|</span>
+
+                {{-- Dark Mode Toggle Mobile --}}
+                <button type="button" class="mobile-dark-toggle hs-dark-mode-active:hidden block hs-dark-mode text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none transition-colors" data-hs-theme-click-value="dark">
+                    <span class="group inline-flex shrink-0 justify-center items-center size-9">
+                        <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                    </span>
+                </button>
+                <button type="button" class="mobile-dark-toggle hs-dark-mode-active:block hidden hs-dark-mode text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none transition-colors" data-hs-theme-click-value="light">
+                    <span class="group inline-flex shrink-0 justify-center items-center size-9">
+                        <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                    </span>
+                </button>
             </li>
         </ul>
     </div>
@@ -153,6 +181,48 @@
         const langToggle = document.getElementById('lang-toggle');
         const langLabels = document.querySelectorAll('.lang-label');
 
+        // --- DARK MODE TOGGLE ---
+        const html = document.documentElement;
+        const darkModeBtns = document.querySelectorAll('.hs-dark-mode');
+
+        // Update tampilan tombol dark mode
+        function updateDarkModeBtns() {
+            const isDark = html.classList.contains('dark');
+            darkModeBtns.forEach(btn => {
+                const val = btn.getAttribute('data-hs-theme-click-value');
+                if (val === 'dark') {
+                    btn.style.display = isDark ? 'none' : 'block';
+                } else {
+                    btn.style.display = isDark ? 'block' : 'none';
+                }
+            });
+        }
+
+        // Set theme
+        function setTheme(theme) {
+            if (theme === 'dark') {
+                html.classList.add('dark');
+                html.classList.remove('light');
+                localStorage.setItem('hs_theme', 'dark');
+            } else {
+                html.classList.remove('dark');
+                html.classList.add('light');
+                localStorage.setItem('hs_theme', 'light');
+            }
+            updateDarkModeBtns();
+        }
+
+        // Event listener untuk tombol dark mode
+        darkModeBtns.forEach(btn => {
+            btn.addEventListener('click', function () {
+                const theme = this.getAttribute('data-hs-theme-click-value');
+                setTheme(theme);
+            });
+        });
+
+        // Update tombol saat load
+        updateDarkModeBtns();
+
         // --- 2. TOGGLE EVENT LISTENER (Redirect) ---
         if (langToggle) {
             langToggle.addEventListener('change', function() {
@@ -164,14 +234,15 @@
         // --- 3. SCROLL LOGIC ---
         const handleScroll = () => {
             const isScrolled = window.scrollY > 10;
+            const isDark = html.classList.contains('dark');
+
             if (isScrolled) {
-                // Mode Scrolled (Merah)
+                // Mode Scrolled (Merah) — sama untuk light & dark
                 navbar.classList.remove('bg-transparent', 'py-8', 'md:py-12');
                 navbar.classList.add('bg-[#E62C37]', 'shadow-md', 'py-6', 'md:py-8');
 
-                // Elemen jadi Putih
                 navLinks.forEach(el => {
-                    el.classList.remove('text-gray-900');
+                    el.classList.remove('text-gray-900', 'dark:text-white');
                     el.classList.add('text-white');
                     if (el.classList.contains('border-[#E62C37]')) {
                         el.classList.remove('border-[#E62C37]');
@@ -188,15 +259,24 @@
                     hamburgerBtn.classList.add('text-white');
                 }
                 logoPaths.forEach(p => p.setAttribute('fill', 'white'));
+                darkModeBtns.forEach(btn => {
+                    btn.classList.remove('text-gray-600', 'dark:text-gray-300');
+                    btn.classList.add('text-white');
+                });
             } else {
-                // Mode Top (Transparan)
+                // Mode Top (Transparan) — beda warna tergantung dark/light
                 navbar.classList.add('bg-transparent', 'py-8', 'md:py-12');
                 navbar.classList.remove('bg-[#E62C37]', 'shadow-md', 'py-6', 'md:py-8');
 
-                // Elemen jadi Default
                 navLinks.forEach(el => {
-                    el.classList.add('text-gray-900');
                     el.classList.remove('text-white');
+                    if (isDark) {
+                        el.classList.remove('text-gray-900');
+                        el.classList.add('dark:text-white');
+                    } else {
+                        el.classList.add('text-gray-900');
+                        el.classList.remove('dark:text-white');
+                    }
                     if (el.classList.contains('border-white')) {
                         el.classList.remove('border-white');
                         el.classList.add('border-[#E62C37]');
@@ -211,9 +291,23 @@
                     hamburgerBtn.classList.remove('text-white');
                     hamburgerBtn.classList.add('text-[#E62C37]');
                 }
-                logoPaths.forEach(p => p.setAttribute('fill', '#E62C37'));
+                logoPaths.forEach(p => p.setAttribute('fill', isDark ? 'white' : '#E62C37'));
+                darkModeBtns.forEach(btn => {
+                    btn.classList.remove('text-white');
+                    if (isDark) {
+                        btn.classList.remove('text-gray-600');
+                        btn.classList.add('dark:text-gray-300');
+                    } else {
+                        btn.classList.add('text-gray-600');
+                        btn.classList.remove('dark:text-gray-300');
+                    }
+                });
             }
         };
+
+        // Re-apply scroll colors saat dark mode berubah
+        const observer = new MutationObserver(() => { handleScroll(); });
+        observer.observe(html, { attributes: true, attributeFilter: ['class'] });
 
         window.addEventListener('scroll', handleScroll);
         handleScroll();

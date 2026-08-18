@@ -1,11 +1,11 @@
 {{--  <footer
-    class="flex flex-wrap justify-center lg:justify-between overflow-hidden gap-10 md:gap-20 py-16 px-6 md:px-16 lg:px-24 xl:px-32 text-[13px] text-gray-700 bg-transparent">
+    class="flex flex-wrap justify-center lg:justify-between overflow-hidden gap-10 md:gap-20 py-16 px-6 md:px-16 lg:px-24 xl:px-32 text-[13px] text-gray-700 dark:text-gray-300 bg-transparent">
 
     <div class="flex flex-wrap items-start gap-4 md:gap-[60px] xl:gap-[100px]">
         <x-logo class="w-35"></x-logo>
 
         <div>
-            <p class="text-black font-semibold">{{ __('footer.navigation') }}</p>
+            <p class="text-black dark:text-white font-semibold">{{ __('footer.navigation') }}</p>
             <ul class="mt-2 space-y-2">
                 <li><a href="/" class="hover:text-[#E62C37] transition">{{ __('footer.home') }}</a></li>
                 <li><a href="/" class="hover:text-[#E62C37] transition">{{ __('footer.collection') }}</a></li>
@@ -16,7 +16,7 @@
         </div>
 
         <div>
-            <p class="text-black font-semibold">{{ __('footer.resources') }}</p>
+            <p class="text-black dark:text-white font-semibold">{{ __('footer.resources') }}</p>
             <ul class="mt-2 space-y-2">
                 <li><a href="/" class="hover:text-[#E62C37] transition">{{ __('footer.company') }}</a></li>
                 <li><a href="/" class="hover:text-[#E62C37] transition">{{ __('footer.blogs') }}</a></li>
@@ -120,14 +120,14 @@
 
 
 <footer
-    class="w-full mt-auto bg-transparent text-gray-700 py-10 px-6 md:px-16 lg:px-24 xl:px-32 border-t border-gray-100">
+    class="w-full mt-auto bg-transparent text-gray-700 dark:text-gray-300 py-10 px-6 md:px-16 lg:px-24 xl:px-32 border-t border-gray-100 dark:border-gray-800">
     <div class="flex flex-col lg:flex-row items-center justify-between gap-8">
 
         <div class="flex items-center order-1">
             <x-logo class="w-32 md:w-40"></x-logo>
         </div>
 
-        <div class="order-3 lg:order-2 text-center lg:text-left text-[13px] font-medium text-gray-500">
+        <div class="order-3 lg:order-2 text-center lg:text-left text-[13px] font-medium text-gray-500 dark:text-gray-400">
             <p>
                 &copy; 2025
                 <a href="" class="hover:text-[#E62C37] transition-colors uppercase font-bold">
@@ -137,15 +137,15 @@
         </div>
 
         <div class="flex flex-col max-md:items-center max-md:text-center gap-2 items-center order-2 lg:order-3">
-            <p class="max-w-60 text-sm text-center text-gray-500">
+            <p class="max-w-60 text-sm text-center text-gray-500 dark:text-gray-400">
                 {{ __('footer.socialmedia') }}
                 <br>
                 <span class="font-bold text-[#E62C37]">#PARROTASAFRIEND</span>
             </p>
 
             <div class="flex items-center gap-4 mt-3">
-                <div class="bg-white w-full h-auto flex items-center justify-center gap-4 flex-wrap">
-                    <div class="bg-white w-full h-auto flex items-center justify-center gap-4 flex-wrap">
+                <div class="w-full h-auto flex items-center justify-center gap-4 flex-wrap">
+                    <div class="w-full h-auto flex items-center justify-center gap-4 flex-wrap">
 
                         <button
                             class="bg-blue-50 cursor-pointer rounded-md shadow-md shadow-transparent transition-all duration-300 hover:shadow-indigo-200">

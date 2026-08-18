@@ -7,10 +7,10 @@
             isGoogleUser: {{ $isGoogleUser ? 'true' : 'false' }}
         }"
     >
-        <div class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-800 pb-5">
+        <div class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-5">
             <div>
-                <h2 class="text-2xl font-bold tracking-tight text-white uppercase">Profil Saya</h2>
-                <p class="text-sm text-gray-400 mt-1">
+                <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">Profil Saya</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     @if($isGoogleUser)
                         Akun terhubung dengan Google — hanya nama yang dapat diubah
                     @else
@@ -21,7 +21,7 @@
 
             <button type="button" @click="editing = !editing"
                 class="px-5 py-2.5 text-sm font-bold uppercase tracking-wider transition-colors duration-200 shadow-md rounded-lg"
-                :class="editing ? 'text-gray-300 border border-gray-600 hover:border-gray-500 bg-transparent' : 'text-white bg-[#E62C37] hover:bg-[#c5242d]'">
+                :class="editing ? 'text-gray-600 dark:text-gray-300 border border-gray-600 hover:border-gray-500 bg-transparent' : 'text-white bg-[#E62C37] hover:bg-[#c5242d]'">
                 <span x-text="editing ? 'Batal' : 'Edit Profil'"></span>
             </button>
         </div>
@@ -40,9 +40,9 @@
         @endif
 
         {{-- Info Role --}}
-        <div class="mb-6 flex items-center gap-3 px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg">
-            <span class="text-sm text-gray-400">Role Akun:</span>
-            <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider {{ $user->isAdmin() ? 'bg-[#E62C37]/20 text-[#E62C37] border border-[#E62C37]/30' : 'bg-gray-700 text-gray-300 border border-gray-600' }}">
+        <div class="mb-6 flex items-center gap-3 px-4 py-3 bg-gray-100 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 rounded-lg">
+            <span class="text-sm text-gray-500 dark:text-gray-400">Role Akun:</span>
+            <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider {{ $user->isAdmin() ? 'bg-[#E62C37]/20 text-[#E62C37] border border-[#E62C37]/30' : 'bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-600' }}">
                 {{ $user->role }}
             </span>
         </div>
@@ -54,11 +54,11 @@
 
                 {{-- Nama --}}
                 <div>
-                    <label for="name" class="block text-sm font-medium text-gray-300 mb-1">Nama</label>
+                    <label for="name" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Nama</label>
                     <input type="text" name="name" id="name" value="{{ old('name', $user->name) }}" required
                         :disabled="!editing"
-                        class="w-full px-4 py-3 rounded-lg bg-gray-800 border text-sm transition-colors duration-200"
-                        :class="editing ? 'border-gray-600 text-white focus:ring-2 focus:ring-[#E62C37]/50 focus:border-[#E62C37] cursor-text' : 'border-gray-800 text-gray-400 cursor-not-allowed opacity-60'">
+                        class="w-full px-4 py-3 rounded-lg bg-white dark:bg-gray-800 border text-sm transition-colors duration-200"
+                        :class="editing ? 'border-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#E62C37]/50 focus:border-[#E62C37] cursor-text' : 'border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-60'">
                     @error('name')
                         <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
                     @enderror
@@ -67,11 +67,11 @@
                 {{-- Email (hanya untuk non-Google) --}}
                 @if(! $isGoogleUser)
                     <div>
-                        <label for="email" class="block text-sm font-medium text-gray-300 mb-1">Email</label>
+                        <label for="email" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Email</label>
                         <input type="email" name="email" id="email" value="{{ old('email', $user->email) }}" required
                             :disabled="!editing"
-                            class="w-full px-4 py-3 rounded-lg bg-gray-800 border text-sm transition-colors duration-200"
-                            :class="editing ? 'border-gray-600 text-white focus:ring-2 focus:ring-[#E62C37]/50 focus:border-[#E62C37] cursor-text' : 'border-gray-800 text-gray-400 cursor-not-allowed opacity-60'">
+                            class="w-full px-4 py-3 rounded-lg bg-white dark:bg-gray-800 border text-sm transition-colors duration-200"
+                            :class="editing ? 'border-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#E62C37]/50 focus:border-[#E62C37] cursor-text' : 'border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-60'">
                         @error('email')
                             <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
                         @enderror
@@ -80,20 +80,20 @@
 
                 {{-- Password (hanya untuk non-Google) --}}
                 @if(! $isGoogleUser)
-                    <div class="border-t border-gray-700 pt-6">
-                        <h3 class="text-sm font-semibold text-gray-300 mb-4">Ubah Password <span class="text-gray-500">(kosongkan jika tidak ingin mengubah)</span></h3>
+                    <div class="border-t border-gray-300 dark:border-gray-700 pt-6">
+                        <h3 class="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-4">Ubah Password <span class="text-gray-500">(kosongkan jika tidak ingin mengubah)</span></h3>
 
                         <div class="space-y-4">
                             <div>
-                                <label for="password" class="block text-sm font-medium text-gray-300 mb-1">Password Baru</label>
+                                <label for="password" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Password Baru</label>
                                 <div class="relative" x-data="{ show: false }">
                                     <input :type="show ? 'text' : 'password'" name="password" id="password"
                                         :disabled="!editing"
-                                        class="w-full px-4 py-3 pr-12 rounded-lg bg-gray-800 border text-sm transition-colors duration-200"
-                                        :class="editing ? 'border-gray-600 text-white focus:ring-2 focus:ring-[#E62C37]/50 focus:border-[#E62C37] cursor-text' : 'border-gray-800 text-gray-400 cursor-not-allowed opacity-60'"
+                                        class="w-full px-4 py-3 pr-12 rounded-lg bg-white dark:bg-gray-800 border text-sm transition-colors duration-200"
+                                        :class="editing ? 'border-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#E62C37]/50 focus:border-[#E62C37] cursor-text' : 'border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-60'"
                                         placeholder="Minimal 8 karakter">
                                     <button type="button" @click="show = !show"
-                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 focus:outline-none">
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none">
                                         <svg x-show="!show" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -109,15 +109,15 @@
                             </div>
 
                             <div>
-                                <label for="password_confirmation" class="block text-sm font-medium text-gray-300 mb-1">Konfirmasi Password Baru</label>
+                                <label for="password_confirmation" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Konfirmasi Password Baru</label>
                                 <div class="relative" x-data="{ show: false }">
                                     <input :type="show ? 'text' : 'password'" name="password_confirmation" id="password_confirmation"
                                         :disabled="!editing"
-                                        class="w-full px-4 py-3 pr-12 rounded-lg bg-gray-800 border text-sm transition-colors duration-200"
-                                        :class="editing ? 'border-gray-600 text-white focus:ring-2 focus:ring-[#E62C37]/50 focus:border-[#E62C37] cursor-text' : 'border-gray-800 text-gray-400 cursor-not-allowed opacity-60'"
+                                        class="w-full px-4 py-3 pr-12 rounded-lg bg-white dark:bg-gray-800 border text-sm transition-colors duration-200"
+                                        :class="editing ? 'border-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#E62C37]/50 focus:border-[#E62C37] cursor-text' : 'border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-60'"
                                         placeholder="Ulangi password baru">
                                     <button type="button" @click="show = !show"
-                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 focus:outline-none">
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none">
                                         <svg x-show="!show" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />

@@ -8,7 +8,7 @@
                     <span class="text-[#E62C37] font-normal">{{ __('about.hero_aviary') }}</span>
                 </h1>
 
-                <p class="text-gray-700 mt-6 md:text-md leading-relaxed">
+                <p class="text-gray-700 dark:text-gray-300 mt-6 md:text-md leading-relaxed">
                     {{ __('about.hero_desc_1') }}
                     <br><br>
                     {{ __('about.hero_desc_2') }}
@@ -27,14 +27,14 @@
         </div>
     </section>
 
-    <section class="w-full px-6 md:px-12 lg:px-16 pb-10 pt-10 bg-[#F3F4F6]">
-        <h1 class="text-4xl font-bold text-slate-800 text-center">
+    <section class="w-full px-6 md:px-12 lg:px-16 pb-10 pt-10 bg-[#F3F4F6] dark:bg-gray-800">
+        <h1 class="text-4xl font-bold text-slate-800 dark:text-slate-100 text-center">
             {{ __('about.team_title') }}
             <span class="font-medium text-[#E62C37]">
                 {{ __('about.team_leadership') }}
             </span>
         </h1>
-        <p class="text-slate-600 text-center mt-2">
+        <p class="text-slate-600 dark:text-slate-400 text-center mt-2">
             {{ __('about.team_desc') }}
         </p>
 

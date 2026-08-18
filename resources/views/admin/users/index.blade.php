@@ -1,10 +1,10 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-800 pb-5">
+    <div class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-5">
         <div>
-            <h2 class="text-2xl font-bold tracking-tight text-white uppercase">Manajemen Akun User</h2>
-            <p class="text-sm text-gray-400 mt-1">Monitoring dan kelola akun pengguna yang memiliki akses ke dashboard</p>
+            <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">Manajemen Akun User</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Monitoring dan kelola akun pengguna yang memiliki akses ke dashboard</p>
         </div>
 
         <button onclick="bukaModalTambahUser()"
@@ -19,35 +19,35 @@
             <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
             </svg>
-            <input type="text" class="table-search-input w-full bg-[#151a22] border border-gray-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-[#E62C37] focus:outline-none" placeholder="Cari user...">
+            <input type="text" class="table-search-input w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:outline-none" placeholder="Cari user...">
         </div>
     </div>
 
     {{-- Statistik --}}
     <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-        <div class="bg-[#1e2530] border border-gray-800 rounded-lg p-4">
-            <p class="text-xs text-gray-400 uppercase tracking-wider">Total Akun</p>
-            <p class="text-2xl font-bold text-white mt-1">{{ $users->count() }}</p>
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Akun</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ $users->count() }}</p>
         </div>
-        <div class="bg-[#1e2530] border border-gray-800 rounded-lg p-4">
-            <p class="text-xs text-gray-400 uppercase tracking-wider">Admin</p>
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Admin</p>
             <p class="text-2xl font-bold text-[#E62C37] mt-1">{{ $users->where('role', 'admin')->count() }}</p>
         </div>
-        <div class="bg-[#1e2530] border border-gray-800 rounded-lg p-4">
-            <p class="text-xs text-gray-400 uppercase tracking-wider">User Biasa</p>
-            <p class="text-2xl font-bold text-gray-300 mt-1">{{ $users->where('role', 'user')->count() }}</p>
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">User Biasa</p>
+            <p class="text-2xl font-bold text-gray-600 dark:text-gray-300 mt-1">{{ $users->where('role', 'user')->count() }}</p>
         </div>
-        <div class="bg-[#1e2530] border border-gray-800 rounded-lg p-4">
-            <p class="text-xs text-gray-400 uppercase tracking-wider">Online Sekarang</p>
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Online Sekarang</p>
             <p id="online-count" class="text-2xl font-bold text-green-400 mt-1">{{ $users->filter->isOnline()->count() }}</p>
         </div>
     </div>
 
-    <div class="w-full overflow-hidden bg-[#1e2530] border border-gray-800 shadow-sm mb-10 table-search-wrapper">
+    <div class="w-full overflow-hidden bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 shadow-sm mb-10 table-search-wrapper">
         <div class="w-full overflow-x-auto">
             <table class="table-searchable w-full text-left border-collapse">
                 <thead>
-                    <tr class="text-xs font-bold uppercase tracking-wider text-gray-400 bg-[#151a22] border-b border-gray-800">
+                    <tr class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-white dark:bg-[#151a22] border-b border-gray-200 dark:border-gray-800">
                         <th class="px-6 py-4">Nama</th>
                         <th class="px-6 py-4">Email</th>
                         <th class="px-6 py-4 w-28">Role</th>
@@ -57,14 +57,14 @@
                         <th class="px-6 py-4 w-48 text-right">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-800">
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
                     @forelse($users as $u)
-                        <tr class="text-gray-300 hover:bg-[#262d3a] transition-colors duration-150">
+                        <tr class="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#262d3a] transition-colors duration-150">
                             <td class="px-6 py-4 text-sm font-medium">
                                 <div class="flex items-center gap-2">
                                     <div class="relative">
                                         <div class="w-8 h-8 rounded-full {{ $u->isAdmin() ? 'bg-[#E62C37]/20' : 'bg-gray-700' }} flex items-center justify-center shrink-0">
-                                            <span class="text-xs font-bold {{ $u->isAdmin() ? 'text-[#E62C37]' : 'text-gray-400' }}">{{ strtoupper(substr($u->name, 0, 1)) }}</span>
+                                            <span class="text-xs font-bold {{ $u->isAdmin() ? 'text-[#E62C37]' : 'text-gray-500 dark:text-gray-400' }}">{{ strtoupper(substr($u->name, 0, 1)) }}</span>
                                         </div>
                                         <span id="avatar-status-{{ $u->id }}" class="absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 border-[#1e2530] rounded-full {{ $u->isOnline() ? 'bg-green-400' : 'bg-gray-600' }} transition-colors duration-300"></span>
                                     </div>
@@ -73,7 +73,7 @@
                             </td>
                             <td class="px-6 py-4 text-sm">{{ $u->email }}</td>
                             <td class="px-6 py-4 text-sm">
-                                <span class="px-2 py-1 rounded-full text-xs font-semibold {{ $u->isAdmin() ? 'bg-[#E62C37]/20 text-[#E62C37]' : 'bg-gray-700 text-gray-300' }}">
+                                <span class="px-2 py-1 rounded-full text-xs font-semibold {{ $u->isAdmin() ? 'bg-[#E62C37]/20 text-[#E62C37]' : 'bg-gray-700 text-gray-600 dark:text-gray-300' }}">
                                     {{ $u->isAdmin() ? 'Admin' : 'User' }}
                                 </span>
                             </td>
@@ -93,7 +93,7 @@
                                     <span class="text-xs text-gray-500">Email/Pass</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-400">
+                            <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                                 @if($u->last_login_at)
                                     {{ $u->last_login_at->diffForHumans() }}
                                 @else
@@ -103,10 +103,10 @@
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
                                     <button onclick="window.location='{{ route('admin.users.activity', $u) }}'"
-                                        class="px-3 py-1.5 text-xs font-semibold text-gray-300 bg-[#151a22] border border-gray-600 rounded-lg hover:border-gray-500 hover:text-white transition-colors">
+                                        class="px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-[#151a22] border border-gray-600 rounded-lg hover:border-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
                                         Detail
                                     </button>
-                                    <button onclick='bukaModalEditUser({{ json_encode($u) }})'
+                                    <button onclick='bukaModalEditUser({{ json_encode($u, JSON_BIGINT_AS_STRING) }})'
                                         class="px-3 py-1.5 text-xs font-semibold text-blue-400 bg-blue-500/10 border border-blue-500/30 rounded-lg hover:bg-blue-500/20 transition-colors">
                                         Edit
                                     </button>
@@ -131,10 +131,10 @@
 
     {{-- ==================== MODAL TAMBAH USER ==================== --}}
     <div id="modalTambahUser" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div class="bg-[#1e2530] border border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6">
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-bold text-white">Tambah User Baru</h3>
-                <button onclick="tutupModal('modalTambahUser')" class="text-gray-400 hover:text-white transition-colors">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Tambah User Baru</h3>
+                <button onclick="tutupModal('modalTambahUser')" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -143,32 +143,32 @@
             <form id="formTambahUser" onsubmit="submitTambahUser(event)" class="space-y-4">
                 @csrf
                 <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Nama</label>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Nama</label>
                     <input type="text" id="tambah_name" placeholder="Nama lengkap"
-                        class="w-full bg-[#151a22] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                     <p class="text-xs text-red-400 mt-1 hidden" id="err_tambah_name"></p>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Email</label>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Email</label>
                     <input type="email" id="tambah_email" placeholder="email@example.com"
-                        class="w-full bg-[#151a22] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                     <p class="text-xs text-red-400 mt-1 hidden" id="err_tambah_email"></p>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Role</label>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Role</label>
                     <select id="tambah_role"
-                        class="w-full bg-[#151a22] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                         <option value="user">User</option>
                         <option value="admin">Admin</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Password</label>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Password</label>
                     <div class="relative" x-data="{ show: false }">
                         <input :type="show ? 'text' : 'password'" id="tambah_password" placeholder="Minimal 8 karakter"
-                            class="w-full bg-[#151a22] border border-gray-700 rounded-xl px-4 py-2.5 pr-12 text-sm text-white placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 pr-12 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                         <button type="button" @click="show = !show"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 focus:outline-none">
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none">
                             <svg x-show="!show" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -181,13 +181,13 @@
                     <p class="text-xs text-red-400 mt-1 hidden" id="err_tambah_password"></p>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Konfirmasi Password</label>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Konfirmasi Password</label>
                     <input type="password" id="tambah_password_confirmation" placeholder="Ulangi password"
-                        class="w-full bg-[#151a22] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                 </div>
                 <div class="flex gap-3 justify-end pt-2">
                     <button type="button" onclick="tutupModal('modalTambahUser')"
-                        class="px-4 py-2.5 text-sm font-semibold text-gray-300 bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">
+                        class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">
                         Batal
                     </button>
                     <button type="submit" id="btnTambahUser"
@@ -201,10 +201,10 @@
 
     {{-- ==================== MODAL EDIT USER ==================== --}}
     <div id="modalEditUser" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div class="bg-[#1e2530] border border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6">
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-bold text-white">Edit User</h3>
-                <button onclick="tutupModal('modalEditUser')" class="text-gray-400 hover:text-white transition-colors">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Edit User</h3>
+                <button onclick="tutupModal('modalEditUser')" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -215,32 +215,32 @@
                 @method('PUT')
                 <input type="hidden" id="edit_id">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Nama</label>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Nama</label>
                     <input type="text" id="edit_name" placeholder="Nama lengkap"
-                        class="w-full bg-[#151a22] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                     <p class="text-xs text-red-400 mt-1 hidden" id="err_edit_name"></p>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Email</label>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Email</label>
                     <input type="email" id="edit_email" placeholder="email@example.com"
-                        class="w-full bg-[#151a22] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                     <p class="text-xs text-red-400 mt-1 hidden" id="err_edit_email"></p>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Role</label>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Role</label>
                     <select id="edit_role"
-                        class="w-full bg-[#151a22] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                         <option value="user">User</option>
                         <option value="admin">Admin</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Password Baru <span class="text-gray-500">(kosongkan jika tidak diubah)</span></label>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Password Baru <span class="text-gray-500">(kosongkan jika tidak diubah)</span></label>
                     <div class="relative" x-data="{ show: false }">
                         <input :type="show ? 'text' : 'password'" id="edit_password" placeholder="Minimal 8 karakter"
-                            class="w-full bg-[#151a22] border border-gray-700 rounded-xl px-4 py-2.5 pr-12 text-sm text-white placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 pr-12 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                         <button type="button" @click="show = !show"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 focus:outline-none">
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none">
                             <svg x-show="!show" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -254,7 +254,7 @@
                 </div>
                 <div class="flex gap-3 justify-end pt-2">
                     <button type="button" onclick="tutupModal('modalEditUser')"
-                        class="px-4 py-2.5 text-sm font-semibold text-gray-300 bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">
+                        class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">
                         Batal
                     </button>
                     <button type="submit" id="btnEditUser"
@@ -268,7 +268,7 @@
 
     {{-- ==================== MODAL HAPUS USER ==================== --}}
     <div id="modalHapusUser" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div class="bg-[#1e2530] border border-gray-700 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
             <div class="flex items-center gap-3 mb-4">
                 <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
                     <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -276,18 +276,18 @@
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold text-white">Hapus Akun</h3>
-                    <p class="text-sm text-gray-400">Tindakan ini tidak dapat dibatalkan</p>
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Hapus Akun</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Tindakan ini tidak dapat dibatalkan</p>
                 </div>
             </div>
-            <p class="text-sm text-gray-300 mb-6">Apakah Anda yakin ingin menghapus akun <span id="hapus_nama_user" class="font-semibold text-white"></span>?</p>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">Apakah Anda yakin ingin menghapus akun <span id="hapus_nama_user" class="font-semibold text-gray-900 dark:text-white"></span>?</p>
             <form id="formHapusUser" onsubmit="submitHapusUser(event)">
                 @csrf
                 @method('DELETE')
                 <input type="hidden" id="hapus_id_user">
                 <div class="flex gap-3 justify-end">
                     <button type="button" onclick="tutupModal('modalHapusUser')"
-                        class="px-4 py-2.5 text-sm font-semibold text-gray-300 bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">
+                        class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">
                         Batal
                     </button>
                     <button type="submit" id="btnHapusUser"

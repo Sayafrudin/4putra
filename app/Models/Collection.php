@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Collection extends Model
 {
+    protected $keyType = 'string';
+
+    public $incrementing = true;
+
     protected $fillable = [
         'name',
         'name_en',
@@ -15,4 +19,11 @@ class Collection extends Model
         'image_path',
         'sort_order',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'id' => 'string',
+        ];
+    }
 }

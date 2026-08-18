@@ -1,10 +1,10 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-800 pb-5">
+    <div class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-5">
         <div>
-            <h2 class="text-2xl font-bold tracking-tight text-white uppercase">Percakapan Pelanggan</h2>
-            <p class="text-sm text-gray-400 mt-1">{{ $pelanggan->nama ?? $pelanggan->nomor_wa }} — Sesi: {{ ucfirst($pelanggan->sesi_aktif) }}</p>
+            <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">Percakapan Pelanggan</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ $pelanggan->nama ?? $pelanggan->nomor_wa }} — Sesi: {{ ucfirst($pelanggan->sesi_aktif) }}</p>
         </div>
         <div class="flex gap-3">
             <a href="{{ route('admin.chatbot.chat', ['pelanggan_id' => $pelanggan->id]) }}"
@@ -12,16 +12,16 @@
                 Buka Chat
             </a>
             <a href="{{ route('admin.chatbot.index') }}"
-                class="px-4 py-2 text-sm font-bold uppercase tracking-wider text-gray-300 border border-gray-600 hover:border-gray-500 rounded-lg transition-colors">
+                class="px-4 py-2 text-sm font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 border border-gray-600 hover:border-gray-500 rounded-lg transition-colors">
                 Kembali
             </a>
         </div>
     </div>
 
     {{-- Info Pelanggan + Toggle --}}
-    <div class="bg-[#1e2530] border border-gray-800 rounded-lg p-4 mb-6 grid grid-cols-2 sm:grid-cols-5 gap-4">
+    <div class="bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-lg p-4 mb-6 grid grid-cols-2 sm:grid-cols-5 gap-4">
         <div>
-            <p class="text-xs text-gray-400">Nomor WA</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Nomor WA</p>
             @php
                 $nomorRaw = str_replace(['@s.whatsapp.net', '@lid'], '', $pelanggan->nomor_wa);
                 $isLid = str_contains($pelanggan->nomor_wa, '@lid');
@@ -34,7 +34,7 @@
                     }
                 }
             @endphp
-            <p class="text-sm text-white font-medium">
+            <p class="text-sm text-gray-900 dark:text-white font-medium">
                 @if($isLid)
                     WA ID: {{ $nomorRaw }}
                 @elseif($nomorFormatted)
@@ -45,27 +45,27 @@
             </p>
         </div>
         <div>
-            <p class="text-xs text-gray-400">Nama</p>
-            <p class="text-sm text-white font-medium">{{ $pelanggan->nama ?? '-' }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Nama</p>
+            <p class="text-sm text-gray-900 dark:text-white font-medium">{{ $pelanggan->nama ?? '-' }}</p>
         </div>
         <div>
-            <p class="text-xs text-gray-400">Sesi Aktif</p>
-            <p class="text-sm text-white font-medium">
+            <p class="text-xs text-gray-500 dark:text-gray-400">Sesi Aktif</p>
+            <p class="text-sm text-gray-900 dark:text-white font-medium">
                 <span class="px-2 py-0.5 rounded text-xs font-bold uppercase
                     {{ $pelanggan->sesi_aktif === 'human' ? 'bg-green-500/20 text-green-400' : '' }}
                     {{ $pelanggan->sesi_aktif === 'ai' ? 'bg-purple-500/20 text-purple-400' : '' }}
                     {{ $pelanggan->sesi_aktif === 'manual' ? 'bg-yellow-500/20 text-yellow-400' : '' }}
-                    {{ $pelanggan->sesi_aktif === 'menu' ? 'bg-gray-500/20 text-gray-400' : '' }}">
+                    {{ $pelanggan->sesi_aktif === 'menu' ? 'bg-gray-500/20 text-gray-500 dark:text-gray-400' : '' }}">
                     {{ $pelanggan->sesi_aktif === 'human' ? 'Admin (Human)' : ($pelanggan->sesi_aktif === 'ai' ? 'AI Bot' : ucfirst($pelanggan->sesi_aktif)) }}
                 </span>
             </p>
         </div>
         <div>
-            <p class="text-xs text-gray-400">Total Chat</p>
-            <p class="text-sm text-white font-medium">{{ $riwayat->total() }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Total Chat</p>
+            <p class="text-sm text-gray-900 dark:text-white font-medium">{{ $riwayat->total() }}</p>
         </div>
         <div>
-            <p class="text-xs text-gray-400">Toggle Mode</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Toggle Mode</p>
             <div class="flex items-center gap-2 mt-1">
                 <span id="modeLabel" class="text-xs font-semibold uppercase tracking-wider
                     {{ $pelanggan->sesi_aktif === 'human' ? 'text-green-400' : 'text-purple-400' }}">
@@ -84,11 +84,11 @@
     </div>
 
     {{-- Riwayat Percakapan --}}
-    <div class="bg-[#1e2530] border border-gray-800 shadow-sm mb-10">
-        <div class="px-6 py-4 border-b border-gray-800">
-            <h3 class="text-lg font-bold text-white">Riwayat Percakapan</h3>
+    <div class="bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 shadow-sm mb-10">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Riwayat Percakapan</h3>
         </div>
-        <div class="divide-y divide-gray-800 max-h-[600px] overflow-y-auto">
+        <div class="divide-y divide-gray-200 dark:divide-gray-800 max-h-[600px] overflow-y-auto">
             @forelse($riwayat as $chat)
                 <div class="px-6 py-3">
                     <div class="flex items-start gap-3">
@@ -96,19 +96,19 @@
                         <div class="flex-1">
                             <div class="flex items-center gap-2 mb-1">
                                 <span class="text-xs font-semibold text-blue-400">Pelanggan</span>
-                                <span class="text-xs text-gray-500">{{ $chat->created_at->format('d M Y H:i:s') }}</span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400">{{ $chat->created_at->format('d M Y H:i:s') }}</span>
                                 <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold
                                     {{ $chat->sumber_balasan === 'groq_ai' ? 'bg-purple-500/20 text-purple-400' : '' }}
                                     {{ $chat->sumber_balasan === 'apriori' ? 'bg-green-500/20 text-green-400' : '' }}
                                     {{ $chat->sumber_balasan === 'manual' ? 'bg-yellow-500/20 text-yellow-400' : '' }}
                                     {{ $chat->sumber_balasan === 'human' ? 'bg-green-500/20 text-green-400' : '' }}
                                     {{ $chat->sumber_balasan === 'admin' ? 'bg-[#E62C37]/20 text-[#E62C37]' : '' }}
-                                    {{ $chat->sumber_balasan === 'system' ? 'bg-gray-600/20 text-gray-400' : '' }}
-                                    {{ $chat->sumber_balasan === 'menu' ? 'bg-gray-500/20 text-gray-400' : '' }}">
+                                    {{ $chat->sumber_balasan === 'system' ? 'bg-gray-600/20 text-gray-500 dark:text-gray-400' : '' }}
+                                    {{ $chat->sumber_balasan === 'menu' ? 'bg-gray-500/20 text-gray-500 dark:text-gray-400' : '' }}">
                                     {{ ucfirst(str_replace('_', ' ', $chat->sumber_balasan)) }}
                                 </span>
                             </div>
-                            <p class="text-sm text-gray-300">{{ $chat->pesan_pengirim }}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">{{ $chat->pesan_pengirim }}</p>
                         </div>
                     </div>
 
@@ -118,17 +118,18 @@
                             <span class="text-xs font-semibold
                                 {{ $chat->sumber_balasan === 'admin' ? 'text-[#E62C37]' : '' }}
                                 {{ $chat->sumber_balasan === 'groq_ai' ? 'text-purple-400' : '' }}
-                                {{ $chat->sumber_balasan === 'system' ? 'text-gray-400' : '' }}
+                                {{ $chat->sumber_balasan === 'system' ? 'text-gray-500 dark:text-gray-400' : '' }}
                                 {{ $chat->sumber_balasan === 'apriori' ? 'text-green-400' : '' }}
-                                {{ $chat->sumber_balasan === 'menu' ? 'text-gray-400' : '' }}">
+                                {{ $chat->sumber_balasan === 'menu' ? 'text-gray-500 dark:text-gray-400' : '' }}">
                                 {{ $chat->sumber_balasan === 'admin' ? 'Admin' : ($chat->sumber_balasan === 'groq_ai' ? 'AI Bot' : ($chat->sumber_balasan === 'system' ? 'System' : 'Bot')) }}
                             </span>
-                            <p class="text-sm text-gray-400 mt-1 whitespace-pre-line">{{ $chat->pesan_balasan }}</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 whitespace-pre-line">{{ $chat->pesan_balasan }}</p>
                         </div>
                     @endif
                 </div>
             @empty
-                <div class="px-6 py-10 text-center text-gray-500">
+                <div class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                    Belum ada percakapan.
                     Belum ada percakapan.
                 </div>
             @endforelse

@@ -1,23 +1,23 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-800 pb-5">
+    <div class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-5">
         <div>
             <div class="flex items-center gap-3">
-                <a href="{{ route('admin.users.index') }}" class="text-gray-400 hover:text-white transition-colors">
+                <a href="{{ route('admin.users.index') }}" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
                     </svg>
                 </a>
                 <div>
-                    <h2 class="text-2xl font-bold tracking-tight text-white uppercase">Aktivitas User</h2>
-                    <p class="text-sm text-gray-400 mt-1">Riwayat aktivitas {{ $user->name }} ({{ $user->email }})</p>
+                    <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">Aktivitas User</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Riwayat aktivitas {{ $user->name }} ({{ $user->email }})</p>
                 </div>
             </div>
         </div>
 
         <div class="flex items-center gap-3">
-            <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider {{ $user->isAdmin() ? 'bg-[#E62C37]/20 text-[#E62C37]' : 'bg-gray-700 text-gray-300' }}">
+            <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider {{ $user->isAdmin() ? 'bg-[#E62C37]/20 text-[#E62C37]' : 'bg-gray-700 text-gray-600 dark:text-gray-300' }}">
                 {{ $user->role }}
             </span>
             @if($user->isOnline())
@@ -36,27 +36,27 @@
 
     {{-- Info User --}}
     <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-        <div class="bg-[#1e2530] border border-gray-800 rounded-lg p-4">
-            <p class="text-xs text-gray-400 uppercase tracking-wider">Total Aktivitas</p>
-            <p class="text-2xl font-bold text-white mt-1">{{ $activities->count() }}</p>
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Aktivitas</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ $activities->count() }}</p>
         </div>
-        <div class="bg-[#1e2530] border border-gray-800 rounded-lg p-4">
-            <p class="text-xs text-gray-400 uppercase tracking-wider">Login Via</p>
-            <p class="text-sm font-bold text-white mt-1">{{ $user->google_id ? 'Google' : 'Email/Password' }}</p>
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Login Via</p>
+            <p class="text-sm font-bold text-gray-900 dark:text-white mt-1">{{ $user->google_id ? 'Google' : 'Email/Password' }}</p>
         </div>
-        <div class="bg-[#1e2530] border border-gray-800 rounded-lg p-4">
-            <p class="text-xs text-gray-400 uppercase tracking-wider">Terakhir Login</p>
-            <p class="text-sm font-bold text-white mt-1">{{ $user->last_login_at ? $user->last_login_at->diffForHumans() : 'Belum pernah' }}</p>
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Terakhir Login</p>
+            <p class="text-sm font-bold text-gray-900 dark:text-white mt-1">{{ $user->last_login_at ? $user->last_login_at->diffForHumans() : 'Belum pernah' }}</p>
         </div>
-        <div class="bg-[#1e2530] border border-gray-800 rounded-lg p-4">
-            <p class="text-xs text-gray-400 uppercase tracking-wider">Terdaftar</p>
-            <p class="text-sm font-bold text-white mt-1">{{ $user->created_at->format('d M Y H:i') }}</p>
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Terdaftar</p>
+            <p class="text-sm font-bold text-gray-900 dark:text-white mt-1">{{ $user->created_at->format('d M Y H:i') }}</p>
         </div>
     </div>
 
     {{-- Timeline Aktivitas --}}
-    <div class="bg-[#1e2530] border border-gray-800 rounded-lg p-6 mb-10">
-        <h3 class="text-lg font-bold text-white mb-6">Riwayat Aktivitas</h3>
+    <div class="bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-lg p-6 mb-10">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-6">Riwayat Aktivitas</h3>
 
         @if($activities->isEmpty())
             <div class="text-center py-10">
@@ -82,7 +82,7 @@
                                 @endif
                             "></div>
 
-                            <div class="bg-[#262d3a] rounded-lg p-4 border border-gray-700">
+                            <div class="bg-gray-50 dark:bg-[#262d3a] rounded-lg p-4 border border-gray-300 dark:border-gray-700">
                                 <div class="flex items-start justify-between gap-4">
                                     <div class="flex-1">
                                         <div class="flex items-center gap-2 mb-1">
@@ -91,16 +91,16 @@
                                                 @elseif($activity->action === 'update') bg-blue-500/20 text-blue-400
                                                 @elseif($activity->action === 'delete') bg-red-500/20 text-red-400
                                                 @elseif($activity->action === 'comment') bg-yellow-500/20 text-yellow-400
-                                                @else bg-gray-500/20 text-gray-400
+                                                @else bg-gray-500/20 text-gray-500 dark:text-gray-400
                                                 @endif
                                             ">
                                                 {{ $activity->action }}
                                             </span>
                                             @if($activity->module)
-                                                <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-gray-600/30 text-gray-400">{{ $activity->module }}</span>
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-gray-600/30 text-gray-500 dark:text-gray-400">{{ $activity->module }}</span>
                                             @endif
                                         </div>
-                                        <p class="text-sm text-gray-300">{{ $activity->description }}</p>
+                                        <p class="text-sm text-gray-600 dark:text-gray-300">{{ $activity->description }}</p>
                                         <div class="flex items-center gap-3 mt-2 text-xs text-gray-500">
                                             <span>{{ $activity->created_at->format('d M Y H:i:s') }}</span>
                                             @if($activity->ip_address)
@@ -114,8 +114,8 @@
                                 @if($activity->metadata)
                                     {{-- Preview Gambar --}}
                                     @if(!empty($activity->image_previews))
-                                        <div class="mt-3 pt-3 border-t border-gray-700">
-                                            <p class="text-xs text-gray-400 mb-2 font-medium">Gambar Terkait:</p>
+                                        <div class="mt-3 pt-3 border-t border-gray-300 dark:border-gray-700">
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2 font-medium">Gambar Terkait:</p>
                                             <div class="flex flex-wrap gap-2">
                                                 @foreach($activity->image_previews as $img)
                                                     @php
@@ -131,8 +131,8 @@
 
                                     {{-- Detail Old/New Values --}}
                                     @if(!empty($activity->old_values) || !empty($activity->new_values))
-                                        <div class="mt-3 pt-3 border-t border-gray-700" x-data="{ showChanges: false }">
-                                            <button @click="showChanges = !showChanges" class="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition-colors">
+                                        <div class="mt-3 pt-3 border-t border-gray-300 dark:border-gray-700" x-data="{ showChanges: false }">
+                                            <button @click="showChanges = !showChanges" class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                                                 <svg class="w-3.5 h-3.5 transition-transform" :class="{ 'rotate-90': showChanges }" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                                                 </svg>
@@ -175,7 +175,7 @@
 
                                 {{-- Admin Comment --}}
                                 @if($activity->admin_comment)
-                                    <div class="mt-3 pt-3 border-t border-gray-700">
+                                    <div class="mt-3 pt-3 border-t border-gray-300 dark:border-gray-700">
                                         <div class="flex items-start gap-2">
                                             <div class="w-5 h-5 rounded-full bg-[#E62C37]/20 flex items-center justify-center shrink-0 mt-0.5">
                                                 <svg class="w-3 h-3 text-[#E62C37]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -184,17 +184,17 @@
                                             </div>
                                             <div>
                                                 <p class="text-xs text-[#E62C37] font-semibold">Komentar Admin:</p>
-                                                <p class="text-sm text-gray-300 mt-0.5">{{ $activity->admin_comment }}</p>
+                                                <p class="text-sm text-gray-600 dark:text-gray-300 mt-0.5">{{ $activity->admin_comment }}</p>
                                             </div>
                                         </div>
                                     </div>
                                 @else
                                     {{-- Form Comment (Admin only) --}}
-                                    <div class="mt-3 pt-3 border-t border-gray-700">
+                                    <div class="mt-3 pt-3 border-t border-gray-300 dark:border-gray-700">
                                         <form method="POST" action="{{ route('admin.activity.comment', $activity->id) }}" class="flex gap-2">
                                             @csrf
                                             <input type="text" name="admin_comment" required
-                                                class="flex-1 px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white text-xs focus:ring-1 focus:ring-[#E62C37]/50 focus:border-[#E62C37]"
+                                                class="flex-1 px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs focus:ring-1 focus:ring-[#E62C37]/50 focus:border-[#E62C37]"
                                                 placeholder="Tambahkan komentar...">
                                             <button type="submit"
                                                 class="px-3 py-2 bg-[#E62C37] hover:bg-[#c5242d] text-white text-xs rounded-lg transition-colors">

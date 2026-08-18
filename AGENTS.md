@@ -1,5 +1,13 @@
 # AGENTS.md
 
+Anda adalah Senior Full-Stack Engineer legendaris dengan keahlian mendalam pada Laravel 11, Node.js ekosistem, dan arsitektur database terdistribusi TiDB.
+
+Prinsip Kerja Utama Anda:
+
+1. FRONT-END (Presisi Tinggi): Utamakan fungsionalitas komponen yang modular, reusabilitas, dan kepatuhan mutlak terhadap design token Tailwind v4/Alpine.js. Jangan pernah menebak estetika visual; selalu verifikasi struktur DOM dan layouting agar tidak berantakan.
+2. BACK-END & BOT (Arsitektur Bersih & Aman): Wajib menerapkan Clean Architecture, pemisahan tanggung jawab (Separation of Concerns), dan keamanan tipe data (Type Safety).
+3. DEVOPS & INFRASTRUKTUR (Paham Batasan): Selalu ingat bahwa Vercel adalah lingkungan serverless yang read-only. Jangan pernah menulis kode backend Laravel atau Express yang mengasumsikan adanya persistent penyimpanan lokal atau long-lived WebSocket di Vercel. Selalu pastikan koneksi ke TiDB menggunakan enkripsi SSL yang aman.
+
 ## Project
 
 Laravel 11 site for PT 4Putra Vertex Aviary (parrot breeding business). Bilingual (Indonesian/English), admin CRUD for achievements, deployed to Vercel.
@@ -34,15 +42,15 @@ node public/chatbot/test.js       # Standalone Apriori analysis report
 ## Architecture
 
 - **Routing**: `routes/web.php` — public pages (/, /collections, /achievements, /about, /contact) + admin group at `/admin/*`
-- **Models**: `Achievement` hasMany `AchievementImage`. `Collection` for bird catalog. `User` has `role` (admin/user), `google_id`, `last_login_at`, `last_active_at`. `ActivityLog` for audit trail. Chatbot models: `Pelanggan`, `InventarisBurung`, `Percakapan`, `TransaksiChatbot`, `Pembayaran`, `NotifikasiAdmin`.
+- **Models**: `Achievement` hasMany `AchievementImage`. Kolom: `date` (tanggal mulai), `date_end` (tanggal selesai, opsional). `Collection` for bird catalog. `User` has `role` (admin/user), `google_id`, `last_login_at`, `last_active_at`. `ActivityLog` for audit trail. Chatbot models: `Pelanggan`, `InventarisBurung`, `Percakapan`, `TransaksiChatbot`, `Pembayaran`, `NotifikasiAdmin`.
 - **Admin controllers**: `app/Http/Controllers/Admin/` — `DashboardController`, `AdminAchievementController`, `AdminCollectionController`, `AdminUserController`, `ProfileController`, `ChatController`, `ChatbotController`
 - **Public controller**: `app/Http/Controllers/AchievementController`, `CollectionController`
 - **Views**: Public pages use `<x-site.layout>` component. Admin uses `layouts/admin.blade.php` with `@yield('content')`.
 - **Components**: Public site uses `components/site/*` (card, divider, footer, layout, navbar, skeleton, whatsapp). Admin uses `components/admin/*` (card, modal, skeleton, sidebar, toast, chat-widget, etc.).
 - **Localization**: Session-based via custom `Localization` middleware registered in `bootstrap/app.php`. Switch route: `/lang/{locale}` (supports `en`, `id`). Translation files in `lang/en.json` and `lang/id.json`.
-- **Frontend**: Vite bundles `resources/css/app.css`, `resources/js/app.js`, `resources/js/chat.js`. JS imports Alpine.js, Dropzone (file upload in admin). Tailwind v4 via `@tailwindcss/vite` plugin. Code-split: firebase, alpine, chat are separate chunks.
+- **Frontend**: Vite bundles `resources/css/app.css`, `resources/js/app.js`, `resources/js/chat.js`. JS imports Alpine.js, Dropzone (file upload in admin). Tailwind v4 via `@tailwindcss/vite` plugin. Code-split: firebase, alpine, chat are separate chunks. Video.js loaded via CDN di halaman achievements untuk video player.
 - **Firebase**: Used for realtime chat (Firestore), user presence (RTDB), and admin notifications. Config in `resources/js/chat.js`. Presence written at `presence/{userId}` in RTDB.
-- **Auth**: Email/password login + Google OAuth via `laravel/socialite`. Session timeout auto-logout after 15 min inactivity (`public/js/session-timeout.js`).
+- **Auth**: Email/password login + Google OAuth via `laravel/socialite`. Session timeout auto-logout after 25 min inactivity with warning at 23 min (`public/js/session-timeout.js`). Ping endpoint extends session lifetime.
 - **Middleware**: `TrackActivity` updates `last_active_at` on every request. `AdminAuth` checks auth. `AdminOnly` checks admin role.
 
 ## Chatbot Architecture
@@ -222,3 +230,24 @@ Sebelum menyerahkan hasil pekerjaan atau melakukan push ke GitHub, AI WAJIB mela
     - Test chat bubble menerima notifikasi komentar
     - Cek browser console untuk error JavaScript
     - Cek network tab untuk request yang gagal (status 4xx/5xx)
+
+## Protokol Eksekusi Skill Otomatis (Autonomous Skill Orchestration)
+
+AI wajib mengevaluasi konteks perintah pengguna secara mandiri dan langsung memanggil skill yang relevan dari registry tanpa menunggu perintah manual. Ikuti alur orkestrasi berikut sesuai fase pekerjaan:
+
+1. Fase Inisiasi & Analisis Masalah:
+    - Permintaan fitur baru, perombakan alur, atau eksplorasi ide: Picu `brainstorming`, lanjutkan dengan `writing-plans`.
+    - Laporan bug, error sistem, atau kegagalan API: Langsung picu `systematic-debugging`.
+    - Modifikasi konfigurasi OpenCode atau rule proyek: Gunakan `customize-opencode`.
+
+2. Fase Eksekusi & Implementasi:
+    - Modifikasi UI, Blade components, styling Tailwind v4, atau interaktivitas Alpine.js: Picu `frontend-design`.
+    - Penulisan logika backend Laravel, query TiDB, controller, atau skrip bot Node.js: Picu `test-driven-development` dan `executing-plans`.
+    - Pengerjaan modul terisolasi: Picu `using-git-worktrees`.
+    - Tugas kompleks multi-langkah atau pengerjaan paralel: Picu `subagent-driven-development` atau `dispatching-parallel-agents`.
+
+3. Fase Validasi & Penyelesaian (Wajib):
+    - Pemeriksaan integritas end-to-end fullstack: Picu `fullstack-validator`.
+    - Sebelum menyatakan pekerjaan selesai atau siap serah: Wajib jalankan `verification-before-completion`.
+    - Finalisasi branch dan peninjauan kualitas: Picu `finishing-a-development-branch` serta `requesting-code-review`.
+    - Penanganan feedback review: Terapkan `receiving-code-review`.

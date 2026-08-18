@@ -3,7 +3,7 @@
 <div id="modal-{{ $id }}"
     class="fixed inset-0 {{ $zIndex }} hidden items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
     <div id="box-{{ $id }}"
-        class="w-full {{ $maxWidth }} bg-[#1e2530] border border-gray-700 rounded-2xl shadow-2xl p-6 overflow-y-auto max-h-[90vh] relative">
+        class="w-full {{ $maxWidth }} bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-6 overflow-y-auto max-h-[90vh] relative">
         {{ $slot }}
     </div>
 </div>

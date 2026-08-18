@@ -1,13 +1,13 @@
 <x-site.layout>
     <section class="w-full px-6 md:px-12 lg:px-16 pb-10 pt-10">
-        <h1 class="text-4xl font-bold text-slate-800 text-center">
+        <h1 class="text-4xl font-bold text-slate-800 dark:text-slate-100 text-center">
             {{ __('collections.title_prefix') }}
             <span class="font-medium text-[#E62C37]">
                 {{ __('collections.title_suffix') }}
             </span>
         </h1>
 
-        <p class="text-gray-700 text-center mt-3">
+        <p class="text-gray-700 dark:text-gray-300 text-center mt-3">
             {{ __('collections.desc') }}
         </p>
 

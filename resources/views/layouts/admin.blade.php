@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html :class="{ 'dark': dark }" x-data="data()" lang="en">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8" />
@@ -16,6 +16,16 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    {{-- FOUC prevention: cek localStorage sebelum render --}}
+    <script>
+        (function() {
+            var theme = localStorage.getItem('admin_theme');
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+
     {{-- Shared toast notification system --}}
     <script src="{{ asset('js/toast.js') }}" defer></script>
 
@@ -26,7 +36,7 @@
     <script src="{{ asset('js/table-search.js') }}" defer></script>
 </head>
 
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
     <div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: false }">
         {{-- Overlay mobile --}}
         <div x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300"
@@ -57,19 +67,19 @@
                     <div class="flex flex-1"></div>
                     <ul class="flex items-center flex-shrink-0 space-x-4 lg:space-x-6">
                         <li class="flex">
-                            <button class="rounded-md focus:outline-none focus:shadow-outline-purple text-gray-500 dark:text-gray-400"
-                                @click="toggleTheme" aria-label="Toggle color mode">
-                                <template x-if="!dark">
-                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
-                                    </svg>
-                                </template>
-                                <template x-if="dark">
-                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-0l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 17.95a1 1 0 01-1.414 0l-.707-.707a1 1 0 011.414-1.414l.707.707a1 1 0 010 1.414zm-2.12-10.607a1 1 0 010-1.414l.707-.707a1 1 0 111.414 1.414l-.707.707a1 1 0 01-1.414 0zM4 11a1 1 0 100-2H3a1 1 0 100 2h1z" clip-rule="evenodd" />
-                                    </svg>
-                                </template>
-                            </button>
+                            {{-- Dark Mode Toggle (Preline-style, sama dengan public site) --}}
+                            <div class="flex items-center">
+                                <button type="button" class="hs-dark-mode-active:hidden block hs-dark-mode text-gray-500 dark:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none transition-colors" data-hs-theme-click-value="dark">
+                                    <span class="group inline-flex shrink-0 justify-center items-center size-9">
+                                        <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                                    </span>
+                                </button>
+                                <button type="button" class="hs-dark-mode-active:block hidden hs-dark-mode text-gray-500 dark:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none transition-colors" data-hs-theme-click-value="light">
+                                    <span class="group inline-flex shrink-0 justify-center items-center size-9">
+                                        <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                                    </span>
+                                </button>
+                            </div>
                         </li>
                     </ul>
                 </div>
@@ -104,6 +114,46 @@
             });
         </script>
     @endif
+
+    {{-- Dark Mode Toggle Handler (Preline-style, pure JS) --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var html = document.documentElement;
+            var darkModeBtns = document.querySelectorAll('.hs-dark-mode');
+
+            function updateDarkModeBtns() {
+                var isDark = html.classList.contains('dark');
+                darkModeBtns.forEach(function(btn) {
+                    var val = btn.getAttribute('data-hs-theme-click-value');
+                    if (val === 'dark') {
+                        btn.style.display = isDark ? 'none' : 'block';
+                    } else {
+                        btn.style.display = isDark ? 'block' : 'none';
+                    }
+                });
+            }
+
+            function setTheme(theme) {
+                if (theme === 'dark') {
+                    html.classList.add('dark');
+                    localStorage.setItem('admin_theme', 'dark');
+                } else {
+                    html.classList.remove('dark');
+                    localStorage.setItem('admin_theme', 'light');
+                }
+                updateDarkModeBtns();
+            }
+
+            darkModeBtns.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var theme = this.getAttribute('data-hs-theme-click-value');
+                    setTheme(theme);
+                });
+            });
+
+            updateDarkModeBtns();
+        });
+    </script>
 </body>
 
 </html>

@@ -110,6 +110,8 @@
         document.getElementById('edit-title-highlight-en').value = achievement.title_highlight_en || '';
         document.getElementById('edit-year').value = achievement.year;
         document.getElementById('edit-date').value = achievement.date;
+        document.getElementById('edit-date-end').value = achievement.date_end || '';
+        document.getElementById('edit-location').value = achievement.location || '';
         document.getElementById('edit-description').value = achievement.description;
         document.getElementById('edit-description-en').value = achievement.description_en || '';
         els.formEdit.action = CFG.achievementsBaseUrl + '/' + achievement.id;
@@ -195,12 +197,15 @@
                 method: 'DELETE',
                 headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || CFG.csrfToken, 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
             })
-                .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+                .then(function (res) {
+                    if (!res.ok) return res.json().then(function (e) { throw new Error(e.message || 'HTTP ' + res.status); });
+                    return res.json();
+                })
                 .then(function () { thumb.remove(); showToast('success', 'Terhapus', 'Foto berhasil dihapus dari galeri.'); })
                 .catch(function (err) {
                     console.error('Delete photo error:', err);
                     thumb.style.opacity = '1'; btn.disabled = false;
-                    showToast('error', 'Gagal', 'Foto gagal dihapus, coba lagi.');
+                    showToast('error', 'Gagal', err.message || 'Foto gagal dihapus, coba lagi.');
                 });
         });
     }

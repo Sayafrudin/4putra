@@ -164,10 +164,15 @@
             },
             credentials: 'same-origin',
         }).then(function (res) {
+            // Jika redirect (session expired), arahkan ke login
+            if (res.redirected || res.status === 302) {
+                window.location.href = '/login';
+                return null;
+            }
             if (res.ok) {
                 return res.json();
             }
-            // Session sudah expired
+            // Response bukan JSON (misal HTML login page), session expired
             window.location.href = '/login';
             return null;
         }).then(function (data) {
@@ -177,6 +182,10 @@
                 if (meta) {
                     meta.setAttribute('content', data.csrf);
                 }
+                // Update semua hidden input _token di halaman
+                document.querySelectorAll('input[name="_token"]').forEach(function (input) {
+                    input.value = data.csrf;
+                });
                 console.log('[Session] Sesi berhasil diperpanjang, CSRF token diperbarui');
             }
         }).catch(function () {});

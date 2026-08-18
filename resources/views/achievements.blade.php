@@ -1,4 +1,13 @@
 <x-site.layout>
+    @push('styles')
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/video-js/8.10.0/video-js.min.css" rel="stylesheet">
+    <style>
+        .video-js { font-family: 'Inter', sans-serif; }
+        .video-js .vjs-big-play-button { border: none; border-radius: 50%; width: 64px; height: 64px; line-height: 64px; }
+        .video-js .vjs-control-bar { background: linear-gradient(transparent, rgba(0,0,0,0.7)); border-radius: 0 0 8px 8px; }
+    </style>
+    @endpush
+
     @forelse($achievements as $year => $items)
         <x-site.divider>{{ $year }}</x-site.divider>
 
@@ -19,7 +28,7 @@
                             @endif
                         </h1>
 
-                        <div class="text-gray-700 mt-6 md:text-md leading-relaxed max-w-2xl whitespace-pre-line">
+                        <div class="text-gray-700 dark:text-gray-300 mt-6 md:text-md leading-relaxed max-w-2xl whitespace-pre-line">
                             {{ app()->getLocale() == 'en' && $achievement->description_en ? $achievement->description_en : $achievement->description }}
                         </div>
 
@@ -45,7 +54,12 @@
                         @endif
 
                         <p class="text-xs text-gray-400 mt-4">
-                            Surabaya, {{ \Carbon\Carbon::parse($achievement->date)->translatedFormat('d F Y') }}
+                            {{ $achievement->location ?: 'Surabaya' }},
+                            @if ($achievement->date_end && $achievement->date_end !== $achievement->date)
+                                {{ \Carbon\Carbon::parse($achievement->date)->translatedFormat('d') }} - {{ \Carbon\Carbon::parse($achievement->date_end)->translatedFormat('d F Y') }}
+                            @else
+                                {{ \Carbon\Carbon::parse($achievement->date)->translatedFormat('d F Y') }}
+                            @endif
                         </p>
                     </div>
 
@@ -68,14 +82,17 @@
                             x-data="{ activeMedia: '{{ $hasVideo ? 'video-0' : 'img-0' }}' }">
 
                             {{-- Area utama: video atau gambar --}}
-                            <div class="w-full aspect-[4/3] md:aspect-[5/4] bg-gray-100 overflow-hidden shadow-lg relative group shrink-0 border border-gray-100">
+                            <div class="w-full aspect-[4/3] md:aspect-[5/4] bg-gray-100 dark:bg-gray-800 overflow-hidden shadow-lg relative group shrink-0 border border-gray-100 dark:border-gray-700">
                                 @if ($hasVideo)
                                     @if ($achievement->video_file)
                                         <div x-show="activeMedia === 'video-file'" x-transition:enter="transition ease-out duration-300"
                                             x-transition:enter-start="opacity-50" x-transition:enter-end="opacity-100"
                                             class="w-full h-full flex items-center justify-center bg-black">
-                                            <video controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" class="w-full h-full object-contain" preload="metadata">
-                                                <source src="{{ asset('storage/achievements/videos/' . $achievement->video_file) }}">
+                                            <video id="vjs-video-file-{{ $achievement->id }}"
+                                                class="video-js vjs-default-skin vjs-big-play-centered w-full h-full"
+                                                controls preload="metadata"
+                                                data-setup='{"fluid": true, "playbackRates": [0.5, 1, 1.5, 2]}'>
+                                                <source src="{{ asset('storage/achievements/videos/' . $achievement->video_file) }}" type="video/mp4">
                                             </video>
                                         </div>
                                     @endif
@@ -106,8 +123,16 @@
                                                 <iframe class="w-full h-full" loading="lazy" src="https://www.youtube.com/embed/{{ $ytId }}"
                                                     frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                                             @elseif ($gdriveId)
-                                                <iframe class="w-full h-full" loading="lazy" src="https://drive.google.com/file/d/{{ $gdriveId }}/preview"
-                                                    frameborder="0" allow="autoplay" allowfullscreen></iframe>
+                                                {{-- Google Drive: crop toolbar + overlay bersih --}}
+                                                <div class="w-full h-full overflow-hidden relative bg-black">
+                                                    <iframe class="w-full border-0 block"
+                                                        style="height: calc(100% + 70px); margin-top: -60px;"
+                                                        loading="lazy"
+                                                        src="https://drive.google.com/file/d/{{ $gdriveId }}/preview"
+                                                        allow="autoplay" allowfullscreen></iframe>
+                                                    <div class="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-black to-transparent z-10 pointer-events-none"></div>
+                                                    <div class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-black to-transparent z-10 pointer-events-none"></div>
+                                                </div>
                                             @elseif ($vimeoId)
                                                 <iframe class="w-full h-full" loading="lazy" src="https://player.vimeo.com/video/{{ $vimeoId }}"
                                                     frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
@@ -185,7 +210,7 @@
                         </div>
                     @else
                         <div class="w-full lg:w-5/12">
-                            <div class="w-full aspect-[4/3] md:aspect-[5/4] bg-gray-100 overflow-hidden shadow-lg relative group shrink-0 border border-gray-100 flex items-center justify-center">
+                            <div class="w-full aspect-[4/3] md:aspect-[5/4] bg-gray-100 dark:bg-gray-800 overflow-hidden shadow-lg relative group shrink-0 border border-gray-100 dark:border-gray-700 flex items-center justify-center">
                                 <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
                                 </svg>
@@ -203,4 +228,8 @@
     @endforelse
 
     <x-site.whatsapp />
+
+    @push('scripts')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/video-js/8.10.0/video.min.js"></script>
+    @endpush
 </x-site.layout>

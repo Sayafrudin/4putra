@@ -1,10 +1,10 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-800 pb-5">
+    <div class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-5">
         <div>
-            <h2 class="text-2xl font-bold tracking-tight text-white uppercase">Dashboard Chatbot WhatsApp</h2>
-            <p class="text-sm text-gray-400 mt-1">Monitoring percakapan, transaksi, dan inventaris chatbot 4PUTRA</p>
+            <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">Dashboard Chatbot WhatsApp</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Monitoring percakapan, transaksi, dan inventaris chatbot 4PUTRA</p>
         </div>
         <div class="flex gap-3">
             <a href="{{ route('admin.chatbot.inventaris') }}"
@@ -20,40 +20,40 @@
 
     {{-- Statistik --}}
     <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-        <div class="bg-[#1e2530] border border-gray-800 rounded-lg p-4">
-            <p class="text-xs text-gray-400 uppercase tracking-wider">Total Pelanggan</p>
-            <p class="text-2xl font-bold text-white mt-1">{{ $totalPelanggan }}</p>
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Pelanggan</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ $totalPelanggan }}</p>
         </div>
-        <div class="bg-[#1e2530] border border-gray-800 rounded-lg p-4">
-            <p class="text-xs text-gray-400 uppercase tracking-wider">Sesi Aktif</p>
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sesi Aktif</p>
             <p class="text-2xl font-bold text-green-400 mt-1">{{ $pelangganAktif }}</p>
         </div>
-        <div class="bg-[#1e2530] border border-gray-800 rounded-lg p-4">
-            <p class="text-xs text-gray-400 uppercase tracking-wider">Chat Hari Ini</p>
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Chat Hari Ini</p>
             <p class="text-2xl font-bold text-blue-400 mt-1">{{ $percakapanHariIni }}</p>
         </div>
-        <div class="bg-[#1e2530] border border-gray-800 rounded-lg p-4">
-            <p class="text-xs text-gray-400 uppercase tracking-wider">Notifikasi Baru</p>
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Notifikasi Baru</p>
             <p class="text-2xl font-bold text-yellow-400 mt-1">{{ $notifikasiBelum }}</p>
         </div>
-        <div class="bg-[#1e2530] border border-gray-800 rounded-lg p-4">
-            <p class="text-xs text-gray-400 uppercase tracking-wider">Transaksi Pending</p>
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Transaksi Pending</p>
             <p class="text-2xl font-bold text-orange-400 mt-1">{{ $transaksiPending }}</p>
         </div>
-        <div class="bg-[#1e2530] border border-gray-800 rounded-lg p-4">
-            <p class="text-xs text-gray-400 uppercase tracking-wider">Pembayaran Berhasil</p>
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Pembayaran Berhasil</p>
             <p class="text-2xl font-bold text-emerald-400 mt-1">{{ $transaksiPaid }}</p>
         </div>
     </div>
 
     {{-- Notifikasi Terbaru --}}
-    <div class="bg-[#1e2530] border border-gray-800 shadow-sm mb-10">
-        <div class="px-6 py-4 border-b border-gray-800">
-            <h3 class="text-lg font-bold text-white">Notifikasi Terbaru</h3>
+    <div class="bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 shadow-sm mb-10">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Notifikasi Terbaru</h3>
         </div>
-        <div class="divide-y divide-gray-800">
+        <div class="divide-y divide-gray-200 dark:divide-gray-800">
             @forelse($notifikasiTerbaru as $notif)
-                <div class="px-6 py-4 flex items-start gap-4 {{ !$notif->dibaca ? 'bg-[#1e2530]/80' : 'bg-[#151a22]' }}">
+                <div class="px-6 py-4 flex items-start gap-4 {{ !$notif->dibaca ? 'bg-gray-50/80 dark:bg-[#1e2530]/80' : 'bg-white dark:bg-[#151a22]' }}">
                     <div class="shrink-0 mt-1">
                         @if($notif->tipe === 'pembayaran')
                             <span class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
@@ -77,18 +77,18 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2">
-                            <p class="text-sm font-semibold text-white">{{ $notif->judul }}</p>
+                            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ $notif->judul }}</p>
                             @if(!$notif->dibaca)
                                 <span class="w-2 h-2 rounded-full bg-[#E62C37]"></span>
                             @endif
                         </div>
-                        <p class="text-xs text-gray-400 mt-1">{{ $notif->isi }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ $notif->isi }}</p>
                         @if($notif->pelanggan)
                             @php
                                 $nomorDisplay = str_replace(['@s.whatsapp.net', '@lid'], '', $notif->pelanggan->nomor_wa);
                                 $isLid = str_contains($notif->pelanggan->nomor_wa, '@lid');
                             @endphp
-                            <p class="text-xs text-gray-500 mt-1">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 {{ $notif->pelanggan->nama ?? '' }}
                                 @if(!$notif->pelanggan->nama)
                                     {{ $isLid ? 'ID: ' : '' }}{{ $nomorDisplay }}
@@ -96,10 +96,10 @@
                             </p>
                         @endif
                     </div>
-                    <span class="text-xs text-gray-500 shrink-0">{{ $notif->created_at->format('d M H:i') }}</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400 shrink-0">{{ $notif->created_at->format('d M H:i') }}</span>
                 </div>
             @empty
-                <div class="px-6 py-10 text-center text-gray-500">
+                <div class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
                     Belum ada notifikasi.
                 </div>
             @endforelse

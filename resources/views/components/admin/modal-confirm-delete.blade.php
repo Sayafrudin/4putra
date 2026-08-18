@@ -10,17 +10,17 @@
             </svg>
         </div>
         <div>
-            <h3 class="text-lg font-bold text-white">{{ $title }}</h3>
-            <p class="text-sm text-gray-400">Tindakan ini tidak dapat dibatalkan</p>
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ $title }}</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Tindakan ini tidak dapat dibatalkan</p>
         </div>
     </div>
-    <p class="text-sm text-gray-300 mb-6">{{ $slot }}</p>
+    <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">{{ $slot }}</p>
     <form id="{{ $formId }}" method="POST">
         @csrf
         @method('DELETE')
         <div class="flex gap-3 justify-end">
             <button type="button" onclick="closeModal('{{ $id }}')"
-                class="px-4 py-2.5 text-sm font-semibold text-gray-300 bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">Batal</button>
+                class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-[#151a22] border border-gray-300 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-500 transition-colors">Batal</button>
             <button type="submit"
                 class="px-4 py-2.5 text-sm font-bold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors">Ya, Hapus</button>
         </div>

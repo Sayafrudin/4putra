@@ -16,10 +16,23 @@
     {{-- Preload critical assets --}}
     <link rel="preload" href="{{ asset('img/buffont.png') }}" as="image" fetchpriority="high">
 
+    {{-- Dark mode init (harus di head untuk hindari glitch) --}}
+    <script>
+        const html = document.querySelector('html');
+        const isLightOrAuto = localStorage.getItem('hs_theme') === 'light' || (localStorage.getItem('hs_theme') === 'auto' && !window.matchMedia('(prefers-color-scheme: dark)').matches);
+        const isDarkOrAuto = localStorage.getItem('hs_theme') === 'dark' || (localStorage.getItem('hs_theme') === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+        if (isLightOrAuto && html.classList.contains('dark')) html.classList.remove('dark');
+        else if (isDarkOrAuto && html.classList.contains('light')) html.classList.remove('light');
+        else if (isDarkOrAuto && !html.classList.contains('dark')) html.classList.add('dark');
+        else if (isLightOrAuto && !html.classList.contains('light')) html.classList.add('light');
+    </script>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('styles')
 </head>
 
-<body class="flex flex-col min-h-screen bg-white antialiased">
+<body class="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased transition-colors duration-300">
 
     <x-site.navbar></x-site.navbar>
 
@@ -30,6 +43,7 @@
     <x-site.footer></x-site.footer>
 
     <script src="{{ asset('js/media-protect.js') }}"></script>
+    @stack('scripts')
 </body>
 
 </html>

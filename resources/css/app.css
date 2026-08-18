@@ -1,9 +1,18 @@
 @import "tailwindcss";
 @import "./styles.css";
 
+/* Dark mode: gunakan class strategy (bukan media) */
+@variant dark (&:where(.dark, .dark *));
+
 html {
     font-family: 'Inter', sans-serif;
     scroll-behavior: smooth;
+}
+
+/* Transisi warna untuk dark mode */
+body,
+.dark body {
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Toast notification container */

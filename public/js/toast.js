@@ -14,9 +14,9 @@
     };
 
     var COLORS = {
-        success: 'bg-green-50 border-green-200 border-l-green-700',
-        warning: 'bg-yellow-50 border-yellow-200 border-l-yellow-700',
-        error: 'bg-red-50 border-red-200 border-l-red-700',
+        success: 'bg-green-50 dark:bg-green-900/50 border-green-200 dark:border-green-800 border-l-green-700',
+        warning: 'bg-yellow-50 dark:bg-yellow-900/50 border-yellow-200 dark:border-yellow-800 border-l-yellow-700',
+        error: 'bg-red-50 dark:bg-red-900/50 border-red-200 dark:border-red-800 border-l-red-700',
     };
 
     function getContainer() {
@@ -43,10 +43,10 @@
             var icon = ICONS[type] || ICONS.success;
             el.innerHTML =
                 '<div class="flex items-start gap-2.5">' + icon +
-                '<div class="flex-1 min-w-0"><p class="text-sm text-slate-900 font-medium leading-tight">' + title + '</p>' +
-                '<p class="text-xs mt-1 text-slate-600">' + message + '</p></div>' +
+                '<div class="flex-1 min-w-0"><p class="text-sm text-slate-900 dark:text-slate-100 font-medium leading-tight">' + title + '</p>' +
+                '<p class="text-xs mt-1 text-slate-600 dark:text-slate-300">' + message + '</p></div>' +
                 '<button type="button" class="ml-auto opacity-70 hover:opacity-100 shrink-0" aria-label="Dismiss">' +
-                '<svg class="size-2.5 fill-slate-500" viewBox="0 0 329.269 329"><path d="M194.8 164.77 323.013 36.555c8.343-8.34 8.343-21.825 0-30.164-8.34-8.34-21.825-8.34-30.164 0L164.633 134.605 36.422 6.391c-8.344-8.34-21.824-8.34-30.164 0-8.344 8.34-8.344 21.824 0 30.164l128.21 128.215L6.259 292.984c-8.344 8.34-8.344 21.825 0 30.164a21.27 21.27 0 0 0 15.082 6.25c5.46 0 10.922-2.09 15.082-6.25l128.21-128.214 128.216 128.214a21.27 21.27 0 0 0 15.082 6.25c5.46 0 10.922-2.09 15.082-6.25 8.343-8.34 8.343-21.824 0-30.164z"/></svg>' +
+                '<svg class="size-2.5 fill-slate-500 dark:fill-slate-400" viewBox="0 0 329.269 329"><path d="M194.8 164.77 323.013 36.555c8.343-8.34 8.343-21.825 0-30.164-8.34-8.34-21.825-8.34-30.164 0L164.633 134.605 36.422 6.391c-8.344-8.34-21.824-8.34-30.164 0-8.344 8.34-8.344 21.824 0 30.164l128.21 128.215L6.259 292.984c-8.344 8.34-8.344 21.825 0 30.164a21.27 21.27 0 0 0 15.082 6.25c5.46 0 10.922-2.09 15.082-6.25l128.21-128.214 128.216 128.214a21.27 21.27 0 0 0 15.082 6.25c5.46 0 10.922-2.09 15.082-6.25 8.343-8.34 8.343-21.824 0-30.164z"/></svg>' +
                 '</button></div>';
             wrap.appendChild(el);
 

@@ -17,7 +17,7 @@ class AdminAchievementController extends Controller
     {
         $achievements = Cache::remember('admin.achievements', 120, function () {
             return Achievement::with('images:id,achievement_id,image_path')
-                ->select('id', 'title', 'title_en', 'title_highlight', 'title_highlight_en', 'year', 'description', 'description_en', 'date', 'video_url', 'video_file', 'external_link')
+                ->select('id', 'title', 'title_en', 'title_highlight', 'title_highlight_en', 'year', 'description', 'description_en', 'date', 'date_end', 'location', 'video_url', 'video_file', 'external_link')
                 ->latest()->get();
         });
 
@@ -59,6 +59,8 @@ class AdminAchievementController extends Controller
                 'title_highlight_en' => $request->title_highlight_en,
                 'year' => $request->year,
                 'date' => $request->date,
+                'date_end' => $request->date_end ?: null,
+                'location' => $request->location ?: 'Surabaya',
                 'description' => $request->description,
                 'description_en' => $request->description_en,
                 'video_url' => ! empty($videoUrls) ? json_encode($videoUrls) : null,
@@ -159,7 +161,7 @@ class AdminAchievementController extends Controller
 
             $data = $request->only([
                 'title', 'title_en', 'title_highlight', 'title_highlight_en',
-                'year', 'date', 'description', 'description_en',
+                'year', 'date', 'date_end', 'location', 'description', 'description_en',
             ]);
             $data['video_url'] = ! empty($videoUrls) ? json_encode($videoUrls) : null;
             $data['external_link'] = ! empty($externalLinks) ? json_encode($externalLinks) : null;

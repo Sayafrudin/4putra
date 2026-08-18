@@ -204,6 +204,7 @@
         document.getElementById('edit-col-scientific').value = col.scientific_name || '';
         document.getElementById('edit-col-category').value = col.category || '';
         document.getElementById('edit-col-category-en').value = col.category_en || '';
+        document.getElementById('edit-col-sort-order').value = col.sort_order ?? 0;
         els.formEdit.action = CFG.collectionsBaseUrl + '/' + col.id;
 
         var photoWrap = document.getElementById('edit-col-existing-photo');

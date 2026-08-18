@@ -10,7 +10,7 @@
                     <span class="text-[#E62C37] font-normal">{{ __('home.hero_aviary') }}</span>
                 </h1>
 
-                <p class="text-gray-700 mt-6 md:text-md leading-relaxed max-w-2xl">
+                <p class="text-gray-700 dark:text-gray-300 mt-6 md:text-md leading-relaxed max-w-2xl">
                     {{ __('home.hero_desc_1') }}
                     <br><br>
                     {{ __('home.hero_desc_2') }}
@@ -35,13 +35,13 @@
 
             <div class="w-full lg:w-1/3 flex flex-col items-center lg:items-start text-center lg:text-left space-y-4">
                 <h1
-                    class="text-4xl lg:text-5xl font-black text-gray-900 leading-tight md:text-5xl md:leading-tight lg:leading-tight uppercase">
+                    class="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white leading-tight md:text-5xl md:leading-tight lg:leading-tight uppercase">
                     {{ __('home.explore_title') }} <br>
                     <span class="bg-clip-text text-[#E62C37] font-normal">
                         {{ __('home.popular_parrots') }}
                     </span>
                 </h1>
-                <p class="text-gray-700 text-md leading-relaxed ">
+                <p class="text-gray-700 dark:text-gray-300 text-md leading-relaxed ">
                     {{ __('home.popular_desc') }}
                 </p>
             </div>
@@ -49,10 +49,10 @@
             <div id="marquee-wrapper"
                 class="w-full lg:w-2/3 overflow-hidden relative cursor-pointer h-[24rem] flex items-center">
                 <div
-                    class="absolute left-0 top-0 h-full w-24 z-20 pointer-events-none bg-linear-to-r from-white to-transparent">
+                    class="absolute left-0 top-0 h-full w-24 z-20 pointer-events-none bg-linear-to-r from-white dark:from-gray-900 to-transparent">
                 </div>
                 <div
-                    class="absolute right-0 top-0 h-full w-24 z-20 pointer-events-none bg-linear-to-l from-white to-transparent">
+                    class="absolute right-0 top-0 h-full w-24 z-20 pointer-events-none bg-linear-to-l from-white dark:from-gray-900 to-transparent">
                 </div>
 
                 <div id="marquee-track" class="marquee-inner flex w-fit">

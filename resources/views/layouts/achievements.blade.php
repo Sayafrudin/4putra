@@ -17,7 +17,7 @@
                 </div>
                 
                 <p class="text-xs text-gray-400 mt-4">
-                    Surabaya, {{ \Carbon\Carbon::parse($achievement->date)->translatedFormat('d F Y') }}
+                    {{ $achievement->location ?: 'Surabaya' }}, {{ \Carbon\Carbon::parse($achievement->date)->translatedFormat('d F Y') }}
                 </p>
             </div>
 

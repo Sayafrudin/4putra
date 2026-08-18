@@ -1,10 +1,10 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-800 pb-5">
+    <div class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-5">
         <div>
-            <h2 class="text-2xl font-bold tracking-tight text-white uppercase">Inventaris Burung Chatbot</h2>
-            <p class="text-sm text-gray-400 mt-1">Kelola data burung yang tersedia untuk chatbot WhatsApp</p>
+            <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">Inventaris Burung Chatbot</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Kelola data burung yang tersedia untuk chatbot WhatsApp</p>
         </div>
         <div class="flex gap-3">
             <button onclick="bukaModalTambah()"
@@ -12,7 +12,7 @@
                 + Tambah Inventaris
             </button>
             <a href="{{ route('admin.chatbot.index') }}"
-                class="px-4 py-2 text-sm font-bold uppercase tracking-wider text-gray-300 border border-gray-600 hover:border-gray-500 rounded-lg transition-colors">
+                class="px-4 py-2 text-sm font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 border border-gray-600 hover:border-gray-500 rounded-lg transition-colors">
                 Kembali
             </a>
         </div>
@@ -24,16 +24,16 @@
             <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
             </svg>
-            <input type="text" class="table-search-input w-full bg-[#151a22] border border-gray-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-[#E62C37] focus:outline-none" placeholder="Cari inventaris...">
+            <input type="text" class="table-search-input w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:outline-none" placeholder="Cari inventaris...">
         </div>
     </div>
 
     {{-- Tabel Inventaris --}}
-    <div class="w-full overflow-hidden bg-[#1e2530] border border-gray-800 shadow-sm mb-10 table-search-wrapper">
+    <div class="w-full overflow-hidden bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 shadow-sm mb-10 table-search-wrapper">
         <div class="w-full overflow-x-auto">
             <table class="table-searchable w-full text-left border-collapse">
                 <thead>
-                    <tr class="text-xs font-bold uppercase tracking-wider text-gray-400 bg-[#151a22] border-b border-gray-800">
+                    <tr class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-white dark:bg-[#151a22] border-b border-gray-200 dark:border-gray-800">
                         <th class="px-6 py-4">Spesies</th>
                         <th class="px-6 py-4 w-24">Fase</th>
                         <th class="px-6 py-4 w-32">Harga</th>
@@ -42,10 +42,10 @@
                         <th class="px-6 py-4 w-40 text-right">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-800">
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
                     @forelse($inventaris as $item)
-                        <tr class="text-gray-300 hover:bg-[#262d3a] transition-colors">
-                            <td class="px-6 py-4 text-sm font-medium text-white">{{ $item->nama_spesies }}</td>
+                        <tr class="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#262d3a] transition-colors">
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{{ $item->nama_spesies }}</td>
                             <td class="px-6 py-4 text-sm">
                                 <span class="px-2 py-1 rounded-full text-xs font-semibold {{ $item->fase === 'anakan' ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400' }}">
                                     {{ $item->fase === 'anakan' ? 'Baby' : 'Dewasa' }}
@@ -60,7 +60,7 @@
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
-                                    <button onclick='bukaModalEdit({{ json_encode($item) }})'
+                                    <button onclick='bukaModalEdit({{ json_encode($item, JSON_BIGINT_AS_STRING) }})'
                                         class="px-3 py-1.5 text-xs font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg hover:bg-blue-500/20 hover:border-blue-500/40 transition-colors">
                                         Edit
                                     </button>
@@ -73,7 +73,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-10 text-center text-gray-500">Belum ada inventaris.</td>
+                            <td colspan="6" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">Belum ada inventaris.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -83,10 +83,10 @@
 
     {{-- ==================== MODAL TAMBAH ==================== --}}
     <div id="modalTambah" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div class="bg-[#1e2530] border border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6">
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-bold text-white">Tambah Inventaris Baru</h3>
-                <button onclick="tutupModal('modalTambah')" class="text-gray-400 hover:text-white transition-colors">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Tambah Inventaris Baru</h3>
+                <button onclick="tutupModal('modalTambah')" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -95,41 +95,41 @@
             <form id="formTambah" onsubmit="submitTambah(event)" class="space-y-4">
                 @csrf
                 <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Nama Spesies</label>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Nama Spesies</label>
                     <input type="text" name="nama_spesies" id="tambah_nama" placeholder="Contoh: African Grey"
-                        class="w-full bg-[#151a22] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                     <p class="text-xs text-red-400 mt-1 hidden" id="err_tambah_nama"></p>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Fase</label>
+                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Fase</label>
                         <select name="fase" id="tambah_fase"
-                            class="w-full bg-[#151a22] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                             <option value="anakan">Baby</option>
                             <option value="dewasa">Dewasa</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Stok</label>
+                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Stok</label>
                         <input type="number" name="stok" id="tambah_stok" placeholder="0" min="0"
-                            class="w-full bg-[#151a22] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                         <p class="text-xs text-red-400 mt-1 hidden" id="err_tambah_stok"></p>
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Harga (Rp)</label>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Harga (Rp)</label>
                     <input type="number" name="harga" id="tambah_harga" placeholder="0" min="0"
-                        class="w-full bg-[#151a22] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                     <p class="text-xs text-red-400 mt-1 hidden" id="err_tambah_harga"></p>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Deskripsi <span class="text-gray-500">(opsional)</span></label>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Deskripsi <span class="text-gray-500">(opsional)</span></label>
                     <textarea name="deskripsi" id="tambah_deskripsi" rows="2" placeholder="Deskripsi singkat..."
-                        class="w-full bg-[#151a22] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none resize-none"></textarea>
+                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none resize-none"></textarea>
                 </div>
                 <div class="flex gap-3 justify-end pt-2">
                     <button type="button" onclick="tutupModal('modalTambah')"
-                        class="px-4 py-2.5 text-sm font-semibold text-gray-300 bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">
+                        class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">
                         Batal
                     </button>
                     <button type="submit" id="btnTambah"
@@ -143,10 +143,10 @@
 
     {{-- ==================== MODAL EDIT ==================== --}}
     <div id="modalEdit" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div class="bg-[#1e2530] border border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6">
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-bold text-white">Edit Inventaris</h3>
-                <button onclick="tutupModal('modalEdit')" class="text-gray-400 hover:text-white transition-colors">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Edit Inventaris</h3>
+                <button onclick="tutupModal('modalEdit')" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -157,47 +157,47 @@
                 @method('PUT')
                 <input type="hidden" id="edit_id">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Nama Spesies</label>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Nama Spesies</label>
                     <input type="text" name="nama_spesies" id="edit_nama" placeholder="Nama Spesies"
-                        class="w-full bg-[#151a22] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                     <p class="text-xs text-red-400 mt-1 hidden" id="err_edit_nama"></p>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Fase</label>
+                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Fase</label>
                         <select name="fase" id="edit_fase"
-                            class="w-full bg-[#151a22] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                             <option value="anakan">Baby</option>
                             <option value="dewasa">Dewasa</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Stok</label>
+                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Stok</label>
                         <input type="number" name="stok" id="edit_stok" placeholder="0" min="0"
-                            class="w-full bg-[#151a22] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                         <p class="text-xs text-red-400 mt-1 hidden" id="err_edit_stok"></p>
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Harga (Rp)</label>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Harga (Rp)</label>
                     <input type="number" name="harga" id="edit_harga" placeholder="0" min="0"
-                        class="w-full bg-[#151a22] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                     <p class="text-xs text-red-400 mt-1 hidden" id="err_edit_harga"></p>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Deskripsi <span class="text-gray-500">(opsional)</span></label>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Deskripsi <span class="text-gray-500">(opsional)</span></label>
                     <textarea name="deskripsi" id="edit_deskripsi" rows="2" placeholder="Deskripsi singkat..."
-                        class="w-full bg-[#151a22] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none resize-none"></textarea>
+                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none resize-none"></textarea>
                 </div>
                 <div>
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="edit_aktif" class="w-4 h-4 rounded border-gray-600 bg-[#151a22] text-[#E62C37] focus:ring-[#E62C37]/50">
-                        <span class="text-sm text-gray-300">Aktif</span>
+                        <input type="checkbox" id="edit_aktif" class="w-4 h-4 rounded border-gray-600 bg-white dark:bg-[#151a22] text-[#E62C37] focus:ring-[#E62C37]/50">
+                        <span class="text-sm text-gray-600 dark:text-gray-300">Aktif</span>
                     </label>
                 </div>
                 <div class="flex gap-3 justify-end pt-2">
                     <button type="button" onclick="tutupModal('modalEdit')"
-                        class="px-4 py-2.5 text-sm font-semibold text-gray-300 bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">
+                        class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">
                         Batal
                     </button>
                     <button type="submit" id="btnEdit"
@@ -211,7 +211,7 @@
 
     {{-- ==================== MODAL HAPUS ==================== --}}
     <div id="modalHapus" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div class="bg-[#1e2530] border border-gray-700 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
             <div class="flex items-center gap-3 mb-4">
                 <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
                     <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -219,18 +219,18 @@
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold text-white">Hapus Inventaris</h3>
-                    <p class="text-sm text-gray-400">Tindakan ini tidak dapat dibatalkan</p>
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Hapus Inventaris</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Tindakan ini tidak dapat dibatalkan</p>
                 </div>
             </div>
-            <p class="text-sm text-gray-300 mb-6">Apakah Anda yakin ingin menghapus <span id="hapus_nama" class="font-semibold text-white"></span> (<span id="hapus_fase" class="font-semibold text-white"></span>) dari inventaris?</p>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">Apakah Anda yakin ingin menghapus                 <span id="hapus_nama" class="font-semibold text-gray-900 dark:text-white"></span> (<span id="hapus_fase" class="font-semibold text-gray-900 dark:text-white"></span>) dari inventaris?</p>
             <form id="formHapus" onsubmit="submitHapus(event)">
                 @csrf
                 @method('DELETE')
                 <input type="hidden" id="hapus_id">
                 <div class="flex gap-3 justify-end">
                     <button type="button" onclick="tutupModal('modalHapus')"
-                        class="px-4 py-2.5 text-sm font-semibold text-gray-300 bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">
+                        class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">
                         Batal
                     </button>
                     <button type="submit" id="btnHapus"
@@ -244,14 +244,14 @@
 
     {{-- ==================== MODAL SUKSES ==================== --}}
     <div id="modalSukses" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div class="bg-[#1e2530] border border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 text-center">
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 text-center">
             <div class="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
                 <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                 </svg>
             </div>
-            <h3 class="text-lg font-bold text-white mb-2" id="sukses_title">Berhasil!</h3>
-            <p class="text-sm text-gray-400 mb-6" id="sukses_message">Data berhasil disimpan.</p>
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2" id="sukses_title">Berhasil!</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6" id="sukses_message">Data berhasil disimpan.</p>
             <button onclick="tutupModal('modalSukses'); location.reload();"
                 class="px-5 py-2.5 text-sm font-bold text-white bg-green-600 rounded-xl hover:bg-green-700 transition-colors">
                 OK

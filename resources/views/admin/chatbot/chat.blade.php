@@ -2,13 +2,13 @@
 
 @section('content')
     <div
-        class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-800 pb-5">
+        class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-5">
         <div>
-            <h2 class="text-2xl font-bold tracking-tight text-white uppercase">WhatsApp Chat</h2>
-            <p class="text-sm text-gray-400 mt-1">Kelola percakapan pelanggan — ambil alih dari AI atau kembalikan ke bot</p>
+            <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">WhatsApp Chat</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Kelola percakapan pelanggan — ambil alih dari AI atau kembalikan ke bot</p>
         </div>
         <a href="{{ route('admin.chatbot.index') }}"
-            class="px-4 py-2 text-sm font-bold uppercase tracking-wider text-gray-300 border border-gray-600 hover:border-gray-500 rounded-lg transition-colors">
+            class="px-4 py-2 text-sm font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 border border-gray-600 hover:border-gray-500 rounded-lg transition-colors">
             Kembali
         </a>
     </div>
@@ -16,35 +16,35 @@
     <div class="flex gap-4 mb-10" style="height: calc(100vh - 220px); min-height: 500px;" x-data="{ showChat: {{ $selectedPelanggan ? 'true' : 'false' }} }">
 
         {{-- ==================== KIRI: Daftar Pelanggan ==================== --}}
-        <div class="w-full lg:w-80 flex-shrink-0 bg-[#1e2530] border border-gray-800 rounded-lg flex flex-col overflow-hidden"
+        <div class="w-full lg:w-80 flex-shrink-0 bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-lg flex flex-col overflow-hidden"
             :class="{ 'hidden lg:flex': showChat, 'flex': !showChat }">
-            <div class="px-4 py-3 border-b border-gray-800">
-                <h3 class="text-sm font-bold text-white uppercase tracking-wider">Pelanggan</h3>
+            <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-800">
+                <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Pelanggan</h3>
                 <input type="text" id="searchPelanggan" placeholder="Cari nama/nomor..."
-                    class="mt-2 w-full px-3 py-1.5 text-sm bg-[#151a22] border border-gray-700 rounded text-gray-300 placeholder-gray-500 focus:outline-none focus:border-[#E62C37]">
+                    class="mt-2 w-full px-3 py-1.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded text-gray-600 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-[#E62C37]">
             </div>
-            <div id="daftarPelanggan" class="flex-1 overflow-y-auto divide-y divide-gray-800">
+            <div id="daftarPelanggan" class="flex-1 overflow-y-auto divide-y divide-gray-200 dark:divide-gray-800">
                 @forelse($pelangganList as $p)
                     <a href="{{ route('admin.chatbot.chat', ['pelanggan_id' => $p->id]) }}" @click="showChat = true"
-                        class="flex items-center gap-3 px-4 py-3 hover:bg-[#151a22] transition-colors {{ optional($selectedPelanggan)->id == $p->id ? 'bg-[#151a22] border-l-2 border-[#E62C37]' : '' }}"
+                        class="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 dark:hover:bg-[#151a22] transition-colors {{ optional($selectedPelanggan)->id == $p->id ? 'bg-gray-100 dark:bg-[#151a22] border-l-2 border-[#E62C37]' : '' }}"
                         data-nama="{{ strtolower($p->nama ?? $p->nomor_wa) }}">
                         <div
                             class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold
                             {{ $p->sesi_aktif === 'human' ? 'bg-green-500/20 text-green-400' : '' }}
                             {{ $p->sesi_aktif === 'ai' ? 'bg-purple-500/20 text-purple-400' : '' }}
                             {{ $p->sesi_aktif === 'manual' ? 'bg-yellow-500/20 text-yellow-400' : '' }}
-                            {{ $p->sesi_aktif === 'menu' ? 'bg-gray-500/20 text-gray-400' : '' }}">
+                            {{ $p->sesi_aktif === 'menu' ? 'bg-gray-500/20 text-gray-500 dark:text-gray-400' : '' }}">
                             {{ strtoupper(substr($p->nama ?? $p->nomor_wa, 0, 2)) }}
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center justify-between">
-                                <p class="text-sm font-semibold text-white truncate">{{ $p->nama ?? 'Tanpa Nama' }}</p>
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ $p->nama ?? 'Tanpa Nama' }}</p>
                                 <span
                                     class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase
                                     {{ $p->sesi_aktif === 'human' ? 'bg-green-500/20 text-green-400' : '' }}
                                     {{ $p->sesi_aktif === 'ai' ? 'bg-purple-500/20 text-purple-400' : '' }}
                                     {{ $p->sesi_aktif === 'manual' ? 'bg-yellow-500/20 text-yellow-400' : '' }}
-                                    {{ $p->sesi_aktif === 'menu' ? 'bg-gray-500/20 text-gray-400' : '' }}">
+                                    {{ $p->sesi_aktif === 'menu' ? 'bg-gray-500/20 text-gray-500 dark:text-gray-400' : '' }}">
                                     {{ $p->sesi_aktif === 'human' ? 'ADMIN' : ($p->sesi_aktif === 'ai' ? 'AI' : ($p->sesi_aktif === 'manual' ? 'MANUAL' : 'IDLE')) }}
                                 </span>
                             </div>
@@ -60,7 +60,7 @@
                                     }
                                 }
                             @endphp
-                            <p class="text-xs text-gray-400 truncate">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
                                 @if ($isLid)
                                     WA ID: {{ $nomorRaw }}
                                 @elseif($nomorFormatted)
@@ -83,15 +83,15 @@
         </div>
 
         {{-- ==================== TENGAH: Chat Window ==================== --}}
-        <div class="flex-1 bg-[#1e2530] border border-gray-800 rounded-lg flex flex-col overflow-hidden min-w-0"
+        <div class="flex-1 bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-lg flex flex-col overflow-hidden min-w-0"
             :class="{ 'flex': showChat, 'hidden lg:flex': !showChat }">
 
             @if ($selectedPelanggan)
                 {{-- Header Chat --}}
-                <div class="px-4 sm:px-6 py-3 border-b border-gray-800 flex items-center justify-between gap-2">
+                <div class="px-4 sm:px-6 py-3 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between gap-2">
                     <div class="flex items-center gap-3 min-w-0">
                         <button @click="showChat = false"
-                            class="lg:hidden shrink-0 p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-gray-700/50 transition-colors">
+                            class="lg:hidden shrink-0 p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-white rounded-lg hover:bg-gray-700/50 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                             </svg>
@@ -102,7 +102,7 @@
                             {{ strtoupper(substr($selectedPelanggan->nama ?? $selectedPelanggan->nomor_wa, 0, 2)) }}
                         </div>
                         <div>
-                            <p class="text-sm font-bold text-white">{{ $selectedPelanggan->nama ?? 'Tanpa Nama' }}</p>
+                            <p class="text-sm font-bold text-gray-900 dark:text-white">{{ $selectedPelanggan->nama ?? 'Tanpa Nama' }}</p>
                             @php
                                 $nomorRaw = str_replace(['@s.whatsapp.net', '@lid'], '', $selectedPelanggan->nomor_wa);
                                 $isLid = str_contains($selectedPelanggan->nomor_wa, '@lid');
@@ -115,7 +115,7 @@
                                     }
                                 }
                             @endphp
-                            <p class="text-xs text-gray-400">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">
                                 @if ($isLid)
                                     WA ID: {{ $nomorRaw }}
                                 @elseif($nomorFormatted)
@@ -130,7 +130,7 @@
                     {{-- Toggle Bot ↔ Human --}}
                     <div class="flex items-center gap-2 sm:gap-3 shrink-0">
                         <button onclick="clearChat()"
-                            class="px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-300 border border-gray-600 hover:border-gray-500 hover:text-white rounded-lg transition-colors">
+                            class="px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 border border-gray-600 hover:border-gray-500 hover:text-gray-900 dark:text-white rounded-lg transition-colors">
                             Clear
                         </button>
                         <span
@@ -169,10 +169,10 @@
                             <div class="flex justify-start mb-1" data-msg-id="{{ $chat->id }}"
                                 data-msg-text="{{ e($chat->pesan_pengirim) }}" data-msg-sender="pelanggan"
                                 oncontextmenu="showContextMenu(event, {{ $chat->id }})">
-                                <div class="max-w-[75%] bg-[#2a3343] rounded-2xl rounded-tl-sm px-3 py-2 relative group">
+                                <div class="max-w-[75%] bg-gray-100 dark:bg-[#2a3343] rounded-2xl rounded-tl-sm px-3 py-2 relative group">
                                     {{-- Forward indicator --}}
                                     @if ($chat->is_forwarded)
-                                        <div class="flex items-center gap-1 mb-1 text-[10px] text-gray-400 italic">
+                                        <div class="flex items-center gap-1 mb-1 text-[10px] text-gray-500 dark:text-gray-400 italic">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -184,12 +184,12 @@
 
                                     {{-- Reply context --}}
                                     @if ($chat->replyTo)
-                                        <div class="mb-1.5 px-2.5 py-1.5 bg-[#1a1f2e] border-l-2 border-[#E62C37] rounded text-[11px] cursor-pointer"
+                                        <div class="mb-1.5 px-2.5 py-1.5 bg-gray-100 dark:bg-[#1a1f2e] border-l-2 border-[#E62C37] rounded text-[11px] cursor-pointer"
                                             onclick="scrollToMsg({{ $chat->replyTo->id }})">
                                             <p class="text-[#E62C37] font-semibold text-[10px]">
                                                 {{ $chat->replyTo->sumber_balasan === 'admin' ? 'Admin' : ($chat->replyTo->sumber_balasan === 'groq_ai' ? 'AI Bot' : 'Pelanggan') }}
                                             </p>
-                                            <p class="text-gray-400 truncate">
+                                            <p class="text-gray-500 dark:text-gray-400 truncate">
                                                 {{ Str::limit($chat->replyTo->pesan_pengirim ?? ($chat->replyTo->pesan_balasan ?? '[Media]'), 60) }}
                                             </p>
                                         </div>
@@ -209,8 +209,8 @@
                                             </video>
                                         @else
                                             <a href="{{ $chat->media_url }}" target="_blank"
-                                                class="flex items-center gap-2 mb-1.5 px-3 py-2 bg-[#1a1f2e] rounded-lg text-gray-300 text-xs hover:bg-[#151a22] transition-colors">
-                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
+                                                class="flex items-center gap-2 mb-1.5 px-3 py-2 bg-gray-100 dark:bg-[#1a1f2e] rounded-lg text-gray-600 dark:text-gray-300 text-xs hover:bg-gray-200 dark:hover:bg-[#151a22] transition-colors">
+                                                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor"
                                                     stroke-width="2" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
@@ -226,7 +226,7 @@
                                             $chat->pesan_pengirim !== '[Video]' &&
                                             $chat->pesan_pengirim !== '[Document]' &&
                                             $chat->pesan_pengirim !== '[Audio]')
-                                        <p class="text-sm text-gray-200 whitespace-pre-line">{{ $chat->pesan_pengirim }}
+                                        <p class="text-sm text-gray-700 dark:text-gray-200 whitespace-pre-line">{{ $chat->pesan_pengirim }}
                                         </p>
                                     @endif
                                     <p class="text-[10px] text-gray-500 mt-1 text-right">
@@ -261,7 +261,7 @@
 
                                     {{-- Forward indicator --}}
                                     @if ($chat->is_forwarded)
-                                        <div class="flex items-center gap-1 mb-1 text-[10px] text-gray-400 italic">
+                                        <div class="flex items-center gap-1 mb-1 text-[10px] text-gray-500 dark:text-gray-400 italic">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -289,7 +289,7 @@
                                             class="text-[10px] font-bold uppercase tracking-wider
                                             {{ $isAdmin ? 'text-[#E62C37]' : '' }}
                                             {{ $isAi ? 'text-purple-400' : '' }}
-                                            {{ $isSystem ? 'text-gray-400' : '' }}
+                                            {{ $isSystem ? 'text-gray-500 dark:text-gray-400' : '' }}
                                             {{ $isApriori ? 'text-green-400' : '' }}">
                                             {{ $isAdmin ? 'Admin' : ($isAi ? 'AI Bot' : ($isSystem ? 'System' : ($isApriori ? 'Rekomendasi' : 'Bot'))) }}
                                         </span>
@@ -309,8 +309,8 @@
                                             </video>
                                         @else
                                             <a href="{{ $chat->media_url }}" target="_blank"
-                                                class="flex items-center gap-2 mb-1.5 px-3 py-2 bg-black/20 rounded-lg text-gray-300 text-xs hover:bg-black/30 transition-colors">
-                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
+                                                class="flex items-center gap-2 mb-1.5 px-3 py-2 bg-black/20 rounded-lg text-gray-600 dark:text-gray-300 text-xs hover:bg-black/30 transition-colors">
+                                                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor"
                                                     stroke-width="2" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
@@ -326,7 +326,7 @@
                                             $chat->pesan_balasan !== '[Video]' &&
                                             $chat->pesan_balasan !== '[Document]' &&
                                             $chat->pesan_balasan !== '[Audio]')
-                                        <p class="text-sm text-gray-200 whitespace-pre-line">{{ $chat->pesan_balasan }}
+                                        <p class="text-sm text-gray-700 dark:text-gray-200 whitespace-pre-line">{{ $chat->pesan_balasan }}
                                         </p>
                                     @endif
                                     <div class="flex items-center justify-end gap-1 mt-1">
@@ -357,7 +357,7 @@
 
                 {{-- Reply preview bar --}}
                 <div id="replyBar"
-                    class="hidden px-4 py-2 bg-[#1a1f2e] border-t border-gray-800 flex items-center justify-between gap-2">
+                    class="hidden px-4 py-2 bg-gray-100 dark:bg-[#1a1f2e] border-t border-gray-200 dark:border-gray-800 flex items-center justify-between gap-2">
                     <div class="flex items-center gap-2 min-w-0">
                         <svg class="w-4 h-4 text-[#E62C37] shrink-0" fill="none" stroke="currentColor"
                             stroke-width="2" viewBox="0 0 24 24">
@@ -366,10 +366,10 @@
                         </svg>
                         <div class="min-w-0">
                             <p id="replyBarSender" class="text-[10px] font-bold text-[#E62C37] uppercase"></p>
-                            <p id="replyBarText" class="text-xs text-gray-400 truncate"></p>
+                            <p id="replyBarText" class="text-xs text-gray-500 dark:text-gray-400 truncate"></p>
                         </div>
                     </div>
-                    <button onclick="cancelReply()" class="p-1 text-gray-500 hover:text-white transition-colors">
+                    <button onclick="cancelReply()" class="p-1 text-gray-500 hover:text-gray-900 dark:text-white transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -377,14 +377,14 @@
                 </div>
 
                 {{-- Media preview --}}
-                <div id="mediaPreview" class="hidden px-4 py-2 bg-[#1a1f2e] border-t border-gray-800">
+                <div id="mediaPreview" class="hidden px-4 py-2 bg-gray-100 dark:bg-[#1a1f2e] border-t border-gray-200 dark:border-gray-800">
                     <div class="flex items-center gap-3">
                         <div id="mediaPreviewContent" class="shrink-0"></div>
                         <div class="flex-1 min-w-0">
-                            <p id="mediaPreviewName" class="text-xs text-gray-300 truncate"></p>
+                            <p id="mediaPreviewName" class="text-xs text-gray-600 dark:text-gray-300 truncate"></p>
                             <p id="mediaPreviewSize" class="text-[10px] text-gray-500"></p>
                         </div>
-                        <button onclick="cancelMedia()" class="p-1 text-gray-500 hover:text-white transition-colors">
+                        <button onclick="cancelMedia()" class="p-1 text-gray-500 hover:text-gray-900 dark:text-white transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -394,7 +394,7 @@
                 </div>
 
                 {{-- Input Kirim Pesan --}}
-                <div class="px-4 py-3 border-t border-gray-800" id="inputArea">
+                <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-800" id="inputArea">
                     @php
                         $isAiMode =
                             $selectedPelanggan &&
@@ -418,7 +418,7 @@
                             onchange="handleFileSelect(event)">
 
                         <button type="button" onclick="document.getElementById('fileInput').click()"
-                            class="p-2.5 text-gray-400 hover:text-[#E62C37] transition-colors shrink-0"
+                            class="p-2.5 text-gray-500 dark:text-gray-400 hover:text-[#E62C37] transition-colors shrink-0"
                             title="Kirim file">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
@@ -429,7 +429,7 @@
 
                         <div class="flex-1 relative">
                             <input type="text" id="inputPesan" placeholder="Ketik pesan..." autocomplete="off"
-                                class="w-full px-4 py-2.5 text-sm bg-[#151a22] border border-gray-700 rounded-xl text-gray-200 placeholder-gray-500 focus:outline-none focus:border-[#E62C37]">
+                                class="w-full px-4 py-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-[#E62C37]">
                         </div>
 
                         <button type="submit" id="btnKirim"
@@ -473,7 +473,7 @@
 
     {{-- Modal Konfirmasi Clear Chat --}}
     <div id="modalClearChat" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div class="bg-[#1e2530] border border-gray-700 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
             <div class="flex items-center gap-3 mb-4">
                 <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
                     <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" stroke-width="2"
@@ -483,16 +483,16 @@
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold text-white">Hapus Percakapan</h3>
-                    <p class="text-sm text-gray-400">Tindakan ini tidak dapat dibatalkan</p>
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Hapus Percakapan</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Tindakan ini tidak dapat dibatalkan</p>
                 </div>
             </div>
-            <p class="text-sm text-gray-300 mb-6">Apakah Anda yakin ingin menghapus <span
-                    class="font-semibold text-white">semua percakapan</span> dengan pelanggan ini? Chat yang sudah dihapus
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">Apakah Anda yakin ingin menghapus <span
+                    class="font-semibold text-gray-900 dark:text-white">semua percakapan</span> dengan pelanggan ini? Chat yang sudah dihapus
                 tidak bisa dikembalikan.</p>
             <div class="flex gap-3 justify-end">
                 <button onclick="tutupModalClearChat()"
-                    class="px-4 py-2.5 text-sm font-semibold text-gray-300 bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">
+                    class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">
                     Batal
                 </button>
                 <button onclick="konfirmasiClearChat()"
@@ -505,12 +505,12 @@
 
     {{-- Modal Hapus Pesan --}}
     <div id="modalDeleteMsg" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div class="bg-[#1e2530] border border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-5">
-            <h3 class="text-base font-bold text-white mb-4">Hapus Pesan</h3>
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-5">
+            <h3 class="text-base font-bold text-gray-900 dark:text-white mb-4">Hapus Pesan</h3>
             <div class="space-y-2">
                 <button onclick="hapusPesan('self')"
-                    class="w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-[#151a22] rounded-xl transition-colors flex items-center gap-3">
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2"
+                    class="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#151a22] rounded-xl transition-colors flex items-center gap-3">
+                    <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" stroke-width="2"
                         viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -527,7 +527,7 @@
                 </button>
             </div>
             <button onclick="tutupModalHapus()"
-                class="mt-4 w-full px-4 py-2.5 text-sm font-semibold text-gray-300 bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">
+                class="mt-4 w-full px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">
                 Batal
             </button>
         </div>
@@ -535,7 +535,7 @@
 
     {{-- Context Menu Hapus Pesan --}}
     <div id="contextMenuMsg"
-        class="fixed z-40 hidden bg-[#1e2530] border border-gray-700 rounded-xl shadow-2xl py-1 min-w-[140px]">
+        class="fixed z-40 hidden bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-xl shadow-2xl py-1 min-w-[140px]">
         <button onclick="bukaModalHapus()"
             class="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -726,7 +726,7 @@
                     `<div class="w-12 h-12 rounded bg-purple-500/20 flex items-center justify-center"><svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg></div>`;
             } else {
                 content.innerHTML =
-                    `<div class="w-12 h-12 rounded bg-gray-600/20 flex items-center justify-center"><svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg></div>`;
+                    `<div class="w-12 h-12 rounded bg-gray-600/20 flex items-center justify-center"><svg class="w-6 h-6 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg></div>`;
             }
 
             preview.classList.remove('hidden');
@@ -935,7 +935,7 @@
             const badge = link.querySelector('.rounded.text-\\[10px\\]');
             if (badge) {
                 let label = 'IDLE';
-                let colorClass = 'bg-gray-500/20 text-gray-400';
+                let colorClass = 'bg-gray-500/20 text-gray-500 dark:text-gray-400';
                 if (mode === 'human') {
                     label = 'ADMIN';
                     colorClass = 'bg-green-500/20 text-green-400';
@@ -978,7 +978,7 @@
             } else if (msg.media_type === 'video') {
                 return `<video controls class="max-w-full max-h-60 rounded-lg mb-1.5"><source src="${msg.media_url}"></video>`;
             } else {
-                return `<a href="${msg.media_url}" target="_blank" class="flex items-center gap-2 mb-1.5 px-3 py-2 bg-black/20 rounded-lg text-gray-300 text-xs"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>${escapeHtml(msg.media_url.split('/').pop())}</a>`;
+                return `<a href="${msg.media_url}" target="_blank" class="flex items-center gap-2 mb-1.5 px-3 py-2 bg-black/20 rounded-lg text-gray-600 dark:text-gray-300 text-xs"><svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>${escapeHtml(msg.media_url.split('/').pop())}</a>`;
             }
         }
 
@@ -1064,7 +1064,7 @@
                             div.setAttribute('data-msg-sender', 'pelanggan');
 
                             const forwardHtml = msg.is_forwarded ?
-                                '<div class="flex items-center gap-1 mb-1 text-[10px] text-gray-400 italic"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Diteruskan</div>' :
+                                '<div class="flex items-center gap-1 mb-1 text-[10px] text-gray-500 dark:text-gray-400 italic"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Diteruskan</div>' :
                                 '';
                             const replyHtml = renderReplyContext(msg.reply_to);
                             const mediaHtml = renderMedia({
@@ -1074,11 +1074,11 @@
                             const textHtml = (msg.pesan_pengirim && !['[Image]', '[Video]', '[Document]',
                                     '[Audio]'
                                 ].includes(msg.pesan_pengirim)) ?
-                                `<p class="text-sm text-gray-200 whitespace-pre-line">${escapeHtml(msg.pesan_pengirim)}</p>` :
+                                `<p class="text-sm text-gray-700 dark:text-gray-200 whitespace-pre-line">${escapeHtml(msg.pesan_pengirim)}</p>` :
                                 '';
 
                             div.innerHTML = `
-                                <div class="max-w-[75%] bg-[#2a3343] rounded-2xl rounded-tl-sm px-3 py-2 relative group">
+                                <div class="max-w-[75%] bg-gray-100 dark:bg-[#2a3343] rounded-2xl rounded-tl-sm px-3 py-2 relative group">
                                     ${forwardHtml}${replyHtml}${mediaHtml}${textHtml}
                                     <p class="text-[10px] text-gray-500 mt-1 text-right">${new Date(msg.created_at).toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'})}</p>
                                     <button onclick="setReply(${msg.id}, '${escapeHtml((msg.pesan_pengirim || '[Media]').substring(0, 40))}', 'pelanggan')" class="absolute -right-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-500 hover:text-[#E62C37]">
@@ -1097,7 +1097,7 @@
                             const isApriori = msg.sumber_balasan === 'apriori';
 
                             let bgColor = 'bg-gray-600/20 border border-gray-600/30';
-                            let labelColor = 'text-gray-400';
+                            let labelColor = 'text-gray-500 dark:text-gray-400';
                             let label = 'Bot';
                             if (isAdmin) {
                                 bgColor = 'bg-[#E62C37]/20 border border-[#E62C37]/30';
@@ -1109,7 +1109,7 @@
                                 label = 'AI Bot';
                             } else if (isSystem) {
                                 bgColor = 'bg-gray-600/20 border border-gray-600/30';
-                                labelColor = 'text-gray-400';
+                                labelColor = 'text-gray-500 dark:text-gray-400';
                                 label = 'System';
                             } else if (isApriori) {
                                 bgColor = 'bg-green-500/20 border border-green-500/30';
@@ -1131,14 +1131,14 @@
                             div.setAttribute('data-msg-sender', 'admin');
 
                             const forwardHtml = msg.is_forwarded ?
-                                '<div class="flex items-center gap-1 mb-1 text-[10px] text-gray-400 italic"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Diteruskan</div>' :
+                                '<div class="flex items-center gap-1 mb-1 text-[10px] text-gray-500 dark:text-gray-400 italic"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Diteruskan</div>' :
                                 '';
                             const replyHtml = renderReplyContext(msg.reply_to);
                             const mediaHtml = renderMedia(msg);
                             const textHtml = (msg.pesan_balasan && !['[Image]', '[Video]', '[Document]',
                                     '[Audio]'
                                 ].includes(msg.pesan_balasan)) ?
-                                `<p class="text-sm text-gray-200 whitespace-pre-line">${escapeHtml(msg.pesan_balasan)}</p>` :
+                                `<p class="text-sm text-gray-700 dark:text-gray-200 whitespace-pre-line">${escapeHtml(msg.pesan_balasan)}</p>` :
                                 '';
 
                             div.innerHTML = `

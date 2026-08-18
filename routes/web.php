@@ -13,6 +13,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\CollectionController;
 use App\Http\Controllers\StorageController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 
@@ -95,8 +96,12 @@ Route::prefix('admin')->middleware(['admin.auth', 'admin.domain'])->group(functi
     // Logout dari admin domain
     Route::post('/logout', [LogoutController::class, 'logout'])->name('admin.logout');
 
-    // Ping session (keep-alive + refresh CSRF token)
-    Route::get('/ping', function () {
+    // Ping session (keep-alive + refresh CSRF token + extend session lifetime)
+    Route::get('/ping', function (Request $request) {
+        // Regenerate session untuk extend lifetime
+        $request->session()->regenerate();
+        $request->session()->put('last_activity', time());
+
         return response()->json([
             'ok' => true,
             'csrf' => csrf_token(),

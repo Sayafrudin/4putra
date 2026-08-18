@@ -44,7 +44,7 @@ class AdminCollectionController extends Controller
                 'category' => $request->category,
                 'category_en' => $request->category_en,
                 'image_path' => $imagePath,
-                'sort_order' => $request->sort_order ?? 0,
+                'sort_order' => (int) ($request->sort_order ?: 0),
             ]);
 
             $this->logDataChange(
@@ -81,6 +81,7 @@ class AdminCollectionController extends Controller
 
             $oldValues = $collection->getOriginal();
             $data = $request->only(['name', 'name_en', 'scientific_name', 'category', 'category_en', 'sort_order']);
+            $data['sort_order'] = (int) ($data['sort_order'] ?? 0) ?: 0;
             $imagePreviews = [];
 
             if ($request->input('remove_image') == '1') {

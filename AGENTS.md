@@ -8,6 +8,12 @@ Prinsip Kerja Utama Anda:
 2. BACK-END & BOT (Arsitektur Bersih & Aman): Wajib menerapkan Clean Architecture, pemisahan tanggung jawab (Separation of Concerns), dan keamanan tipe data (Type Safety).
 3. DEVOPS & INFRASTRUKTUR (Paham Batasan): Selalu ingat bahwa Vercel adalah lingkungan serverless yang read-only. Jangan pernah menulis kode backend Laravel atau Express yang mengasumsikan adanya persistent penyimpanan lokal atau long-lived WebSocket di Vercel. Selalu pastikan koneksi ke TiDB menggunakan enkripsi SSL yang aman.
 
+## Aturan Efisiensi Output (Anti-Verbose)
+
+- Jangan pernah mencetak ulang seluruh isi file kode jika hanya sebagian kecil yang diubah.
+- Hanya tampilkan potongan fungsi atau baris kode spesifik yang dimodifikasi (diff snippet).
+- Hapus semua basa-basi pembuka, penjelas yang redundan, dan ringkasan penutup. Fokus langsung pada eksekusi file.
+
 ## Project
 
 Laravel 11 site for PT 4Putra Vertex Aviary (parrot breeding business). Bilingual (Indonesian/English), admin CRUD for achievements, deployed to Vercel.
@@ -233,21 +239,45 @@ Sebelum menyerahkan hasil pekerjaan atau melakukan push ke GitHub, AI WAJIB mela
 
 ## Protokol Eksekusi Skill Otomatis (Autonomous Skill Orchestration)
 
-AI wajib mengevaluasi konteks perintah pengguna secara mandiri dan langsung memanggil skill yang relevan dari registry tanpa menunggu perintah manual. Ikuti alur orkestrasi berikut sesuai fase pekerjaan:
+AI wajib mengevaluasi konteks perintah pengguna secara mandiri dan langsung memanggil skill yang relevan dari registry tanpa menunggu perintah manual. Alur orkestrasi mencakup seluruh 29 skill berikut:
 
-1. Fase Inisiasi & Analisis Masalah:
-    - Permintaan fitur baru, perombakan alur, atau eksplorasi ide: Picu `brainstorming`, lanjutkan dengan `writing-plans`.
-    - Laporan bug, error sistem, atau kegagalan API: Langsung picu `systematic-debugging`.
-    - Modifikasi konfigurasi OpenCode atau rule proyek: Gunakan `customize-opencode`.
+1. Fase Inisiasi, Ideasi & Penajaman Konsep:
+    - `using-superpowers`: Pemicu utama di awal sesi untuk menyelaraskan alur kerja otonom.
+    - `brainstorming`: Eksplorasi ide, perancangan konsep kreatif, atau fitur baru.
+    - `grill-me`: Wawancara kritis untuk menguji asumsi, menemukan celah logika, dan menajamkan rencana sebelum coding.
+    - `writing-plans`: Menyusun roadmap dan langkah implementasi teknis yang terstruktur.
+    - `find-skills`: Menemukan dan menyarankan instalasi skill baru saat dihadapkan pada kapabilitas khusus.
 
-2. Fase Eksekusi & Implementasi:
-    - Modifikasi UI, Blade components, styling Tailwind v4, atau interaktivitas Alpine.js: Picu `frontend-design`.
-    - Penulisan logika backend Laravel, query TiDB, controller, atau skrip bot Node.js: Picu `test-driven-development` dan `executing-plans`.
-    - Pengerjaan modul terisolasi: Picu `using-git-worktrees`.
-    - Tugas kompleks multi-langkah atau pengerjaan paralel: Picu `subagent-driven-development` atau `dispatching-parallel-agents`.
+2. Fase Desain UI/UX & Frontend:
+    - `impeccable`: Merancang, merombak, dan menyempurnakan kualitas estetika serta tata letak visual level tinggi.
+    - `frontend-design`: Implementasi teknis styling Tailwind v4, modularitas Blade components, dan interaktivitas Alpine.js.
 
-3. Fase Validasi & Penyelesaian (Wajib):
-    - Pemeriksaan integritas end-to-end fullstack: Picu `fullstack-validator`.
-    - Sebelum menyatakan pekerjaan selesai atau siap serah: Wajib jalankan `verification-before-completion`.
-    - Finalisasi branch dan peninjauan kualitas: Picu `finishing-a-development-branch` serta `requesting-code-review`.
-    - Penanganan feedback review: Terapkan `receiving-code-review`.
+3. Fase Eksekusi Kode, Backend & Simplicity (KISS / Ponytail):
+    - `ponytail`: Memaksa implementasi solusi paling ringkas dan efisien tanpa baris kode yang mubazir.
+    - `codebase-design`: Merancang arsitektur modul mendalam, penataan domain, dan pola desain bersih.
+    - `test-driven-development`: Menulis dan menjalankan pengujian sebelum menulis logika utama.
+    - `executing-plans`: Eksekusi disiplin berdasarkan rencana teknis yang telah disetujui.
+    - `using-git-worktrees`: Mengisolasi pekerjaan fitur pada workspace branch terpisah.
+    - `subagent-driven-development`: Mendelegasikan tugas multi-langkah ke sub-agen independen.
+    - `dispatching-parallel-agents`: Mengeksekusi 2 tugas independen atau lebih secara paralel.
+
+4. Fase Debugging & Validasi Arsitektur Hibrida:
+    - `systematic-debugging`: Langsung dipicu saat terjadi bug, exception, atau kegagalan terminal test dan build.
+    - `fullstack-validator`: Memvalidasi kepatuhan SSL TiDB Cloud, penanganan format ID (Stringify Fetches), batasan read-only Vercel Serverless `/tmp`, dan isolasi runtime bot Node.js[cite: 1].
+
+5. Fase Review Kualitas, Audit Kode, Copywriting & Finalisasi:
+    - `no-ai-slop`: Memurnikan seluruh teks UI, deskripsi konten, commit message, dan dokumentasi dari gaya tulisan AI klise: hapus tanda baca em dash, potong basa-basi/meta-announcements, serta buat gaya penulisan tajam, padat, dan natural layaknya manusia.
+    - `ponytail-review`: Code review khusus untuk memangkas over-engineering dan kompleksitas berlebih.
+    - `ponytail-audit`: Audit menyeluruh pada repository untuk mendeteksi kode yang tidak efisien.
+    - `ponytail-debt`: Memindai dan merapikan catatan penanda technical debt (`ponytail:` tags).
+    - `ponytail-gain`: Menghitung dan menampilkan metrik dampak penyederhanaan kode.
+    - `requesting-code-review`: Mengajukan tinjauan komprehensif atas kualitas implementasi kode.
+    - `receiving-code-review`: Menangani dan menerapkan perbaikan dari feedback code review.
+    - `improve-codebase-architecture`: Memindai codebase untuk menemukan peluang modularisasi lanjutan.
+    - `verification-before-completion`: Wajib dijalankan sebelum menyatakan tugas selesai guna memastikan zero regression[cite: 1].
+    - `finishing-a-development-branch`: Menyelesaikan branch, membersihkan worktree, dan memfinalisasi integrasi setelah semua tes lolos.
+
+6. Manajemen Konfigurasi & Skill:
+    - `customize-opencode`: Digunakan saat membuat atau memodifikasi konfigurasi sistem OpenCode.
+    - `writing-skills`: Digunakan saat membuat atau mengedit file definisi skill baru.
+    - `ponytail-help`: Kartu referensi cepat untuk opsi dan parameter mode ponytail.

@@ -1,18 +1,28 @@
 ---
 name: fullstack-validator
-description: Validasi arsitektur hibrida untuk TiDB Database, Vercel Serverless, dan Node.js Chatbot.
+description: Trigger automatically whenever modifying database configurations, Eloquent models, controllers, Blade templates, deployment configs, or Node.js chatbot files to prevent TiDB and Vercel serverless runtime failures.
 ---
 
-# TiDB & Vercel Arch Guard Skill
+# TiDB, Vercel, & Chatbot Architecture Validator
 
-Anda adalah sistem validasi otomatis untuk mencegah kegagalan runtime pada infrastruktur hibrida proyek ini.
+Anda adalah validator arsitektur hibrida otomatis. Jalankan pemeriksaan berikut sebelum menyerahkan perubahan kode apa pun:
 
-## 1. Validasi TiDB (Distributed Database)
+## 1. Validasi TiDB Cloud & Database Layer
 
-- Setiap memodifikasi `public/chatbot/db.js` atau `config/database.php`, pastikan opsi SSL (`rejectUnauthorized` / `MYSQL_ATTR_SSL_CA`) WAJIB diaktifkan untuk production.
-- Deteksi integer besar dari TiDB: Ingat aturan `PDO::ATTR_STRINGIFY_FETCHES` di AGENTS.md, dilarang menggunakan strict comparison (`===`) untuk ID model.
+- **SSL Enkripsi:** Pastikan opsi SSL (`rejectUnauthorized: true` / `PDO::MYSQL_ATTR_SSL_CA`) aktif pada `public/chatbot/db.js` dan `config/database.php` untuk environment production[cite: 1].
+- **Format ID (Stringify Fetches):** Karena `PDO::ATTR_STRINGIFY_FETCHES` aktif di konfigurasi database, semua ID model Laravel diperlakukan sebagai string[cite: 1]. Dilarang menggunakan perbandingan ketat (`===`) antar ID, gunakan `==` atau lakukan casting ke string[cite: 1].
+- **Anti N+1 Query:** Periksa controller (terutama `CollectionController` dan `AchievementController`). Pastikan query relasi gambar atau kategori selalu menggunakan eager loading `with()`.
 
-## 2. Validasi Vercel Serverless
+## 2. Validasi Vercel Serverless (Read-Only Environment)
 
-- Jika pengguna memodifikasi backend Laravel, pastikan file cache/view diarahkan ke `/tmp`. Jangan gunakan `filemtime()` di Blade.
-- Jika mendeteksi modifikasi pada `public/chatbot/whatsapp.js` (Baileys), berikan peringatan keras bahwa file ini harus di-host di VPS/lokal terpisah, bukan di Vercel Serverless.
+- **Filesystem Constraints:** Pastikan penulisan cache, session, dan compiled views diarahkan ke direktori `/tmp`[cite: 1]. Dilarang menulis file lokal secara persisten di luar `/tmp`[cite: 1].
+- **Blade Safe Functions:** Dilarang keras menggunakan fungsi `filemtime()` pada template Blade karena akan memicu crash di Vercel[cite: 1].
+- **Isolasi Node.js Bot:** Jika mendeteksi perubahan pada `public/chatbot/whatsapp.js` (Baileys), pastikan kode tidak berasumsi berjalan di Vercel Serverless. File socket bot wajib berjalan di lingkungan standalone (VPS/lokal port 3001)[cite: 1].
+
+## 3. Eksekusi Pengujian Mandiri
+
+Sebelum menyatakan validasi selesai, jalankan pengecekan berikut:
+
+1. Jalankan `php artisan test` untuk memastikan tidak ada query atau model yang rusak[cite: 1].
+2. Jalankan `npm run build` jika terdapat perubahan pada asset frontend atau Tailwind v4[cite: 1].
+3. Periksa file log jika terdapat query lambat atau error koneksi database.

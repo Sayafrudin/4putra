@@ -9,7 +9,7 @@
     }
 @endphp
 
-<div class="w-72 text-slate-800 dark:text-white overflow-hidden flex flex-col shadow-lg group"
+<div class="w-72 overflow-hidden shadow-lg group"
     @if($zoomable) x-data="{ showLightbox: false }" @endif>
 
     <div class="relative w-full aspect-[4/5] overflow-hidden {{ $zoomable ? 'cursor-pointer' : '' }}"
@@ -27,13 +27,12 @@
                 </svg>
             </div>
         @endif
-    </div>
 
-    <div class="px-4 pb-5 pt-2 text-center z-20 relative flex-1 flex flex-col justify-end">
-        <p class="text-xl font-bold leading-tight">{{ $name }}</p>
-        <p class="text-sm font-medium text-[#E62C37] mt-1 uppercase tracking-wide">
-            {{ $SName }}
-        </p>
+        {{-- Floating frosted glass info --}}
+        <div class="absolute bottom-3 inset-x-3 z-10 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 p-3 text-center shadow-lg pointer-events-none">
+            <p class="text-white font-bold text-base">{{ $name }}</p>
+            <p class="text-red-400 font-bold text-xs uppercase tracking-widest mt-0.5">{{ $SName }}</p>
+        </div>
     </div>
 
     @if($zoomable)

@@ -1,4 +1,4 @@
-@props(['gambar', 'name', 'SName'])
+@props(['gambar', 'name', 'SName', 'zoomable' => true])
 
 @php
     // Buat URL gambar resolusi tinggi untuk lightbox
@@ -9,11 +9,11 @@
     }
 @endphp
 
-<div class="w-72 bg-black text-white overflow-hidden flex flex-col shadow-lg group"
-    x-data="{ showLightbox: false }">
+<div class="w-72 text-slate-800 dark:text-white overflow-hidden flex flex-col shadow-lg group"
+    @if($zoomable) x-data="{ showLightbox: false }" @endif>
 
-    <div class="relative w-full aspect-[4/5] overflow-hidden cursor-pointer"
-        @click="showLightbox = true">
+    <div class="relative w-full aspect-[4/5] overflow-hidden {{ $zoomable ? 'cursor-pointer' : '' }}"
+        @if($zoomable) @click="showLightbox = true" @endif>
         @if (isset($gambar))
             <img src="{{ $gambar }}"
                 alt="{{ $name }}"
@@ -27,18 +27,16 @@
                 </svg>
             </div>
         @endif
-
-        <div class="absolute bottom-0 z-10 h-2/3 w-full bg-gradient-to-t from-black via-black/20 to-transparent pointer-events-none">
-        </div>
     </div>
 
-    <div class="px-4 pb-5 pt-2 text-center z-20 relative bg-black flex-1 flex flex-col justify-end">
-        <p class="text-xl font-bold leading-tight text-white">{{ $name }}</p>
+    <div class="px-4 pb-5 pt-2 text-center z-20 relative flex-1 flex flex-col justify-end">
+        <p class="text-xl font-bold leading-tight">{{ $name }}</p>
         <p class="text-sm font-medium text-[#E62C37] mt-1 uppercase tracking-wide">
             {{ $SName }}
         </p>
     </div>
 
+    @if($zoomable)
     {{-- Lightbox Modal --}}
     <template x-if="showLightbox">
         <div class="fixed inset-0 z-[10000] bg-black/90 overflow-auto"
@@ -58,4 +56,5 @@
             </div>
         </div>
     </template>
+    @endif
 </div>

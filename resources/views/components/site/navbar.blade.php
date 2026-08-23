@@ -14,17 +14,37 @@
             class="nav-link font-medium transition-colors duration-300 border-b-2 {{ request()->is('collections') ? 'border-[#E62C37]' : 'border-transparent hover:border-[#E62C37]' }} text-gray-900 dark:text-white">
             {{ __('Collections') }}
         </a>
-        <a href="/achievements"
-            class="nav-link font-medium transition-colors duration-300 border-b-2 {{ request()->is('achievements') ? 'border-[#E62C37]' : 'border-transparent hover:border-[#E62C37]' }} text-gray-900 dark:text-white">
-            {{ __('Achievements') }}
+        <a href="/facilities"
+            class="nav-link font-medium transition-colors duration-300 border-b-2 {{ request()->is('facilities') ? 'border-[#E62C37]' : 'border-transparent hover:border-[#E62C37]' }} text-gray-900 dark:text-white">
+            {{ __('Facilities') }}
         </a>
+
+        {{-- Dropdown Activities --}}
+        <div x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false" class="relative">
+            <button type="button" @click="open = !open"
+                class="nav-link flex items-center gap-1.5 font-medium transition-colors duration-300 border-b-2 {{ (request()->is('achievements') || request()->is('daily-activities')) ? 'border-[#E62C37]' : 'border-transparent hover:border-[#E62C37]' }} text-gray-900 dark:text-white">
+                {{ __('Activities') }}
+                <svg class="w-3 h-3 transition-transform duration-300" :class="open && 'rotate-180'" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+
+            <div x-show="open" x-transition.origin.top
+                class="absolute left-0 top-full mt-3 w-48 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl py-2 z-50">
+                <a href="/daily-activities"
+                    class="block px-4 py-2.5 text-sm transition-colors {{ request()->is('daily-activities') ? 'text-[#E62C37] font-bold' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-[#E62C37]' }}">
+                    {{ __('Daily Activities') }}
+                </a>
+                <a href="/achievements"
+                    class="block px-4 py-2.5 text-sm transition-colors {{ request()->is('achievements') ? 'text-[#E62C37] font-bold' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-[#E62C37]' }}">
+                    {{ __('Achievements') }}
+                </a>
+            </div>
+        </div>
+
         <a href="/about"
             class="nav-link font-medium transition-colors duration-300 border-b-2 {{ request()->is('about') ? 'border-[#E62C37]' : 'border-transparent hover:border-[#E62C37]' }} text-gray-900 dark:text-white">
             {{ __('About') }}
-        </a>
-        <a href="/contact"
-            class="nav-link font-medium transition-colors duration-300 border-b-2 {{ request()->is('contact') ? 'border-[#E62C37]' : 'border-transparent hover:border-[#E62C37]' }} text-gray-900 dark:text-white">
-            {{ __('Contact') }}
         </a>
     </div>
 
@@ -110,13 +130,47 @@
             </li>
 
             <li>
-                <a href="/achievements"
-                    class="block py-3 px-4 transition-all duration-300 
-               {{ request()->is('achievements')
+                <a href="/facilities"
+                    class="block py-3 px-4 transition-all duration-300
+               {{ request()->is('facilities')
                    ? 'border-l-[5px] border-[#E62C37] bg-red-50 dark:bg-red-900/30 text-[#E62C37] font-bold'
                    : 'border-l-[5px] border-transparent hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-[#E62C37]' }}">
-                    {{ __('Achievements') }}
+                    {{ __('Facilities') }}
                 </a>
+            </li>
+
+            {{-- Accordion Activities --}}
+            <li x-data="{ open: {{ (request()->is('achievements') || request()->is('daily-activities')) ? 'true' : 'false' }} }">
+                <button type="button" @click="open = !open"
+                    class="w-full flex items-center justify-between py-3 px-4 transition-all duration-300
+               {{ (request()->is('achievements') || request()->is('daily-activities'))
+                   ? 'border-l-[5px] border-[#E62C37] bg-red-50 dark:bg-red-900/30 text-[#E62C37] font-bold'
+                   : 'border-l-[5px] border-transparent hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-[#E62C37]' }}">
+                    {{ __('Activities') }}
+                    <svg class="w-4 h-4 shrink-0 transition-transform duration-300" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <ul x-show="open" x-transition.origin.top class="py-1 space-y-1">
+                    <li>
+                        <a href="/daily-activities"
+                            class="block py-2.5 pl-10 pr-4 text-sm transition-all duration-300
+                   {{ request()->is('daily-activities')
+                       ? 'text-[#E62C37] font-bold'
+                       : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-[#E62C37]' }}">
+                            {{ __('Daily Activities') }}
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/achievements"
+                            class="block py-2.5 pl-10 pr-4 text-sm transition-all duration-300
+                   {{ request()->is('achievements')
+                       ? 'text-[#E62C37] font-bold'
+                       : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-[#E62C37]' }}">
+                            {{ __('Achievements') }}
+                        </a>
+                    </li>
+                </ul>
             </li>
 
             <li>
@@ -126,16 +180,6 @@
                    ? 'border-l-[5px] border-[#E62C37] bg-red-50 dark:bg-red-900/30 text-[#E62C37] font-bold'
                    : 'border-l-[5px] border-transparent hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-[#E62C37]' }}">
                     {{ __('About') }}
-                </a>
-            </li>
-
-            <li>
-                <a href="/contact"
-                    class="block py-3 px-4 transition-all duration-300
-               {{ request()->is('contact')
-                   ? 'border-l-[5px] border-[#E62C37] bg-red-50 dark:bg-red-900/30 text-[#E62C37] font-bold'
-                   : 'border-l-[5px] border-transparent hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-[#E62C37]' }}">
-                    {{ __('Contact') }}
                 </a>
             </li>
 

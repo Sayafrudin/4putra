@@ -18,12 +18,10 @@
                 class="w-full h-full object-cover object-top group-hover:scale-105 transition-all duration-500">
         @endif
 
-        {{-- Strip info semi-transparan di dasar foto agar foto burung terlihat penuh --}}
-        <div class="absolute inset-x-0 bottom-0 z-10 bg-black/40 backdrop-blur-md px-4 py-3 text-center pointer-events-none">
-            <p class="text-xl font-bold leading-tight text-white">{{ $name }}</p>
-            <p class="text-sm font-medium text-[#E62C37] mt-1 uppercase tracking-wide">
-                {{ $SName }}
-            </p>
+        {{-- Floating frosted glass info agar foto burung terlihat penuh --}}
+        <div class="absolute bottom-2.5 inset-x-2.5 z-10 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 p-2.5 text-center shadow-lg pointer-events-none">
+            <p class="text-white font-bold text-sm tracking-wide">{{ $name }}</p>
+            <p class="text-red-400 font-semibold text-xs tracking-wider uppercase">{{ $SName }}</p>
         </div>
     </div>
 </div>

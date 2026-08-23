@@ -75,9 +75,9 @@
         <x-site.divider>{{ __('about.team_devide') }}</x-site.divider>
 
         <div class="flex flex-wrap items-center justify-center gap-10">
-            <x-site.card gambar="{{ asset('img/manager.png') }}" name="Rachmad Hidayat" SName="{{ __('about.team_role3') }}"></x-site.card>
-            <x-site.card gambar="{{ asset('img/direktur.png') }}" name="Dedy Murya Budi, SE" SName="{{ __('about.team_role1') }}"></x-site.card>
-            <x-site.card gambar="{{ asset('img/komisaris.png') }}" name="Syafrudin Hendra Lumanto" SName="{{ __('about.team_role2') }}"></x-site.card>
+            <x-site.card :zoomable="false" gambar="{{ asset('img/manager.png') }}" name="Rachmad Hidayat" SName="{{ __('about.team_role3') }}"></x-site.card>
+            <x-site.card :zoomable="false" gambar="{{ asset('img/direktur.png') }}" name="Dedy Murya Budi, SE" SName="{{ __('about.team_role1') }}"></x-site.card>
+            <x-site.card :zoomable="false" gambar="{{ asset('img/komisaris.png') }}" name="Syafrudin Hendra Lumanto" SName="{{ __('about.team_role2') }}"></x-site.card>
         </div>
     </section>
     

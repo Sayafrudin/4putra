@@ -104,5 +104,19 @@
     "contact.card2_desc_2": "Visit our farm directly",
 
     "contact.card3_desc_1": "Phone & WhatsApp",
-    "contact.card4_desc_2": "Monday - Sunday (08:00 - 17:00)"
+    "contact.card4_desc_2": "Monday - Sunday (08:00 - 17:00)",
+
+    "Facilities": "Facilities",
+    "Activities": "Activities",
+    "Daily Activities": "Daily Activities",
+
+    "page.coming_soon": "Coming Soon · Under Development",
+    "page.cta_collections": "View Collections",
+    "page.cta_home": "Back to Home",
+
+    "facilities.title": "Modern Breeding Facilities",
+    "facilities.desc": "Documentation of PT 4Putra Vertex Aviary's modern breeding facility standards is currently being prepared.",
+
+    "daily.title": "Daily Activities",
+    "daily.desc": "Documentation of our daily bird care routines — feeding, grooming, and health monitoring — is currently being prepared."
 }

@@ -51,13 +51,19 @@ Route::get('/', function () {
 Route::get('/collections', [CollectionController::class, 'index'])->name('collections');
 Route::get('/achievements', [AchievementController::class, 'publicIndex'])->name('achievements');
 
+Route::get('/facilities', function () {
+    return view('facilities');
+})->name('facilities');
+
+Route::get('/daily-activities', function () {
+    return view('daily-activities');
+})->name('daily.activities');
+
 Route::get('/about', function () {
     return view('about');
 });
 
-Route::get('/contact', function () {
-    return view('contact');
-});
+Route::get('/contact', fn () => redirect('/about#contact'))->name('contact');
 
 // Midtrans webhook callback (tanpa auth, dipanggil oleh Midtrans server)
 Route::post('/midtrans/callback', [ChatbotController::class, 'midtransCallback'])->name('midtrans.callback');

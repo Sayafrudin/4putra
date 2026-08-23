@@ -104,5 +104,19 @@
     "contact.card2_desc_2": "Datang langsung ke farm kami",
 
     "contact.card3_desc_1": "Telepon & WhatsApp",
-    "contact.card4_desc_2": "Senin - Minggu (08:00 - 17:00)"
+    "contact.card4_desc_2": "Senin - Minggu (08:00 - 17:00)",
+
+    "Facilities": "Fasilitas",
+    "Activities": "Aktivitas",
+    "Daily Activities": "Aktivitas Harian",
+
+    "page.coming_soon": "Segera Hadir · Sedang Dikembangkan",
+    "page.cta_collections": "Lihat Koleksi",
+    "page.cta_home": "Kembali ke Home",
+
+    "facilities.title": "Fasilitas Penangkaran Modern",
+    "facilities.desc": "Dokumentasi standar fasilitas penangkaran modern PT 4Putra Vertex Aviary sedang dipersiapkan.",
+
+    "daily.title": "Aktivitas Harian",
+    "daily.desc": "Dokumentasi rutinitas perawatan harian burung kami — pemberian pakan, grooming, dan pemantauan kesehatan — sedang dipersiapkan."
 }

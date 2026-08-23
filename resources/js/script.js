@@ -50,9 +50,10 @@ const initMarquee = () => {
     }, { passive: true });
 };
 
-// Jalankan saat DOM ready
+// Jalankan saat DOM ready + re-render setelah navigasi Turbo Drive
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initMarquee);
 } else {
     initMarquee();
 }
+document.addEventListener('turbo:load', initMarquee);

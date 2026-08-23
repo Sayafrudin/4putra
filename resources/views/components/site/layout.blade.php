@@ -29,6 +29,29 @@
     </script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {{-- Speculation Rules API: prefetch halaman publik saat hover/pointerdown (Chromium) --}}
+    <script type="speculationrules">
+        {"prefetch":[{"source":"document","where":{"href_matches":"/*"},"eagerness":"conservative"}]}
+    </script>
+
+    {{-- Fallback micro-prefetcher untuk browser tanpa Speculation Rules (Firefox/Safari) --}}
+    <script>
+        (function () {
+            var prefetched = new Set();
+            document.addEventListener('pointerover', function (e) {
+                var a = e.target.closest && e.target.closest('a[href^="/"]');
+                if (!a || prefetched.has(a.href)) return;
+                var url = a.getAttribute('href');
+                if (url.indexOf('/admin') === 0 || url.indexOf('/lang/') === 0 || url.indexOf('/logout') === 0 || url.indexOf('/midtrans') === 0) return;
+                prefetched.add(a.href);
+                var l = document.createElement('link');
+                l.rel = 'prefetch';
+                l.href = url;
+                document.head.appendChild(l);
+            });
+        })();
+    </script>
+
     @stack('styles')
 </head>
 

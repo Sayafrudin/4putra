@@ -213,9 +213,12 @@
 </nav>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // --- 1. SELECTORS ---
+    function initNavbar() {
         const navbar = document.getElementById('navbar');
+        if (!navbar || navbar.dataset.navInit) return;
+        navbar.dataset.navInit = '1';
+
+        // --- 1. SELECTORS ---
         const navLinks = document.querySelectorAll('.nav-link');
         const logoPaths = document.querySelectorAll('#nav-logo path');
         const hamburgerBtn = document.getElementById('hamburger-btn');
@@ -364,10 +367,13 @@
             }
         };
 
-        // Re-apply scroll colors saat dark mode berubah
-        const observer = new MutationObserver(() => { handleScroll(); });
-        observer.observe(html, { attributes: true, attributeFilter: ['class'] });
+        // Re-apply scroll colors saat dark mode berubah (observer dibuat sekali global)
+        window.__navThemeObserver ??= new MutationObserver(() => { window.__navScroll?.(); });
+        window.__navThemeObserver.observe(html, { attributes: true, attributeFilter: ['class'] });
 
+        // Dedup listener lintas navigasi Turbo Drive
+        if (window.__navScroll) window.removeEventListener('scroll', window.__navScroll);
+        window.__navScroll = handleScroll;
         window.addEventListener('scroll', handleScroll);
         handleScroll();
 
@@ -398,11 +404,13 @@
                 }
             });
 
-            window.addEventListener('resize', () => {
+            if (window.__navResize) window.removeEventListener('resize', window.__navResize);
+            window.__navResize = () => {
                 if (window.innerWidth >= 768) {
                     closeMenu();
                 }
-            });
+            };
+            window.addEventListener('resize', window.__navResize);
 
             // PENTING: Update juga fungsi closeMenu biar iconnya balik normal kalau menu ketutup otomatis
             const closeMenu = () => {
@@ -414,5 +422,9 @@
                 }
             };
         }
-    });
+    }
+
+    document.addEventListener('DOMContentLoaded', initNavbar);
+    document.addEventListener('turbo:load', initNavbar);
+    if (document.readyState !== 'loading') initNavbar();
 </script>

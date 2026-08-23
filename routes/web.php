@@ -21,6 +21,9 @@ Route::get('/storage/{path}', [StorageController::class, 'serve'])
     ->where('path', '.*')
     ->name('storage.serve');
 
+// Halaman publik statis: Cache-Control edge-friendly untuk Vercel Edge
+Route::middleware(\App\Http\Middleware\CachePublic::class)->group(function () {
+
 Route::get('/', function () {
     // Redirect admin domain root ke dashboard admin
     $host = request()->getHost();
@@ -61,6 +64,7 @@ Route::get('/daily-activities', function () {
 
 Route::get('/about', function () {
     return view('about');
+});
 });
 
 Route::get('/contact', fn () => redirect('/about#contact'))->name('contact');

@@ -11,6 +11,9 @@
 (function () {
     'use strict';
 
+    // Guard: cegah duplikasi style & listener saat Turbo Drive mengeksekusi ulang script ini
+    if (window.zoomMedia) return;
+
     // Inject CSS
     var style = document.createElement('style');
     style.textContent =
@@ -89,7 +92,8 @@
     var videoObserver = new MutationObserver(function () {
         protectVideos();
     });
-    videoObserver.observe(document.body, { childList: true, subtree: true });
+    // Observe documentElement agar bertahan saat Turbo menggantikan body
+    videoObserver.observe(document.documentElement, { childList: true, subtree: true });
 
     // =============================================
     // ZOOM GAMBAR DENGAN WATERMARK

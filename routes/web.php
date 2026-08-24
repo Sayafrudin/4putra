@@ -78,7 +78,9 @@ Route::get('lang/{locale}', function ($locale) {
         Session::put('locale', $locale);
     }
 
-    return redirect()->back();
+    // no-store: redirect switch tidak boleh di-cache browser/edge
+    return redirect()->back()
+        ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
 })->name('lang.switch');
 
 // Autentikasi

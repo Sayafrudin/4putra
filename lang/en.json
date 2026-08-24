@@ -117,6 +117,9 @@
     "facilities.title": "Modern Breeding Facilities",
     "facilities.desc": "Documentation of PT 4Putra Vertex Aviary's modern breeding facility standards is currently being prepared.",
 
-    "daily.title": "Daily Activities",
-    "daily.desc": "Documentation of our daily bird care routines — feeding, grooming, and health monitoring — is currently being prepared."
+    "daily.page_badge": "Field Journal",
+    "daily.hero_title": "Daily Activities at the Aviary",
+    "daily.hero_desc": "A running record of the care routines we go through every day. From morning feed rotations to weekly grooming sessions and health audits with our partner veterinarian, everything is documented as it happens.",
+    "daily.view_gallery": "View Gallery",
+    "daily.empty": "No daily activity documentation has been published yet. Stay tuned for updates from our breeding team."
 }

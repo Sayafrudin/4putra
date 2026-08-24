@@ -3,6 +3,7 @@
 use App\Http\Controllers\AchievementController;
 use App\Http\Controllers\Admin\AdminAchievementController;
 use App\Http\Controllers\Admin\AdminCollectionController;
+use App\Http\Controllers\Admin\AdminDailyActivityController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\ChatbotController;
 use App\Http\Controllers\Admin\ChatController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\CollectionController;
+use App\Http\Controllers\DailyActivityController;
 use App\Http\Controllers\StorageController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -24,47 +26,45 @@ Route::get('/storage/{path}', [StorageController::class, 'serve'])
 // Halaman publik statis: Cache-Control edge-friendly untuk Vercel Edge
 Route::middleware(\App\Http\Middleware\CachePublic::class)->group(function () {
 
-Route::get('/', function () {
-    // Redirect admin domain root ke dashboard admin
-    $host = request()->getHost();
-    if (in_array($host, ['admin4putra.vercel.app'])) {
-        return redirect('/admin');
-    }
+    Route::get('/', function () {
+        // Redirect admin domain root ke dashboard admin
+        $host = request()->getHost();
+        if (in_array($host, ['admin4putra.vercel.app'])) {
+            return redirect('/admin');
+        }
 
-    // Ambil data koleksi untuk carousel (random)
-    $carouselCollections = \App\Models\Collection::select('name', 'name_en', 'image_path')
-        ->whereNotNull('image_path')
-        ->inRandomOrder()
-        ->limit(8)
-        ->get()
-        ->map(function ($item) {
-            $imgUrl = str_starts_with($item->image_path, 'http')
-                ? str_replace('/upload/', '/upload/w_400,c_fill,q_auto,f_auto/', $item->image_path)
-                : asset('storage/collections/'.$item->image_path);
+        // Ambil data koleksi untuk carousel (random)
+        $carouselCollections = \App\Models\Collection::select('name', 'name_en', 'image_path')
+            ->whereNotNull('image_path')
+            ->inRandomOrder()
+            ->limit(8)
+            ->get()
+            ->map(function ($item) {
+                $imgUrl = str_starts_with($item->image_path, 'http')
+                    ? str_replace('/upload/', '/upload/w_400,c_fill,q_auto,f_auto/', $item->image_path)
+                    : asset('storage/collections/'.$item->image_path);
 
-            return [
-                'title' => app()->getLocale() === 'en' && $item->name_en ? $item->name_en : $item->name,
-                'image' => $imgUrl,
-            ];
-        });
+                return [
+                    'title' => app()->getLocale() === 'en' && $item->name_en ? $item->name_en : $item->name,
+                    'image' => $imgUrl,
+                ];
+            });
 
-    return view('index', compact('carouselCollections'));
-});
+        return view('index', compact('carouselCollections'));
+    });
 
-Route::get('/collections', [CollectionController::class, 'index'])->name('collections');
-Route::get('/achievements', [AchievementController::class, 'publicIndex'])->name('achievements');
+    Route::get('/collections', [CollectionController::class, 'index'])->name('collections');
+    Route::get('/achievements', [AchievementController::class, 'publicIndex'])->name('achievements');
 
-Route::get('/facilities', function () {
-    return view('facilities');
-})->name('facilities');
+    Route::get('/facilities', function () {
+        return view('facilities');
+    })->name('facilities');
 
-Route::get('/daily-activities', function () {
-    return view('daily-activities');
-})->name('daily.activities');
+    Route::get('/daily-activities', [DailyActivityController::class, 'index'])->name('daily.activities');
 
-Route::get('/about', function () {
-    return view('about');
-});
+    Route::get('/about', function () {
+        return view('about');
+    });
 });
 
 Route::get('/contact', fn () => redirect('/about#contact'))->name('contact');
@@ -150,6 +150,16 @@ Route::prefix('admin')->middleware(['admin.auth', 'admin.domain'])->group(functi
         'edit' => 'admin.collections.edit',
         'update' => 'admin.collections.update',
         'destroy' => 'admin.collections.destroy',
+    ]);
+
+    // CRUD Aktivitas Harian
+    Route::resource('daily-activities', AdminDailyActivityController::class)->only([
+        'index', 'store', 'update', 'destroy',
+    ])->names([
+        'index' => 'admin.daily-activities.index',
+        'store' => 'admin.daily-activities.store',
+        'update' => 'admin.daily-activities.update',
+        'destroy' => 'admin.daily-activities.destroy',
     ]);
 
     // Manajemen User (hanya admin)

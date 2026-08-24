@@ -114,8 +114,11 @@
     "page.cta_collections": "Lihat Koleksi",
     "page.cta_home": "Kembali ke Home",
 
-    "facilities.title": "Fasilitas Penangkaran Modern",
-    "facilities.desc": "Dokumentasi standar fasilitas penangkaran modern PT 4Putra Vertex Aviary sedang dipersiapkan.",
+    "facilities.hero_title": "Fasilitas Penangkaran",
+    "facilities.hero_desc": "Kenali area-area yang menunjang keseharian burung di aviary kami, mulai dari kandang koloni induk, ruang inkubasi, sampai klinik kecil milik sendiri. Semua fasilitas dirawat dan diaudit secara berkala.",
+    "facilities.all": "Semua",
+    "facilities.view_detail": "Lihat Detail",
+    "facilities.empty": "Belum ada fasilitas yang dipublikasikan. Nantikan pembaruan dari tim penangkaran kami.",
 
     "daily.page_badge": "Jurnal Harian",
     "daily.hero_title": "Aktivitas Harian Penangkaran",

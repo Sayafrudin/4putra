@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ChatbotInventarisSeeder::class,
             DailyActivitySeeder::class,
+            FacilitySeeder::class,
         ]);
     }
 }

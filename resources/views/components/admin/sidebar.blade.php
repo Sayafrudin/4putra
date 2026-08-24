@@ -18,7 +18,7 @@
                 </button>
             </div>
 
-            <ul class="mt-6" x-data="{ openMenu: {{ request()->routeIs('admin.achievements.*') || request()->routeIs('admin.collections.*') || request()->routeIs('admin.daily-activities.*') ? 'true' : 'false' }} }">
+            <ul class="mt-6" x-data="{ openMenu: {{ request()->routeIs('admin.achievements.*') || request()->routeIs('admin.collections.*') || request()->routeIs('admin.daily-activities.*') || request()->routeIs('admin.facilities.*') ? 'true' : 'false' }} }">
                 <li class="relative px-6 py-3">
                     @if (request()->routeIs('admin.dashboard'))
                         <span class="absolute inset-y-0 left-0 w-1 bg-[#E62C37] rounded-tr-lg rounded-br-lg" aria-hidden="true"></span>
@@ -33,11 +33,11 @@
                 </li>
 
                 <li class="relative px-6 py-3">
-                    @if (request()->routeIs('admin.achievements.*') || request()->routeIs('admin.collections.*') || request()->routeIs('admin.daily-activities.*'))
+                    @if (request()->routeIs('admin.achievements.*') || request()->routeIs('admin.collections.*') || request()->routeIs('admin.daily-activities.*') || request()->routeIs('admin.facilities.*'))
                         <span class="absolute inset-y-0 left-0 w-1 bg-[#E62C37] rounded-tr-lg rounded-br-lg" aria-hidden="true"></span>
                     @endif
                     <button @click="openMenu = !openMenu"
-                        class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.achievements.*') || request()->routeIs('admin.collections.*') || request()->routeIs('admin.daily-activities.*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
+                        class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.achievements.*') || request()->routeIs('admin.collections.*') || request()->routeIs('admin.daily-activities.*') || request()->routeIs('admin.facilities.*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
                         <span class="inline-flex items-center">
                             <svg class="w-5 h-5" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
                                 <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -77,6 +77,14 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
                             </svg>
                             Aktivitas Harian (Daily Activities)
+                        </a>
+                        <a href="{{ route('admin.facilities.index') }}"
+                            @click="sidebarOpen = false"
+                            class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.facilities.*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" />
+                            </svg>
+                            Fasilitas (Facilities)
                         </a>
                     </div>
                 </li>

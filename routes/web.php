@@ -4,6 +4,7 @@ use App\Http\Controllers\AchievementController;
 use App\Http\Controllers\Admin\AdminAchievementController;
 use App\Http\Controllers\Admin\AdminCollectionController;
 use App\Http\Controllers\Admin\AdminDailyActivityController;
+use App\Http\Controllers\Admin\AdminFacilityController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\ChatbotController;
 use App\Http\Controllers\Admin\ChatController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\CollectionController;
 use App\Http\Controllers\DailyActivityController;
+use App\Http\Controllers\FacilityController;
 use App\Http\Controllers\StorageController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -56,9 +58,7 @@ Route::middleware(\App\Http\Middleware\CachePublic::class)->group(function () {
     Route::get('/collections', [CollectionController::class, 'index'])->name('collections');
     Route::get('/achievements', [AchievementController::class, 'publicIndex'])->name('achievements');
 
-    Route::get('/facilities', function () {
-        return view('facilities');
-    })->name('facilities');
+    Route::get('/facilities', [FacilityController::class, 'index'])->name('facilities');
 
     Route::get('/daily-activities', [DailyActivityController::class, 'index'])->name('daily.activities');
 
@@ -160,6 +160,16 @@ Route::prefix('admin')->middleware(['admin.auth', 'admin.domain'])->group(functi
         'store' => 'admin.daily-activities.store',
         'update' => 'admin.daily-activities.update',
         'destroy' => 'admin.daily-activities.destroy',
+    ]);
+
+    // CRUD Fasilitas
+    Route::resource('facilities', AdminFacilityController::class)->only([
+        'index', 'store', 'update', 'destroy',
+    ])->names([
+        'index' => 'admin.facilities.index',
+        'store' => 'admin.facilities.store',
+        'update' => 'admin.facilities.update',
+        'destroy' => 'admin.facilities.destroy',
     ]);
 
     // Manajemen User (hanya admin)

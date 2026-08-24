@@ -114,8 +114,11 @@
     "page.cta_collections": "View Collections",
     "page.cta_home": "Back to Home",
 
-    "facilities.title": "Modern Breeding Facilities",
-    "facilities.desc": "Documentation of PT 4Putra Vertex Aviary's modern breeding facility standards is currently being prepared.",
+    "facilities.hero_title": "Aviary Facilities",
+    "facilities.hero_desc": "Get to know the areas that support our birds daily life, from the breeder colony cages and the incubation room to our own small clinic. Every facility is maintained and audited on a regular schedule.",
+    "facilities.all": "All",
+    "facilities.view_detail": "View Detail",
+    "facilities.empty": "No facilities have been published yet. Stay tuned for updates from our breeding team.",
 
     "daily.page_badge": "Field Journal",
     "daily.hero_title": "Daily Activities at the Aviary",

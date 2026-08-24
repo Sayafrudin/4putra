@@ -8,6 +8,17 @@
     </style>
     @endpush
 
+    {{-- Header halaman --}}
+    <section class="w-full px-6 md:px-12 lg:px-16 pt-10 pb-2">
+        <h1 class="text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-100 text-center">
+            {{ __('achievements.title_prefix') }}
+            <span class="font-medium text-[#E62C37]">{{ __('achievements.title_suffix') }}</span>
+        </h1>
+        <p class="mt-3 max-w-2xl mx-auto text-gray-700 dark:text-gray-300 text-center leading-relaxed">
+            {{ __('achievements.page_desc') }}
+        </p>
+    </section>
+
     @forelse($achievements as $year => $items)
         <x-site.divider>{{ $year }}</x-site.divider>
 

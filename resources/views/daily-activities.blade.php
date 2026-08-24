@@ -50,7 +50,7 @@
             </header>
 
             <div x-data="{
-                    items: @json($feed),
+                    items: @js($feed),
                     open: false,
                     idx: 0,
                     cur: 0,

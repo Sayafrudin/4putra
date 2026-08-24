@@ -54,10 +54,11 @@
                     open: false,
                     idx: 0,
                     cur: 0,
-                    openAt(i) { this.idx = i; this.cur = 0; this.open = true; document.documentElement.style.overflow = 'hidden' },
+                    openAt(i) { this.idx = i; this.cur = 0; this.open = true; document.documentElement.style.overflow = 'hidden'; this.warm(1) },
                     close() { this.open = false; document.documentElement.style.overflow = '' },
-                    prev() { const n = this.items[this.idx].full.length; this.cur = (this.cur - 1 + n) % n },
-                    next() { const n = this.items[this.idx].full.length; this.cur = (this.cur + 1) % n }
+                    prev() { const n = this.items[this.idx].full.length; this.cur = (this.cur - 1 + n) % n; this.warm(-1) },
+                    next() { const n = this.items[this.idx].full.length; this.cur = (this.cur + 1) % n; this.warm(1) },
+                    warm(d) { const f = this.items[this.idx].full; if (f.length < 2) return; new Image().src = f[(this.cur + d + f.length) % f.length] }
                 }">
 
                 <div class="space-y-8">
@@ -96,7 +97,7 @@
                                     @foreach (array_slice($item['thumbs'], 0, 4) as $i => $thumb)
                                         <div
                                             class="relative aspect-[4/3] overflow-hidden rounded-lg border border-gray-100 dark:border-gray-700 bg-gray-100 dark:bg-gray-900">
-                                            <img src="{{ $thumb }}" loading="lazy"
+                                            <img src="{{ $thumb }}" loading="lazy" decoding="async"
                                                 alt="Dokumentasi {{ $item['title'] }} {{ $i + 1 }}"
                                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                             @if ($i === 3 && count($item['thumbs']) > 4)
@@ -167,7 +168,7 @@
                                     <div class="relative">
                                         <div
                                             class="aspect-[16/10] sm:aspect-[16/9] overflow-hidden rounded-lg border border-white/10 bg-black/40">
-                                            <img :src="items[idx].full[cur]" loading="lazy"
+                                            <img :src="open ? items[idx].full[cur] : ''" loading="lazy" decoding="async"
                                                 :alt="items[idx].title + ' ' + (cur + 1)"
                                                 class="w-full h-full object-contain">
                                         </div>
@@ -190,14 +191,14 @@
                                             x-text="(cur + 1) + ' / ' + items[idx].full.length"></span>
                                     </div>
 
-                                    {{-- Strip thumbnail --}}
+                                    {{-- Strip thumbnail: pakai thumbs (w_600) yang sudah ter-cache dari grid kartu --}}
                                     <template x-if="items[idx].full.length > 1">
                                         <div class="mt-4 flex gap-2 overflow-x-auto pb-1">
-                                            <template x-for="(img, ti) in items[idx].full" :key="ti">
+                                            <template x-for="(img, ti) in items[idx].thumbs" :key="ti">
                                                 <button type="button" @click="cur = ti"
                                                     class="shrink-0 w-16 h-16 rounded border-2 overflow-hidden transition-colors"
                                                     :class="cur === ti ? 'border-[#E62C37]' : 'border-transparent opacity-60 hover:opacity-100'">
-                                                    <img :src="img" loading="lazy" class="w-full h-full object-cover" alt="">
+                                                    <img :src="open ? img : ''" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="">
                                                 </button>
                                             </template>
                                         </div>

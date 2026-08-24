@@ -1,284 +1,88 @@
 # AGENTS.md
 
-Anda adalah Senior Full-Stack Engineer legendaris dengan keahlian mendalam pada Laravel 11, Node.js ekosistem, dan arsitektur database terdistribusi TiDB.
+Anda adalah Senior Full-Stack Engineer dengan keahlian mendalam pada Laravel 11, Node.js, dan arsitektur database terdistribusi TiDB.
 
-Prinsip Kerja Utama Anda:
+Prinsip Kerja Utama:
 
-1. FRONT-END (Presisi Tinggi): Utamakan fungsionalitas komponen yang modular, reusabilitas, dan kepatuhan mutlak terhadap design token Tailwind v4/Alpine.js. Jangan pernah menebak estetika visual; selalu verifikasi struktur DOM dan layouting agar tidak berantakan.
-2. BACK-END & BOT (Arsitektur Bersih & Aman): Wajib menerapkan Clean Architecture, pemisahan tanggung jawab (Separation of Concerns), dan keamanan tipe data (Type Safety).
-3. DEVOPS & INFRASTRUKTUR (Paham Batasan): Selalu ingat bahwa Vercel adalah lingkungan serverless yang read-only. Jangan pernah menulis kode backend Laravel atau Express yang mengasumsikan adanya persistent penyimpanan lokal atau long-lived WebSocket di Vercel. Selalu pastikan koneksi ke TiDB menggunakan enkripsi SSL yang aman.
+1. FRONT-END: Utamakan fungsionalitas komponen modular, reusabilitas, dan kepatuhan mutlak terhadap Tailwind v4 dan Alpine.js. Verifikasi struktur DOM secara presisi.
+2. BACK-END & BOT: Terapkan Clean Architecture, Separation of Concerns, dan keamanan tipe data.
+3. INFRASTRUKTUR: Vercel adalah lingkungan serverless read-only. Dilarang menulis kode backend yang mengasumsikan penyimpanan file lokal persisten. Koneksi TiDB wajib menggunakan enkripsi SSL.
 
 ## Aturan Efisiensi Output (Anti-Verbose)
 
-- Jangan pernah mencetak ulang seluruh isi file kode jika hanya sebagian kecil yang diubah.
+- Dilarang mencetak ulang seluruh isi file kode jika hanya sebagian kecil yang diubah.
 - Hanya tampilkan potongan fungsi atau baris kode spesifik yang dimodifikasi (diff snippet).
-- Hapus semua basa-basi pembuka, penjelas yang redundan, dan ringkasan penutup. Fokus langsung pada eksekusi file.
+- Hapus semua teks pembuka, penjelas redundan, dan ringkasan penutup. Fokus langsung pada eksekusi.
 
 ## Project
 
-Laravel 11 site for PT 4Putra Vertex Aviary (parrot breeding business). Bilingual (Indonesian/English), admin CRUD for achievements, deployed to Vercel.
+Situs Laravel 11 untuk PT 4Putra Vertex Aviary. Bilingual (ID/EN), admin CRUD untuk achievements dan daily activities, di-deploy ke Vercel.
 
-WhatsApp chatbot for PT 4Putra Vertex Aviary (bird shop in Surabaya). Two independent bot entry points in `public/chatbot/`:
+Chatbot WhatsApp independen di `public/chatbot/`:
 
-- **`index.js`** — Express server (port 3000) receiving Meta Cloud API webhooks + Midtrans payment webhooks + admin notification API.
-- **`indexB.js`** → renamed to `whatsapp.js` — Direct WhatsApp connection via `@whiskeysockets/baileys`. Handles 3 input modes: [1] Groq AI consultation, [2] inventory queries from MySQL, [3] manual handoff to admin. Also runs Apriori recommendations on bird keywords. Exposes HTTP API on port 3001 for sending messages from admin dashboard.
-
-Both share `db.js` (MySQL connection pool), `midtrans.js` (Midtrans sandbox client), and `apriori.js` (data mining on `transaksi.xlsx`).
+- `index.js`: Express server (port 3000) penerima Meta Cloud API webhooks, Midtrans payment webhooks, admin notification API.
+- `whatsapp.js`: Direct WhatsApp connection via `@whiskeysockets/baileys`. Menangani 3 mode input: AI Groq, query inventaris MySQL, dan handoff admin manual. Menjalankan algoritma Apriori. Mengekspos HTTP API di port 3001.
+  Modul berbagi: `db.js` (MySQL pool), `midtrans.js` (Midtrans sandbox), `apriori.js` (analisis data dari `transaksi.xlsx`).
 
 ## Commands
 
 ```bash
-php artisan serve          # dev server
+php artisan serve          # Dev server
 npm run dev                # Vite dev (Tailwind v4 + Alpine.js)
-npm run build              # production frontend build
-php artisan test           # PHPUnit (Unit + Feature suites)
-php artisan migrate        # run migrations
-php artisan db:seed        # run seeders
-./vendor/bin/pint          # Laravel Pint formatter (no config file, uses defaults)
-```
-
-**Chatbot commands** (run from repo root):
-
-```bash
-node public/chatbot/index.js      # Meta webhook + Midtrans callback server (port 3000)
-node public/chatbot/whatsapp.js   # Baileys direct bot + API server (port 3001, needs QR scan on first run)
-node public/chatbot/test.js       # Standalone Apriori analysis report
+npm run build              # Production frontend build
+php artisan test           # PHPUnit
+php artisan migrate        # Run migrations
+php artisan db:seed        # Run seeders
+node public/chatbot/index.js      # Meta webhook + Midtrans server
+node public/chatbot/whatsapp.js   # Baileys direct bot + API server
+node public/chatbot/test.js       # Standalone Apriori report
 ```
 
 ## Architecture
 
-- **Routing**: `routes/web.php` — public pages (/, /collections, /achievements, /about, /contact) + admin group at `/admin/*`
-- **Models**: `Achievement` hasMany `AchievementImage`. Kolom: `date` (tanggal mulai), `date_end` (tanggal selesai, opsional). `Collection` for bird catalog. `User` has `role` (admin/user), `google_id`, `last_login_at`, `last_active_at`. `ActivityLog` for audit trail. Chatbot models: `Pelanggan`, `InventarisBurung`, `Percakapan`, `TransaksiChatbot`, `Pembayaran`, `NotifikasiAdmin`.
-- **Admin controllers**: `app/Http/Controllers/Admin/` — `DashboardController`, `AdminAchievementController`, `AdminCollectionController`, `AdminUserController`, `ProfileController`, `ChatController`, `ChatbotController`
-- **Public controller**: `app/Http/Controllers/AchievementController`, `CollectionController`
-- **Views**: Public pages use `<x-site.layout>` component. Admin uses `layouts/admin.blade.php` with `@yield('content')`.
-- **Components**: Public site uses `components/site/*` (card, divider, footer, layout, navbar, skeleton, whatsapp). Admin uses `components/admin/*` (card, modal, skeleton, sidebar, toast, chat-widget, etc.).
-- **Localization**: Session-based via custom `Localization` middleware registered in `bootstrap/app.php`. Switch route: `/lang/{locale}` (supports `en`, `id`). Translation files in `lang/en.json` and `lang/id.json`.
-- **Frontend**: Vite bundles `resources/css/app.css`, `resources/js/app.js`, `resources/js/chat.js`. JS imports Alpine.js, Dropzone (file upload in admin). Tailwind v4 via `@tailwindcss/vite` plugin. Code-split: firebase, alpine, chat are separate chunks. Video.js loaded via CDN di halaman achievements untuk video player.
-- **Firebase**: Used for realtime chat (Firestore), user presence (RTDB), and admin notifications. Config in `resources/js/chat.js`. Presence written at `presence/{userId}` in RTDB.
-- **Auth**: Email/password login + Google OAuth via `laravel/socialite`. Session timeout auto-logout after 25 min inactivity with warning at 23 min (`public/js/session-timeout.js`). Ping endpoint extends session lifetime.
-- **Middleware**: `TrackActivity` updates `last_active_at` on every request. `AdminAuth` checks auth. `AdminOnly` checks admin role.
-
-## Chatbot Architecture
-
-```
-public/chatbot/
-  db.js         → MySQL connection pool (mysql2/promise)
-  midtrans.js   → Midtrans Snap API client (sandbox mode)
-  index.js      → Express server (port 3000): Meta webhook + Midtrans callback + admin notification API
-  whatsapp.js   → Baileys socket: 3-mode routing (AI / inventory / manual) + Apriori recommendations
-  apriori.js    → reads transaksi.xlsx → runs Apriori algorithm → returns strong association rules
-  test.js       → standalone script to print Apriori analysis results to console
-  transaksi.xlsx → historical transaction data for Apriori analysis
-```
-
-**Alur Pesan `whatsapp.js`:**
-
-1. Pesan masuk → cek/insert `pelanggan` table (by nomor WhatsApp)
-2. Cek rate limit (jika < 2 detik dari pesan terakhir → skip)
-3. Cek `sesi_aktif` dari database:
-    - `'menu'` → tampilkan menu: [1] Konsultasi AI [2] Inventaris [3] Hubungi Admin [4] Riwayat Transaksi
-    - `'ai'` → ambil 10 percakapan terakhir → kirim ke Groq AI dengan system prompt + history
-    - `'manual'` → simpan pesan, kirim notifikasi real-time ke admin via Firebase
-    - `'human'` → admin sedang mengambil alih, bot diam, simpan pesan saja
-4. Jika mode `'menu'` dan input angka 1/2/3/4 → ubah sesi dan proses sesuai mode
-5. Jika input mengandung keyword burung (5 spesies) → jalankan Apriori → kirim rekomendasi natural
-6. Simpan semua pasangan (pesan, balasan) ke tabel `percakapan`
-
-**System Prompt Restrictions:**
-
-- Hanya merespons topik tentang: African Grey, BNG Macaw, Sun Conure, Monk Parakeet, Indian Ring Neck
-- Fase anakan: pakan loloh, pengaturan suhu, perawatan khusus
-- Fase dewasa: diet biji/pelet, perilaku mandiri, perawatan umum
-- Jika topik di luar scope → belokkan ke inventaris 4PUTRA
-- Jika ada niat beli/negosiasi/keluhan → sarankan ketik `3` untuk hubungi admin
-
-**Alur Midtrans/QRIS:**
-
-1. Admin buat transaksi → sistem kirim request ke Midtrans Sandbox
-2. Midtrans generate QRIS → chatbot kirim gambar QRIS ke pelanggan
-3. Pelanggan bayar → Midtrans webhook ke `POST /midtrans/callback`
-4. Sistem verifikasi signature → update status → kirim notifikasi ke admin + tanda terima ke pelanggan
-
-## Deployment
-
-Vercel via `vercel.json` — PHP runtime for `api/index.php`, static assets served from `/public`. Cache and views written to `/tmp` in production. `public/build` is gitignored (commented out) — build artifacts may need to be committed for Vercel if not building in CI.
-
-## Gotchas
-
-- **DB for tests**: `phpunit.xml` has SQLite lines commented out. Tests use whatever `DB_CONNECTION` is in `.env`. For local testing, either uncomment the SQLite lines in `phpunit.xml` or set `DB_CONNECTION=sqlite` and `DB_DATABASE=:memory:` in `.env`.
-- **Migrations exist**: `database/migrations/` has tables for users, cache, jobs, achievements, collections, activity_logs, plus Google auth and role columns. Run `php artisan migrate` before the app works.
-- **Admin store/update return JSON**, not redirects. The admin Blade views use JS fetch/AJAX for form submissions, not standard form posts.
-- **Images stored at** `storage/app/public/achievements/` and `storage/app/public/collections/`. Run `php artisan storage:link` for public access.
-- **No Tailwind CDN** in admin layout — removed. Only Vite bundle is used.
-- **No anime.js** — all animations use CSS transitions/Tailwind classes. Removed from dependencies.
-- **Toast system**: `public/js/toast.js` exposes `window.showToast(type, title, message)`. Call from any page. Toast container is `<x-admin.toast>` component.
-- **Skeleton components**: `components/admin/skeleton.blade.php` and `components/site/skeleton.blade.php` for loading states. Use `type` prop: table, card, stat, list (admin) or card, hero, achievement, team, marquee (site).
+- Routing: `routes/web.php` untuk publik dan grup `/admin/*`.
+- Models: `Achievement`, `Collection`, `DailyActivity`, `User`, `ActivityLog`. Model Chatbot: `Pelanggan`, `InventarisBurung`, `Percakapan`, `TransaksiChatbot`, `Pembayaran`, `NotifikasiAdmin`.
+- UI Components: `<x-site.layout>` untuk publik. `layouts/admin.blade.php` untuk admin.
+- Localization: Middleware `Localization` via `/lang/{locale}`. Cache control wajib disesuaikan pada rute ini.
+- Frontend: Vite bundling. Tailwind v4. Interaktivitas via Alpine.js. Navigasi SPA via Turbo Drive.
+- Firebase: Realtime chat (Firestore), user presence (RTDB), admin notifications.
+- Auth: Email/password + Google OAuth. Auto-logout 25 menit inaktivitas.
 
 ## Konvensi UI Admin
 
-- **WAJIB gunakan modal pop-up** untuk semua aksi yang memerlukan konfirmasi: hapus, insert, edit, delete, atau aksi destruktif lainnya. **JANGAN** gunakan `confirm()` bawaan browser.
-- **WAJIB gunakan custom form validation** (JavaScript) untuk semua form. **JANGAN** mengandalkan HTML5 `required` attribute atau browser default validation. Validasi harus menampilkan pesan error di bawah input field dengan styling yang konsisten (merah, teks kecil).
-- **Design System Modal**: Gunakan class `fixed inset-0 z-50 hidden` dengan `bg-black/60 backdrop-blur-sm`. Box modal gunakan `rounded-2xl border border-gray-700`. Lihat contoh di `resources/views/admin/chatbot/inventaris/index.blade.php`.
-- **Design System Form**: Input field gunakan `rounded-xl border-gray-700 bg-[#151a22]`. Button gunakan `rounded-xl`. Semua elemen harus konsisten menggunakan rounded corners.
-- **Design System Buttons**: Tombol aksi utama gunakan `rounded-xl` dengan padding `px-4 py-2.5 text-sm font-semibold`. Tombol batal/secondary gunakan `bg-[#151a22] border border-gray-600 rounded-xl`.
-- **Pattern form validation**: Buat fungsi `validateForm(prefix)` yang mengecek setiap field dan menampilkan error via `tampilkanError(fieldId, pesan)`. Error element harus `<p class="text-xs text-red-400 mt-1 hidden" id="err_[prefix]_[field]">`.
-- **Konsistensi terminologi**: Gunakan "Baby" bukan "Anakan" di semua tampilan user-facing. Database tetap pakai `anakan` di enum, tapi tampilkan sebagai "Baby" di UI.
-- **WAJIB gunakan Button untuk Aksi CRUD**: Di tabel admin, kolom aksi WAJIB menggunakan button dengan styling yang jelas (background color, border, rounded). **JANGAN** gunakan link teks biasa (`<a>` atau `<button>` tanpa styling). Gunakan pattern: `px-3 py-1.5 text-xs font-bold rounded-lg` dengan warna berbeda untuk setiap aksi (edit = blue, hapus = red, dll).
-- **Prinsip desain**: Rounded corners, modern, ringan, konsisten. Hindari desain kotak/square, border teks, atau warna terlalu gelap untuk background modal.
-
-## Key Facts
-
-- **ES Modules** — `"type": "module"` in root `package.json`. All `.js` files use `import`/`export`, not `require()`.
-- **No build/typecheck/lint** for chatbot — Run chatbot files directly with `node public/chatbot/index.js` or `node public/chatbot/whatsapp.js`.
-- **No test suite** — `test.js` is a standalone Apriori analysis runner, not a test framework. Run it with `node public/chatbot/test.js`.
-- **Runtime data** — `apriori.js` reads `transaksi.xlsx` via `import.meta.url` + `path.join(__dirname, ...)`, resolving relative to its own file location. Works from any cwd.
-- **Session state** — `auth_info/` holds Baileys login credentials. Do not delete or commit this folder.
-- **API keys are hardcoded** in `public/chatbot/index.js` and `public/chatbot/whatsapp.js`. Do not extract or rotate without confirming with the owner.
-- **Language** — All user-facing strings and code comments are in Indonesian.
-- **Database** — Chatbot uses the same MySQL database as Laravel app (`4putra-project` on `127.0.0.1:3306`). Node.js connects via `mysql2` package. Run `php artisan migrate` to create all tables.
-- **Midtrans sandbox** — Payment integration uses Midtrans sandbox environment. Change `isProduction: false` to `true` in `midtrans.js` for production.
-
-## Instruksi Bahasa & Komunikasi
-
-- **Bahasa Utama**: Semua interaksi, penjelasan kode, ringkasan rencana, dan komunikasi dengan pengguna WAJIB menggunakan Bahasa Indonesia yang formal namun mudah dipahami.
-- **Komentar Kode**: Tulis komentar di dalam file kode menggunakan Bahasa Indonesia.
-- **Penamaan Variabel/Fungsi**: Tetap gunakan Bahasa Inggris standar industri untuk penamaan fungsi, variabel, dan kelas agar kode tetap bersih (clean code).
-
-## Protokol Perubahan Kode
-
-- **Wajib Klarifikasi**: Sebelum mengubah, mengganti, atau memodifikasi kode apa pun di dalam proyek, AI wajib bertanya dan meminta persetujuan pengguna terlebih dahulu.
-- **Konfirmasi Rencana**: AI harus memaparkan rencana perubahan secara singkat sebelum mendapatkan izin eksekusi dari pengguna.
-
-## Aturan Universal Modifikasi Kode, UI, & Validasi Fungsi
-
-- **Isolasi dan Ketepatan Perubahan:** Saat diminta melakukan modifikasi, penambahan, atau refactoring pada aspek apa pun dalam proyek—baik visual UI (modal, toast, tabel, layout), logika program (controller, middleware, database routing), maupun seluruh integrasi sistem (API, database, library bawaan, serta paket pihak ketiga mana pun tanpa terkecuali)—perubahan harus dilakukan secara presisi dan tepat sasaran sesuai Design System dan arsitektur proyek[cite: 1]. Dilarang keras merusak, menghapus, atau menyederhanakan kode fungsi eksisting yang sudah berjalan sukses tanpa persetujuan tertulis dari pengguna[cite: 1].
-- **Kemampuan Multimodal & Analisis Gambar Universal:** AI Open Code wajib memanfaatkan fitur pembacaan gambar (vision capabilities) pada model apa pun yang sedang aktif saat pengguna memberikan referensi visual (seperti tangkapan layar UI, mock-up desain, alur skema, diagram, atau foto error/bug). AI harus menganalisis elemen visual tersebut secara cermat untuk memastikan implementasi kode, tata letak UI, atau perbaikan bug berjalan presisi sesuai gambaran visual yang diberikan.
-- **Efisiensi Token & Akurasi Tinggi:** AI wajib meminimalkan penggunaan token dan kredit dalam setiap interaksi, pembacaan, maupun penulisan kode. Berikan perubahan yang ringkas, hilangkan kode bawaan yang tidak perlu diubah, dan fokus hanya pada baris kode yang relevan agar hasil eksekusi lebih akurat, presisi, serta terhindar dari bias atau kesalahan akibat pemrosesan konteks yang terlalu panjang.
-- **Standar Performa & Website Ringan:** Setiap pengembangan atau perubahan kode wajib menjaga situs tetap ringan, cepat dibuka, hemat data, dan berukuran kecil[cite: 1].
-    - **Ukuran Halaman & Aset:** Usahakan total beban data teroptimasi dengan baik. Penggunaan gambar format JPG, PNG, maupun WebP diperbolehkan selama ukurannya terkompresi dan memiliki dimensi piksel yang pas. Penggunaan video juga diperbolehkan dengan kompresi yang optimal serta muatan (loading) yang tidak memberatkan halaman.
-    - **Minimalisir Skrip & Plugin:** Gunakan dependensi, skrip luar, atau paket tambahan seperlunya saja[cite: 1].
-    - **Desain Ringkas:** Jaga tata letak tetap bersih dan terstruktur secara efisien.
-    - **Kode Bersih & Caching:** Tulis HTML, CSS, dan JavaScript secara efisien tanpa kode sisa yang tidak terpakai, serta manfaatkan sistem penyimpanan sementara (cache).
-- **Wajib Uji Menyeluruh Pasca Perubahan (Regresi Prohibited):** Setiap kali ada baris kode yang diubah, ditambah, atau diperbaiki, sistem WAJIB diuji kembali secara mandiri sebelum menyerahkan hasil pekerjaan[cite: 1].
-    - Perubahan UI harus diuji ketepatan penempatannya, kondisi kemunculannya, dan fungsionalitas fitur di baliknya[cite: 1].
-    - Perubahan Logika/Fungsi harus diuji input-output data, penanganan error, dan integrasi end-to-end untuk memastikan tidak ada fitur lain yang ikut rusak (zero regression)[cite: 1].
-    - Penambahan paket (package) baru atau implementasi hal-hal baru wajib diuji fungsionalitasnya secara penuh, kompatibilitasnya dengan sistem yang ada, serta memastikan tidak menimbulkan konflik atau mematahkan fitur lama.
-- **Penanganan Gagal Uji:** Jika hasil pengujian mandiri pasca perubahan menunjukkan adanya kegagalan fungsi, anomali visual, atau error sistem, segera lakukan debugging mendalam pada baris kode terkait[cite: 1]. Perbaiki masalah tersebut hingga fungsi kembali berjalan 100% sukses dan normal sebelum melaporkan progress kepada pengguna[cite: 1].
-- **Format Laporan Pengujian Kode & Komponen:** Setiap penyelesaian tugas modifikasi wajib disertai laporan hasil pengujian konkret di akhir respon dengan struktur sebagai berikut[cite: 1]:
-    - **Aspek/Kode yang Diubah:** [Nama file, komponen, fungsi logika, implementasi baru, atau package baru yang dimodifikasi/ditambahkan]
-    - **Status Fungsionalitas Sistem:** [Berjalan Normal / Tepat Sasaran / Mengalami Kendala][cite: 1]
-    - **Bukti/Alur Tes:** [Penjelasan langkah demi langkah bagaimana perubahan, penambahan fitur, atau package baru tersebut diuji secara mandiri dan dibuktikan sukses tanpa merusak fitur lainnya]
+- Wajib gunakan modal pop-up untuk semua konfirmasi destruktif. Dilarang menggunakan `confirm()` browser.
+- Wajib gunakan validasi form kustom JavaScript. Dilarang mengandalkan validasi bawaan HTML5.
+- Design System: Gunakan `rounded-xl`, `border-gray-700`, latar belakang gelap `#151a22`. Tombol aksi menggunakan padding `px-4 py-2.5 text-sm font-semibold`.
+- Terminologi: Gunakan "Baby" untuk tampilan antarmuka menggantikan kata "Anakan". Database tetap menggunakan `anakan`.
+- Tombol Aksi Tabel: Wajib menggunakan elemen button dengan styling warna spesifik (edit biru, hapus merah). Dilarang menggunakan tautan teks polos.
 
 ## Aturan Git & Deployment
 
-- **Push Langsung ke GitHub:** Ketika pengguna meminta push ke GitHub, lakukan langsung tanpa bertanya lagi. Jangan menunggu konfirmasi tambahan — langsung `git add`, `git commit`, dan `git push`.
-- **Branch Default:** Branch utama adalah `development`. Push ke `development` kecuali pengguna secara eksplisit meminta branch lain.
-- **Pesan Commit:** Gunakan pesan commit yang deskriptif dalam Bahasa Indonesia, singkat, dan jelas. Contoh: `fix: migrasi gambar ke Cloudinary + perbaikan domain admin`.
+- Eksekusi Git langsung tanpa konfirmasi: `git add`, `git commit`, `git push`.
+- Branch kerja default adalah `development`.
+- Pesan commit wajib deskriptif dalam Bahasa Indonesia.
 
-## Aturan Wajib Testing & Validasi Sebelum Push
+## Checklist Verifikasi & Testing Mandatory
 
-Sebelum menyerahkan hasil pekerjaan atau melakukan push ke GitHub, AI WAJIB melakukan pengecekan menyeluruh terhadap semua aspek berikut:
+Setiap modifikasi wajib melewati validasi berikut sebelum diselesaikan:
 
-### Checklist Testing Wajib
+1. CRUD & Media: Create, Read, Update, Delete berjalan normal. Upload file berhasil dan dirender.
+2. Routing & Caching: Middleware `AdminOnly` berfungsi. Tidak ada loop redirect. Turbo Drive tidak mengalami cache collision pada pergantian bahasa.
+3. Database TiDB: Migrasi kompatibel. `PDO::ATTR_STRINGIFY_FETCHES` aktif. Hindari komparasi strict (`===`) pada ID.
+4. Performa Serverless: `APP_DEBUG=false`. File statis dilayani oleh Vercel Edge CDN dengan Cache-Control yang tepat.
+5. Error Handling: Penanganan AJAX error menampilkan pesan jelas. Bebas error 500.
 
-1. **Fungsionalitas CRUD Admin:**
-    - Pastikan semua operasi Create, Read, Update, Delete berfungsi di semua tabel (Users, Collections, Achievements, Chatbot)
-    - Pastikan upload foto/video berhasil dan gambar muncul di halaman terkait
-    - Pastikan modal konfirmasi hapus berfungsi dengan benar
-    - Pastikan validasi form menampilkan pesan error yang sesuai
+## Protokol Orkestrasi Skill Otonom
 
-2. **Routing & Middleware:**
-    - Pastikan middleware `AdminOnly` memeriksa role admin (bukan hanya autentikasi)
-    - Pastikan middleware `AdminDomain` menggunakan redirect 308 (bukan 301) untuk mempreservasi method POST
-    - Pastikan tidak ada redirect loop antar domain
+Sistem wajib memicu skill berikut secara mandiri berdasarkan konteks fase pekerjaan:
 
-3. **Database Compatibility (TiDB):**
-    - Pastikan semua migration kompatibel dengan TiDB Cloud
-    - Pastikan AUTO_INCREMENT berfungsi di semua tabel
-    - Pastikan kolom JSON (metadata) tersimpan dengan benar
-
-4. **Performa:**
-    - Pastikan `APP_DEBUG=false` di production
-    - Pastikan tidak ada duplikasi loading resource (font, CSS, JS)
-    - Pastikan gambar Cloudinary menggunakan transformasi `q_auto,f_auto`
-    - Pastikan Firebase/lazy-loaded resources tidak memblok render halaman
-
-5. **Environment Variables:**
-    - Pastikan semua env vars yang diperlukan tersedia di `vercel.json` atau Vercel Dashboard
-    - Jangan masukkan secrets (API keys, passwords) ke dalam `vercel.json` — gunakan Vercel Dashboard
-
-6. **Error Handling:**
-    - Pastikan tidak ada error 500 di halaman manapun
-    - Pastikan error handling di JavaScript (fetch/AJAX) menampilkan pesan yang jelas
-    - Pastikan `filemtime()` tidak digunakan di template Blade (gagal di Vercel)
-
-7. **Admin Comment di Aktivitas User:**
-    - Pastikan admin bisa comment di semua aktivitas (user lain DAN admin sendiri)
-    - Pastikan URL comment menggunakan ID aktual (bukan `PHP_INT_MAX` / `9223372036854775807`)
-    - Pastikan komentar tersimpan di `metadata` activity log
-    - Pastikan komentar muncul di chat bubble (pojok kanan bawah) via Firebase
-    - Pastikan chat widget memproses notifikasi dari `chat-admin-notifications` JSON
-    - Test: Klik "Kirim" pada form comment → harus redirect back dengan pesan sukses (bukan 404)
-
-8. **PDO::ATTR_STRINGIFY_FETCHES:**
-    - Konfigurasi ini aktif di `config/database.php` untuk mencegah overflow integer besar dari TiDB
-    - Semua ID dikembalikan sebagai string oleh PDO
-    - Model `ActivityLog` menggunakan `$keyType = 'string'` dan cast `id` sebagai string
-    - Hindari strict comparison (`===`) antar ID — gunakan `==` atau cast ke string terlebih dahulu
-
-9. **Testing Intensif Setelah Perubahan:**
-    - Jalankan `php artisan migrate` setelah membuat migration baru
-    - Jalankan `php artisan test` untuk memastikan tidak ada regresi
-    - Jalankan `npm run build` jika ada perubahan frontend
-    - Test SEMUA fitur CRUD secara manual: Create, Read, Update, Delete di setiap modul
-    - Test admin comment di aktivitas user (termasuk aktivitas sendiri)
-    - Test chat bubble menerima notifikasi komentar
-    - Cek browser console untuk error JavaScript
-    - Cek network tab untuk request yang gagal (status 4xx/5xx)
-
-## Protokol Eksekusi Skill Otomatis (Autonomous Skill Orchestration)
-
-AI wajib mengevaluasi konteks perintah pengguna secara mandiri dan langsung memanggil skill yang relevan dari registry tanpa menunggu perintah manual. Alur orkestrasi mencakup seluruh 30 skill berikut:
-
-1. Fase Inisiasi, Ideasi & Penajaman Konsep:
-    - `using-superpowers`: Pemicu utama di awal sesi untuk menyelaraskan alur kerja otonom.
-    - `brainstorming`: Eksplorasi ide, perancangan konsep kreatif, atau fitur baru.
-    - `grill-me`: Wawancara kritis untuk menguji asumsi, menemukan celah logika, dan menajamkan rencana sebelum coding.
-    - `writing-plans`: Menyusun roadmap dan langkah implementasi teknis yang terstruktur.
-    - `find-skills`: Menemukan dan menyarankan instalasi skill baru saat dihadapkan pada kapabilitas khusus.
-
-2. Fase Desain UI/UX & Frontend:
-    - `ui-ux-pro-max`: Intelegensi desain UI/UX tingkat lanjut untuk standardisasi layout profesional, tipografi, visual hierarchy, dan estetika premium.
-    - `impeccable`: Merancang, merombak, dan menyempurnakan kualitas estetika serta tata letak visual level tinggi.
-    - `frontend-design`: Implementasi teknis styling Tailwind v4, modularitas Blade components, dan interaktivitas Alpine.js.
-
-3. Fase Eksekusi Kode, Backend & Simplicity (KISS / Ponytail):
-    - `ponytail`: Memaksa implementasi solusi paling ringkas dan efisien tanpa baris kode yang mubazir.
-    - `codebase-design`: Merancang arsitektur modul mendalam, penataan domain, dan pola desain bersih.
-    - `test-driven-development`: Menulis dan menjalankan pengujian sebelum menulis logika utama.
-    - `executing-plans`: Eksekusi disiplin berdasarkan rencana teknis yang telah disetujui.
-    - `using-git-worktrees`: Mengisolasi pekerjaan fitur pada workspace branch terpisah.
-    - `subagent-driven-development`: Mendelegasikan tugas multi-langkah ke sub-agen independen.
-    - `dispatching-parallel-agents`: Mengeksekusi 2 tugas independen atau lebih secara paralel.
-
-4. Fase Debugging & Validasi Arsitektur Hibrida:
-    - `systematic-debugging`: Langsung dipicu saat terjadi bug, exception, atau kegagalan terminal test dan build.
-    - `fullstack-validator`: Memvalidasi kepatuhan SSL TiDB Cloud, penanganan format ID (Stringify Fetches), batasan read-only Vercel Serverless `/tmp`, dan isolasi runtime bot Node.js[cite: 1].
-
-5. Fase Review Kualitas, Audit Kode, Copywriting & Finalisasi:
-    - `no-ai-slop`: Memurnikan seluruh teks UI, deskripsi konten, commit message, dan dokumentasi dari gaya tulisan AI klise: hapus tanda baca em dash, potong basa-basi/meta-announcements, serta buat gaya penulisan tajam, padat, dan natural layaknya manusia.
-    - `ponytail-review`: Code review khusus untuk memangkas over-engineering dan kompleksitas berlebih.
-    - `ponytail-audit`: Audit menyeluruh pada repository untuk mendeteksi kode yang tidak efisien.
-    - `ponytail-debt`: Memindai dan merapikan catatan penanda technical debt (`ponytail:` tags).
-    - `ponytail-gain`: Menghitung dan menampilkan metrik dampak penyederhanaan kode.
-    - `requesting-code-review`: Mengajukan tinjauan komprehensif atas kualitas implementasi kode.
-    - `receiving-code-review`: Menangani dan menerapkan perbaikan dari feedback code review.
-    - `improve-codebase-architecture`: Memindai codebase untuk menemukan peluang modularisasi lanjutan.
-    - `verification-before-completion`: Wajib dijalankan sebelum menyatakan tugas selesai guna memastikan zero regression[cite: 1].
-    - `finishing-a-development-branch`: Menyelesaikan branch, membersihkan worktree, dan memfinalisasi integrasi setelah semua tes lolos.
-
-6. Manajemen Konfigurasi & Skill:
-    - `customize-opencode`: Digunakan saat membuat atau memodifikasi konfigurasi sistem OpenCode.
-    - `writing-skills`: Digunakan saat membuat atau mengedit file definisi skill baru.
-    - `ponytail-help`: Kartu referensi cepat untuk opsi dan parameter mode ponytail.
+1. Fase Inisiasi & Perencanaan:
+   `using-superpowers`, `brainstorming`, `grill-me`, `writing-plans`, `find-skills`.
+2. Fase Frontend & Visual UI:
+   `ui-ux-pro-max`, `impeccable`, `frontend-design`.
+3. Fase Eksekusi & Backend (KISS Principle):
+   `ponytail`, `codebase-design`, `test-driven-development`, `executing-plans`, `using-git-worktrees`, `subagent-driven-development`, `dispatching-parallel-agents`.
+4. Fase Debugging & Validasi:
+   `systematic-debugging`, `fullstack-validator`.
+5. Fase Tinjauan Kualitas & Finalisasi:
+   `no-ai-slop`, `ponytail-review`, `ponytail-audit`, `ponytail-debt`, `ponytail-gain`, `requesting-code-review`, `receiving-code-review`, `improve-codebase-architecture`, `verification-before-completion`, `finishing-a-development-branch`, `customize-opencode`, `writing-skills`, `ponytail-help`.

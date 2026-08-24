@@ -117,6 +117,9 @@
     "facilities.title": "Fasilitas Penangkaran Modern",
     "facilities.desc": "Dokumentasi standar fasilitas penangkaran modern PT 4Putra Vertex Aviary sedang dipersiapkan.",
 
-    "daily.title": "Aktivitas Harian",
-    "daily.desc": "Dokumentasi rutinitas perawatan harian burung kami — pemberian pakan, grooming, dan pemantauan kesehatan — sedang dipersiapkan."
+    "daily.page_badge": "Jurnal Harian",
+    "daily.hero_title": "Aktivitas Harian Penangkaran",
+    "daily.hero_desc": "Rekam jejak rutinitas perawatan yang kami jalankan setiap hari. Dari rotasi pakan pagi, grooming mingguan, sampai audit kesehatan bersama dokter hewan mitra, semuanya terdokumentasi apa adanya.",
+    "daily.view_gallery": "Lihat Galeri",
+    "daily.empty": "Belum ada dokumentasi aktivitas harian yang dipublikasikan. Nantikan pembaruan dari tim penangkaran kami."
 }

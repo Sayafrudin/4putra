@@ -239,7 +239,7 @@ Sebelum menyerahkan hasil pekerjaan atau melakukan push ke GitHub, AI WAJIB mela
 
 ## Protokol Eksekusi Skill Otomatis (Autonomous Skill Orchestration)
 
-AI wajib mengevaluasi konteks perintah pengguna secara mandiri dan langsung memanggil skill yang relevan dari registry tanpa menunggu perintah manual. Alur orkestrasi mencakup seluruh 29 skill berikut:
+AI wajib mengevaluasi konteks perintah pengguna secara mandiri dan langsung memanggil skill yang relevan dari registry tanpa menunggu perintah manual. Alur orkestrasi mencakup seluruh 30 skill berikut:
 
 1. Fase Inisiasi, Ideasi & Penajaman Konsep:
     - `using-superpowers`: Pemicu utama di awal sesi untuk menyelaraskan alur kerja otonom.
@@ -249,6 +249,7 @@ AI wajib mengevaluasi konteks perintah pengguna secara mandiri dan langsung mema
     - `find-skills`: Menemukan dan menyarankan instalasi skill baru saat dihadapkan pada kapabilitas khusus.
 
 2. Fase Desain UI/UX & Frontend:
+    - `ui-ux-pro-max`: Intelegensi desain UI/UX tingkat lanjut untuk standardisasi layout profesional, tipografi, visual hierarchy, dan estetika premium.
     - `impeccable`: Merancang, merombak, dan menyempurnakan kualitas estetika serta tata letak visual level tinggi.
     - `frontend-design`: Implementasi teknis styling Tailwind v4, modularitas Blade components, dan interaktivitas Alpine.js.
 

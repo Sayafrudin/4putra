@@ -21,6 +21,8 @@ class CachePublic
                 'Cache-Control',
                 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400'
             );
+            // Edge cache wajib membedakan konten per bahasa (locale di cookie session)
+            $response->headers->set('Vary', 'Cookie, Accept-Language');
         }
 
         return $response;

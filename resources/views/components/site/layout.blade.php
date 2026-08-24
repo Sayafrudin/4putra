@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
     <meta charset="UTF-8">
@@ -31,7 +31,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     {{-- Speculation Rules API: prefetch halaman publik saat hover/pointerdown (Chromium) --}}
     <script type="speculationrules">
-        {"prefetch":[{"source":"document","where":{"href_matches":"/*"},"eagerness":"conservative"}]}
+        {"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":"/lang/*"}}]},"eagerness":"conservative"}]}
     </script>
 
     {{-- Fallback micro-prefetcher untuk browser tanpa Speculation Rules (Firefox/Safari) --}}

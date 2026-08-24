@@ -184,12 +184,12 @@
             </li>
 
             <li class="border-t border-gray-500/50 pt-4 mt-2 flex gap-4 px-4 items-center justify-center">
-                <a href="{{ route('lang.switch', 'id') }}"
+                <a href="{{ route('lang.switch', 'id') }}" data-turbo="false"
                     class="px-4 py-2 transition-colors {{ app()->getLocale() == 'id' ? 'bg-[#E62C37] text-white font-bold shadow-md' : 'text-gray-500 hover:bg-gray-100' }}">
                     Indonesia
                 </a>
                 <span class="text-gray-300">|</span>
-                <a href="{{ route('lang.switch', 'en') }}"
+                <a href="{{ route('lang.switch', 'en') }}" data-turbo="false"
                     class="px-4 py-2 transition-colors {{ app()->getLocale() == 'en' ? 'bg-[#E62C37] text-white font-bold shadow-md' : 'text-gray-500 hover:bg-gray-100' }}">
                     English
                 </a>
@@ -273,6 +273,8 @@
         // --- 2. TOGGLE EVENT LISTENER (Redirect) ---
         if (langToggle) {
             langToggle.addEventListener('change', function() {
+                // Hapus snapshot Turbo agar tidak restore bahasa lama
+                window.Turbo?.cache?.clear();
                 window.location.href = this.checked ? "{{ route('lang.switch', 'en') }}" :
                     "{{ route('lang.switch', 'id') }}";
             });

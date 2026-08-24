@@ -78,8 +78,17 @@ Route::get('lang/{locale}', function ($locale) {
         Session::put('locale', $locale);
     }
 
+    // Cache-buster ?v=: pastikan target redirect tidak dilayani cache HTTP/edge/
+    // prefetch berbahasa lama. Cookie 'locale' mengaktifkan Vary: Cookie di CachePublic.
+    $target = trim(preg_replace('/([?&])v=\d+/', '$1', url()->previous() ?: url('/')), '?&');
+    if (!str_contains($target, url('/')) || str_contains($target, '/lang/') || str_contains($target, '/midtrans')) {
+        $target = url('/');
+    }
+    $sep = str_contains($target, '?') ? '&' : '?';
+
     // no-store: redirect switch tidak boleh di-cache browser/edge
-    return redirect()->back()
+    return redirect()->to($target.$sep.'v='.time())
+        ->withCookie(cookie('locale', $locale ?: 'id', 60 * 24 * 30))
         ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
 })->name('lang.switch');
 

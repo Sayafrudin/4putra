@@ -66,7 +66,10 @@
     "achievements.hero_desc_1": "4Putra Vertex Aviary berkesempatan menggelar pameran edukatif di Universitas Dinamika. Bukan sekadar pameran visual, kami menghadirkan pengalaman interaktif di mana mahasiswa dapat berinteraksi langsung dengan koleksi eksotis kami, mulai dari Galah yang ceria hingga Macaw yang megah.",
     "achievements.hero_desc_2": "Kegiatan ini merupakan wujud nyata komitmen kami untuk tidak hanya menjadi penangkar, tetapi juga edukator. Kami berbagi wawasan mengenai karakteristik unik burung paruh bengkok, pentingnya kesejahteraan satwa, serta legalitas dalam pemeliharaan satwa eksotis di Indonesia.",
     "achievements.hero_desc_3": "Surabaya, 24 Juli 2025",
-    
+    "achievements.title_prefix": "Pencapaian",
+    "achievements.title_suffix": "Kami",
+    "achievements.page_desc": "Jejak langkah dan pencapaian PT 4Putra Vertex Aviary.",
+
 
     "achievements2.hero_welcome": "SOSIALISASI TERKAIT PETERNAKAN PARROT, KESEHATAN PARROT, DAN LAIN LAIN SEPUTAR PARROT PADA WARGA ",
     "achievements2.hero_aviary": "DESA DUNGUS, GRESIK",
@@ -114,14 +117,15 @@
     "page.cta_collections": "Lihat Koleksi",
     "page.cta_home": "Kembali ke Home",
 
-    "facilities.hero_title": "Fasilitas Penangkaran",
+    "facilities.title_prefix": "Fasilitas",
+    "facilities.title_suffix": "Penangkaran",
     "facilities.hero_desc": "Kenali area-area yang menunjang keseharian burung di aviary kami, mulai dari kandang koloni induk, ruang inkubasi, sampai klinik kecil milik sendiri. Semua fasilitas dirawat dan diaudit secara berkala.",
     "facilities.all": "Semua",
     "facilities.view_detail": "Lihat Detail",
     "facilities.empty": "Belum ada fasilitas yang dipublikasikan. Nantikan pembaruan dari tim penangkaran kami.",
 
-    "daily.page_badge": "Jurnal Harian",
-    "daily.hero_title": "Aktivitas Harian Penangkaran",
+    "daily.title_prefix": "Aktivitas Harian",
+    "daily.title_suffix": "Penangkaran",
     "daily.hero_desc": "Rekam jejak rutinitas perawatan yang kami jalankan setiap hari. Dari rotasi pakan pagi, grooming mingguan, sampai audit kesehatan bersama dokter hewan mitra, semuanya terdokumentasi apa adanya.",
     "daily.view_gallery": "Lihat Galeri",
     "daily.empty": "Belum ada dokumentasi aktivitas harian yang dipublikasikan. Nantikan pembaruan dari tim penangkaran kami."

@@ -66,6 +66,9 @@
     "achievements.hero_desc_1": "4Putra Vertex Aviary had the opportunity to hold an educational exhibition at Dinamika University. It was not just a visual exhibition; we presented an interactive experience where students could interact directly with our exotic collection, from cheerful Galah to majestic Macaws.",
     "achievements.hero_desc_2": "This activity is a tangible manifestation of our commitment to not only be breeders, but also educators. We share insights about the unique characteristics of curved-beak birds, the importance of animal welfare, and the legality of keeping exotic animals in Indonesia.",
     "achievements.hero_desc_3": "Surabaya, 24 July 2025",
+    "achievements.title_prefix": "Our",
+    "achievements.title_suffix": "Achievements",
+    "achievements.page_desc": "Milestones and the track record of PT 4Putra Vertex Aviary.",
     
 
     "achievements2.hero_welcome": "SOCIALIZATION RELATED TO PARROT BREEDING, PARROT HEALTH, AND OTHER MATTERS CONCERNING PARROTS AMONG RESIDENTS OF ",
@@ -114,14 +117,15 @@
     "page.cta_collections": "View Collections",
     "page.cta_home": "Back to Home",
 
-    "facilities.hero_title": "Aviary Facilities",
+    "facilities.title_prefix": "Aviary",
+    "facilities.title_suffix": "Facilities",
     "facilities.hero_desc": "Get to know the areas that support our birds daily life, from the breeder colony cages and the incubation room to our own small clinic. Every facility is maintained and audited on a regular schedule.",
     "facilities.all": "All",
     "facilities.view_detail": "View Detail",
     "facilities.empty": "No facilities have been published yet. Stay tuned for updates from our breeding team.",
 
-    "daily.page_badge": "Field Journal",
-    "daily.hero_title": "Daily Activities at the Aviary",
+    "daily.title_prefix": "Daily Activities at the",
+    "daily.title_suffix": "Aviary",
     "daily.hero_desc": "A running record of the care routines we go through every day. From morning feed rotations to weekly grooming sessions and health audits with our partner veterinarian, everything is documented as it happens.",
     "daily.view_gallery": "View Gallery",
     "daily.empty": "No daily activity documentation has been published yet. Stay tuned for updates from our breeding team."

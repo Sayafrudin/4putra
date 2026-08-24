@@ -62,15 +62,12 @@
         <div class="max-w-7xl mx-auto">
 
             {{-- Header halaman --}}
-            <header class="mb-10">
-                <div
-                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#E62C37]/25 text-[#E62C37] text-xs font-bold uppercase tracking-wider">
-                    {{ __('Facilities') }}
-                </div>
-                <h1 class="mt-4 text-3xl md:text-4xl font-extrabold uppercase tracking-tight text-gray-900 dark:text-white">
-                    {{ __('facilities.hero_title') }}
+            <header class="mb-10 text-center">
+                <h1 class="text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
+                    {{ __('facilities.title_prefix') }}
+                    <span class="font-medium text-[#E62C37]">{{ __('facilities.title_suffix') }}</span>
                 </h1>
-                <p class="mt-3 max-w-2xl text-gray-600 dark:text-gray-400 leading-relaxed">
+                <p class="mt-3 max-w-2xl mx-auto text-gray-600 dark:text-gray-400 leading-relaxed">
                     {{ __('facilities.hero_desc') }}
                 </p>
             </header>
@@ -89,7 +86,7 @@
                 }">
 
                 {{-- Filter pills kategori --}}
-                <div class="flex flex-wrap items-center gap-2.5 mb-10" role="group" aria-label="Filter kategori">
+                <div class="flex flex-wrap justify-center items-center gap-x-2 gap-y-2.5 mb-10" role="group" aria-label="Filter kategori">
                     <button type="button" @click="cat = 'all'"
                         class="px-4 py-2 rounded-full text-sm font-semibold border transition-all duration-200"
                         :class="cat === 'all'

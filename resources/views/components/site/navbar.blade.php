@@ -48,12 +48,13 @@
         </a>
     </div>
 
-    <div class="hidden md:flex items-center ml-4">
+    <div class="hidden md:flex items-center ml-4" x-data="{ lang: '{{ app()->getLocale() }}' }">
         <span class="lang-label mr-3 text-sm font-bold text-[#E62C37] transition-colors duration-300">ID</span>
 
         <label class="relative flex items-center cursor-pointer">
-            <input type="checkbox" id="lang-toggle" value="" class="sr-only peer"
-                {{ app()->getLocale() == 'en' ? 'checked' : '' }}>
+            <input type="checkbox" id="lang-toggle" class="sr-only peer"
+                :checked="lang === 'en'"
+                @change="lang = $el.checked ? 'en' : 'id'; window.Turbo && window.Turbo.cache.clear(); window.location.href = '/lang/' + lang">
 
             <div
                 class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer 
@@ -225,7 +226,6 @@
         const mobileMenu = document.getElementById('mobile-menu');
 
         // Toggle Selectors
-        const langToggle = document.getElementById('lang-toggle');
         const langLabels = document.querySelectorAll('.lang-label');
 
         // --- DARK MODE TOGGLE ---
@@ -269,16 +269,6 @@
 
         // Update tombol saat load
         updateDarkModeBtns();
-
-        // --- 2. TOGGLE EVENT LISTENER (Redirect) ---
-        if (langToggle) {
-            langToggle.addEventListener('change', function() {
-                // Hapus snapshot Turbo agar tidak restore bahasa lama
-                window.Turbo?.cache?.clear();
-                window.location.href = this.checked ? "{{ route('lang.switch', 'en') }}" :
-                    "{{ route('lang.switch', 'id') }}";
-            });
-        }
 
         // --- 3. SCROLL LOGIC ---
         const handleScroll = () => {

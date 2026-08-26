@@ -17,7 +17,6 @@ use App\Http\Controllers\CollectionController;
 use App\Http\Controllers\DailyActivityController;
 use App\Http\Controllers\FacilityController;
 use App\Http\Controllers\StorageController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 
@@ -117,15 +116,8 @@ Route::prefix('admin')->middleware(['admin.auth', 'admin.domain'])->group(functi
     // Logout dari admin domain
     Route::post('/logout', [LogoutController::class, 'logout'])->name('admin.logout');
 
-    // Ping session (keep-alive + refresh CSRF token + extend session lifetime)
-    Route::match(['get', 'post'], '/ping', function (Request $request) {
-        $request->session()->put('last_activity', time());
-
-        return response()->json([
-            'ok' => true,
-            'csrf' => csrf_token(),
-        ]);
-    })->name('admin.ping');
+    // Ping session (keep-alive + refresh CSRF token)
+    Route::match(['get', 'post'], '/ping', [DashboardController::class, 'ping'])->name('admin.ping');
 
     // Profil akun
     Route::get('/profile', [ProfileController::class, 'edit'])->name('admin.profile.edit');

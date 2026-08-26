@@ -52,6 +52,6 @@ class GoogleController extends Controller
         // Update last_login_at langsung ke database
         User::where('id', $user->id)->update(['last_login_at' => now()]);
 
-        return redirect()->route('admin.dashboard')->with('success', 'Selamat datang kembali, '.$user->name.'!');
+        return redirect()->intended(route('admin.dashboard'))->with('success', 'Selamat datang kembali, '.$user->name.'!');
     }
 }

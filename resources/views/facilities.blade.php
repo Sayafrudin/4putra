@@ -42,7 +42,11 @@
                 'excerpt' => Str::limit(strip_tags($description), 110),
                 'cat' => $f->category,
                 'catLabel' => $isEn && $f->category_en ? $f->category_en : $f->category,
-                'video' => $parseEmbed($f->video_url),
+                'videos' => collect($f->video_urls ?? [])
+                    ->map(fn ($u) => $parseEmbed($u))
+                    ->filter()
+                    ->values()
+                    ->all(),
                 'thumbs' => collect($f->images ?? [])
                     ->map(fn ($u) => $transform($u, 'w_600,c_fill,q_auto,f_auto'))
                     ->values()
@@ -197,13 +201,18 @@
 
                                 {{-- Isi panel: scrollable --}}
                                 <div class="flex-1 overflow-y-auto overscroll-contain px-6 py-5">
-                                    {{-- Video player (lazy: hanya mount saat panel aktif) --}}
-                                    <template x-if="items[idx].video">
-                                        <div class="aspect-video overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-black mb-6">
-                                            <iframe :src="open ? items[idx].video : ''" loading="lazy"
-                                                class="w-full h-full" frameborder="0"
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                allowfullscreen></iframe>
+                                    {{-- Video players: multi-link, berurutan sebelum galeri (lazy: hanya mount saat panel aktif) --}}
+                                    <template x-if="items[idx].videos.length > 0">
+                                        <div class="space-y-4 mb-6">
+                                            <template x-for="(v, vi) in items[idx].videos" :key="vi">
+                                                <div
+                                                    class="aspect-video overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-black">
+                                                    <iframe :src="open ? v : ''" loading="lazy"
+                                                        class="w-full h-full" frameborder="0"
+                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                        allowfullscreen></iframe>
+                                                </div>
+                                            </template>
                                         </div>
                                     </template>
 

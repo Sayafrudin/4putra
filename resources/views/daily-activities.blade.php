@@ -36,11 +36,15 @@
         $feed = $activities->map(function ($a) use ($isEn, $transform, $parseEmbed) {
             $description = $isEn && $a->description_en ? $a->description_en : $a->description;
 
-            // Galeri media slider: video (jika ada) menjadi item pertama
+            // Galeri media slider: semua video (jika ada) menjadi item pertama
             $media = [];
-            $videoEmbed = $parseEmbed($a->video_url ?? null);
-            if ($videoEmbed) {
-                $media[] = ['type' => 'video', 'src' => $videoEmbed];
+            $videoEmbeds = collect($a->video_urls ?? [])
+                ->map(fn ($u) => $parseEmbed($u))
+                ->filter()
+                ->values()
+                ->all();
+            foreach ($videoEmbeds as $ve) {
+                $media[] = ['type' => 'video', 'src' => $ve];
             }
             $thumbs = [];
             foreach ($a->images ?? [] as $u) {
@@ -57,7 +61,7 @@
                 'description' => $description,
                 'excerpt' => Str::limit(strip_tags($description), 170),
                 'date' => \Carbon\Carbon::parse($a->activity_date)->translatedFormat('d F Y'),
-                'video' => $videoEmbed,
+                'videos' => $videoEmbeds,
                 'thumbs' => $thumbs,
                 'media' => $media,
             ];

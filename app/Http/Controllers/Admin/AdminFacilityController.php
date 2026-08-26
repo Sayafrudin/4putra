@@ -15,7 +15,7 @@ class AdminFacilityController extends Controller
     public function index()
     {
         $facilities = Cache::remember('admin.facilities', 120, function () {
-            return Facility::select('id', 'title', 'title_en', 'category', 'category_en', 'description', 'description_en', 'video_url', 'images')
+            return Facility::select('id', 'title', 'title_en', 'category', 'category_en', 'description', 'description_en', 'video_urls', 'images')
                 ->orderByDesc('id')
                 ->get();
         });
@@ -49,7 +49,7 @@ class AdminFacilityController extends Controller
                 'category_en' => $request->category_en,
                 'description' => $request->description,
                 'description_en' => $request->description_en,
-                'video_url' => $this->nullableUrl($request->video_url),
+                'video_urls' => $this->cleanVideoUrls($request),
                 'images' => $cloudUrls,
             ]);
 
@@ -89,6 +89,8 @@ class AdminFacilityController extends Controller
                 'title' => 'required|string|max:255',
                 'category' => 'required|string|max:100',
                 'description' => 'required|string',
+                'video_urls' => 'nullable|array',
+                'video_urls.*' => 'nullable|url|max:255',
             ]);
 
             // Foto lama minus yang dihapus admin, plus upload baru
@@ -111,7 +113,7 @@ class AdminFacilityController extends Controller
                 'category_en' => $request->category_en,
                 'description' => $request->description,
                 'description_en' => $request->description_en,
-                'video_url' => $this->nullableUrl($request->video_url),
+                'video_urls' => $this->cleanVideoUrls($request),
                 'images' => $images,
             ]);
 
@@ -171,11 +173,15 @@ class AdminFacilityController extends Controller
             ->all();
     }
 
-    private function nullableUrl(?string $url): ?string
+    private function cleanVideoUrls(Request $request): ?array
     {
-        $url = trim((string) $url);
+        $urls = collect($request->input('video_urls', []))
+            ->map(fn ($url) => trim((string) $url))
+            ->filter(fn ($url) => $url !== '' && filter_var($url, FILTER_VALIDATE_URL))
+            ->values()
+            ->all();
 
-        return $url !== '' && filter_var($url, FILTER_VALIDATE_URL) ? $url : null;
+        return $urls === [] ? null : $urls;
     }
 
     /**

@@ -15,7 +15,7 @@ class AdminDailyActivityController extends Controller
     public function index()
     {
         $activities = Cache::remember('admin.daily_activities', 120, function () {
-            return DailyActivity::select('id', 'title', 'title_en', 'description', 'description_en', 'video_url', 'activity_date', 'images')
+            return DailyActivity::select('id', 'title', 'title_en', 'description', 'description_en', 'video_urls', 'activity_date', 'images')
                 ->orderByDesc('activity_date')
                 ->get();
         });
@@ -30,7 +30,8 @@ class AdminDailyActivityController extends Controller
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
                 'activity_date' => 'required|date',
-                'video_url' => 'nullable|url|max:255',
+                'video_urls' => 'nullable|array',
+                'video_urls.*' => 'nullable|url|max:255',
             ]);
 
             // Gambar di-upload langsung dari browser ke Cloudinary
@@ -48,7 +49,7 @@ class AdminDailyActivityController extends Controller
                 'title_en' => $request->title_en,
                 'description' => $request->description,
                 'description_en' => $request->description_en,
-                'video_url' => $this->nullableUrl($request->video_url),
+                'video_urls' => $this->cleanVideoUrls($request),
                 'activity_date' => $request->activity_date,
                 'images' => $cloudUrls,
             ]);
@@ -89,7 +90,8 @@ class AdminDailyActivityController extends Controller
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
                 'activity_date' => 'required|date',
-                'video_url' => 'nullable|url|max:255',
+                'video_urls' => 'nullable|array',
+                'video_urls.*' => 'nullable|url|max:255',
             ]);
 
             // Foto lama minus yang dihapus admin, plus upload baru
@@ -110,7 +112,7 @@ class AdminDailyActivityController extends Controller
                 'title_en' => $request->title_en,
                 'description' => $request->description,
                 'description_en' => $request->description_en,
-                'video_url' => $this->nullableUrl($request->video_url),
+                'video_urls' => $this->cleanVideoUrls($request),
                 'activity_date' => $request->activity_date,
                 'images' => $images,
             ]);
@@ -171,11 +173,15 @@ class AdminDailyActivityController extends Controller
             ->all();
     }
 
-    private function nullableUrl(?string $url): ?string
+    private function cleanVideoUrls(Request $request): ?array
     {
-        $url = trim((string) $url);
+        $urls = collect($request->input('video_urls', []))
+            ->map(fn ($url) => trim((string) $url))
+            ->filter(fn ($url) => $url !== '' && filter_var($url, FILTER_VALIDATE_URL))
+            ->values()
+            ->all();
 
-        return $url !== '' && filter_var($url, FILTER_VALIDATE_URL) ? $url : null;
+        return $urls === [] ? null : $urls;
     }
 
     /**

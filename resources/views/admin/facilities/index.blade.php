@@ -24,7 +24,7 @@
             <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
             </svg>
-            <input type="text" class="table-search-input w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:outline-none" placeholder="Cari fasilitas...">
+            <input type="text" class="table-search-input w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:outline-none" placeholder="Cari fasilitas...">
         </div>
     </div>
 
@@ -127,7 +127,7 @@
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Judul
                     Fasilitas (ID)</label>
                 <input type="text" id="create-input-title" name="title" placeholder="Contoh: Ruang Nursery dan Inkubasi"
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-[#E62C37]">
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
                 <span id="error-create-title" class="hidden text-xs font-semibold text-[#E62C37] mt-1">Kolom judul wajib
                     diisi dengan benar</span>
             </div>
@@ -135,7 +135,7 @@
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Judul Fasilitas
                     Terjemahan (EN)</label>
                 <input type="text" name="title_en" placeholder="Example: Nursery and Incubation Room"
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-[#E62C37]">
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -143,7 +143,7 @@
                         (ID)</label>
                     <input type="text" id="create-input-category" name="category" list="category-suggestions"
                         placeholder="Contoh: Area Penangkaran"
-                        class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-[#E62C37]">
+                        class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
                     <datalist id="category-suggestions">
                         <option value="Area Penangkaran"></option>
                         <option value="Nursery & Inkubasi"></option>
@@ -158,7 +158,7 @@
                         Terjemahan (EN)</label>
                     <input type="text" name="category_en" list="category-suggestions-en"
                         placeholder="Example: Breeding Area"
-                        class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-[#E62C37]">
+                        class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
                     <datalist id="category-suggestions-en">
                         <option value="Breeding Area"></option>
                         <option value="Nursery & Incubation"></option>
@@ -172,7 +172,7 @@
                     Lengkap (ID)</label>
                 <textarea id="create-input-description" name="description" rows="5"
                     placeholder="Jelaskan fungsi fasilitas, perlengkapan di dalamnya, dan rutinitas perawatannya."
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-[#E62C37]"></textarea>
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]"></textarea>
                 <span id="error-create-description" class="hidden text-xs font-semibold text-[#E62C37] mt-1">Deskripsi
                     fasilitas tidak boleh kosong</span>
             </div>
@@ -180,14 +180,14 @@
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Deskripsi Lengkap
                     Terjemahan (EN)</label>
                 <textarea name="description_en" rows="5"
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-[#E62C37]"></textarea>
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]"></textarea>
             </div>
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Link Video
                     <span class="font-normal normal-case text-gray-500">(opsional, YouTube/GDrive/Vimeo/dll)</span>
                 </label>
                 <input type="url" name="video_url" placeholder="https://youtube.com/watch?v=..."
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-[#E62C37]">
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
             </div>
 
             <div>
@@ -233,7 +233,7 @@
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Judul
                     Fasilitas (ID)</label>
                 <input type="text" name="title" id="edit-title"
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-amber-500">
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500">
                 <span id="error-edit-title" class="hidden text-xs font-semibold text-[#E62C37] mt-1">Kolom judul wajib
                     diisi</span>
             </div>
@@ -241,14 +241,14 @@
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Judul Fasilitas
                     Terjemahan (EN)</label>
                 <input type="text" name="title_en" id="edit-title-en"
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-amber-500">
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500">
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Kategori
                         (ID)</label>
                     <input type="text" name="category" id="edit-category" list="category-suggestions"
-                        class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-amber-500">
+                        class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500">
                     <span id="error-edit-category" class="hidden text-xs font-semibold text-[#E62C37] mt-1">Kategori wajib
                         diisi</span>
                 </div>
@@ -256,14 +256,14 @@
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Kategori
                         Terjemahan (EN)</label>
                     <input type="text" name="category_en" id="edit-category-en" list="category-suggestions-en"
-                        class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-amber-500">
+                        class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500">
                 </div>
             </div>
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Deskripsi
                     Lengkap (ID)</label>
                 <textarea name="description" id="edit-description" rows="5"
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-amber-500"></textarea>
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500"></textarea>
                 <span id="error-edit-description" class="hidden text-xs font-semibold text-[#E62C37] mt-1">Deskripsi
                     tidak boleh kosong</span>
             </div>
@@ -271,14 +271,14 @@
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Deskripsi Lengkap
                     Terjemahan (EN)</label>
                 <textarea name="description_en" id="edit-description-en" rows="5"
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-amber-500"></textarea>
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500"></textarea>
             </div>
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Link Video
                     <span class="font-normal normal-case text-gray-500">(opsional, YouTube/GDrive/Vimeo/dll)</span>
                 </label>
                 <input type="url" name="video_url" id="edit-video-url" placeholder="https://youtube.com/watch?v=..."
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-amber-500">
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500">
             </div>
 
             {{-- GALERI FOTO TERSIMPAN + HAPUS PER-FOTO --}}

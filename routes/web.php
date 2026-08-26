@@ -118,9 +118,7 @@ Route::prefix('admin')->middleware(['admin.auth', 'admin.domain'])->group(functi
     Route::post('/logout', [LogoutController::class, 'logout'])->name('admin.logout');
 
     // Ping session (keep-alive + refresh CSRF token + extend session lifetime)
-    Route::get('/ping', function (Request $request) {
-        // Regenerate session untuk extend lifetime
-        $request->session()->regenerate();
+    Route::match(['get', 'post'], '/ping', function (Request $request) {
         $request->session()->put('last_activity', time());
 
         return response()->json([

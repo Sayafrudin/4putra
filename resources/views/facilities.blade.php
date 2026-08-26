@@ -45,6 +45,7 @@
                 'videos' => collect($f->video_urls ?? [])
                     ->map(fn ($u) => $parseEmbed($u))
                     ->filter()
+                    ->map(fn ($src) => ['src' => $src, 'drive' => str_contains($src, 'drive.google.com')])
                     ->values()
                     ->all(),
                 'thumbs' => collect($f->images ?? [])
@@ -82,8 +83,10 @@
                     open: false,
                     idx: 0,
                     cur: 0,
-                    openAt(i) { this.idx = i; this.cur = 0; this.open = true; document.documentElement.style.overflow = 'hidden'; this.warm(1) },
-                    close() { this.open = false; document.documentElement.style.overflow = '' },
+                    vOn: {},
+                    playV(i) { this.vOn[i] = true },
+                    openAt(i) { this.idx = i; this.cur = 0; this.vOn = { 0: true }; this.open = true; document.documentElement.style.overflow = 'hidden'; this.warm(1) },
+                    close() { this.open = false; this.vOn = {}; document.documentElement.style.overflow = '' },
                     prev() { const n = this.items[this.idx].full.length; this.cur = (this.cur - 1 + n) % n; this.warm(-1) },
                     next() { const n = this.items[this.idx].full.length; this.cur = (this.cur + 1) % n; this.warm(1) },
                     warm(d) { const f = this.items[this.idx].full; if (f.length < 2) return; new Image().src = f[(this.cur + d + f.length) % f.length] }
@@ -174,6 +177,7 @@
                     {{-- Panel drawer kanan --}}
                     <aside
                         class="absolute inset-y-0 right-0 w-full max-w-xl bg-white dark:bg-[#151a22] border-l border-gray-200 dark:border-gray-700 shadow-2xl flex flex-col"
+                        @contextmenu.prevent
                         x-show="open"
                         x-transition:enter="transform transition ease-out duration-300"
                         x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
@@ -201,16 +205,42 @@
 
                                 {{-- Isi panel: scrollable --}}
                                 <div class="flex-1 overflow-y-auto overscroll-contain px-6 py-5">
-                                    {{-- Video players: multi-link, berurutan sebelum galeri (lazy: hanya mount saat panel aktif) --}}
+                                    {{-- Video players: 1 iframe aktif (auto-mount pertama, sisanya facade klik-play) — anti-lag --}}
                                     <template x-if="items[idx].videos.length > 0">
                                         <div class="space-y-4 mb-6">
                                             <template x-for="(v, vi) in items[idx].videos" :key="vi">
                                                 <div
-                                                    class="aspect-video overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-black">
-                                                    <iframe :src="open ? v : ''" loading="lazy"
-                                                        class="w-full h-full" frameborder="0"
-                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                        allowfullscreen></iframe>
+                                                    class="relative aspect-video overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-black">
+
+                                                    {{-- Facade: murah (div), iframe baru termuat saat tombol play diklik --}}
+                                                    <template x-if="!vOn[vi]">
+                                                        <button type="button" @click="playV(vi)" aria-label="Putar video"
+                                                            class="absolute inset-0 w-full h-full flex items-center justify-center text-white hover:text-[#E62C37] transition-colors">
+                                                            <svg class="w-14 h-14" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                                                        </button>
+                                                    </template>
+
+                                                    {{-- Embed standar (YouTube/Vimeo/Dailymotion) --}}
+                                                    <template x-if="vOn[vi] && !v.drive">
+                                                        <iframe :src="open && vOn[vi] ? v.src : ''"
+                                                            sandbox="allow-scripts allow-same-origin" loading="lazy"
+                                                            class="w-full h-full" frameborder="0"
+                                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                            allowfullscreen></iframe>
+                                                    </template>
+
+                                                    {{-- Google Drive: crop toolbar + overlay bersih (ala Achievements) — pop-out mati via sandbox --}}
+                                                    <template x-if="vOn[vi] && v.drive">
+                                                        <div class="absolute inset-0 overflow-hidden">
+                                                            <iframe :src="open && vOn[vi] ? v.src : ''"
+                                                                sandbox="allow-scripts allow-same-origin" loading="lazy"
+                                                                class="w-full border-0 block"
+                                                                style="height: calc(100% + 70px); margin-top: -60px;"
+                                                                allow="autoplay" allowfullscreen></iframe>
+                                                            <div class="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-black to-transparent z-10 pointer-events-none"></div>
+                                                            <div class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-black to-transparent z-10 pointer-events-none"></div>
+                                                        </div>
+                                                    </template>
                                                 </div>
                                             </template>
                                         </div>
@@ -218,7 +248,7 @@
 
                                     {{-- Carousel galeri foto --}}
                                     <template x-if="items[idx].full.length > 0">
-                                        <div class="relative mb-6">
+                                        <div class="relative mb-6 transform-gpu will-change-transform">
                                             <div
                                                 class="aspect-[4/3] overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900">
                                                 <img :src="open ? items[idx].full[cur] : ''" loading="lazy" decoding="async"

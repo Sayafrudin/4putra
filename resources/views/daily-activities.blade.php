@@ -44,7 +44,7 @@
                 ->values()
                 ->all();
             foreach ($videoEmbeds as $ve) {
-                $media[] = ['type' => 'video', 'src' => $ve];
+                $media[] = ['type' => 'video', 'src' => $ve, 'drive' => str_contains($ve, 'drive.google.com')];
             }
             $thumbs = [];
             foreach ($a->images ?? [] as $u) {
@@ -167,6 +167,7 @@
                 {{-- ===================== LIGHTBOX MODAL ===================== --}}
                 <div x-cloak x-show="open" role="dialog" aria-modal="true"
                     class="fixed inset-0 z-[90]"
+                    @contextmenu.prevent
                     @keydown.escape.window="close()"
                     @keydown.arrow-left.prevent="prev()"
                     @keydown.arrow-right.prevent="next()"
@@ -198,14 +199,26 @@
                                 <div class="max-w-5xl mx-auto">
 
                                     {{-- Slider utama: video (jika ada) jadi item pertama --}}
-                                    <div class="relative">
+                                    <div class="relative transform-gpu will-change-transform">
                                         <div
                                             class="aspect-[16/10] sm:aspect-[16/9] overflow-hidden rounded-lg border border-white/10 bg-black/40">
-                                            <template x-if="items[idx].media[cur].type === 'video'">
-                                                <iframe :src="open ? items[idx].media[cur].src : ''" loading="lazy"
+                                            <template x-if="items[idx].media[cur].type === 'video' && !items[idx].media[cur].drive">
+                                                <iframe :src="open ? items[idx].media[cur].src : ''"
+                                                    sandbox="allow-scripts allow-same-origin" loading="lazy"
                                                     class="w-full h-full" frameborder="0"
                                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                                     allowfullscreen></iframe>
+                                            </template>
+                                            <template x-if="items[idx].media[cur].type === 'video' && items[idx].media[cur].drive">
+                                                <div class="w-full h-full relative overflow-hidden">
+                                                    <iframe :src="open ? items[idx].media[cur].src : ''"
+                                                        sandbox="allow-scripts allow-same-origin" loading="lazy"
+                                                        class="w-full border-0 block"
+                                                        style="height: calc(100% + 70px); margin-top: -60px;"
+                                                        allow="autoplay" allowfullscreen></iframe>
+                                                    <div class="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-black to-transparent z-10 pointer-events-none"></div>
+                                                    <div class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-black to-transparent z-10 pointer-events-none"></div>
+                                                </div>
                                             </template>
                                             <template x-if="items[idx].media[cur].type === 'image'">
                                                 <img :src="open ? items[idx].media[cur].src : ''" loading="lazy"

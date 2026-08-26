@@ -10,7 +10,7 @@ class DailyActivity extends Model
 
     public $incrementing = true;
 
-    protected $fillable = ['title', 'title_en', 'description', 'description_en', 'activity_date', 'images'];
+    protected $fillable = ['title', 'title_en', 'description', 'description_en', 'video_url', 'activity_date', 'images'];
 
     protected function casts(): array
     {

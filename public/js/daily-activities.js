@@ -114,6 +114,7 @@
         document.getElementById('edit-date').value = activity.activity_date || '';
         document.getElementById('edit-description').value = activity.description || '';
         document.getElementById('edit-description-en').value = activity.description_en || '';
+        document.getElementById('edit-video-url').value = activity.video_url || '';
         els.formEdit.action = CFG.activitiesBaseUrl + '/' + activity.id;
 
         renderExistingPhotos(activity.images || []);

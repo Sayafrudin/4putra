@@ -125,7 +125,7 @@
                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                 @endif
                                 <span
-                                    class="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-gray-950/70 backdrop-blur-sm text-[11px] font-bold uppercase tracking-wider text-white">
+                                    class="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-gray-950/80 text-[11px] font-bold uppercase tracking-wider text-white">
                                     {{ $item['catLabel'] }}
                                 </span>
                             </div>
@@ -166,7 +166,7 @@
                     class="fixed inset-0 z-[90]"
                     @keydown.escape.window="close()">
                     {{-- Backdrop --}}
-                    <div class="absolute inset-0 bg-gray-950/70 backdrop-blur-sm"
+                    <div class="absolute inset-0 bg-gray-950/80"
                         x-show="open"
                         x-transition:enter="transition ease-out duration-300"
                         x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"

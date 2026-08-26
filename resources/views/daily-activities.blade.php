@@ -103,13 +103,24 @@
 
                                 {{-- Teks: tanggal + judul (mobile pertama, desktop kolom kiri) --}}
                                 <div class="min-w-0">
-                                    <span
-                                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 dark:bg-red-900/20 text-[#E62C37] text-xs font-semibold">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
-                                        </svg>
-                                        {{ $item['date'] }}
-                                    </span>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <span
+                                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 dark:bg-red-900/20 text-[#E62C37] text-xs font-semibold">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                                            </svg>
+                                            {{ $item['date'] }}
+                                        </span>
+                                        @if (!empty($item['videos']))
+                                            <span
+                                                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-900/5 dark:bg-white/10 text-gray-700 dark:text-gray-300 text-xs font-semibold">
+                                                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M8 5v14l11-7z" />
+                                                </svg>
+                                                {{ count($item['videos']) }} Video
+                                            </span>
+                                        @endif
+                                    </div>
                                     <h2 class="mt-3 text-xl sm:text-2xl font-bold uppercase leading-snug text-gray-900 dark:text-white group-hover:text-[#E62C37] transition-colors duration-300">
                                         {{ $item['title'] }}
                                     </h2>
@@ -175,7 +186,7 @@
                     x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
                     x-transition:leave="transition ease-in duration-150"
                     x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
-                    <div class="absolute inset-0 bg-gray-950/95 backdrop-blur-sm" @click="close()"></div>
+                    <div class="absolute inset-0 bg-gray-950/95" @click="close()"></div>
 
                     <template x-if="open && items[idx]">
                         <div class="relative h-full flex flex-col">

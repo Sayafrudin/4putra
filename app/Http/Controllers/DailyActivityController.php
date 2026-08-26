@@ -10,7 +10,7 @@ class DailyActivityController extends Controller
     public function index()
     {
         $activities = Cache::remember('public.daily_activities', 300, function () {
-            return DailyActivity::select('id', 'title', 'title_en', 'description', 'description_en', 'activity_date', 'images')
+            return DailyActivity::select('id', 'title', 'title_en', 'description', 'description_en', 'video_url', 'activity_date', 'images')
                 ->orderByDesc('activity_date')
                 ->get();
         });

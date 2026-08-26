@@ -12,22 +12,54 @@
                 : asset('storage/daily-activities/'.$url);
         };
 
-        $feed = $activities->map(function ($a) use ($isEn, $transform) {
+        $parseEmbed = function (?string $url): ?string {
+            $url = trim((string) $url);
+            if ($url === '') {
+                return null;
+            }
+            if (preg_match('/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([^\?&]+)/', $url, $m)) {
+                return 'https://www.youtube.com/embed/'.$m[1];
+            }
+            if (preg_match('/drive\.google\.com\/file\/d\/([^\/\?]+)/', $url, $m)) {
+                return 'https://drive.google.com/file/d/'.$m[1].'/preview';
+            }
+            if (preg_match('/(?:vimeo\.com\/|player\.vimeo\.com\/video\/)(\d+)/', $url, $m)) {
+                return 'https://player.vimeo.com/video/'.$m[1];
+            }
+            if (preg_match('/dailymotion\.com\/video\/([^_\?]+)/', $url, $m)) {
+                return 'https://www.dailymotion.com/embed/video/'.$m[1];
+            }
+
+            return null;
+        };
+
+        $feed = $activities->map(function ($a) use ($isEn, $transform, $parseEmbed) {
             $description = $isEn && $a->description_en ? $a->description_en : $a->description;
+
+            // Galeri media slider: video (jika ada) menjadi item pertama
+            $media = [];
+            $videoEmbed = $parseEmbed($a->video_url ?? null);
+            if ($videoEmbed) {
+                $media[] = ['type' => 'video', 'src' => $videoEmbed];
+            }
+            $thumbs = [];
+            foreach ($a->images ?? [] as $u) {
+                $media[] = [
+                    'type' => 'image',
+                    'src' => $transform($u, 'w_1600,q_auto,f_auto'),
+                    'thumb' => $transform($u, 'w_600,c_fill,q_auto,f_auto'),
+                ];
+                $thumbs[] = $transform($u, 'w_600,c_fill,q_auto,f_auto');
+            }
 
             return [
                 'title' => $isEn && $a->title_en ? $a->title_en : $a->title,
                 'description' => $description,
                 'excerpt' => Str::limit(strip_tags($description), 170),
                 'date' => \Carbon\Carbon::parse($a->activity_date)->translatedFormat('d F Y'),
-                'thumbs' => collect($a->images ?? [])
-                    ->map(fn ($u) => $transform($u, 'w_600,c_fill,q_auto,f_auto'))
-                    ->values()
-                    ->all(),
-                'full' => collect($a->images ?? [])
-                    ->map(fn ($u) => $transform($u, 'w_1600,q_auto,f_auto'))
-                    ->values()
-                    ->all(),
+                'video' => $videoEmbed,
+                'thumbs' => $thumbs,
+                'media' => $media,
             ];
         })->values()->all();
     @endphp
@@ -53,9 +85,9 @@
                     cur: 0,
                     openAt(i) { this.idx = i; this.cur = 0; this.open = true; document.documentElement.style.overflow = 'hidden'; this.warm(1) },
                     close() { this.open = false; document.documentElement.style.overflow = '' },
-                    prev() { const n = this.items[this.idx].full.length; this.cur = (this.cur - 1 + n) % n; this.warm(-1) },
-                    next() { const n = this.items[this.idx].full.length; this.cur = (this.cur + 1) % n; this.warm(1) },
-                    warm(d) { const f = this.items[this.idx].full; if (f.length < 2) return; new Image().src = f[(this.cur + d + f.length) % f.length] }
+                    prev() { const n = this.items[this.idx].media.length; this.cur = (this.cur - 1 + n) % n; this.warm(-1) },
+                    next() { const n = this.items[this.idx].media.length; this.cur = (this.cur + 1) % n; this.warm(1) },
+                    warm(d) { const m = this.items[this.idx].media; if (m.length < 2) return; const nx = m[(this.cur + d + m.length) % m.length]; if (nx.type === 'image') new Image().src = nx.src }
                 }">
 
                 <div class="space-y-8">
@@ -161,16 +193,24 @@
                             <div class="flex-1 overflow-y-auto overscroll-contain px-5 sm:px-8 py-5">
                                 <div class="max-w-5xl mx-auto">
 
-                                    {{-- Slider utama --}}
+                                    {{-- Slider utama: video (jika ada) jadi item pertama --}}
                                     <div class="relative">
                                         <div
                                             class="aspect-[16/10] sm:aspect-[16/9] overflow-hidden rounded-lg border border-white/10 bg-black/40">
-                                            <img :src="open ? items[idx].full[cur] : ''" loading="lazy" decoding="async"
-                                                :alt="items[idx].title + ' ' + (cur + 1)"
-                                                class="w-full h-full object-contain">
+                                            <template x-if="items[idx].media[cur].type === 'video'">
+                                                <iframe :src="open ? items[idx].media[cur].src : ''" loading="lazy"
+                                                    class="w-full h-full" frameborder="0"
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                    allowfullscreen></iframe>
+                                            </template>
+                                            <template x-if="items[idx].media[cur].type === 'image'">
+                                                <img :src="open ? items[idx].media[cur].src : ''" loading="lazy"
+                                                    decoding="async" :alt="items[idx].title + ' ' + (cur + 1)"
+                                                    class="w-full h-full object-contain">
+                                            </template>
                                         </div>
 
-                                        <template x-if="items[idx].full.length > 1">
+                                        <template x-if="items[idx].media.length > 1">
                                             <div>
                                                 <button type="button" @click="prev()" aria-label="Sebelumnya"
                                                     class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-black/60 hover:bg-[#E62C37] text-white transition-colors">
@@ -185,17 +225,28 @@
 
                                         <span
                                             class="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-black/70 text-xs font-bold text-white"
-                                            x-text="(cur + 1) + ' / ' + items[idx].full.length"></span>
+                                            x-text="(cur + 1) + ' / ' + items[idx].media.length"></span>
                                     </div>
 
-                                    {{-- Strip thumbnail: pakai thumbs (w_600) yang sudah ter-cache dari grid kartu --}}
-                                    <template x-if="items[idx].full.length > 1">
+                                    {{-- Strip thumbnail: video = tile play hitam, foto = thumb w_600 --}}
+                                    <template x-if="items[idx].media.length > 1">
                                         <div class="mt-4 flex gap-2 overflow-x-auto pb-1">
-                                            <template x-for="(img, ti) in items[idx].thumbs" :key="ti">
+                                            <template x-for="(m, ti) in items[idx].media" :key="ti">
                                                 <button type="button" @click="cur = ti"
-                                                    class="shrink-0 w-16 h-16 rounded border-2 overflow-hidden transition-colors"
+                                                    class="shrink-0 w-16 h-16 rounded border-2 overflow-hidden transition-colors flex items-center justify-center"
                                                     :class="cur === ti ? 'border-[#E62C37]' : 'border-transparent opacity-60 hover:opacity-100'">
-                                                    <img :src="open ? img : ''" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="">
+                                                    <template x-if="m.type === 'video'">
+                                                        <span
+                                                            class="w-full h-full flex items-center justify-center bg-black text-white">
+                                                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                                                <path d="M8 5v14l11-7z" />
+                                                            </svg>
+                                                        </span>
+                                                    </template>
+                                                    <template x-if="m.type === 'image'">
+                                                        <img :src="open ? m.thumb : ''" loading="lazy" decoding="async"
+                                                            class="w-full h-full object-cover" alt="">
+                                                    </template>
                                                 </button>
                                             </template>
                                         </div>

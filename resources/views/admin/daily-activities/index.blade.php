@@ -162,6 +162,14 @@
             </div>
 
             <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Link Video
+                    <span class="font-normal normal-case text-gray-500">(opsional, YouTube/GDrive/Vimeo/dll)</span>
+                </label>
+                <input type="url" name="video_url" placeholder="https://youtube.com/watch?v=..."
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
+            </div>
+
+            <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Upload Foto Dokumentasi
                     <span class="font-normal normal-case text-gray-500">(bisa beberapa foto sekaligus)</span>
                 </label>
@@ -235,6 +243,14 @@
                     Terjemahan (EN)</label>
                 <textarea name="description_en" id="edit-description-en" rows="5"
                     class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500"></textarea>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Link Video
+                    <span class="font-normal normal-case text-gray-500">(opsional, YouTube/GDrive/Vimeo/dll)</span>
+                </label>
+                <input type="url" name="video_url" id="edit-video-url" placeholder="https://youtube.com/watch?v=..."
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500">
             </div>
 
             {{-- GALERI FOTO TERSIMPAN + HAPUS PER-FOTO --}}

@@ -2,12 +2,17 @@
  * session-timeout.js — Auto-logout setelah inaktivitas (seperti MyBCA)
  * Taruh di: public/js/session-timeout.js
  * Menggunakan CSS transition untuk animasi yang ringan
+ *
+ * Lifetime diambil dari meta[name="session-lifetime-minutes"] yang disuntikkan
+ * layout admin dari config('session.lifetime') agar tidak drift dengan server.
  */
 (function () {
     'use strict';
 
-    var TIMEOUT_MINUTES = 25;
-    var WARNING_MINUTES = 2;
+    var lifetimeMeta = document.querySelector('meta[name="session-lifetime-minutes"]');
+    var TIMEOUT_MINUTES = Math.max(1, parseInt(lifetimeMeta ? lifetimeMeta.getAttribute('content') : '30', 10) || 30);
+    // Popup peringatan muncul sedikitnya 5 menit sebelum sesi server kedaluwarsa
+    var WARNING_MINUTES = 5;
     var TIMEOUT_MS = TIMEOUT_MINUTES * 60 * 1000;
     var WARNING_MS = WARNING_MINUTES * 60 * 1000;
     var PING_INTERVAL_MS = 10 * 60 * 1000; // Ping setiap 10 menit
@@ -18,42 +23,48 @@
     var warningShown = false;
     var modalEl = null;
 
-    /**
-     * Kirim ping ke server untuk keep-alive session + refresh CSRF token
-     */
-    function pingSession() {
+    function getCsrfToken() {
         var csrfMeta = document.querySelector('meta[name="csrf-token"]');
-        var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+        return csrfMeta ? csrfMeta.getAttribute('content') : '';
+    }
 
-        fetch('/admin/ping', {
+    function applyCsrf(data) {
+        if (!data || !data.csrf) return;
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        if (meta) {
+            meta.setAttribute('content', data.csrf);
+        }
+        document.querySelectorAll('input[name="_token"]').forEach(function (input) {
+            input.value = data.csrf;
+        });
+    }
+
+    /**
+     * Ping endpoint keep-alive.
+     * Resolve {csrf} saat sukses (sesi diperbarui server),
+     * resolve {expired:true} saat 401/419 (sesi telah mati).
+     */
+    function requestPing() {
+        return fetch('/admin/ping', {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
+                'X-CSRF-TOKEN': getCsrfToken(),
             },
             credentials: 'same-origin',
         }).then(function (res) {
-            if (res.ok) {
+            if (res.ok && (res.headers.get('content-type') || '').indexOf('application/json') !== -1) {
                 return res.json();
             }
-            // Session sudah expired, redirect ke login
-            if (res.status === 401) {
-                window.location.href = '/login';
-                return null;
-            }
-            return null;
-        }).then(function (data) {
-            if (data && data.csrf) {
-                // Update meta tag CSRF token
-                var meta = document.querySelector('meta[name="csrf-token"]');
-                if (meta) {
-                    meta.setAttribute('content', data.csrf);
-                }
-                // Update semua hidden input _token di halaman
-                document.querySelectorAll('input[name="_token"]').forEach(function (input) {
-                    input.value = data.csrf;
-                });
+            return { expired: res.status === 401 || res.status === 419 };
+        });
+    }
+
+    function pingSession() {
+        requestPing().then(function (data) {
+            if (data && !data.expired) {
+                applyCsrf(data);
             }
         }).catch(function () {});
     }
@@ -74,7 +85,7 @@
                     '</div>' +
                     '<h3 class="text-lg font-bold text-white">Sesi Akan Berakhir</h3>' +
                 '</div>' +
-                '<p class="text-sm text-gray-400 mb-2">Anda telah tidak aktif selama ' + TIMEOUT_MINUTES + ' menit.</p>' +
+                '<p class="text-sm text-gray-400 mb-2">Anda telah tidak aktif selama ' + (TIMEOUT_MINUTES - WARNING_MINUTES) + ' menit.</p>' +
                 '<p class="text-sm text-gray-400 mb-4">Sesi akan berakhir dalam <span id="session-countdown" class="text-yellow-400 font-bold">' + WARNING_MINUTES + ':00</span></p>' +
                 '<div class="flex justify-end gap-3">' +
                     '<button id="session-logout-btn" class="px-4 py-2 text-sm text-gray-300 hover:text-white border border-gray-600 rounded-lg hover:border-gray-500 transition-colors">' +
@@ -94,16 +105,11 @@
         return modalEl;
     }
 
-    function showWarning() {
-        if (warningShown) return;
-        warningShown = true;
-
-        var modal = createModal();
+    function showModalAnimation(modal) {
         var dialog = modal.querySelector('div');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
 
-        // Trigger animasi masuk
         requestAnimationFrame(function () {
             requestAnimationFrame(function () {
                 modal.classList.remove('opacity-0');
@@ -112,8 +118,16 @@
                 dialog.classList.add('scale-100', 'opacity-100');
             });
         });
+    }
 
-        // Countdown timer
+    function showWarning() {
+        if (warningShown) return;
+        warningShown = true;
+
+        var modal = createModal();
+        showModalAnimation(modal);
+
+        // Countdown timer menuju auto-logout
         var remaining = WARNING_MS;
         var countdownEl = document.getElementById('session-countdown');
 
@@ -129,6 +143,53 @@
                 countdownEl.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
             }
         }, 1000);
+    }
+
+    /**
+     * Edge case: sesi sudah mati di server (401/419) saat tombol perpanjang diklik.
+     * Jangan redirect paksa & jangan auto-submit logout — biarkan user menyalin
+     * data form panjang terlebih dahulu, lalu arahkan manual ke halaman login.
+     */
+    function showExpiredState() {
+        if (logoutTimer) {
+            clearInterval(logoutTimer); // hentikan auto-logout paksa
+            logoutTimer = null;
+        }
+        warningShown = true;
+
+        var modal = createModal();
+        if (!modal.classList.contains('flex')) {
+            showModalAnimation(modal);
+        }
+
+        var dialog = modal.querySelector('div');
+        var titleEl = dialog.querySelector('h3');
+        var paragraphs = dialog.querySelectorAll('p');
+        var extendBtn = document.getElementById('session-extend-btn');
+        var logoutBtn = document.getElementById('session-logout-btn');
+
+        if (titleEl) {
+            titleEl.textContent = 'Sesi Anda Telah Berakhir';
+        }
+        if (paragraphs.length > 0) {
+            paragraphs[0].textContent = 'Silakan login kembali untuk melanjutkan.';
+        }
+        if (paragraphs.length > 1) {
+            paragraphs[1].textContent = 'Data pada form tidak terkirim — salin teks penting terlebih dahulu bila diperlukan.';
+        }
+
+        if (extendBtn) {
+            var loginBtn = extendBtn.cloneNode(true); // clone tanpa listener lama
+            loginBtn.textContent = 'Ke Halaman Login';
+            extendBtn.parentNode.replaceChild(loginBtn, extendBtn);
+            loginBtn.addEventListener('click', function () {
+                window.location.href = '/login';
+            });
+        }
+
+        if (logoutBtn) {
+            logoutBtn.style.display = 'none';
+        }
     }
 
     function hideWarning() {
@@ -163,50 +224,18 @@
             e.stopPropagation();
         }
 
-        hideWarning();
-        resetTimer();
-
-        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
-        var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
-
-        // Kirim ping untuk memperpanjang session + refresh CSRF token
-        fetch('/admin/ping', {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-            },
-            credentials: 'same-origin',
-        }).then(function (res) {
-            // Jika unauthenticated (401), redirect ke login
-            if (res.status === 401) {
-                window.location.href = '/login';
-                return null;
+        // Tunggu keputusan server sebelum menutup modal atau mereset timer,
+        // agar tidak ada reset palsu saat sesi ternyata sudah kedaluwarsa.
+        requestPing().then(function (data) {
+            if (data && data.expired) {
+                showExpiredState();
+                return;
             }
-            if (!res.ok) {
-                return null;
-            }
-            var contentType = res.headers.get('content-type');
-            if (contentType && contentType.indexOf('application/json') !== -1) {
-                return res.json();
-            }
-            return null;
-        }).then(function (data) {
-            if (data && data.csrf) {
-                // Update meta tag CSRF token
-                var meta = document.querySelector('meta[name="csrf-token"]');
-                if (meta) {
-                    meta.setAttribute('content', data.csrf);
-                }
-                // Update semua hidden input _token di halaman
-                document.querySelectorAll('input[name="_token"]').forEach(function (input) {
-                    input.value = data.csrf;
-                });
-            }
-        }).catch(function (err) {
-            console.warn('Gagal memperpanjang sesi via ping:', err);
-        });
+            applyCsrf(data);
+            // Sukses: tutup popup + reset timer lokal ke 0, tanpa reload halaman.
+            hideWarning();
+            resetTimer();
+        }).catch(function () {});
     }
 
     function logoutNow() {
@@ -273,6 +302,7 @@
         reset: resetTimer,
         showWarning: showWarning,
         hideWarning: hideWarning,
+        showExpiredState: showExpiredState,
         ping: pingSession
     };
 })();

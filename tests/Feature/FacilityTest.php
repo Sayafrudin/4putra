@@ -156,7 +156,10 @@ class FacilityTest extends TestCase
             ->assertStatus(200)
             ->assertSee('aqz-KE-bpKQ', false)
             ->assertSee('76979871', false)
-            ->assertDontSee('watch?v=aqz-KE-bpKQ', false);
+            ->assertDontSee('watch?v=aqz-KE-bpKQ', false)
+            // Proteksi iframe: sandbox mematikan pop-out Drive, tanpa allow-popups
+            ->assertSee('sandbox="allow-scripts allow-same-origin"', false)
+            ->assertDontSee('allow-popups', false);
 
         $facility->delete();
         Cache::forget('public.facilities');

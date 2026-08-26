@@ -77,4 +77,88 @@ class FacilityTest extends TestCase
 
         $facility->delete();
     }
+
+    public function test_video_urls_persist_via_admin_store_and_clear_via_update(): void
+    {
+        // Bersihkan baris basi dari run uji yang gagal sebelumnya
+        Facility::where('title', 'Uji Video Fasilitas')->delete();
+
+        $user = \App\Models\User::updateOrCreate(
+            ['email' => 'admin-uji-facility-video@4putra.test'],
+            [
+                'name' => 'Admin Uji Video Fasilitas',
+                'password' => bcrypt('password123'),
+                'role' => 'admin',
+            ]
+        );
+
+        $payload = [
+            'title' => 'Uji Video Fasilitas',
+            'title_en' => 'Video Facility Test',
+            'category' => 'Umum',
+            'category_en' => 'General',
+            'description' => 'Deskripsi uji video fasilitas.',
+            'cloudinary_urls' => ['https://res.cloudinary.com/demo/image/upload/sample.jpg'],
+        ];
+
+        $store = $this->actingAs($user)->postJson(route('admin.facilities.store'), $payload + [
+            'video_urls' => ['https://www.youtube.com/watch?v=aqz-KE-bpKQ'],
+        ]);
+        $store->assertStatus(200);
+
+        $facility = Facility::where('title', 'Uji Video Fasilitas')->firstOrFail();
+        $this->assertIsArray($facility->video_urls);
+        $this->assertCount(1, $facility->video_urls);
+
+        $this->actingAs($user)->get(route('admin.facilities.index'))
+            ->assertStatus(200)
+            ->assertSee('aqz-KE-bpKQ', false);
+
+        $update = $this->actingAs($user)->putJson(
+            route('admin.facilities.update', $facility->getKey()),
+            $payload + ['video_urls' => []]
+        );
+        $update->assertStatus(200);
+        $this->assertNull($facility->fresh()->video_urls);
+
+        $update2 = $this->actingAs($user)->putJson(
+            route('admin.facilities.update', $facility->getKey()),
+            $payload + ['video_urls' => ['https://vimeo.com/76979871']]
+        );
+        $update2->assertStatus(200);
+        $this->assertCount(1, $facility->fresh()->video_urls);
+
+        $facility->delete();
+        Cache::forget('admin.facilities');
+        Cache::forget('public.facilities');
+        $user->delete();
+    }
+
+    public function test_public_page_renders_multiple_video_embeds(): void
+    {
+        Facility::where('title', 'Uji Multi Video Fasilitas')->delete();
+
+        $facility = Facility::create([
+            'title' => 'Uji Multi Video Fasilitas',
+            'title_en' => 'Multi Video Facility Test',
+            'category' => 'Umum',
+            'category_en' => 'General',
+            'description' => 'Deskripsi multi video.',
+            'video_urls' => [
+                'https://www.youtube.com/watch?v=aqz-KE-bpKQ',
+                'https://vimeo.com/76979871',
+            ],
+            'images' => ['https://res.cloudinary.com/demo/image/upload/sample.jpg'],
+        ]);
+        Cache::forget('public.facilities');
+
+        $this->get('/facilities')
+            ->assertStatus(200)
+            ->assertSee('aqz-KE-bpKQ', false)
+            ->assertSee('76979871', false)
+            ->assertDontSee('watch?v=aqz-KE-bpKQ', false);
+
+        $facility->delete();
+        Cache::forget('public.facilities');
+    }
 }

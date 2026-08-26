@@ -95,6 +95,7 @@
     }
 
     function openCreateModal() {
+        populateVideoList('create-video-url-list', ['']);
         showModal('create');
         requestAnimationFrame(function () {
             initDzCreate();
@@ -114,7 +115,7 @@
         document.getElementById('edit-date').value = activity.activity_date || '';
         document.getElementById('edit-description').value = activity.description || '';
         document.getElementById('edit-description-en').value = activity.description_en || '';
-        document.getElementById('edit-video-url').value = activity.video_url || '';
+        populateVideoList('edit-video-url-list', activity.video_urls || []);
         els.formEdit.action = CFG.activitiesBaseUrl + '/' + activity.id;
 
         renderExistingPhotos(activity.images || []);
@@ -395,6 +396,45 @@
             console.error('[DROPZONE EDIT INIT ERROR]', err);
         }
     }
+
+    // =============================================
+    // MULTIPLE VIDEO LINKS UTILITY
+    // =============================================
+    function videoRowHtml(value) {
+        return '<input type="url" name="video_urls[]" value="' + (value || '') + '" ' +
+            'placeholder="https://youtube.com/watch?v=..." ' +
+            'class="flex-1 p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">' +
+            '<button type="button" onclick="hapusVideoRow(this)" class="px-2.5 py-2.5 text-sm font-bold bg-red-600/20 text-red-400 border border-red-500/30 rounded-xl hover:bg-red-600/30 transition-colors">&times;</button>';
+    }
+
+    function tambahVideoRow(containerId) {
+        var container = document.getElementById(containerId);
+        if (!container) return;
+        var wrapper = document.createElement('div');
+        wrapper.className = 'flex items-center gap-2';
+        wrapper.innerHTML = videoRowHtml('');
+        container.appendChild(wrapper);
+    }
+
+    function hapusVideoRow(btn) {
+        btn.closest('.flex').remove();
+    }
+
+    function populateVideoList(containerId, urls) {
+        var container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = '';
+        var arr = Array.isArray(urls) && urls.length ? urls : [''];
+        arr.forEach(function (url) {
+            var wrapper = document.createElement('div');
+            wrapper.className = 'flex items-center gap-2';
+            wrapper.innerHTML = videoRowHtml(url);
+            container.appendChild(wrapper);
+        });
+    }
+
+    window.tambahVideoRow = tambahVideoRow;
+    window.hapusVideoRow = hapusVideoRow;
 
     // =============================================
     // EXPOSE FUNGSI

@@ -163,10 +163,15 @@
 
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Link Video
-                    <span class="font-normal normal-case text-gray-500">(opsional, YouTube/GDrive/Vimeo/dll)</span>
+                    <span class="font-normal normal-case text-gray-500">(opsional, bisa YouTube/GDrive/Vimeo/dll)</span>
                 </label>
-                <input type="url" name="video_url" placeholder="https://youtube.com/watch?v=..."
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
+                <div id="create-video-url-list" class="space-y-2">
+                    <div class="flex items-center gap-2">
+                        <input type="url" name="video_urls[]" placeholder="https://youtube.com/watch?v=..."
+                            class="flex-1 p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
+                        <button type="button" onclick="tambahVideoRow('create-video-url-list')" class="px-3 py-2.5 text-sm font-bold bg-green-600/20 text-green-400 border border-green-500/30 rounded-xl hover:bg-green-600/30 transition-colors">+</button>
+                    </div>
+                </div>
             </div>
 
             <div>
@@ -247,10 +252,10 @@
 
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Link Video
-                    <span class="font-normal normal-case text-gray-500">(opsional, YouTube/GDrive/Vimeo/dll)</span>
+                    <span class="font-normal normal-case text-gray-500">(opsional, bisa YouTube/GDrive/Vimeo/dll)</span>
                 </label>
-                <input type="url" name="video_url" id="edit-video-url" placeholder="https://youtube.com/watch?v=..."
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500">
+                <div id="edit-video-url-list" class="space-y-2"></div>
+                <button type="button" onclick="tambahVideoRow('edit-video-url-list')" class="mt-2 px-3 py-1.5 text-xs font-bold bg-green-600/20 text-green-400 border border-green-500/30 rounded-lg hover:bg-green-600/30 transition-colors">+ Tambah Link Video</button>
             </div>
 
             {{-- GALERI FOTO TERSIMPAN + HAPUS PER-FOTO --}}

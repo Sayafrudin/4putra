@@ -9,10 +9,10 @@
     }
 @endphp
 
-<div class="w-72 overflow-hidden shadow-lg group"
+<div class="w-72 rounded-2xl overflow-hidden shadow-lg group"
     @if($zoomable) x-data="{ showLightbox: false }" @endif>
 
-    <div class="relative w-full aspect-[4/5] overflow-hidden {{ $zoomable ? 'cursor-pointer' : '' }}"
+    <div class="relative w-full aspect-[4/5] rounded-2xl overflow-hidden {{ $zoomable ? 'cursor-pointer' : '' }}"
         @if($zoomable) @click="showLightbox = true" @endif>
         @if (isset($gambar))
             <img src="{{ $gambar }}"

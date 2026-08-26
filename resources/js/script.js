@@ -19,7 +19,7 @@ const initMarquee = () => {
     // Build HTML sekali saja
     const renderData = [...cardData, ...cardData];
     const html = renderData.map((card) => `
-        <div class="card-item w-56 mx-4 h-[20rem] relative group shrink-0 transition-transform duration-300 hover:scale-90">
+        <div class="card-item w-56 mx-4 h-[20rem] relative group shrink-0 rounded-2xl overflow-hidden transition-transform duration-300 hover:scale-90">
             <img src="${card.image}" alt="${card.title}" class="w-full h-full object-cover" loading="lazy" decoding="async" />
             <div class="card-overlay flex items-center justify-center px-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 absolute bottom-0 backdrop-blur-md left-0 w-full h-full bg-black/20">
                 <p class="text-white text-xl font-semibold text-center">${card.title}</p>

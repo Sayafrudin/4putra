@@ -1,8 +1,8 @@
 @props(['gambar', 'name', 'SName'])
 
-<div class="w-72 overflow-hidden shadow-lg group">
+<div class="w-72 rounded-2xl overflow-hidden shadow-lg group">
 
-    <div class="relative w-full aspect-[4/5] overflow-hidden">
+    <div class="relative w-full aspect-[4/5] rounded-2xl overflow-hidden">
         @if (isset($gambar))
             <img src="{{ $gambar }}"
                 alt="{{ $name }}"

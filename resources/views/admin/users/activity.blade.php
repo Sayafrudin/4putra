@@ -17,7 +17,7 @@
         </div>
 
         <div class="flex items-center gap-3">
-            <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider {{ $user->isAdmin() ? 'bg-[#E62C37]/20 text-[#E62C37]' : 'bg-gray-700 text-gray-600 dark:text-gray-300' }}">
+            <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider {{ $user->isAdmin() ? 'bg-[#E62C37]/20 text-[#E62C37]' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200' }}">
                 {{ $user->role }}
             </span>
             @if($user->isOnline())

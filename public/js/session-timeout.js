@@ -22,11 +22,15 @@
      * Kirim ping ke server untuk keep-alive session + refresh CSRF token
      */
     function pingSession() {
+        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
         fetch('/admin/ping', {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
             },
             credentials: 'same-origin',
         }).then(function (res) {
@@ -34,7 +38,7 @@
                 return res.json();
             }
             // Session sudah expired, redirect ke login
-            if (res.status === 401 || res.status === 302 || res.redirected) {
+            if (res.status === 401) {
                 window.location.href = '/login';
                 return null;
             }
@@ -151,9 +155,19 @@
         }
     }
 
-    function extendSession() {
+    function extendSession(e) {
+        if (e && typeof e.preventDefault === 'function') {
+            e.preventDefault();
+        }
+        if (e && typeof e.stopPropagation === 'function') {
+            e.stopPropagation();
+        }
+
         hideWarning();
         resetTimer();
+
+        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
 
         // Kirim ping untuk memperpanjang session + refresh CSRF token
         fetch('/admin/ping', {
@@ -161,28 +175,23 @@
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
             },
             credentials: 'same-origin',
         }).then(function (res) {
-            // Cek redirect SEBELUM res.ok karena redirect bisa menghasilkan 200 (login page HTML)
-            if (res.redirected) {
-                window.location.href = '/login';
-                return null;
-            }
-            if (res.status === 302 || res.status === 401) {
+            // Jika unauthenticated (401), redirect ke login
+            if (res.status === 401) {
                 window.location.href = '/login';
                 return null;
             }
             if (!res.ok) {
                 return null;
             }
-            // Pastikan response benar-benar JSON
             var contentType = res.headers.get('content-type');
-            if (!contentType || contentType.indexOf('application/json') === -1) {
-                window.location.href = '/login';
-                return null;
+            if (contentType && contentType.indexOf('application/json') !== -1) {
+                return res.json();
             }
-            return res.json();
+            return null;
         }).then(function (data) {
             if (data && data.csrf) {
                 // Update meta tag CSRF token
@@ -195,9 +204,8 @@
                     input.value = data.csrf;
                 });
             }
-        }).catch(function () {
-            // Network error atau parse error — redirect ke login
-            window.location.href = '/login';
+        }).catch(function (err) {
+            console.warn('Gagal memperpanjang sesi via ping:', err);
         });
     }
 

@@ -24,7 +24,7 @@
             <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
             </svg>
-            <input type="text" class="table-search-input w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:outline-none" placeholder="Cari portofolio...">
+            <input type="text" class="table-search-input w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:outline-none" placeholder="Cari portofolio...">
         </div>
     </div>
 
@@ -126,7 +126,7 @@
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Judul
                     Portofolio (ID)</label>
                 <input type="text" id="create-input-title" name="title"
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-[#E62C37]">
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
                 <span id="error-create-title" class="hidden text-xs font-semibold text-[#E62C37] mt-1">Kolom judul wajib
                     diisi dengan benar</span>
             </div>
@@ -136,7 +136,7 @@
                     <span class="font-normal normal-case text-gray-500">(opsional, misal: nama event/tempat)</span>
                 </label>
                 <input type="text" name="title_highlight" placeholder="Contoh: Bupati Cup 2025"
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-[#E62C37]">
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
             </div>
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
@@ -144,20 +144,20 @@
                     <span class="font-normal normal-case text-gray-500">(opsional, versi bahasa Inggris)</span>
                 </label>
                 <input type="text" name="title_highlight_en" placeholder="Example: Bupati Cup 2025"
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-[#E62C37]">
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
             </div>
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Judul Portofolio
                     Terjemahan (EN)</label>
                 <input type="text" name="title_en"
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-[#E62C37]">
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Tahun
                         Event</label>
                     <input type="number" id="create-input-year" name="year" min="2000" max="2099"
-                        class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-[#E62C37]">
+                        class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
                     <span id="error-create-year" class="hidden text-xs font-semibold text-[#E62C37] mt-1">Tahun event
                         wajib diisi</span>
                 </div>
@@ -166,12 +166,12 @@
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <input type="date" id="create-input-date" name="date" placeholder="Mulai"
-                                class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 text-white focus:outline-none focus:border-[#E62C37] cursor-pointer [color-scheme:dark]">
+                                class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37] cursor-pointer dark:[color-scheme:dark]">
                             <span class="text-[10px] text-gray-500 mt-0.5 block">Tanggal Mulai</span>
                         </div>
                         <div>
                             <input type="date" id="create-input-date-end" name="date_end" placeholder="Selesai"
-                                class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 text-white focus:outline-none focus:border-[#E62C37] cursor-pointer [color-scheme:dark]">
+                                class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37] cursor-pointer dark:[color-scheme:dark]">
                             <span class="text-[10px] text-gray-500 mt-0.5 block">Tanggal Selesai (opsional)</span>
                         </div>
                     </div>
@@ -182,14 +182,14 @@
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Lokasi / Kota</label>
                 <input type="text" id="create-input-location" name="location" placeholder="Contoh: Surabaya, Jakarta, Bali"
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-[#E62C37]">
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
                 <span class="text-[10px] text-gray-500 mt-0.5 block">Kosongkan jika di Surabaya</span>
             </div>
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Deskripsi
                     Lengkap</label>
                 <textarea id="create-input-description" name="description" rows="4"
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-[#E62C37]"></textarea>
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]"></textarea>
                 <span id="error-create-description" class="hidden text-xs font-semibold text-[#E62C37] mt-1">Deskripsi
                     portofolio tidak boleh kosong</span>
             </div>
@@ -197,7 +197,7 @@
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Deskripsi Lengkap
                     Terjemahan (EN)</label>
                 <textarea name="description_en" rows="4"
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-[#E62C37]"></textarea>
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]"></textarea>
             </div>
 
             <div>
@@ -207,7 +207,7 @@
                 <div id="create-video-url-list" class="space-y-2">
                     <div class="flex items-center gap-2">
                         <input type="url" name="video_url[]" placeholder="https://youtube.com/watch?v=... atau https://drive.google.com/..."
-                            class="flex-1 p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-[#E62C37]">
+                            class="flex-1 p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
                         <button type="button" onclick="tambahLinkItem('create-video-url-list')" class="px-3 py-2.5 text-sm font-bold bg-green-600/20 text-green-400 border border-green-500/30 rounded-xl hover:bg-green-600/30 transition-colors">+</button>
                     </div>
                 </div>
@@ -220,7 +220,7 @@
                 <div id="create-external-link-list" class="space-y-2">
                     <div class="flex items-center gap-2">
                         <input type="url" name="external_link[]" placeholder="https://berita.com/artikel..."
-                            class="flex-1 p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-[#E62C37]">
+                            class="flex-1 p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
                         <button type="button" onclick="tambahLinkItem('create-external-link-list')" class="px-3 py-2.5 text-sm font-bold bg-green-600/20 text-green-400 border border-green-500/30 rounded-xl hover:bg-green-600/30 transition-colors">+</button>
                     </div>
                 </div>
@@ -269,7 +269,7 @@
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Judul
                     Portofolio (ID)</label>
                 <input type="text" name="title" id="edit-title"
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-amber-500">
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500">
                 <span id="error-edit-title" class="hidden text-xs font-semibold text-[#E62C37] mt-1">Kolom judul wajib
                     diisi</span>
             </div>
@@ -280,7 +280,7 @@
                 </label>
                 <input type="text" name="title_highlight" id="edit-title-highlight"
                     placeholder="Contoh: Bupati Cup 2025"
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-amber-500">
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500">
             </div>
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
@@ -289,20 +289,20 @@
                 </label>
                 <input type="text" name="title_highlight_en" id="edit-title-highlight-en"
                     placeholder="Example: Bupati Cup 2025"
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-amber-500">
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500">
             </div>
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Judul Portofolio
                     Terjemahan (EN)</label>
                 <input type="text" name="title_en" id="edit-title-en"
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-amber-500">
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500">
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Tahun
                         Event</label>
                     <input type="number" name="year" id="edit-year"
-                        class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-amber-500">
+                        class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500">
                     <span id="error-edit-year" class="hidden text-xs font-semibold text-[#E62C37] mt-1">Tahun event
                         wajib diisi</span>
                 </div>
@@ -311,12 +311,12 @@
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <input type="date" name="date" id="edit-date" placeholder="Mulai"
-                                class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 text-white focus:outline-none focus:border-amber-500 cursor-pointer [color-scheme:dark]">
+                                class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-amber-500 cursor-pointer dark:[color-scheme:dark]">
                             <span class="text-[10px] text-gray-500 mt-0.5 block">Tanggal Mulai</span>
                         </div>
                         <div>
                             <input type="date" name="date_end" id="edit-date-end" placeholder="Selesai"
-                                class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 text-white focus:outline-none focus:border-amber-500 cursor-pointer [color-scheme:dark]">
+                                class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-amber-500 cursor-pointer dark:[color-scheme:dark]">
                             <span class="text-[10px] text-gray-500 mt-0.5 block">Tanggal Selesai (opsional)</span>
                         </div>
                     </div>
@@ -327,14 +327,14 @@
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Lokasi / Kota</label>
                 <input type="text" name="location" id="edit-location" placeholder="Contoh: Surabaya, Jakarta, Bali"
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-amber-500">
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500">
                 <span class="text-[10px] text-gray-500 mt-0.5 block">Kosongkan jika di Surabaya</span>
             </div>
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Deskripsi
                     Lengkap (ID)</label>
                 <textarea name="description" id="edit-description" rows="4"
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-amber-500"></textarea>
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500"></textarea>
                 <span id="error-edit-description" class="hidden text-xs font-semibold text-[#E62C37] mt-1">Deskripsi
                     tidak boleh kosong</span>
             </div>
@@ -342,7 +342,7 @@
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Deskripsi Lengkap
                     Terjemahan (EN)</label>
                 <textarea name="description_en" id="edit-description-en" rows="4"
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-white focus:outline-none focus:border-amber-500"></textarea>
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500"></textarea>
             </div>
 
             <div>

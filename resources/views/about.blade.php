@@ -18,7 +18,7 @@
             </div>
 
             <div class="flex-1 lg:flex-none lg:w-4/12 flex justify-center md:justify-end relative">
-                <div class="w-full max-w-sm overflow-hidden shadow-xl aspect-[4/5] relative group">
+                <div class="w-full max-w-sm rounded-2xl overflow-hidden shadow-xl aspect-[4/5] relative group">
                     <img src="{{ asset('img/achievement1.jpg') }}" alt="About Hero"
                         class="w-full h-full object-cover transition-all duration-500 hover:scale-105">
                     <div class="absolute inset-0 ring-1 ring-black/5 pointer-events-none"></div>
@@ -85,7 +85,7 @@
 
                 <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-1">
 
-                    <div class="flex flex-col items-start p-6 bg-gray-50 dark:bg-gray-800 hover:shadow-md transition-shadow">
+                    <div class="flex flex-col items-start p-6 bg-gray-50 dark:bg-gray-800 rounded-2xl hover:shadow-md transition-shadow">
                         <span class="inline-block p-3 text-[#E62C37] rounded-full bg-red-100 dark:bg-red-900/30">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -101,7 +101,7 @@
                         </a>
                     </div>
 
-                    <div class="flex flex-col items-start p-6 bg-gray-50 dark:bg-gray-800 hover:shadow-md transition-shadow">
+                    <div class="flex flex-col items-start p-6 bg-gray-50 dark:bg-gray-800 rounded-2xl hover:shadow-md transition-shadow">
                         <span class="inline-block p-3 text-[#E62C37] rounded-full bg-red-100 dark:bg-red-900/30">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -118,7 +118,7 @@
                         </p>
                     </div>
 
-                    <div class="flex flex-col items-start p-6 bg-gray-50 dark:bg-gray-800 hover:shadow-md transition-shadow">
+                    <div class="flex flex-col items-start p-6 bg-gray-50 dark:bg-gray-800 rounded-2xl hover:shadow-md transition-shadow">
                         <span class="inline-block p-3 text-[#E62C37] rounded-full bg-red-100 dark:bg-red-900/30">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke-width="1.5" stroke="currentColor" class="w-6 h-6">

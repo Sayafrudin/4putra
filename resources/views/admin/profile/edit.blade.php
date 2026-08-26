@@ -42,7 +42,7 @@
         {{-- Info Role --}}
         <div class="mb-6 flex items-center gap-3 px-4 py-3 bg-gray-100 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 rounded-lg">
             <span class="text-sm text-gray-500 dark:text-gray-400">Role Akun:</span>
-            <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider {{ $user->isAdmin() ? 'bg-[#E62C37]/20 text-[#E62C37] border border-[#E62C37]/30' : 'bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-600' }}">
+            <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider {{ $user->isAdmin() ? 'bg-[#E62C37]/20 text-[#E62C37] border border-[#E62C37]/30' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-600' }}">
                 {{ $user->role }}
             </span>
         </div>

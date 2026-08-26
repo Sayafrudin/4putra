@@ -16,7 +16,9 @@ class AdminAuth
                 return response()->json(['error' => 'Unauthenticated'], 401);
             }
 
-            return redirect()->route('login');
+            // guest(): simpan URL yang dituju agar intended() mengembalikan
+            // user ke halaman yang sama setelah login (email & Google)
+            return redirect()->guest(route('login'));
         }
 
         return $next($request);

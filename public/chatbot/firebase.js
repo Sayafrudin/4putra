@@ -7,7 +7,7 @@ config({ path: join(__dirname, '../../.env') });
 config({ path: join(__dirname, '.env'), override: true });
 
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
-import { getDatabase, ref, set, remove, serverTimestamp } from 'firebase-admin/database';
+import { getDatabase } from 'firebase-admin/database';
 
 let rtdb = null;
 
@@ -35,11 +35,11 @@ function getRtdb() {
 // Tulis sinyal handoff realtime untuk Admin Dashboard
 export async function kirimHandoffKeFirebase(pelangganId, { nama, nomor }) {
     try {
-        await set(ref(getRtdb(), `chatbot_handoffs/${pelangganId}`), {
+        await getRtdb().ref(`chatbot_handoffs/${pelangganId}`).set({
             nama: nama || null,
             nomor: nomor || null,
             sesi: 'human',
-            timestamp: serverTimestamp(),
+            timestamp: Date.now(),
         });
         return true;
     } catch (e) {
@@ -51,7 +51,7 @@ export async function kirimHandoffKeFirebase(pelangganId, { nama, nomor }) {
 // Hapus sinyal handoff (bot kembali mengontrol)
 export async function hapusHandoffFirebase(pelangganId) {
     try {
-        await remove(ref(getRtdb(), `chatbot_handoffs/${pelangganId}`));
+        await getRtdb().ref(`chatbot_handoffs/${pelangganId}`).remove();
         return true;
     } catch (e) {
         console.error('[FIREBASE] Gagal hapus handoff:', e.message);

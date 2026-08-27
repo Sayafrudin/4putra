@@ -97,7 +97,7 @@
                         <div class="flex-1">
                             <div class="flex items-center gap-2 mb-1">
                                 <span class="text-xs font-semibold text-blue-400">Pelanggan</span>
-                                <span class="text-xs text-gray-500 dark:text-gray-400">{{ $chat->created_at->format('d M Y H:i:s') }}</span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400">{{ $chat->created_at->timezone('Asia/Jakarta')->format('d M Y H:i:s') }}</span>
                                 <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold
                                     {{ $chat->sumber_balasan === 'groq_ai' ? 'bg-purple-500/20 text-purple-400' : '' }}
                                     {{ $chat->sumber_balasan === 'apriori' ? 'bg-green-500/20 text-green-400' : '' }}

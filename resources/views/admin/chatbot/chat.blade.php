@@ -53,11 +53,11 @@
                             <div class="flex items-center justify-between gap-2">
                                 <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ $p->nama ?? 'Tanpa Nama' }}</p>
                                 @if ($p->pesan_terakhir)
-                                    <span class="text-[10px] text-gray-400 shrink-0">{{ $p->pesan_terakhir->format('H:i') }}</span>
+                                    <span class="row-time text-[10px] text-gray-400 shrink-0">{{ $p->pesan_terakhir->timezone('Asia/Jakarta')->format('H:i') }}</span>
                                 @endif
                             </div>
                             <div class="flex items-center justify-between gap-2">
-                                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ Str::limit($preview, 34) }}</p>
+                                <p class="row-preview text-xs text-gray-500 dark:text-gray-400 truncate">{{ Str::limit($preview, 34) }}</p>
                                 @if ($p->unread_count > 0)
                                     <span class="unread-badge shrink-0 bg-green-500 text-white text-[10px] font-bold rounded-full min-w-[20px] h-5 px-1.5 inline-flex items-center justify-center"
                                         data-pelanggan-id="{{ $p->id }}">{{ $p->unread_count }}</span>
@@ -220,7 +220,7 @@
                                         </p>
                                     @endif
                                     <p class="text-[10px] text-gray-400 mt-1 text-right">
-                                        {{ $chat->created_at->format('H:i') }}</p>
+                                        {{ $chat->created_at->timezone('Asia/Jakarta')->format('H:i') }}</p>
 
                                     {{-- Reply button --}}
                                     <button
@@ -326,7 +326,7 @@
                                     @endif
                                     <div class="flex items-center justify-end gap-1 mt-1">
                                         <span
-                                            class="text-[10px] text-gray-400">{{ $chat->created_at->format('H:i') }}</span>
+                                            class="text-[10px] text-gray-400">{{ $chat->created_at->timezone('Asia/Jakarta')->format('H:i') }}</span>
                                         @if ($isAdmin)
                                             @if ($chat->terkirim)
                                                 <svg class="w-4 h-4 text-green-400" viewBox="0 0 24 16" fill="none"
@@ -1059,7 +1059,7 @@
                             div.setAttribute('data-msg-text', msg.pesan_pengirim);
                             div.setAttribute('data-msg-sender', 'pelanggan');
 
-                            const forwardHtml = msg.is_forwarded ?
+                            const forwardHtml = Number(msg.is_forwarded) === 1 ?
                                 '<div class="flex items-center gap-1 mb-1 text-[10px] text-gray-500 dark:text-gray-400 italic"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Diteruskan</div>' :
                                 '';
                             const replyHtml = renderReplyContext(msg.reply_to, false);
@@ -1110,7 +1110,7 @@
 
                             let checkmark = '';
                             if (isAdmin) {
-                                checkmark = msg.terkirim ?
+                                checkmark = Number(msg.terkirim) === 1 ?
                                     '<svg class="w-4 h-4 text-green-500" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8l4 4L13 4"></path><path d="M7 8l4 4L19 4"></path></svg>' :
                                     '<svg class="w-4 h-4 text-yellow-500" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8l4 4L13 4"></path></svg>';
                             }
@@ -1121,7 +1121,7 @@
                             div.setAttribute('data-msg-text', msg.pesan_balasan);
                             div.setAttribute('data-msg-sender', 'admin');
 
-                            const forwardHtml = msg.is_forwarded ?
+                            const forwardHtml = Number(msg.is_forwarded) === 1 ?
                                 '<div class="flex items-center gap-1 mb-1 text-[10px] text-gray-500 dark:text-gray-400 italic"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Diteruskan</div>' :
                                 '';
                             const replyHtml = renderReplyContext(msg.reply_to, true);
@@ -1169,9 +1169,30 @@
 
                 unreadList.forEach(function(u) {
                     let badge = document.querySelector(`#daftarPelanggan .unread-badge[data-pelanggan-id="${u.pelanggan_id}"]`);
-                    if (!badge) {
-                        const link = document.querySelector(`#daftarPelanggan a[data-id="${u.pelanggan_id}"]`);
-                        if (!link) return;
+                    const link = document.querySelector(`#daftarPelanggan a[data-id="${u.pelanggan_id}"]`);
+
+                    // Update preview, jam, dan dot sesi agar daftar kontak ikut realtime
+                    if (link && u.pesan_preview) {
+                        const previewEl = link.querySelector('.row-preview');
+                        if (previewEl) previewEl.textContent = u.pesan_preview.length > 34 ? u.pesan_preview.substring(0, 34) + '...' : u.pesan_preview;
+                    }
+                    if (link && u.pesan_terakhir) {
+                        const timeEl = link.querySelector('.row-time');
+                        if (timeEl) timeEl.textContent = new Date(u.pesan_terakhir).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                    }
+                    if (link && u.sesi_aktif) {
+                        const dot = link.querySelector('.sesi-dot');
+                        if (dot) {
+                            dot.classList.remove('bg-green-500', 'bg-purple-500', 'bg-amber-500', 'bg-sky-500', 'bg-gray-400');
+                            const color = u.sesi_aktif === 'human' ? 'bg-green-500' :
+                                u.sesi_aktif === 'ai' ? 'bg-purple-500' :
+                                u.sesi_aktif === 'checkout' ? 'bg-amber-500' :
+                                u.sesi_aktif === 'inventory' ? 'bg-sky-500' : 'bg-gray-400';
+                            dot.classList.add(color);
+                        }
+                    }
+
+                    if (!badge && link) {
                         const previewRow = link.querySelector('.flex-1 > div:nth-child(2)');
                         if (!previewRow) return;
                         badge = document.createElement('span');
@@ -1179,7 +1200,7 @@
                         badge.dataset.pelangganId = u.pelanggan_id;
                         previewRow.appendChild(badge);
                     }
-                    badge.textContent = u.jumlah;
+                    if (badge) badge.textContent = u.jumlah;
                 });
             } catch (e) {
                 // Silent fail

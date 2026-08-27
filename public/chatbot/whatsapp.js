@@ -595,7 +595,7 @@ export async function kirimPesanKePelanggan(nomorWa, pesan) {
 // FUNGSI UTAMA BOT
 // ============================================================
 async function hubungkanKeWhatsApp() {
-    const { state, saveCreds } = await useMultiFileAuthState('auth_info');
+    const { state, saveCreds } = await useMultiFileAuthState(join(__dirname, 'auth_info'));
 
     const sock = makeWASocket({
         logger: pino({ level: 'silent' }),

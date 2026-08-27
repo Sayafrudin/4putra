@@ -150,7 +150,7 @@
     </div>
 
     {{-- Modal Export PDF --}}
-    <div id="modalExportPdf" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div id="modalExportPdf" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
         <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 text-center">
             <div class="w-12 h-12 rounded-full bg-rose-500/20 flex items-center justify-center mx-auto mb-4">
                 <svg class="w-6 h-6 text-rose-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -173,7 +173,7 @@
     </div>
 
     {{-- Modal Export Excel --}}
-    <div id="modalExportExcel" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div id="modalExportExcel" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
         <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 text-center">
             <div class="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
                 <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -247,7 +247,7 @@
             const text = document.getElementById('statusText');
 
             btn.disabled = true;
-            btn.innerHTML = '<span class="inline-block animate-spin mr-2">⏳</span> Mengecek...';
+            btn.innerHTML = '<span class="inline-block animate-spin mr-2">â³</span> Mengecek...';
             info.classList.remove('hidden');
             text.textContent = 'Mengecek status pembayaran dari Midtrans...';
 
@@ -264,18 +264,18 @@
                 const data = await res.json();
                 if (res.ok && data.status === 'OK') {
                     if (data.updated > 0) {
-                        text.textContent = `✅ ${data.updated} transaksi berhasil diperbarui! Memuat ulang...`;
+                        text.textContent = `âœ… ${data.updated} transaksi berhasil diperbarui! Memuat ulang...`;
                         setTimeout(() => location.reload(), 1500);
                     } else {
                         text.textContent = data.message || 'Semua transaksi pending belum ada perubahan status dari Midtrans.';
                         setTimeout(() => info.classList.add('hidden'), 4000);
                     }
                 } else {
-                    text.textContent = '❌ Gagal: ' + (data.message || 'Unknown error');
+                    text.textContent = 'âŒ Gagal: ' + (data.message || 'Unknown error');
                     setTimeout(() => info.classList.add('hidden'), 4000);
                 }
             } catch (err) {
-                text.textContent = '❌ Error: ' + err.message;
+                text.textContent = 'âŒ Error: ' + err.message;
                 setTimeout(() => info.classList.add('hidden'), 4000);
             } finally {
                 btn.disabled = false;

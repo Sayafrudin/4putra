@@ -5,7 +5,7 @@
         class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-5">
         <div>
             <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">WhatsApp Chat</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Kelola percakapan pelanggan — ambil alih dari AI atau kembalikan ke bot</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Kelola percakapan pelanggan â€” ambil alih dari AI atau kembalikan ke bot</p>
         </div>
         <a href="{{ route('admin.chatbot.index') }}"
             class="px-4 py-2 text-sm font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 border border-gray-600 hover:border-gray-500 rounded-lg transition-colors">
@@ -113,7 +113,7 @@
                         </div>
                     </div>
 
-                    {{-- Toggle Bot ↔ Human --}}
+                    {{-- Toggle Bot â†” Human --}}
                     <div class="flex items-center gap-2 sm:gap-3 shrink-0">
                         <button onclick="clearChat()"
                             class="px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 border border-gray-600 hover:border-gray-500 hover:text-gray-900 dark:text-white rounded-lg transition-colors">
@@ -397,7 +397,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                         </svg>
-                        <span class="text-sm text-purple-400">Mode AI aktif — switch ke Human untuk mengirim pesan</span>
+                        <span class="text-sm text-purple-400">Mode AI aktif â€” switch ke Human untuk mengirim pesan</span>
                     </div>
 
                     <form id="chatForm" onsubmit="kirimPesan(event)"
@@ -462,7 +462,7 @@
     </div>
 
     {{-- Modal Konfirmasi Clear Chat --}}
-    <div id="modalClearChat" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div id="modalClearChat" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
         <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
             <div class="flex items-center gap-3 mb-4">
                 <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
@@ -494,7 +494,7 @@
     </div>
 
     {{-- Modal Hapus Pesan --}}
-    <div id="modalDeleteMsg" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div id="modalDeleteMsg" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
         <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-5">
             <h3 class="text-base font-bold text-gray-900 dark:text-white mb-4">Hapus Pesan</h3>
             <div class="space-y-2">
@@ -669,7 +669,7 @@
                         const el = document.querySelector(`[data-msg-id="${deleteMsgId}"]`);
                         if (el) {
                             const inner = el.querySelector('.group > p.text-sm');
-                            if (inner) inner.textContent = '🚫 Pesan ini telah dihapus';
+                            if (inner) inner.textContent = 'ðŸš« Pesan ini telah dihapus';
                         }
                         showToast('success', 'Berhasil', 'Pesan dihapus untuk semua');
                     }

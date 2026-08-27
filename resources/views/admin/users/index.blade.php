@@ -135,7 +135,7 @@
     </div>
 
     {{-- ==================== MODAL TAMBAH USER ==================== --}}
-    <div id="modalTambahUser" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div id="modalTambahUser" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
         <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-lg font-bold text-gray-900 dark:text-white">Tambah User Baru</h3>
@@ -205,7 +205,7 @@
     </div>
 
     {{-- ==================== MODAL EDIT USER ==================== --}}
-    <div id="modalEditUser" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div id="modalEditUser" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
         <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-lg font-bold text-gray-900 dark:text-white">Edit User</h3>
@@ -272,7 +272,7 @@
     </div>
 
     {{-- ==================== MODAL HAPUS USER ==================== --}}
-    <div id="modalHapusUser" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div id="modalHapusUser" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
         <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
             <div class="flex items-center gap-3 mb-4">
                 <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">

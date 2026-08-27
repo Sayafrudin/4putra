@@ -88,12 +88,17 @@ class ChatbotController extends Controller
             ->orderBy('created_at', 'asc')
             ->get();
 
-        // Load reply context
-        $messages->each(function ($msg) {
-            if ($msg->reply_to_id) {
-                $replyTo = Percakapan::select('id', 'pesan_pengirim', 'pesan_balasan', 'sumber_balasan', 'media_type')->find($msg->reply_to_id);
-                $msg->reply_to = $replyTo;
-            }
+        // Load reply context sekaligus (hindari N+1 query)
+        $replyIds = $messages->pluck('reply_to_id')->filter()->unique()->values();
+        $replyMap = $replyIds->isEmpty()
+            ? collect()
+            : Percakapan::select('id', 'pesan_pengirim', 'pesan_balasan', 'sumber_balasan', 'media_type')
+                ->whereIn('id', $replyIds)
+                ->get()
+                ->keyBy('id');
+
+        $messages->each(function ($msg) use ($replyMap) {
+            $msg->reply_to = $msg->reply_to_id ? $replyMap->get($msg->reply_to_id) : null;
         });
 
         return response()->json($messages);

@@ -9,7 +9,7 @@ class FacilityController extends Controller
 {
     public function index()
     {
-        $facilities = Cache::remember('public.facilities', 300, function () {
+        $facilities = Cache::remember('public.facilities', 60 * 60, function () {
             return Facility::select('id', 'title', 'title_en', 'category', 'category_en', 'description', 'description_en', 'video_urls', 'images')
                 ->orderByDesc('id')
                 ->get();

@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://res.cloudinary.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/chat.js'])
 
     {{-- FOUC prevention: cek localStorage sebelum render --}}
     <script>
@@ -97,9 +97,6 @@
     <x-admin.toast />
 
     <x-admin.chat-widget :user="Auth::user()" />
-
-    {{-- Chat JS loaded lazily (tidak memblok render halaman) --}}
-    <script type="module" src="{{ asset('build/assets/chat-CZ2_Y-v4.js') }}" defer></script>
 
     @if (session('success'))
         <script>

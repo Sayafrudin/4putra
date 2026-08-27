@@ -104,26 +104,45 @@ class ChatbotController extends Controller
         return response()->json($messages);
     }
 
-    // Ambil pelanggan yang punya pesan belum dibaca admin
+    // Ambil pelanggan yang punya pesan belum dibaca admin (untuk badge + update daftar kontak)
     public function unreadMessages()
     {
         $unread = \App\Models\Percakapan::select('pelanggan_id', DB::raw('COUNT(*) as jumlah'), DB::raw('MAX(id) as last_id'))
             ->where('dibaca_admin', false)
             ->whereNotNull('pesan_pengirim')
             ->groupBy('pelanggan_id')
-            ->get()
-            ->map(function ($item) {
-                $pelanggan = Pelanggan::find($item->pelanggan_id);
-                return [
-                    'pelanggan_id' => $item->pelanggan_id,
-                    'nama' => $pelanggan?->nama ?? 'Unknown',
-                    'nomor_wa' => $pelanggan?->nomor_wa ?? '',
-                    'jumlah' => $item->jumlah,
-                    'last_id' => $item->last_id,
-                ];
-            });
+            ->get();
 
-        return response()->json($unread);
+        if ($unread->isEmpty()) {
+            return response()->json([]);
+        }
+
+        // Eager ambil data pelanggan & pesan terakhir sekaligus (hindari N+1)
+        $pelanggans = Pelanggan::select('id', 'nomor_wa', 'nama', 'sesi_aktif', 'pesan_terakhir')
+            ->whereIn('id', $unread->pluck('pelanggan_id'))
+            ->get()
+            ->keyBy('id');
+
+        $lastMessages = \App\Models\Percakapan::select('id', 'pelanggan_id', 'pesan_pengirim', 'pesan_balasan')
+            ->whereIn('id', $unread->pluck('last_id'))
+            ->get()
+            ->keyBy('pelanggan_id');
+
+        return response()->json($unread->map(function ($item) use ($pelanggans, $lastMessages) {
+            $p = $pelanggans->get($item->pelanggan_id);
+            $last = $lastMessages->get($item->pelanggan_id);
+
+            return [
+                'pelanggan_id' => $item->pelanggan_id,
+                'nama' => $p?->nama ?? 'Unknown',
+                'nomor_wa' => $p?->nomor_wa ?? '',
+                'sesi_aktif' => $p?->sesi_aktif ?? 'menu',
+                'jumlah' => $item->jumlah,
+                'last_id' => $item->last_id,
+                'pesan_preview' => $last ? ($last->pesan_pengirim ?: $last->pesan_balasan) : '',
+                'pesan_terakhir' => $p?->pesan_terakhir?->toISOString(),
+            ];
+        })->values());
     }
 
     // Tandai pesan pelanggan sebagai sudah dibaca

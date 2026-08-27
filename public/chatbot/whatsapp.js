@@ -805,6 +805,18 @@ async function hubungkanKeWhatsApp() {
             // Update pesan terakhir
             await update('UPDATE pelanggan SET pesan_terakhir = NOW() WHERE id = ?', [pelanggan.id]);
 
+            // Sesi bot menganggur > 6 jam → sambut ulang dengan menu
+            // (pelanggan.pesan_terakhir masih nilai lama — diambil sebelum NOW() di atas)
+            const IDLE_RESET_MS = 6 * 60 * 60 * 1000;
+            if (['ai', 'inventory', 'checkout'].includes(pelanggan.sesi_aktif) && pelanggan.pesan_terakhir) {
+                const idleSelisih = Date.now() - new Date(pelanggan.pesan_terakhir).getTime();
+                if (idleSelisih > IDLE_RESET_MS) {
+                    await update('UPDATE pelanggan SET sesi_aktif = ?, riwayat_konteks = NULL WHERE id = ?', ['menu', pelanggan.id]);
+                    pelanggan.sesi_aktif = 'menu';
+                    console.log(`[SESI] Sesi pelanggan ${pelanggan.id} idle ${Math.round(idleSelisih / 3600000)} jam → reset ke menu`);
+                }
+            }
+
             // ============================================================
             // LANGKAH 4: Deteksi keyword Apriori & Niat Pembelian
             // ============================================================
@@ -1065,7 +1077,8 @@ async function hubungkanKeWhatsApp() {
 
             // --- MODE AI ---
             if (pelanggan.sesi_aktif === 'ai') {
-                if (teksMasukLower === 'menu') {
+                // Sapaan atau "menu" → selalu sambut dengan menu utama, bukan AI
+                if (KEYWORD_SAPAAN.some(kata => teksMasukLower.includes(kata))) {
                     const namaPelanggan = pelanggan.nama || 'Kak';
                     const pesanUtuh = await buatSapaanHybrid(namaPelanggan);
 

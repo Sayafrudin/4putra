@@ -54,7 +54,8 @@
                 <span class="px-2 py-0.5 rounded text-xs font-bold uppercase
                     {{ $pelanggan->sesi_aktif === 'human' ? 'bg-green-500/20 text-green-400' : '' }}
                     {{ $pelanggan->sesi_aktif === 'ai' ? 'bg-purple-500/20 text-purple-400' : '' }}
-                    {{ $pelanggan->sesi_aktif === 'manual' ? 'bg-yellow-500/20 text-yellow-400' : '' }}
+                    {{ $pelanggan->sesi_aktif === 'checkout' ? 'bg-amber-500/20 text-amber-400' : '' }}
+                    {{ $pelanggan->sesi_aktif === 'inventory' ? 'bg-sky-500/20 text-sky-400' : '' }}
                     {{ $pelanggan->sesi_aktif === 'menu' ? 'bg-gray-500/20 text-gray-500 dark:text-gray-400' : '' }}">
                     {{ $pelanggan->sesi_aktif === 'human' ? 'Admin (Human)' : ($pelanggan->sesi_aktif === 'ai' ? 'AI Bot' : ucfirst($pelanggan->sesi_aktif)) }}
                 </span>

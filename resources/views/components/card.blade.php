@@ -19,7 +19,7 @@
         @endif
 
         {{-- Floating frosted glass info agar foto burung terlihat penuh --}}
-        <div class="absolute bottom-2.5 inset-x-2.5 z-10 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 p-2.5 text-center shadow-lg pointer-events-none">
+        <div class="absolute bottom-2.5 inset-x-2.5 z-10 rounded-xl bg-black/85 border border-white/10 p-2.5 text-center shadow-lg pointer-events-none">
             <p class="text-white font-bold text-sm tracking-wide">{{ $name }}</p>
             <p class="text-red-400 font-semibold text-xs tracking-wider uppercase">{{ $SName }}</p>
         </div>

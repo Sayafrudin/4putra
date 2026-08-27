@@ -20,7 +20,7 @@ class AchievementController extends Controller
 
     public function publicIndex()
     {
-        $achievements = Cache::remember('public.achievements', 300, function () {
+        $achievements = Cache::remember('public.achievements', 60 * 60, function () {
             return Achievement::with('images:id,achievement_id,image_path')
                 ->select('id', 'title', 'title_en', 'title_highlight', 'title_highlight_en', 'year', 'description', 'description_en', 'date', 'date_end', 'location', 'video_url', 'video_file', 'external_link')
                 ->orderBy('year', 'desc')
@@ -59,6 +59,10 @@ class AchievementController extends Controller
             }
 
             $image->delete();
+
+            // Cache gambar achievement berubah → buang cache publik & admin
+            Cache::forget('public.achievements');
+            Cache::forget('admin.achievements');
 
             return response()->json(['success' => true, 'message' => 'Foto berhasil dihapus.']);
         } catch (\Exception $e) {

@@ -29,7 +29,7 @@
         @endif
 
         {{-- Floating frosted glass info --}}
-        <div class="absolute bottom-3 inset-x-3 z-10 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 p-3 text-center shadow-lg pointer-events-none">
+        <div class="absolute bottom-3 inset-x-3 z-10 rounded-xl bg-black/85 border border-white/10 p-3 text-center shadow-lg pointer-events-none">
             <p class="text-white font-bold text-base">{{ $name }}</p>
             <p class="text-red-400 font-bold text-xs uppercase tracking-widest mt-0.5">{{ $SName }}</p>
         </div>

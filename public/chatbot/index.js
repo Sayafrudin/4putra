@@ -9,7 +9,7 @@ config({ path: join(__dirname, '.env'), override: true });
 import express from 'express';
 import axios from 'axios';
 import { query, queryOne, insert, update } from './db.js';
-import { verifySignature, createTransaction, getTransactionStatus } from './midtrans.js';
+import { verifySignature, getTransactionStatus } from './midtrans.js';
 
 const app = express();
 app.use(express.json());
@@ -94,6 +94,12 @@ app.post('/midtrans/callback', async (req, res) => {
             statusBaru = 'expired';
         } else if (transaction_status === 'cancel' || transaction_status === 'deny') {
             statusBaru = 'cancelled';
+        }
+
+        // Idempotensi: webhook bisa terkirim ulang oleh Midtrans — skip jika status tidak berubah
+        if (transaksi.status === statusBaru) {
+            console.log('[MIDTRANS] Webhook duplikat diabaikan untuk order:', order_id, 'status:', statusBaru);
+            return res.json({ status: 'OK', note: 'duplicate ignored' });
         }
 
         // Simpan data pembayaran

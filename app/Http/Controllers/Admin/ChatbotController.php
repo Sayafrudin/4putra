@@ -50,6 +50,10 @@ class ChatbotController extends Controller
     {
         $pelangganList = Pelanggan::select('id', 'nomor_wa', 'nama', 'sesi_aktif', 'pesan_terakhir')
             ->withCount('percakapan as total_chat')
+            ->withCount(['percakapan as unread_count' => function ($q) {
+                $q->where('dibaca_admin', false)->whereNotNull('pesan_pengirim');
+            }])
+            ->addSelect(DB::raw('(SELECT COALESCE(NULLIF(pesan_pengirim, \'\'), pesan_balasan) FROM percakapan WHERE percakapan.pelanggan_id = pelanggan.id ORDER BY id DESC LIMIT 1) as pesan_preview'))
             ->orderByDesc('pesan_terakhir')
             ->get();
 

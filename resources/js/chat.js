@@ -76,7 +76,7 @@ function initChatWidget(currentUser) {
                             '<p id="chat-contact-role" class="text-xs text-white/70"></p>' +
                         '</div>' +
                     '</div>' +
-                    '<div id="chat-messages" class="flex-1 overflow-y-auto p-3 space-y-1 bg-gray-50"></div>' +
+                    '<div id="chat-messages" class="flex-1 overflow-y-auto p-3 space-y-1 bg-gray-50 dark:bg-[#151a22]"></div>' +
                     // Reply bar
                     '<div id="chat-reply-bar" class="hidden px-3 py-2 bg-gray-100 border-t border-gray-200 text-xs text-gray-600 flex items-center justify-between shrink-0">' +
                         '<div class="flex-1 min-w-0 flex items-center gap-2">' +
@@ -90,11 +90,11 @@ function initChatWidget(currentUser) {
                             '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>' +
                         '</button>' +
                     '</div>' +
-                    // Input area
-                    '<div class="p-3 border-t border-gray-200 bg-white shrink-0">' +
+                    // Input area (sticky bottom)
+                    '<div class="p-3 border-t border-gray-200 bg-white sticky bottom-0 shrink-0">' +
                         '<form id="chat-send-form" class="flex gap-2 items-end">' +
-                            '<input type="text" id="chat-input" autocomplete="off" class="flex-1 px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-1 focus:ring-[#E62C37]/50 focus:border-[#E62C37] placeholder-gray-400" placeholder="Ketik pesan...">' +
-                            '<button type="submit" class="bg-[#E62C37] hover:bg-[#c5242d] text-white rounded-lg px-3 py-2 transition-colors shrink-0">' +
+                            '<input type="text" id="chat-input" autocomplete="off" class="flex-1 px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-full focus:ring-1 focus:ring-[#25D366]/50 focus:border-[#25D366] placeholder-gray-400" placeholder="Ketik pesan...">' +
+                            '<button type="submit" class="bg-[#25D366] hover:bg-[#1fb857] text-white rounded-full p-2.5 transition-colors shrink-0 flex items-center justify-center" title="Kirim">' +
                                 '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>' +
                             '</button>' +
                         '</form>' +
@@ -407,7 +407,7 @@ function initChatWidget(currentUser) {
                     var typingBubble = document.createElement('div');
                     typingBubble.id = 'typing-bubble';
                     typingBubble.className = 'flex justify-start mb-1';
-                    typingBubble.innerHTML = '<div class="bg-gray-200 text-gray-800 rounded-2xl rounded-bl-md px-4 py-3 max-w-[75%] min-w-[60px]">' +
+                    typingBubble.innerHTML = '<div class="bg-gray-100 dark:bg-[#2a3343] text-gray-800 dark:text-gray-100 rounded-2xl rounded-br-2xl px-4 py-3 max-w-[75%] min-w-[60px]">' +
                         '<div class="flex items-center gap-1">' +
                             '<span class="typing-dot w-2 h-2 bg-gray-400 rounded-full inline-block"></span>' +
                             '<span class="typing-dot w-2 h-2 bg-gray-400 rounded-full inline-block" style="animation-delay:0.2s"></span>' +
@@ -453,7 +453,7 @@ function initChatWidget(currentUser) {
             bubble.className = 'flex ' + (isMine ? 'justify-end' : 'justify-start') + ' mb-1';
             bubble.innerHTML =
                 '<div class="max-w-[75%] min-w-[90px]">' +
-                    '<div class="px-3 py-2 rounded-2xl text-sm bg-gray-100 border border-gray-200">' +
+                    '<div class="px-3 py-2 rounded-2xl text-sm bg-gray-100 dark:bg-[#2a3343] border border-gray-200 dark:border-gray-700">' +
                         '<div class="flex items-center gap-1.5">' +
                             '<svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>' +
                             '<p class="text-gray-400 italic text-xs">Pesan ini telah dihapus</p>' +
@@ -472,11 +472,11 @@ function initChatWidget(currentUser) {
             } else if (msg.replyTo.videoUrl) {
                 replyMediaHtml = '<div class="w-10 h-10 bg-gray-300 rounded flex items-center justify-center float-left mr-2"><svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg></div>';
             }
-            replyHtml = '<div class="mb-1.5 px-2 py-1.5 bg-black/10 rounded-lg text-[11px] border-l-2 ' + (isMine ? 'border-white/50' : 'border-[#E62C37]') + ' flex items-start gap-2 overflow-hidden">' +
+            replyHtml = '<div class="mb-1.5 px-2 py-1.5 bg-black/5 dark:bg-black/20 rounded-lg text-[11px] border-l-2 border-gray-400 dark:border-white/30 flex items-start gap-2 overflow-hidden">' +
                 replyMediaHtml +
                 '<div class="min-w-0 flex-1">' +
-                    '<p class="font-semibold ' + (isMine ? 'text-white/80' : 'text-[#E62C37]') + '">' + escapeHtml(msg.replyTo.name || '') + '</p>' +
-                    '<p class="truncate ' + (isMine ? 'text-white/60' : 'text-gray-500') + '">' + escapeHtml(msg.replyTo.text || (msg.replyTo.imageUrl ? 'Gambar' : msg.replyTo.videoUrl ? 'Video' : '')) + '</p>' +
+                    '<p class="font-semibold text-gray-500 dark:text-white/80">' + escapeHtml(msg.replyTo.name || '') + '</p>' +
+                    '<p class="truncate text-gray-500 dark:text-white/60">' + escapeHtml(msg.replyTo.text || (msg.replyTo.imageUrl ? 'Gambar' : msg.replyTo.videoUrl ? 'Video' : '')) + '</p>' +
                 '</div></div>';
         }
 
@@ -492,12 +492,12 @@ function initChatWidget(currentUser) {
         bubble.className = 'flex ' + (isMine ? 'justify-end' : 'justify-start') + ' mb-1';
         bubble.innerHTML =
             '<div class="chat-bubble-wrapper relative max-w-[75%] min-w-[90px] cursor-pointer" data-msg-id="' + msgId + '" data-msg-sender="' + (isMine ? 'me' : 'other') + '" data-msg-text="' + escapeHtml(msg.text || '') + '" data-msg-name="' + escapeHtml(msg.senderName || '') + '" data-msg-image="' + (msg.imageUrl || '') + '" data-msg-video="' + (msg.videoUrl || '') + '">' +
-                '<div class="px-3 py-2 rounded-2xl text-sm ' + (isMine ? 'bg-[#E62C37] text-white rounded-br-md' : 'bg-gray-200 text-gray-800 rounded-bl-md') + '">' +
+                '<div class="px-3 py-2 rounded-2xl text-sm break-words min-w-0 ' + (isMine ? 'bg-green-100 dark:bg-green-900/60 text-gray-800 dark:text-gray-100 rounded-bl-2xl' : 'bg-gray-100 dark:bg-[#2a3343] text-gray-800 dark:text-gray-100 rounded-br-2xl') + '">' +
                     replyHtml + mediaHtml +
                     (msg.text ? '<p class="break-words">' + escapeHtml(msg.text) + '</p>' : '') +
                     '<div class="flex items-center justify-end gap-1 mt-1">' +
-                        '<span class="text-[10px] ' + (isMine ? 'text-white/60' : 'text-gray-400') + '">' + time + '</span>' +
-                        (isMine ? '<span class="text-[10px] ' + (isRead ? 'text-blue-300' : 'text-white/40') + '">' + (isRead ? '\u2713\u2713' : '\u2713') + '</span>' : '') +
+                        '<span class="text-[10px] text-gray-400">' + time + '</span>' +
+                        (isMine ? '<span class="text-[10px] ' + (isRead ? 'text-green-600 dark:text-green-400' : 'text-gray-400') + '">' + (isRead ? '\u2713\u2713' : '\u2713') + '</span>' : '') +
                     '</div>' +
                 '</div>' +
             '</div>';

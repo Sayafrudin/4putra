@@ -12,7 +12,8 @@ import { Groq } from 'groq-sdk';
 import express from 'express';
 import { eksekusiAprioriLengkap } from './apriori.js';
 import { query, queryOne, insert, update } from './db.js';
-import { createTransaction } from './midtrans.js';
+import { createQrisCharge, unduhGambarQr } from './midtrans.js';
+import { kirimHandoffKeFirebase, hapusHandoffFirebase } from './firebase.js';
 
 // ============================================================
 // KONFIGURASI
@@ -139,30 +140,6 @@ Aturan wajib:
 }
 
 // ============================================================
-// KIRIM INTERACTIVE BUTTONS (JIKA SUPPORT)
-// ============================================================
-async function kirimMenuDenganButtons(remoteJid, teks) {
-    try {
-        await sockInstance.sendMessage(remoteJid, {
-            text: teks,
-            footer: 'PT 4Putra Vertex Aviary — Surabaya Barat',
-            buttons: [
-                { buttonId: 'menu_ai', buttonText: { displayText: '🤖 Konsultasi AI' }, type: 1 },
-                { buttonId: 'menu_inventaris', buttonText: { displayText: '📋 Lihat Inventaris' }, type: 1 },
-                { buttonId: 'menu_admin', buttonText: { displayText: '👤 Hubungi Admin' }, type: 1 },
-                { buttonId: 'menu_transaksi', buttonText: { displayText: '📦 Riwayat Transaksi' }, type: 1 },
-                { buttonId: 'menu_bayar', buttonText: { displayText: '💳 Bayar (QRIS)' }, type: 1 },
-            ],
-            headerType: 1,
-        });
-    } catch (err) {
-        console.log('Buttons tidak support, kirim teks biasa');
-        await sockInstance.sendMessage(remoteJid, { text: teks });
-    }
-}
-
-
-// ============================================================
 // FUNGSI BANTUAN
 // ============================================================
 
@@ -196,13 +173,13 @@ async function dapatkanPelanggan(remoteJid, pushName = '') {
     if (!pelanggan) {
         const id = await insert(
             'INSERT INTO pelanggan (nomor_wa, nama, sesi_aktif, pesan_terakhir) VALUES (?, ?, ?, NOW())',
-            [remoteJid, pushName || null, 'awal']
+            [remoteJid, pushName || null, 'menu']
         );
         pelanggan = {
             id,
             nomor_wa: remoteJid,
             nama: pushName || null,
-            sesi_aktif: 'awal',
+            sesi_aktif: 'menu',
             riwayat_konteks: null,
             pesan_terakhir: new Date()
         };
@@ -295,6 +272,52 @@ async function dapatkanRekomendasiBerdasarkanPembelian(pelangganId) {
     return rekomendasi.length > 0 ? rekomendasi : null;
 }
 
+// Rekomendasi natural via Groq dari aturan asosiasi Apriori
+async function buatRekomendasiAprioriGroq(pelangganId, namaPelanggan) {
+    const pembelian = await query(
+        `SELECT DISTINCT i.nama_spesies
+         FROM transaksi_chatbot t
+         JOIN inventaris_burung i ON t.inventaris_id = i.id
+         WHERE t.pelanggan_id = ? AND t.status = 'paid'`,
+        [pelangganId]
+    );
+    if (pembelian.length === 0) return null;
+
+    const aturan = dapatkanHasilApriori().aturanKuatFinal.filter(rule =>
+        pembelian.some(p => rule.antecedents.toLowerCase().includes(p.nama_spesies.toLowerCase()))
+    );
+    if (aturan.length === 0) return null;
+
+    const daftarAturan = aturan
+        .map(r => `- ${r.antecedents} -> ${r.consequents} (confidence ${r.confidence})`)
+        .join('\n');
+
+    const systemPrompt = `Anda asisten virtual penangkaran PT 4Putra Vertex Aviary (burung paruh bengkok premium). Pelanggan bernama ${namaPelanggan}.
+
+Berikut data aturan asosiasi dari riwayat pembelian pelanggan:
+${daftarAturan}
+
+Tugas Anda: Terjemahkan aturan asosiasi ini menjadi rekomendasi pembelian burung yang natural dan ramah tanpa menyebutkan istilah teknis matematis (dilarang menyebut: support, confidence, aturan asosiasi, data mining, atau istilah statistik lain).
+
+Gaya: panggil pelanggan 'Kak', maksimal 4 kalimat, hangat dan persuasif. Akhiri dengan ajakan mengetik *2* untuk melihat stok atau *5* untuk membeli.`;
+
+    try {
+        const respon = await groq.chat.completions.create({
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: 'Buat rekomendasi pembeliannya' },
+            ],
+            model: 'llama-3.1-8b-instant',
+            temperature: 0.7,
+            max_tokens: 200,
+        });
+        return respon.choices[0].message.content.trim();
+    } catch (e) {
+        console.error('[APRIORI-GROQ] Gagal generate rekomendasi:', e.message);
+        return null;
+    }
+}
+
 // Format riwayat transaksi untuk WhatsApp
 function formatRiwayatTransaksi(daftar) {
     if (!daftar || daftar.length === 0) {
@@ -379,21 +402,14 @@ function formatInventaris(daftar) {
     }
 
     let teks = '*📋 DAFTAR BURUNG TERSEDIA — PT 4Putra Vertex Aviary*\n\n';
-    let spesiesSekarang = '';
 
-    for (const item of daftar) {
-        if (item.nama_spesies !== spesiesSekarang) {
-            if (spesiesSekarang) teks += '\n';
-            teks += `*${item.nama_spesies}*\n`;
-            spesiesSekarang = item.nama_spesies;
-        }
-
+    daftar.forEach((item, idx) => {
         const harga = Number(item.harga).toLocaleString('id-ID');
         const fase = item.fase === 'anakan' ? 'Baby' : 'Dewasa';
-        teks += `  • ${fase}: Rp ${harga} (Stok: ${item.stok})\n`;
-    }
+        teks += `${idx + 1}. *${item.nama_spesies}* (${fase}) — Rp ${harga} (Stok: ${item.stok})\n`;
+    });
 
-    teks += '\nKetik *3* atau ketik *admin* untuk terhubung langsung dengan admin ya, Kak! 🦜';
+    teks += '\nKetik *nomor* burung untuk lanjut ke pembayaran, atau ketik *menu* untuk kembali ya, Kak! 🦜';
     return teks;
 }
 
@@ -438,9 +454,9 @@ async function buatPembayaranQRIS(pelangganId, inventarisId, namaSpesies, fase, 
         const namaDisplay = pelanggan?.nama || 'Pelanggan';
         const nomorDisplay = getNomorDisplay(pelanggan?.nomor_wa || '');
 
-        console.log(`[QRIS] Memanggil Midtrans API...`);
+        console.log(`[QRIS] Memanggil Midtrans Core API (payment_type: qris)...`);
         const faseLabel = fase === 'anakan' ? 'Baby' : 'Dewasa';
-        const midtransResult = await createTransaction(orderId, totalHarga, {
+        const midtransResult = await createQrisCharge(orderId, totalHarga, {
             nama: namaDisplay,
             nomor: nomorDisplay,
             nama_produk: `${namaSpesies} ${faseLabel} x${quantity}`,
@@ -452,29 +468,42 @@ async function buatPembayaranQRIS(pelangganId, inventarisId, namaSpesies, fase, 
                 name: `${namaSpesies} ${faseLabel}`,
             },
         ]);
-        console.log(`[QRIS] Midtrans response:`, JSON.stringify(midtransResult));
+        console.log(`[QRIS] Midtrans response: status=${midtransResult.status_code}, qr=${!!midtransResult.qrImageUrl}`);
 
-        // Update QR URL ke transaksi
+        // Simpan URL QR (fallback ke redirect_url Snap jika gambar tidak tersedia)
+        const urlQr = midtransResult.qrImageUrl || midtransResult.redirect_url;
         await update(
             'UPDATE transaksi_chatbot SET qr_url = ? WHERE id = ?',
-            [midtransResult.redirect_url, transaksiId]
+            [urlQr, transaksiId]
         );
 
-        // Kirim pesan dengan link pembayaran
-        const pesan = `✅ *Pesanan Berhasil Dibuat!*\n\n` +
+        const caption = `✅ *Pesanan Berhasil Dibuat!*\n\n` +
             `📦 *Detail Pesanan:*\n` +
             `• Produk: ${namaSpesies} (${fase === 'anakan' ? 'Baby' : 'Dewasa'})\n` +
             `• Jumlah: ${quantity} ekor\n` +
             `• Harga satuan: Rp ${Number(harga).toLocaleString('id-ID')}\n` +
-            `• Total: Rp ${Number(totalHarga).toLocaleString('id-ID')}\n` +
+            `• *Total: Rp ${Number(totalHarga).toLocaleString('id-ID')}*\n` +
             `• Order ID: ${orderId}\n\n` +
-            `💳 *Cara Pembayaran:*\n` +
-            `Klik link di bawah untuk membayar dengan QRIS:\n` +
-            `${midtransResult.redirect_url}\n\n` +
-            `⏰ Pembayaran berlaku selama 24 jam.\n` +
-            `Setelah pembayaran berhasil, admin kami akan segera memproses pesanan Kakak.`;
+            `💳 Scan QR di atas dengan aplikasi apa pun yang mendukung QRIS (GoPay, OVO, DANA, m-banking).\n` +
+            `⏰ Pembayaran berlaku 24 jam. Konfirmasi pembayaran akan otomatis terkirim di chat ini.`;
 
-        await sockInstance.sendMessage(remoteJid, { text: pesan });
+        // Kirim QRIS sebagai gambar (image message)
+        let terkirimGambar = false;
+        if (midtransResult.qrImageUrl) {
+            try {
+                const qrBuffer = await unduhGambarQr(midtransResult.qrImageUrl);
+                await sockInstance.sendMessage(remoteJid, { image: qrBuffer, caption });
+                terkirimGambar = true;
+            } catch (e) {
+                console.error('[QRIS] Gagal kirim gambar QR, fallback ke teks:', e.message);
+            }
+        }
+
+        if (!terkirimGambar) {
+            await sockInstance.sendMessage(remoteJid, {
+                text: caption + (midtransResult.redirect_url ? `\n\n💳 Atau bayar via link berikut:\n${midtransResult.redirect_url}` : '')
+            });
+        }
 
         return { success: true, orderId, transaksiId };
     } catch (error) {
@@ -487,6 +516,61 @@ async function buatPembayaranQRIS(pelangganId, inventarisId, namaSpesies, fase, 
         });
         return { success: false, error: error.message };
     }
+}
+
+// ============================================================
+// DAFTAR INVENTARIS & CHECKOUT (state inventory / checkout)
+// ============================================================
+function simpanKonteksDaftar(pelanggan, tujuanState) {
+    return dapatkanInventaris().then(inventaris => {
+        if (!inventaris || inventaris.length === 0) return null;
+        return update(
+            'UPDATE pelanggan SET sesi_aktif = ?, riwayat_konteks = ? WHERE id = ?',
+            [tujuanState, JSON.stringify({
+                action: 'pilih_bayar',
+                items: inventaris.map(i => ({ id: i.id, nama: i.nama_spesies, fase: i.fase, harga: i.harga }))
+            }), pelanggan.id]
+        ).then(() => inventaris);
+    });
+}
+
+// Menu 2: daftar stok bernomor (state: inventory)
+async function kirimDaftarInventaris(pelanggan, remoteJid, teksMasuk) {
+    const inventaris = await simpanKonteksDaftar(pelanggan, 'inventory');
+    pelanggan.sesi_aktif = 'inventory';
+
+    let balasan;
+    if (!inventaris) {
+        balasan = 'Maaf Kak, saat ini stok burung sedang kosong. Silakan cek kembali nanti ya.';
+    } else {
+        balasan = formatInventaris(inventaris);
+        balasan += '\n\n🛒 Ingin langsung membeli? Ketik *5* untuk menu pembayaran, atau ketik *3* untuk terhubung dengan admin.';
+    }
+
+    await sockInstance.sendMessage(remoteJid, { text: balasan });
+    await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'menu');
+}
+
+// Menu 5: daftar pembayaran QRIS bernomor (state: checkout)
+async function kirimDaftarCheckout(pelanggan, remoteJid, teksMasuk) {
+    const inventaris = await simpanKonteksDaftar(pelanggan, 'checkout');
+    pelanggan.sesi_aktif = 'checkout';
+
+    let balasan;
+    if (!inventaris) {
+        balasan = 'Maaf Kak, saat ini belum ada burung yang tersedia. Silakan cek kembali nanti ya.';
+    } else {
+        balasan = '💳 *Pembayaran QRIS — PT 4Putra Vertex Aviary*\n\nSilakan pilih burung yang ingin Kakak beli:\n\n';
+        inventaris.forEach((item, idx) => {
+            const harga = Number(item.harga).toLocaleString('id-ID');
+            const fase = item.fase === 'anakan' ? 'Baby' : 'Dewasa';
+            balasan += `${idx + 1}. *${item.nama_spesies}* (${fase}) — Rp ${harga}\n`;
+        });
+        balasan += '\nKetik *nomor* burung yang ingin dibeli (contoh: 1)';
+    }
+
+    await sockInstance.sendMessage(remoteJid, { text: balasan });
+    await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'menu');
 }
 
 // ============================================================
@@ -695,8 +779,8 @@ async function hubungkanKeWhatsApp() {
             // LANGKAH 2: Untuk user baru → set session awal
             // ============================================================
             if (isNew) {
-                await update('UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?', ['awal', pelanggan.id]);
-                pelanggan.sesi_aktif = 'awal';
+                await update('UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?', ['menu', pelanggan.id]);
+                pelanggan.sesi_aktif = 'menu';
             }
 
             // ============================================================
@@ -738,13 +822,12 @@ async function hubungkanKeWhatsApp() {
             // TAMBAHAN: Deteksi intensi eksplisit untuk transaksi
             const niatBeli = ['beli', 'pesan', 'order', 'mau ambil', 'bayar'].some(kata => teksMasukLower.includes(kata));
 
-            if (burungTerdeteksi && pelanggan.sesi_aktif !== 'manual' && pelanggan.sesi_aktif !== 'human') {
-                
+            if (burungTerdeteksi && pelanggan.sesi_aktif !== 'human') {
+
                 if (niatBeli) {
-                    // BYPASS APRIORI: Jika pelanggan menyatakan ingin beli (misal: "Saya ingin membeli afgrey")
-                    // Ubah input menjadi trigger menu pembayaran agar diproses di LANGKAH 5
-                    teksMasuk = '5';
-                    teksMasukLower = '5';
+                    // BYPASS APRIORI: Pelanggan menyatakan ingin beli → langsung daftar pembayaran (state checkout)
+                    await kirimDaftarCheckout(pelanggan, remoteJid, teksMasuk);
+                    return;
                 } else {
                     // TAMPILKAN REKOMENDASI: Jika hanya menyebut nama burung (misal: "Afgrey")
                     const hasilApriori = dapatkanHasilApriori();
@@ -774,112 +857,8 @@ async function hubungkanKeWhatsApp() {
             }
 
             // ============================================================
-            // LANGKAH 4.5: Cek konteks pembayaran
+            // LANGKAH 5: Routing berdasarkan sesi aktif (state machine)
             // ============================================================
-            if (pelanggan.riwayat_konteks) {
-                try {
-                    const konteks = typeof pelanggan.riwayat_konteks === 'string'
-                        ? JSON.parse(pelanggan.riwayat_konteks)
-                        : pelanggan.riwayat_konteks;
-
-                    // STEP 2: User memilih nomor burung → minta quantity
-                    if (konteks.action === 'pilih_bayar' && /^\d+$/.test(teksMasuk)) {
-                        const pilihan = parseInt(teksMasuk) - 1;
-                        const items = konteks.items;
-
-                        if (pilihan >= 0 && pilihan < items.length) {
-                            const item = items[pilihan];
-                            const faseLabel = item.fase === 'anakan' ? 'Baby' : 'Dewasa';
-                            const hargaFormatted = Number(item.harga).toLocaleString('id-ID');
-
-                            // Simpan konteks baru: pilih_quantity
-                            await update('UPDATE pelanggan SET riwayat_konteks = ? WHERE id = ?',
-                                [JSON.stringify({
-                                    action: 'pilih_quantity',
-                                    item: { id: item.id, nama: item.nama, fase: item.fase, harga: item.harga }
-                                }), pelanggan.id]);
-
-                            const balasan = `Kakak pilih *${item.nama}* (${faseLabel}) — Rp ${hargaFormatted}/ekor\n\n` +
-                                `Mau beli berapa ekor? Ketik jumlahnya ya, Kak (contoh: 1, 2, 3)`;
-
-                            await sockInstance.sendMessage(remoteJid, { text: balasan });
-                            await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'menu');
-                            return;
-                        } else {
-                            await sockInstance.sendMessage(remoteJid, { text: 'Pilihan tidak valid. Silakan ketik nomor yang tersedia ya, Kak.' });
-                            return;
-                        }
-                    }
-
-                    // STEP 3: User memilih quantity → buat pembayaran QRIS
-                    if (konteks.action === 'pilih_quantity' && /^\d+$/.test(teksMasuk)) {
-                        const quantity = parseInt(teksMasuk);
-
-                        if (quantity < 1 || quantity > 100) {
-                            await sockInstance.sendMessage(remoteJid, { text: 'Jumlah tidak valid. Silakan ketik angka antara 1 sampai 100 ya, Kak.' });
-                            return;
-                        }
-
-                        const item = konteks.item;
-
-                        // Cek stok
-                        const stokItem = await queryOne('SELECT stok FROM inventaris_burung WHERE id = ?', [item.id]);
-                        if (stokItem && quantity > stokItem.stok) {
-                            await sockInstance.sendMessage(remoteJid, {
-                                text: `Maaf Kak, stok *${item.nama}* (${item.fase === 'anakan' ? 'Baby' : 'Dewasa'}) hanya tersisa ${stokItem.stok} ekor. Silakan kurangi jumlahnya ya.`
-                            });
-                            return;
-                        }
-
-                        // Buat pembayaran QRIS
-                        await buatPembayaranQRIS(
-                            pelanggan.id,
-                            item.id,
-                            item.nama,
-                            item.fase,
-                            item.harga,
-                            remoteJid,
-                            quantity
-                        );
-
-                        // Hapus konteks
-                        await update('UPDATE pelanggan SET riwayat_konteks = NULL WHERE id = ?', [pelanggan.id]);
-                        await simpanPercakapan(pelanggan.id, teksMasuk, null, 'menu');
-                        return;
-                    }
-                } catch (e) {
-                    // Konteks tidak valid, lanjutkan
-                }
-            }
-
-            // ============================================================
-            // LANGKAH 5: Routing berdasarkan sesi aktif
-            // ============================================================
-
-            // --- MODE AWAL (user harus sapa dulu untuk buka menu) ---
-            if (pelanggan.sesi_aktif === 'awal') {
-                const isSapaan = KEYWORD_SAPAAN.some(kata => teksMasukLower.includes(kata));
-
-                if (isSapaan) {
-                    const namaPelanggan = pelanggan.nama || 'Kak';
-
-                    // Hybrid: Groq AI sapaan + menu statis digabung
-                    const pesanUtuh = await buatSapaanHybrid(namaPelanggan);
-
-                    await sock.sendPresenceUpdate('composing', remoteJid);
-                    await sockInstance.sendMessage(remoteJid, { text: pesanUtuh });
-
-                    await update('UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?', ['menu', pelanggan.id]);
-                    await simpanPercakapan(pelanggan.id, teksMasuk, pesanUtuh, 'menu');
-                    return;
-                } else {
-                    const waktu = dapatkanSapaanWaktu();
-                    const balasan = `${waktu.sapaan} Kak! 👋 Untuk memulai, silakan ketik *menu* atau sapaan seperti *halo* ya.`;
-                    await sockInstance.sendMessage(remoteJid, { text: balasan });
-                    await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'system');
-                    return;
-                }
-            }
 
             // --- MODE MENU ---
             if (pelanggan.sesi_aktif === 'menu') {
@@ -902,20 +881,17 @@ async function hubungkanKeWhatsApp() {
                 }
 
                 if (teksMasuk === 'menu_inventaris' || teksMasuk === '2') {
-                    const inventaris = await dapatkanInventaris();
-                    let balasan = formatInventaris(inventaris);
-                    // Tambahkan saran untuk membeli
-                    balasan += '\n\n🛒 Apakah Kakak tertarik untuk membeli? Ketik *5* untuk langsung ke menu pembayaran, atau ketik *3* untuk terhubung dengan admin.';
-                    await sock.sendMessage(remoteJid, { text: balasan });
-                    await update('UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?', ['awal', pelanggan.id]);
-                    await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'menu');
+                    await kirimDaftarInventaris(pelanggan, remoteJid, teksMasuk);
                     return;
                 }
 
                 if (teksMasuk === 'menu_admin' || teksMasuk === '3' || teksMasukLower === 'admin') {
-                    await update('UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?', ['manual', pelanggan.id]);
+                    await update('UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?', ['human', pelanggan.id]);
                     const balasan = 'Baik Kak! Admin kami akan segera merespons. Mohon tunggu sebentar ya. Pesan Kakak sudah kami teruskan ke admin.\n\nKetik *menu* untuk kembali ke menu otomatis.';
                     await sock.sendMessage(remoteJid, { text: balasan });
+
+                    // Notifikasi realtime ke Admin Dashboard via Firebase
+                    await kirimHandoffKeFirebase(pelanggan.id, { nama: pelanggan.nama, nomor: nomorWa });
 
                     await buatNotifikasi(
                         'permintaan_manual',
@@ -932,45 +908,29 @@ async function hubungkanKeWhatsApp() {
                     const transaksi = await dapatkanRiwayatTransaksi(pelanggan.id);
                     let balasan = formatRiwayatTransaksi(transaksi);
 
-                    const rekomendasi = await dapatkanRekomendasiBerdasarkanPembelian(pelanggan.id);
-                    if (rekomendasi) {
-                        balasan += '\n\n💡 *Rekomendasi untuk Kakak:*\n';
-                        for (const rec of rekomendasi) {
-                            balasan += `\nBerdasarkan pembelian *${rec.dibeli}*, kami sarankan juga melirik *${rec.rekomendasi}* (Keyakinan: ${rec.confidence})`;
+                    // Rekomendasi Apriori diterjemahkan Groq AI (fallback: template statis)
+                    const namaPelanggan = pelanggan.nama || 'Kak';
+                    const rekomAi = await buatRekomendasiAprioriGroq(pelanggan.id, namaPelanggan);
+                    if (rekomAi) {
+                        balasan += `\n\n💡 *Rekomendasi untuk Kakak:*\n${rekomAi}`;
+                    } else {
+                        const rekomendasi = await dapatkanRekomendasiBerdasarkanPembelian(pelanggan.id);
+                        if (rekomendasi) {
+                            balasan += '\n\n💡 *Rekomendasi untuk Kakak:*\n';
+                            for (const rec of rekomendasi) {
+                                balasan += `\nBerdasarkan pembelian *${rec.dibeli}*, kami sarankan juga melirik *${rec.rekomendasi}* (Keyakinan: ${rec.confidence})`;
+                            }
                         }
                     }
 
                     balasan += '\n\nKetik *menu* untuk kembali ke menu utama.';
                     await sock.sendMessage(remoteJid, { text: balasan });
-                    await update('UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?', ['awal', pelanggan.id]);
-                    await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'menu');
+                    await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'apriori');
                     return;
                 }
 
                 if (teksMasuk === 'menu_bayar' || teksMasuk === '5' || teksMasukLower === 'bayar' || teksMasukLower === 'qris') {
-                    const inventaris = await dapatkanInventaris();
-                    if (!inventaris || inventaris.length === 0) {
-                        const balasan = 'Maaf Kak, saat ini belum ada burung yang tersedia. Silakan cek kembali nanti ya.';
-                        await sock.sendMessage(remoteJid, { text: balasan });
-                        await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'menu');
-                        return;
-                    }
-
-                    let balasan = '💳 *Pembayaran QRIS — PT 4Putra Vertex Aviary*\n\nSilakan pilih burung yang ingin Kakak beli:\n\n';
-                    let nomor = 1;
-                    for (const item of inventaris) {
-                        const harga = Number(item.harga).toLocaleString('id-ID');
-                        const fase = item.fase === 'anakan' ? 'Baby' : 'Dewasa';
-                        balasan += `${nomor}. *${item.nama_spesies}* (${fase}) — Rp ${harga}\n`;
-                        nomor++;
-                    }
-                    balasan += `\nKetik *nomor* burung yang ingin dibeli (contoh: 1)`;
-
-                    await update('UPDATE pelanggan SET riwayat_konteks = ? WHERE id = ?',
-                        [JSON.stringify({ action: 'pilih_bayar', items: inventaris.map(i => ({ id: i.id, nama: i.nama_spesies, fase: i.fase, harga: i.harga })) }), pelanggan.id]);
-
-                    await sock.sendMessage(remoteJid, { text: balasan });
-                    await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'menu');
+                    await kirimDaftarCheckout(pelanggan, remoteJid, teksMasuk);
                     return;
                 }
 
@@ -982,39 +942,102 @@ async function hubungkanKeWhatsApp() {
                 return;
             }
 
-            // --- MODE MANUAL ---
-            if (pelanggan.sesi_aktif === 'manual') {
+            // --- MODE INVENTARIS & CHECKOUT (alur beli bersama) ---
+            if (pelanggan.sesi_aktif === 'inventory' || pelanggan.sesi_aktif === 'checkout') {
                 if (teksMasukLower === 'menu') {
-                    const namaPelanggan = pelanggan.nama || 'Kak';
-                    const pesanUtuh = await buatSapaanHybrid(namaPelanggan);
-
+                    await update('UPDATE pelanggan SET sesi_aktif = ?, riwayat_konteks = NULL WHERE id = ?', ['menu', pelanggan.id]);
+                    const pesanUtuh = await buatSapaanHybrid(pelanggan.nama || 'Kak');
                     await sockInstance.sendMessage(remoteJid, { text: pesanUtuh });
-                    await update('UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?', ['menu', pelanggan.id]);
                     await simpanPercakapan(pelanggan.id, teksMasuk, pesanUtuh, 'menu');
                     return;
                 }
 
-                await simpanPercakapan(pelanggan.id, teksMasuk, null, 'manual', { replyToId, mediaUrl, mediaType, isForwarded, waMessageId: incomingWaId });
-                await buatNotifikasi(
-                    'pesan_masuk',
-                    'Pesan dari pelanggan (mode manual)',
-                    `${pelanggan.nama || nomorWa}: ${teksMasuk}`,
-                    pelanggan.id
-                );
+                let konteks = null;
+                try {
+                    konteks = typeof pelanggan.riwayat_konteks === 'string'
+                        ? JSON.parse(pelanggan.riwayat_konteks)
+                        : pelanggan.riwayat_konteks;
+                } catch (e) { konteks = null; }
 
-                const balasan = 'Pesan Kakak sudah diteruskan ke admin. Admin akan membalas secepatnya ya! Ketik *menu* untuk kembali ke menu otomatis.';
-                await sock.sendMessage(remoteJid, { text: balasan });
+                // STEP 2: pilih nomor burung → minta quantity
+                if (konteks?.action === 'pilih_bayar' && /^\d+$/.test(teksMasuk)) {
+                    const pilihan = parseInt(teksMasuk) - 1;
+                    const items = konteks.items || [];
+
+                    if (pilihan >= 0 && pilihan < items.length) {
+                        const item = items[pilihan];
+                        const faseLabel = item.fase === 'anakan' ? 'Baby' : 'Dewasa';
+                        const hargaFormatted = Number(item.harga).toLocaleString('id-ID');
+
+                        await update('UPDATE pelanggan SET riwayat_konteks = ? WHERE id = ?',
+                            [JSON.stringify({
+                                action: 'pilih_quantity',
+                                item: { id: item.id, nama: item.nama, fase: item.fase, harga: item.harga }
+                            }), pelanggan.id]);
+
+                        const balasan = `Kakak pilih *${item.nama}* (${faseLabel}) — Rp ${hargaFormatted}/ekor\n\n` +
+                            `Mau beli berapa ekor? Ketik jumlahnya ya, Kak (contoh: 1, 2, 3)`;
+
+                        await sockInstance.sendMessage(remoteJid, { text: balasan });
+                        await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'menu');
+                    } else {
+                        await sockInstance.sendMessage(remoteJid, { text: 'Pilihan tidak valid. Silakan ketik nomor yang tersedia ya, Kak.' });
+                    }
+                    return;
+                }
+
+                // STEP 3: quantity → buat QRIS
+                if (konteks?.action === 'pilih_quantity' && /^\d+$/.test(teksMasuk)) {
+                    const quantity = parseInt(teksMasuk);
+
+                    if (quantity < 1 || quantity > 100) {
+                        await sockInstance.sendMessage(remoteJid, { text: 'Jumlah tidak valid. Silakan ketik angka antara 1 sampai 100 ya, Kak.' });
+                        return;
+                    }
+
+                    const item = konteks.item;
+
+                    const stokItem = await queryOne('SELECT stok FROM inventaris_burung WHERE id = ?', [item.id]);
+                    if (stokItem && quantity > stokItem.stok) {
+                        await sockInstance.sendMessage(remoteJid, {
+                            text: `Maaf Kak, stok *${item.nama}* (${item.fase === 'anakan' ? 'Baby' : 'Dewasa'}) hanya tersisa ${stokItem.stok} ekor. Silakan kurangi jumlahnya ya.`
+                        });
+                        return;
+                    }
+
+                    await buatPembayaranQRIS(
+                        pelanggan.id,
+                        item.id,
+                        item.nama,
+                        item.fase,
+                        item.harga,
+                        remoteJid,
+                        quantity
+                    );
+
+                    // Transaksi dibuat → kembali ke menu
+                    await update('UPDATE pelanggan SET sesi_aktif = ?, riwayat_konteks = NULL WHERE id = ?', ['menu', pelanggan.id]);
+                    await simpanPercakapan(pelanggan.id, teksMasuk, '[QRIS dikirim]', 'menu');
+                    return;
+                }
+
+                // Input tidak dikenal → ulangi daftar sesuai state
+                if (pelanggan.sesi_aktif === 'inventory') {
+                    await kirimDaftarInventaris(pelanggan, remoteJid, teksMasuk);
+                } else {
+                    await kirimDaftarCheckout(pelanggan, remoteJid, teksMasuk);
+                }
                 return;
             }
 
-            // --- MODE HUMAN (admin takeover) ---
+            // --- MODE HUMAN (admin takeover, merge eks-'manual') ---
             if (pelanggan.sesi_aktif === 'human') {
                 if (teksMasukLower === 'menu') {
-                    const namaPelanggan = pelanggan.nama || 'Kak';
-                    const pesanUtuh = await buatSapaanHybrid(namaPelanggan);
+                    await hapusHandoffFirebase(pelanggan.id);
+                    await update('UPDATE pelanggan SET sesi_aktif = ?, riwayat_konteks = NULL WHERE id = ?', ['menu', pelanggan.id]);
+                    const pesanUtuh = await buatSapaanHybrid(pelanggan.nama || 'Kak');
 
                     await sockInstance.sendMessage(remoteJid, { text: pesanUtuh });
-                    await update('UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?', ['menu', pelanggan.id]);
                     await simpanPercakapan(pelanggan.id, teksMasuk, pesanUtuh, 'menu');
                     return;
                 }
@@ -1082,10 +1105,10 @@ async function hubungkanKeWhatsApp() {
                 return;
             }
 
-            // Fallback: arahkan ke awal
-            await update('UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?', ['awal', pelanggan.id]);
-            const balasan = 'Halo Kak! 👋 Untuk memulai, silakan ketik *menu* ya. 😊';
-            await sockInstance.sendMessage(remoteJid, { text: balasan });
+            // Fallback: state tidak dikenal → kembali ke menu
+            await update('UPDATE pelanggan SET sesi_aktif = ?, riwayat_konteks = NULL WHERE id = ?', ['menu', pelanggan.id]);
+            const pesanMenu = await buatSapaanHybrid(pelanggan.nama || 'Kak');
+            await sockInstance.sendMessage(remoteJid, { text: pesanMenu });
 
         } catch (error) {
             console.error('Gagal memproses pesan:', error.message);

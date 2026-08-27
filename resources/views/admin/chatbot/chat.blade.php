@@ -5,7 +5,7 @@
         class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-5">
         <div>
             <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">WhatsApp Chat</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Kelola percakapan pelanggan â€” ambil alih dari AI atau kembalikan ke bot</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Kelola percakapan pelanggan — ambil alih dari AI atau kembalikan ke bot</p>
         </div>
         <a href="{{ route('admin.chatbot.index') }}"
             class="px-4 py-2 text-sm font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 border border-gray-600 hover:border-gray-500 rounded-lg transition-colors">
@@ -403,7 +403,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                         </svg>
-                        <span class="text-sm text-purple-400">Mode AI aktif â€” switch ke Human untuk mengirim pesan</span>
+                        <span class="text-sm text-purple-400">Mode AI aktif — switch ke Human untuk mengirim pesan</span>
                     </div>
 
                     <form id="chatForm" onsubmit="kirimPesan(event)"
@@ -675,7 +675,7 @@
                         const el = document.querySelector(`[data-msg-id="${deleteMsgId}"]`);
                         if (el) {
                             const inner = el.querySelector('.group > p.text-sm');
-                            if (inner) inner.textContent = 'ðŸš« Pesan ini telah dihapus';
+                            if (inner) inner.textContent = '🚫 Pesan ini telah dihapus';
                         }
                         showToast('success', 'Berhasil', 'Pesan dihapus untuk semua');
                     }

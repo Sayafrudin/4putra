@@ -169,11 +169,14 @@
                                         </div>
                                     @endif
 
-                                    {{-- Reply context --}}
+                                    {{-- Reply context (pesanan pelanggan → border abu-abu) --}}
                                     @if ($chat->replyTo)
-                                        <div class="mb-1.5 px-2.5 py-1.5 bg-gray-100 dark:bg-[#1a1f2e] border-l-2 border-[#E62C37] rounded text-[11px] cursor-pointer"
+                                        <div class="mb-1.5 px-2.5 py-1.5 bg-black/5 dark:bg-black/20 border-l-2 border-gray-400 dark:border-gray-500 rounded text-[11px] cursor-pointer"
                                             onclick="scrollToMsg({{ $chat->replyTo->id }})">
-                                            <p class="text-[#E62C37] font-semibold text-[10px]">
+                                            <p class="flex items-center gap-1 text-gray-500 dark:text-gray-400 font-semibold text-[10px]">
+                                                <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+                                                </svg>
                                                 {{ $chat->replyTo->sumber_balasan === 'admin' ? 'Admin' : ($chat->replyTo->sumber_balasan === 'groq_ai' ? 'AI Bot' : 'Pelanggan') }}
                                             </p>
                                             <p class="text-gray-500 dark:text-gray-400 truncate">
@@ -258,11 +261,14 @@
                                         </div>
                                     @endif
 
-                                    {{-- Reply context --}}
+                                    {{-- Reply context (pesan admin/bot → border hijau) --}}
                                     @if ($chat->replyTo)
-                                        <div class="mb-1.5 px-2.5 py-1.5 bg-black/5 dark:bg-black/20 border-l-2 border-gray-400 dark:border-white/30 rounded text-[11px] cursor-pointer"
+                                        <div class="mb-1.5 px-2.5 py-1.5 bg-black/5 dark:bg-black/20 border-l-2 border-green-500/60 rounded text-[11px] cursor-pointer"
                                             onclick="scrollToMsg({{ $chat->replyTo->id }})">
-                                            <p class="text-gray-500 dark:text-white/60 font-semibold text-[10px]">
+                                            <p class="flex items-center gap-1 text-gray-500 dark:text-white/60 font-semibold text-[10px]">
+                                                <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+                                                </svg>
                                                 {{ $chat->replyTo->sumber_balasan === 'admin' ? 'Admin' : ($chat->replyTo->sumber_balasan === 'groq_ai' ? 'AI Bot' : 'Pelanggan') }}
                                             </p>
                                             <p class="text-gray-500 dark:text-white/40 truncate">
@@ -947,14 +953,15 @@
             return div.innerHTML;
         }
 
-        // Render reply context HTML
-        function renderReplyContext(replyTo) {
+        // Render reply context HTML (isMine: true untuk pesan admin/bot → border hijau)
+        function renderReplyContext(replyTo, isMine) {
             if (!replyTo) return '';
             const senderName = replyTo.sumber_balasan === 'admin' ? 'Admin' : (replyTo.sumber_balasan === 'groq_ai' ?
                 'AI Bot' : 'Pelanggan');
             const text = replyTo.pesan_pengirim || replyTo.pesan_balasan || '[Media]';
-            return `<div class="mb-1.5 px-2.5 py-1.5 bg-black/5 dark:bg-black/20 border-l-2 border-gray-400 dark:border-white/30 rounded text-[11px] cursor-pointer" onclick="scrollToMsg(${replyTo.id})">
-                <p class="text-gray-500 dark:text-white/60 font-semibold text-[10px]">${escapeHtml(senderName)}</p>
+            const borderColor = isMine ? 'border-green-500/60' : 'border-gray-400 dark:border-gray-500';
+            return `<div class="mb-1.5 px-2.5 py-1.5 bg-black/5 dark:bg-black/20 border-l-2 ${borderColor} rounded text-[11px] cursor-pointer" onclick="scrollToMsg(${replyTo.id})">
+                <p class="flex items-center gap-1 text-gray-500 dark:text-white/60 font-semibold text-[10px]"><svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>${escapeHtml(senderName)}</p>
                 <p class="text-gray-500 dark:text-white/40 truncate">${escapeHtml(text.substring(0, 60))}</p>
             </div>`;
         }
@@ -1055,7 +1062,7 @@
                             const forwardHtml = msg.is_forwarded ?
                                 '<div class="flex items-center gap-1 mb-1 text-[10px] text-gray-500 dark:text-gray-400 italic"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Diteruskan</div>' :
                                 '';
-                            const replyHtml = renderReplyContext(msg.reply_to);
+                            const replyHtml = renderReplyContext(msg.reply_to, false);
                             const mediaHtml = renderMedia({
                                 ...msg,
                                 pesan_balasan: null
@@ -1117,7 +1124,7 @@
                             const forwardHtml = msg.is_forwarded ?
                                 '<div class="flex items-center gap-1 mb-1 text-[10px] text-gray-500 dark:text-gray-400 italic"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Diteruskan</div>' :
                                 '';
-                            const replyHtml = renderReplyContext(msg.reply_to);
+                            const replyHtml = renderReplyContext(msg.reply_to, true);
                             const mediaHtml = renderMedia(msg);
                             const textHtml = (msg.pesan_balasan && !['[Image]', '[Video]', '[Document]',
                                     '[Audio]'

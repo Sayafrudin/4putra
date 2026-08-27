@@ -216,9 +216,10 @@ async function simpanPercakapan(pelangganId, pesanPengirim, pesanBalasan, sumber
 }
 
 async function dapatkanRiwayatPercakapan(pelangganId, limit = JUMLAH_PERCAKAPAN_KONTEKS) {
+    // LIMIT wajib inline (parseInt) — prepared statement mengirim LIMIT ? sebagai string, ditolak TiDB
     return await query(
-        'SELECT pesan_pengirim, pesan_balasan FROM percakapan WHERE pelanggan_id = ? ORDER BY created_at DESC LIMIT ?',
-        [pelangganId, limit]
+        `SELECT pesan_pengirim, pesan_balasan FROM percakapan WHERE pelanggan_id = ? ORDER BY created_at DESC LIMIT ${parseInt(limit) || 10}`,
+        [pelangganId]
     );
 }
 
@@ -595,7 +596,7 @@ export async function kirimPesanKePelanggan(nomorWa, pesan) {
 // FUNGSI UTAMA BOT
 // ============================================================
 async function hubungkanKeWhatsApp() {
-    const { state, saveCreds } = await useMultiFileAuthState('auth_info');
+    const { state, saveCreds } = await useMultiFileAuthState(join(__dirname, 'auth_info'));
 
     const sock = makeWASocket({
         logger: pino({ level: 'silent' }),
@@ -706,14 +707,19 @@ async function hubungkanKeWhatsApp() {
 
             // Deteksi pesan diteruskan (forwarded)
             // Baileys v7: forwardingScore > 0 ATAU contextInfo.isForwarded
+            // Reply juga punya contextInfo (quotedMessage) — forwardingScore di dalamnya milik pesan
+            // yang dikutip, bukan pesan ini → jangan dianggap forwarded.
             let isForwarded = false;
             const msgContextInfo = msg.message.extendedTextMessage?.contextInfo ||
                 msg.message.imageMessage?.contextInfo ||
                 msg.message.videoMessage?.contextInfo ||
                 msg.message.documentMessage?.contextInfo ||
                 msg.message.audioMessage?.contextInfo;
-            if (msgContextInfo?.forwardingScore > 0) isForwarded = true;
-            if (msgContextInfo?.isForwarded) isForwarded = true;
+            const isReplyPesan = !!(msgContextInfo?.stanzaId && msgContextInfo?.quotedMessage);
+            if (!isReplyPesan) {
+                if (msgContextInfo?.forwardingScore > 0) isForwarded = true;
+                if (msgContextInfo?.isForwarded) isForwarded = true;
+            }
 
             // Deteksi reply context
             let replyToId = null;

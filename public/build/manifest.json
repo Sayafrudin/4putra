@@ -8,12 +8,12 @@
     "name": "firebase"
   },
   "resources/css/app.css": {
-    "file": "assets/app-Bj1C2L4X.css",
+    "file": "assets/app-D6qRZadB.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-CgvhHzGy.js",
+    "file": "assets/app-DsPDLn_k.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -25,7 +25,7 @@
     ]
   },
   "resources/js/chat.js": {
-    "file": "assets/chat-yJbPr1ab.js",
+    "file": "assets/chat-FI41dY9M.js",
     "name": "chat",
     "src": "resources/js/chat.js",
     "isEntry": true,

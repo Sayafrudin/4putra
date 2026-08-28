@@ -14,11 +14,13 @@ class Pelanggan extends Model
         'nama',
         'sesi_aktif',
         'riwayat_konteks',
+        'metadata_sesi',
         'pesan_terakhir',
     ];
 
     protected $casts = [
         'riwayat_konteks' => 'array',
+        'metadata_sesi' => 'array',
         'pesan_terakhir' => 'datetime',
     ];
 

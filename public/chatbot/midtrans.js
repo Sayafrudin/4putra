@@ -29,6 +29,7 @@ export async function createTransaction(orderId, grossAmount, customerDetails = 
                 name: customerDetails.nama_produk || 'Produk 4Putra',
             },
         ],
+        enabled_payments: ['qris'],
         credit_card: {
             secure: true,
         },

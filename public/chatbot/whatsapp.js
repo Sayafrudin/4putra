@@ -910,7 +910,6 @@ async function hubungkanKeWhatsApp() {
             const isGlobalReset = teksMasukLower === 'menu' || teksMasukLower === 'batal';
 
             if (isGlobalReset || (isSapaan && pelanggan.sesi_aktif !== 'ai')) {
-                // Cleanup khusus sebelum reset state
                 if (pelanggan.sesi_aktif === 'human') {
                     await hapusHandoffFirebase(pelanggan.id);
                 }
@@ -1110,9 +1109,38 @@ async function hubungkanKeWhatsApp() {
 
             // --- MODE AI (sticky: pelanggan ditahan di sini sampai mengetik "menu") ---
             if (pelanggan.sesi_aktif === 'ai') {
-                // "menu" sudah ditangkap global keyword check di atas
+                // "menu" dan "batal" sudah ditangkap global keyword check di atas
 
-                // Di mode AI, angka 1-5 dan sapaan tidak diproses sebagai menu → perlakukan sebagai pertanyaan AI
+                // Angka 1-5 → keluar dari AI, eksekusi menu langsung
+                if (['1', '2', '3', '4', '5'].includes(teksMasuk)) {
+                    await update('UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = NULL WHERE id = ?', ['menu', pelanggan.id]);
+                    pelanggan.sesi_aktif = 'menu';
+
+                    if (teksMasuk === '1') {
+                        await update('UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?', ['ai', pelanggan.id]);
+                        const balasan = 'Baik Kak! Mode konsultasi AI sudah aktif. Silakan tanyakan seputar perawatan burung, nutrisi, atau info lainnya tentang 5 spesies unggulan kami.\n\nKetik *menu* untuk kembali ke menu utama.';
+                        await sockInstance.sendMessage(remoteJid, { text: balasan });
+                        await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'menu');
+                    } else if (teksMasuk === '2') {
+                        await kirimDaftarInventaris(pelanggan, remoteJid, teksMasuk);
+                    } else if (teksMasuk === '3') {
+                        await update('UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?', ['human', pelanggan.id]);
+                        const balasan = 'Baik Kak! Admin kami akan segera merespons. Mohon tunggu sebentar ya. Pesan Kakak sudah kami teruskan ke admin.\n\nKetik *menu* untuk kembali ke menu otomatis.';
+                        await sockInstance.sendMessage(remoteJid, { text: balasan });
+                        await kirimHandoffKeFirebase(pelanggan.id, { nama: pelanggan.nama, nomor: getNomorDisplay(remoteJid) });
+                        await buatNotifikasi('permintaan_manual', 'Pelanggan minta bicara dengan admin', `Pelanggan ${pelanggan.nama || getNomorDisplay(remoteJid)} meminta untuk bicara dengan admin.`, pelanggan.id);
+                        await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'menu');
+                    } else if (teksMasuk === '4') {
+                        const transaksi = await dapatkanRiwayatTransaksi(pelanggan.id);
+                        let balasan = formatRiwayatTransaksi(transaksi);
+                        balasan += '\n\nKetik *menu* untuk kembali ke menu utama.';
+                        await sockInstance.sendMessage(remoteJid, { text: balasan });
+                        await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'menu');
+                    } else if (teksMasuk === '5') {
+                        await kirimDaftarCheckout(pelanggan, remoteJid, teksMasuk);
+                    }
+                    return;
+                }
 
                 const riwayat = await dapatkanRiwayatPercakapan(pelanggan.id);
 

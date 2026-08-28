@@ -6,7 +6,7 @@ import fs from 'fs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 config({ path: join(__dirname, '../../.env') });
 config({ path: join(__dirname, '.env'), override: true });
-import { makeWASocket, useMultiFileAuthState, DisconnectReason } from '@whiskeysockets/baileys';
+import { makeWASocket, useMultiFileAuthState, DisconnectReason, downloadMediaMessage } from '@whiskeysockets/baileys';
 import pino from 'pino';
 import { Groq } from 'groq-sdk';
 import express from 'express';
@@ -22,6 +22,7 @@ const GROQ_API_KEY = process.env.GROQ_API_KEY;
 // Model default mengikuti katalog Groq aktif; ganti via GROQ_MODEL di .env
 const GROQ_MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-20b';
 const groq = new Groq({ apiKey: GROQ_API_KEY });
+const logger = pino({ level: 'silent' });
 const RATE_LIMIT_MS = 2000;
 const JUMLAH_PERCAKAPAN_KONTEKS = 10;
 
@@ -580,13 +581,33 @@ export async function kirimPesanKePelanggan(nomorWa, pesan) {
 }
 
 // ============================================================
+// ANTREAN SERIALISASI PER-CHAT
+// Handler pesan berikutnya menunggu handler sebelumnya selesai
+// commit sesi_aktif ke DB — mencegah input angka terbaca sebagai
+// menu saat state inventory/checkout belum ter-commit (race antar
+// event messages.upsert yang diproses konkuren oleh Baileys).
+// ponytail: rantai promise per-chat, map auto-bersih saat idle;
+// jika sendMessage pernah hang permanen, tambahkan timeout wrapper
+// ============================================================
+const antreanChat = new Map();
+
+function antrePesan(remoteJid, tugas) {
+    const prev = antreanChat.get(remoteJid) || Promise.resolve();
+    const berikut = prev.catch(() => {}).then(tugas);
+    antreanChat.set(remoteJid, berikut);
+    berikut.catch(() => {}).finally(() => {
+        if (antreanChat.get(remoteJid) === berikut) antreanChat.delete(remoteJid);
+    });
+}
+
+// ============================================================
 // FUNGSI UTAMA BOT
 // ============================================================
 async function hubungkanKeWhatsApp() {
     const { state, saveCreds } = await useMultiFileAuthState(join(__dirname, 'auth_info'));
 
     const sock = makeWASocket({
-        logger: pino({ level: 'silent' }),
+        logger,
         auth: state,
         printQRInTerminal: false,
     });
@@ -674,11 +695,17 @@ async function hubungkanKeWhatsApp() {
     // ============================================================
     // EVENT PENERIMAAN PESAN MASUK
     // ============================================================
-    sock.ev.on('messages.upsert', async (m) => {
-        try {
-            const msg = m.messages[0];
-            if (!msg.message || msg.key.fromMe) return;
+    sock.ev.on('messages.upsert', (m) => {
+        // Proses semua pesan dalam batch (bukan hanya messages[0]) secara
+        // berurutan per-chat via antrean agar tidak ada pesan terlewat
+        for (const msg of m.messages) {
+            if (!msg.message || msg.key.fromMe) continue;
+            antrePesan(msg.key.remoteJid, () => prosesPesanMasuk(msg));
+        }
+    });
 
+    async function prosesPesanMasuk(msg) {
+        try {
             const remoteJid = msg.key.remoteJid;
 
             // Skip grup dan broadcast
@@ -744,9 +771,14 @@ async function hubungkanKeWhatsApp() {
             }
 
             // Download media jika ada
+            // Baileys v7: downloadMediaMessage bukan lagi method socket —
+            // import langsung dari modul (sock.downloadMediaMessage → undefined)
             if (mediaType && sockInstance) {
                 try {
-                    const buffer = await sockInstance.downloadMediaMessage(msg, 'buffer');
+                    const buffer = await downloadMediaMessage(msg, 'buffer', {}, {
+                        logger,
+                        reuploadRequest: sockInstance.updateMediaMessage,
+                    });
                     const ext = mediaType === 'image' ? 'jpg' : (mediaType === 'video' ? 'mp4' : (mediaType === 'audio' ? 'mp3' : 'bin'));
                     const filename = `wa_${Date.now()}_${Math.random().toString(36).substr(2, 6)}.${ext}`;
                     const filepath = join(__dirname, '../storage/app/public/chat-media', filename);
@@ -1123,7 +1155,7 @@ async function hubungkanKeWhatsApp() {
         } catch (error) {
             console.error('Gagal memproses pesan:', error.message);
         }
-    });
+    }
 }
 
 // ============================================================

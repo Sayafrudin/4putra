@@ -50,7 +50,7 @@ function initChatWidget(currentUser) {
                 '</div>' +
             '</div>' +
             // Chat panel
-            '<div id="chat-panel" class="hidden fixed bottom-20 right-6 z-[9999] w-96 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden" style="height:520px;">' +
+            '<div id="chat-panel" class="hidden fixed bottom-20 right-6 z-[9999] w-96 bg-[#151a22] rounded-xl shadow-2xl border border-gray-700 overflow-hidden" style="height:520px;">' +
                 // Contact list view
                 '<div id="chat-contact-list" class="h-full flex flex-col">' +
                     '<div class="bg-[#E62C37] text-white px-4 py-3 flex items-center justify-between shrink-0">' +
@@ -76,24 +76,24 @@ function initChatWidget(currentUser) {
                             '<p id="chat-contact-role" class="text-xs text-white/70"></p>' +
                         '</div>' +
                     '</div>' +
-                    '<div id="chat-messages" class="flex-1 overflow-y-auto p-3 space-y-1 bg-gray-50 dark:bg-[#151a22]"></div>' +
+                    '<div id="chat-messages" class="flex-1 overflow-y-auto p-3 space-y-1 bg-gray-900"></div>' +
                     // Reply bar
-                    '<div id="chat-reply-bar" class="hidden px-3 py-2 bg-gray-100 border-t border-gray-200 text-xs text-gray-600 flex items-center justify-between shrink-0">' +
+                    '<div id="chat-reply-bar" class="hidden px-3 py-2 bg-gray-800 border-t border-gray-700 text-xs text-gray-300 flex items-center justify-between shrink-0">' +
                         '<div class="flex-1 min-w-0 flex items-center gap-2">' +
-                            '<div id="chat-reply-preview" class="w-8 h-8 rounded bg-gray-200 shrink-0 hidden overflow-hidden"></div>' +
+                            '<div id="chat-reply-preview" class="w-8 h-8 rounded bg-gray-700 shrink-0 hidden overflow-hidden"></div>' +
                             '<div class="min-w-0">' +
                                 '<p id="chat-reply-name" class="font-semibold text-[#E62C37] truncate"></p>' +
                                 '<p id="chat-reply-text" class="truncate"></p>' +
                             '</div>' +
                         '</div>' +
-                        '<button id="chat-reply-cancel" class="ml-2 text-gray-400 hover:text-gray-600" type="button">' +
+                        '<button id="chat-reply-cancel" class="ml-2 text-gray-400 hover:text-gray-200" type="button">' +
                             '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>' +
                         '</button>' +
                     '</div>' +
                     // Input area (sticky bottom)
-                    '<div class="p-3 border-t border-gray-200 bg-white sticky bottom-0 shrink-0">' +
+                    '<div class="p-3 border-t border-gray-700 bg-[#151a22] sticky bottom-0 shrink-0">' +
                         '<form id="chat-send-form" class="flex gap-2 items-end">' +
-                            '<input type="text" id="chat-input" autocomplete="off" class="flex-1 px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-full focus:ring-1 focus:ring-[#25D366]/50 focus:border-[#25D366] placeholder-gray-400" placeholder="Ketik pesan...">' +
+                            '<input type="text" id="chat-input" autocomplete="off" class="flex-1 px-3 py-2 text-sm text-gray-100 bg-gray-800 border border-gray-700 rounded-full focus:ring-1 focus:ring-[#25D366]/50 focus:border-[#25D366] placeholder-gray-500" placeholder="Ketik pesan...">' +
                             '<button type="submit" class="bg-[#25D366] hover:bg-[#1fb857] text-white rounded-full p-2.5 transition-colors shrink-0 flex items-center justify-center" title="Kirim">' +
                                 '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>' +
                             '</button>' +
@@ -102,12 +102,12 @@ function initChatWidget(currentUser) {
                 '</div>' +
             '</div>' +
             // Context menu
-            '<div id="chat-context-menu" class="hidden fixed z-[10000] bg-white rounded-lg shadow-xl border border-gray-200 py-1 min-w-[140px]">' +
-                '<button data-action="reply" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">' +
+            '<div id="chat-context-menu" class="hidden fixed z-[10000] bg-[#151a22] rounded-lg shadow-xl border border-gray-700 py-1 min-w-[140px]">' +
+                '<button data-action="reply" class="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-800 flex items-center gap-2">' +
                     '<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"/></svg>Balas</button>' +
-                '<button data-action="copy" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">' +
+                '<button data-action="copy" class="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-800 flex items-center gap-2">' +
                     '<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184"/></svg>Salin</button>' +
-                '<button data-action="delete" class="hidden w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">' +
+                '<button data-action="delete" class="hidden w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 flex items-center gap-2">' +
                     '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>Hapus</button>' +
             '</div>';
 
@@ -193,14 +193,14 @@ function initChatWidget(currentUser) {
         contacts.forEach(function (c) {
             var ini = c.name.split(' ').map(function (n) { return n[0]; }).join('').toUpperCase().slice(0, 2);
             var adm = c.role === 'admin';
-            html += '<div class="contact-item flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 transition-colors" data-user-id="' + c.id + '">' +
+            html += '<div class="contact-item flex items-center gap-3 px-4 py-3 hover:bg-white/5 cursor-pointer border-b border-gray-800 transition-colors" data-user-id="' + c.id + '">' +
                 '<div class="relative">' +
-                    '<div class="w-10 h-10 rounded-full ' + (adm ? 'bg-[#E62C37]/20' : 'bg-gray-200') + ' flex items-center justify-center shrink-0"><span class="text-sm font-bold ' + (adm ? 'text-[#E62C37]' : 'text-gray-500') + '">' + ini + '</span></div>' +
-                    '<span class="contact-status absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-gray-400 border-2 border-white" data-user-id="' + c.id + '"></span>' +
+                    '<div class="w-10 h-10 rounded-full ' + (adm ? 'bg-[#E62C37]/20' : 'bg-gray-700') + ' flex items-center justify-center shrink-0"><span class="text-sm font-bold ' + (adm ? 'text-[#E62C37]' : 'text-gray-300') + '">' + ini + '</span></div>' +
+                    '<span class="contact-status absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-gray-400 border-2 border-[#151a22]" data-user-id="' + c.id + '"></span>' +
                 '</div>' +
                 '<div class="contact-info flex-1 min-w-0" data-user-id="' + c.id + '">' +
                     '<div class="flex items-center justify-between">' +
-                        '<p class="text-sm font-semibold text-gray-800 truncate">' + c.name + '</p>' +
+                        '<p class="text-sm font-semibold text-gray-100 truncate">' + c.name + '</p>' +
                         '<span class="contact-time text-[10px] text-gray-400" data-user-id="' + c.id + '"></span>' +
                     '</div>' +
                     '<div class="flex items-center justify-between">' +
@@ -407,7 +407,7 @@ function initChatWidget(currentUser) {
                     var typingBubble = document.createElement('div');
                     typingBubble.id = 'typing-bubble';
                     typingBubble.className = 'flex justify-start mb-1';
-                    typingBubble.innerHTML = '<div class="bg-gray-100 dark:bg-[#2a3343] text-gray-800 dark:text-gray-100 rounded-2xl rounded-br-2xl px-4 py-3 max-w-[75%] min-w-[60px]">' +
+                    typingBubble.innerHTML = '<div class="bg-[#2a3343] text-gray-100 rounded-2xl rounded-br-2xl px-4 py-3 max-w-[75%] min-w-[60px]">' +
                         '<div class="flex items-center gap-1">' +
                             '<span class="typing-dot w-2 h-2 bg-gray-400 rounded-full inline-block"></span>' +
                             '<span class="typing-dot w-2 h-2 bg-gray-400 rounded-full inline-block" style="animation-delay:0.2s"></span>' +
@@ -453,7 +453,7 @@ function initChatWidget(currentUser) {
             bubble.className = 'flex ' + (isMine ? 'justify-end' : 'justify-start') + ' mb-1';
             bubble.innerHTML =
                 '<div class="max-w-[75%] min-w-[90px]">' +
-                    '<div class="px-3 py-2 rounded-2xl text-sm bg-gray-100 dark:bg-[#2a3343] border border-gray-200 dark:border-gray-700">' +
+                    '<div class="px-3 py-2 rounded-2xl text-sm bg-[#2a3343] border border-gray-700">' +
                         '<div class="flex items-center gap-1.5">' +
                             '<svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>' +
                             '<p class="text-gray-400 italic text-xs">Pesan ini telah dihapus</p>' +
@@ -492,7 +492,7 @@ function initChatWidget(currentUser) {
         bubble.className = 'flex ' + (isMine ? 'justify-end' : 'justify-start') + ' mb-1';
         bubble.innerHTML =
             '<div class="chat-bubble-wrapper relative max-w-[75%] min-w-[90px] cursor-pointer" data-msg-id="' + msgId + '" data-msg-sender="' + (isMine ? 'me' : 'other') + '" data-msg-text="' + escapeHtml(msg.text || '') + '" data-msg-name="' + escapeHtml(msg.senderName || '') + '" data-msg-image="' + (msg.imageUrl || '') + '" data-msg-video="' + (msg.videoUrl || '') + '">' +
-                '<div class="px-3 py-2 rounded-2xl text-sm break-words min-w-0 ' + (isMine ? 'bg-green-100 dark:bg-green-900/60 text-gray-800 dark:text-gray-100 rounded-bl-2xl' : 'bg-gray-100 dark:bg-[#2a3343] text-gray-800 dark:text-gray-100 rounded-br-2xl') + '">' +
+                '<div class="px-3 py-2 rounded-2xl text-sm break-words min-w-0 ' + (isMine ? 'bg-green-900/60 text-gray-100 rounded-bl-2xl' : 'bg-[#2a3343] text-gray-100 rounded-br-2xl') + '">' +
                     replyHtml + mediaHtml +
                     (msg.text ? '<p class="break-words">' + escapeHtml(msg.text) + '</p>' : '') +
                     '<div class="flex items-center justify-end gap-1 mt-1">' +

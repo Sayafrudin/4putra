@@ -142,6 +142,7 @@ class AdminCollectionController extends Controller
         $collection->delete();
 
         Cache::forget('admin.collections');
+        Cache::forget('public.collections');
 
         return redirect()->route('admin.collections.index')->with('success', 'Koleksi berhasil dihapus.');
     }

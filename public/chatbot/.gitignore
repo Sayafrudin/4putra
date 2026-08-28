@@ -1,4 +1,7 @@
 node_modules/
+package-lock.json
+package.json
+.env.example
 .env
 auth_info/
 *.log

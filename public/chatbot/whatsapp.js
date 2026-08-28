@@ -525,8 +525,8 @@ function simpanKonteksDaftar(pelanggan, tujuanState) {
 
 // Menu 2: daftar stok bernomor (state: inventory)
 async function kirimDaftarInventaris(pelanggan, remoteJid, teksMasuk) {
-    const inventaris = await simpanKonteksDaftar(pelanggan, 'inventory');
-    pelanggan.sesi_aktif = 'inventory';
+    const inventaris = await simpanKonteksDaftar(pelanggan, 'inventory_select');
+    pelanggan.sesi_aktif = 'inventory_select';
 
     let balasan;
     if (!inventaris) {
@@ -542,8 +542,8 @@ async function kirimDaftarInventaris(pelanggan, remoteJid, teksMasuk) {
 
 // Menu 5: daftar pembayaran QRIS bernomor (state: checkout)
 async function kirimDaftarCheckout(pelanggan, remoteJid, teksMasuk) {
-    const inventaris = await simpanKonteksDaftar(pelanggan, 'checkout');
-    pelanggan.sesi_aktif = 'checkout';
+    const inventaris = await simpanKonteksDaftar(pelanggan, 'checkout_qty');
+    pelanggan.sesi_aktif = 'checkout_qty';
 
     let balasan;
     if (!inventaris) {
@@ -808,6 +808,14 @@ async function hubungkanKeWhatsApp() {
                 pelanggan.sesi_aktif = 'menu';
             }
 
+            // Normalisasi state lama → baru (fallback untuk data di DB)
+            const STATE_MAP = { 'inventory': 'inventory_select', 'checkout': 'checkout_qty' };
+            if (STATE_MAP[pelanggan.sesi_aktif]) {
+                const newState = STATE_MAP[pelanggan.sesi_aktif];
+                await update('UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?', [newState, pelanggan.id]);
+                pelanggan.sesi_aktif = newState;
+            }
+
             // ============================================================
             // LANGKAH 3: Cek rate limit (skip untuk tombol/keyword penting)
             // ============================================================
@@ -824,7 +832,7 @@ async function hubungkanKeWhatsApp() {
             // (pelanggan.pesan_terakhir masih nilai lama — diambil sebelum NOW() di atas)
             // Mode AI sengaja dikecualikan: pelanggan ditahan di sesi AI sampai mengetik "menu"
             const IDLE_RESET_MS = 6 * 60 * 60 * 1000;
-            if (['inventory', 'checkout'].includes(pelanggan.sesi_aktif) && pelanggan.pesan_terakhir) {
+            if (['inventory_select', 'checkout_qty'].includes(pelanggan.sesi_aktif) && pelanggan.pesan_terakhir) {
                 const idleSelisih = Date.now() - new Date(pelanggan.pesan_terakhir).getTime();
                 if (idleSelisih > IDLE_RESET_MS) {
                     await update('UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = NULL WHERE id = ?', ['menu', pelanggan.id]);
@@ -896,19 +904,30 @@ async function hubungkanKeWhatsApp() {
             }
 
             // ============================================================
-            // LANGKAH 5: Routing berdasarkan sesi aktif (state machine)
+            // LANGKAH 5: Global keywords — reset ke menu apapun state
+            // ============================================================
+            const isSapaan = KEYWORD_SAPAAN.filter(k => k !== 'menu').includes(teksMasukLower);
+            const isGlobalReset = teksMasukLower === 'menu' || teksMasukLower === 'batal';
+
+            if (isGlobalReset || (isSapaan && pelanggan.sesi_aktif !== 'ai')) {
+                // Cleanup khusus sebelum reset state
+                if (pelanggan.sesi_aktif === 'human') {
+                    await hapusHandoffFirebase(pelanggan.id);
+                }
+                await update('UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = NULL WHERE id = ?', ['menu', pelanggan.id]);
+                pelanggan.sesi_aktif = 'menu';
+                const pesanUtuh = await buatSapaanHybrid(pelanggan.nama || 'Kak');
+                await sockInstance.sendMessage(remoteJid, { text: pesanUtuh });
+                await simpanPercakapan(pelanggan.id, teksMasuk, pesanUtuh, 'menu');
+                return;
+            }
+
+            // ============================================================
+            // LANGKAH 6: Routing berdasarkan sesi aktif (state machine)
             // ============================================================
 
             // --- MODE MENU ---
             if (pelanggan.sesi_aktif === 'menu') {
-                // Handle "menu" → tampilkan menu lagi tanpa ganti state
-                if (teksMasukLower === 'menu') {
-                    const namaPelanggan = pelanggan.nama || 'Kak';
-                    const pesanUtuh = await buatSapaanHybrid(namaPelanggan);
-                    await sockInstance.sendMessage(remoteJid, { text: pesanUtuh });
-                    await simpanPercakapan(pelanggan.id, teksMasuk, pesanUtuh, 'menu');
-                    return;
-                }
 
                 // Handle button response
                 if (teksMasuk === 'menu_ai' || teksMasuk === '1') {
@@ -981,16 +1000,8 @@ async function hubungkanKeWhatsApp() {
                 return;
             }
 
-            // --- MODE INVENTARIS & CHECKOUT (alur beli bersama) ---
-            if (pelanggan.sesi_aktif === 'inventory' || pelanggan.sesi_aktif === 'checkout') {
-                if (teksMasukLower === 'menu') {
-                    await update('UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = NULL WHERE id = ?', ['menu', pelanggan.id]);
-                    const pesanUtuh = await buatSapaanHybrid(pelanggan.nama || 'Kak');
-                    await sockInstance.sendMessage(remoteJid, { text: pesanUtuh });
-                    await simpanPercakapan(pelanggan.id, teksMasuk, pesanUtuh, 'menu');
-                    return;
-                }
-
+            // --- MODE INVENTORY SELECT: pilih nomor burung ---
+            if (pelanggan.sesi_aktif === 'inventory_select') {
                 // mysql2 auto-parse kolom JSON; tetap defensif bila datang sebagai string
                 let konteks = pelanggan.metadata_sesi;
                 if (typeof konteks === 'string') {
@@ -998,7 +1009,6 @@ async function hubungkanKeWhatsApp() {
                 }
                 if (!konteks || typeof konteks !== 'object') konteks = null;
 
-                // STEP 2: pilih nomor burung → minta quantity
                 if (konteks?.items && /^\d+$/.test(teksMasuk)) {
                     const pilihan = parseInt(teksMasuk) - 1;
                     const items = konteks.items || [];
@@ -1008,8 +1018,8 @@ async function hubungkanKeWhatsApp() {
                         const faseLabel = item.fase === 'anakan' ? 'Baby' : 'Dewasa';
                         const hargaFormatted = Number(item.harga).toLocaleString('id-ID');
 
-                        await update('UPDATE pelanggan SET metadata_sesi = ? WHERE id = ?',
-                            [JSON.stringify({
+                        await update('UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = ? WHERE id = ?',
+                            ['checkout_qty', JSON.stringify({
                                 item: { id: item.id, nama: item.nama, fase: item.fase, harga: Number(item.harga) }
                             }), pelanggan.id]);
 
@@ -1023,7 +1033,19 @@ async function hubungkanKeWhatsApp() {
                     return;
                 }
 
-                // STEP 3: quantity → buat QRIS
+                // Input tidak dikenal → ulangi daftar inventaris
+                await kirimDaftarInventaris(pelanggan, remoteJid, teksMasuk);
+                return;
+            }
+
+            // --- MODE CHECKOUT QTY: input jumlah beli → buat QRIS ---
+            if (pelanggan.sesi_aktif === 'checkout_qty') {
+                let konteks = pelanggan.metadata_sesi;
+                if (typeof konteks === 'string') {
+                    try { konteks = JSON.parse(konteks); } catch (e) { konteks = null; }
+                }
+                if (!konteks || typeof konteks !== 'object') konteks = null;
+
                 if (konteks?.item && /^\d+$/.test(teksMasuk)) {
                     const quantity = parseInt(teksMasuk);
 
@@ -1058,27 +1080,23 @@ async function hubungkanKeWhatsApp() {
                     return;
                 }
 
-                // Input tidak dikenal → ulangi daftar sesuai state
-                if (pelanggan.sesi_aktif === 'inventory') {
-                    await kirimDaftarInventaris(pelanggan, remoteJid, teksMasuk);
+                // Input bukan angka → ulangi prompt quantity
+                if (konteks?.item) {
+                    const item = konteks.item;
+                    const faseLabel = item.fase === 'anakan' ? 'Baby' : 'Dewasa';
+                    const hargaFormatted = Number(item.harga).toLocaleString('id-ID');
+                    await sockInstance.sendMessage(remoteJid, {
+                        text: `Kakak pilih *${item.nama}* (${faseLabel}) — Rp ${hargaFormatted}/ekor. Ketik jumlah yang ingin dibeli ya, Kak (contoh: 1, 2, 3)`
+                    });
                 } else {
+                    // metadata hilang → kembali ke inventaris
                     await kirimDaftarCheckout(pelanggan, remoteJid, teksMasuk);
                 }
                 return;
             }
 
-            // --- MODE HUMAN (admin takeover, merge eks-'manual') ---
+            // --- MODE HUMAN (admin takeover) ---
             if (pelanggan.sesi_aktif === 'human') {
-                if (teksMasukLower === 'menu') {
-                    await hapusHandoffFirebase(pelanggan.id);
-                    await update('UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = NULL WHERE id = ?', ['menu', pelanggan.id]);
-                    const pesanUtuh = await buatSapaanHybrid(pelanggan.nama || 'Kak');
-
-                    await sockInstance.sendMessage(remoteJid, { text: pesanUtuh });
-                    await simpanPercakapan(pelanggan.id, teksMasuk, pesanUtuh, 'menu');
-                    return;
-                }
-
                 // Simpan pesan saja, bot tidak membalas
                 await simpanPercakapan(pelanggan.id, teksMasuk, null, 'human', { replyToId, mediaUrl, mediaType, isForwarded, waMessageId: incomingWaId });
                 await buatNotifikasi(
@@ -1092,18 +1110,9 @@ async function hubungkanKeWhatsApp() {
 
             // --- MODE AI (sticky: pelanggan ditahan di sini sampai mengetik "menu") ---
             if (pelanggan.sesi_aktif === 'ai') {
-                // Satu-satunya pintu keluar dari sesi AI adalah perintah "menu"
-                if (teksMasukLower === 'menu') {
-                    const namaPelanggan = pelanggan.nama || 'Kak';
-                    const pesanUtuh = await buatSapaanHybrid(namaPelanggan);
+                // "menu" sudah ditangkap global keyword check di atas
 
-                    await sockInstance.sendMessage(remoteJid, { text: pesanUtuh });
-                    await update('UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?', ['menu', pelanggan.id]);
-                    await simpanPercakapan(pelanggan.id, teksMasuk, pesanUtuh, 'menu');
-                    return;
-                }
-
-                // Di mode AI, angka 1-5 tidak diproses sebagai menu → perlakukan sebagai pertanyaan AI
+                // Di mode AI, angka 1-5 dan sapaan tidak diproses sebagai menu → perlakukan sebagai pertanyaan AI
 
                 const riwayat = await dapatkanRiwayatPercakapan(pelanggan.id);
 

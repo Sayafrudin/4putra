@@ -1186,8 +1186,8 @@
                             dot.classList.remove('bg-green-500', 'bg-purple-500', 'bg-amber-500', 'bg-sky-500', 'bg-gray-400');
                             const color = u.sesi_aktif === 'human' ? 'bg-green-500' :
                                 u.sesi_aktif === 'ai' ? 'bg-purple-500' :
-                                u.sesi_aktif === 'checkout' ? 'bg-amber-500' :
-                                u.sesi_aktif === 'inventory' ? 'bg-sky-500' : 'bg-gray-400';
+                                u.sesi_aktif === 'checkout_qty' ? 'bg-amber-500' :
+                                u.sesi_aktif === 'inventory_select' ? 'bg-sky-500' : 'bg-gray-400';
                             dot.classList.add(color);
                         }
                     }

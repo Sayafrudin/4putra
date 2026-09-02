@@ -376,7 +376,21 @@ class ChatbotController extends Controller
     // Hapus inventaris
     public function inventarisDestroy(Request $request, InventarisBurung $inventari)
     {
-        $inventari->delete();
+        try {
+            $inventari->delete();
+        } catch (\Illuminate\Database\QueryException $e) {
+            if (($e->errorInfo[0] ?? $e->getCode()) == '23000') {
+                $message = "Data tidak dapat dihapus karena masih terkait dengan riwayat transaksi pelanggan. Solusi: Silakan ubah Status burung ini menjadi 'Tidak Aktif'.";
+
+                if ($request->expectsJson()) {
+                    return response()->json(['status' => 'ERROR', 'message' => $message], 400);
+                }
+
+                return redirect()->route('admin.chatbot.inventaris')->with('error', $message);
+            }
+
+            throw $e;
+        }
 
         Cache::forget('chatbot.totalPelanggan');
 

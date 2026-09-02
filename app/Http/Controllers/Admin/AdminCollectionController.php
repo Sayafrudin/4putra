@@ -155,10 +155,9 @@ class AdminCollectionController extends Controller
         try {
             $parts = parse_url($url);
             $path = $parts['path'] ?? '';
-            $path = preg_replace('#^/image/upload/v\d+/#', '', $path);
-            $publicId = pathinfo($path, PATHINFO_DIRNAME).'/'.pathinfo($path, PATHINFO_FILENAME);
-            $publicId = trim($publicId, '/');
-            \CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary::destroy($publicId);
+            $path = preg_replace('#^/[^/]+/upload/(?:v\d+/)?#', '', $path);
+            $publicId = preg_replace('/\.\w+$/', '', ltrim($path, '/'));
+            Cloudinary::uploadApi()->destroy($publicId);
         } catch (\Exception $e) {
             \Log::warning('Gagal hapus gambar Cloudinary: '.$e->getMessage());
         }

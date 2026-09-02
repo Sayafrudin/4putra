@@ -67,7 +67,7 @@
     </div>
 @elseif($type === 'marquee')
     {{-- Skeleton untuk marquee --}}
-    <div class="w-full lg:w-2/3 overflow-hidden h-[24rem] flex items-center animate-pulse [mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)] [-webkit-mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)]">
+    <div class="w-full lg:w-2/3 overflow-hidden h-[24rem] flex items-center animate-pulse [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)] [-webkit-mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]">
         <div class="flex gap-4">
             @for($i = 0; $i < 4; $i++)
                 <div class="w-56 h-[20rem] bg-gray-200 rounded flex-shrink-0"></div>

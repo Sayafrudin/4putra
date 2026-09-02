@@ -12,6 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Paling luar: retry sekali saat koneksi DB gagal sesaat (SSL abort TiDB)
+        $middleware->prepend(\App\Http\Middleware\RetryDbConnection::class);
+
         // --- DAFTARKAN DISINI ---
         $middleware->web(append: [
             Localization::class,

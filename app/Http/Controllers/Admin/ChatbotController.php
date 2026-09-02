@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\Rule;
 
 class ChatbotController extends Controller
 {
@@ -332,11 +333,16 @@ class ChatbotController extends Controller
     public function inventarisStore(Request $request)
     {
         $validated = $request->validate([
-            'nama_spesies' => 'required|string|max:100',
+            'nama_spesies' => [
+                'required', 'string', 'max:100',
+                Rule::unique('inventaris_burung')->where(fn ($q) => $q->where('fase', $request->fase)),
+            ],
             'fase' => 'required|in:anakan,dewasa',
             'harga' => 'required|numeric|min:1',
             'stok' => 'required|integer|min:0',
             'deskripsi' => 'nullable|string',
+        ], [
+            'nama_spesies.unique' => 'Kombinasi spesies dan fase ini sudah ada di inventaris. Gunakan Edit untuk mengubah stok.',
         ]);
 
         InventarisBurung::create($validated);
@@ -354,12 +360,17 @@ class ChatbotController extends Controller
     public function inventarisUpdate(Request $request, InventarisBurung $inventari)
     {
         $validated = $request->validate([
-            'nama_spesies' => 'required|string|max:100',
+            'nama_spesies' => [
+                'required', 'string', 'max:100',
+                Rule::unique('inventaris_burung')->where(fn ($q) => $q->where('fase', $request->fase))->ignore($inventari->id),
+            ],
             'fase' => 'required|in:anakan,dewasa',
             'harga' => 'required|numeric|min:1',
             'stok' => 'required|integer|min:0',
             'deskripsi' => 'nullable|string',
             'aktif' => 'boolean',
+        ], [
+            'nama_spesies.unique' => 'Kombinasi spesies dan fase ini sudah ada di inventaris.',
         ]);
 
         $inventari->update($validated);
@@ -394,11 +405,13 @@ class ChatbotController extends Controller
 
         Cache::forget('chatbot.totalPelanggan');
 
+        $message = 'Inventaris berhasil dihapus! Riwayat transaksi terkait tetap tersimpan.';
+
         if ($request->expectsJson()) {
-            return response()->json(['status' => 'OK', 'message' => 'Inventaris berhasil dihapus!']);
+            return response()->json(['status' => 'OK', 'message' => $message]);
         }
 
-        return redirect()->route('admin.chatbot.inventaris')->with('success', 'Inventaris berhasil dihapus!');
+        return redirect()->route('admin.chatbot.inventaris')->with('success', $message);
     }
 
     // Daftar transaksi

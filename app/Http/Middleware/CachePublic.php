@@ -17,6 +17,8 @@ class CachePublic
         $response = $next($request);
 
         if ($request->isMethod('GET') && $response->isSuccessful()) {
+            // Header s-maxage juga menjadi penanda bagi StripCookiesOnPublicCache
+            // (global, paling luar) untuk membuang Set-Cookie — lihat middleware tsb.
             $response->headers->set(
                 'Cache-Control',
                 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400'

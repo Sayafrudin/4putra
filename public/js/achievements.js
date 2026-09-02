@@ -315,7 +315,7 @@
                 })
                 .then(function () {
                     showToast('success', 'Berhasil!', 'Portofolio baru aviary telah ditambahkan.');
-                    setTimeout(function () { location.reload(); }, 1000);
+                    refreshAdminList();
                 })
                 .catch(function (e) {
                     console.error('Create error:', e);
@@ -400,7 +400,7 @@
                 })
                 .then(function () {
                     showToast('success', 'Berhasil Diubah!', 'Data pencapaian telah diperbarui.');
-                    setTimeout(function () { location.reload(); }, 1000);
+                    refreshAdminList();
                 })
                 .catch(function (e) {
                     console.error('Update error:', e);

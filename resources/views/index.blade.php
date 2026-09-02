@@ -1,9 +1,9 @@
 <x-site.layout>
 
-    <section class="w-full px-6 md:px-12 lg:px-16 pb-20 pt-10">
+    <section class="relative w-full px-6 md:px-12 lg:px-16 pb-20 pt-10">
         <div class="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-16 lg:gap-24 max-w-7xl mx-auto">
 
-            <div class="flex flex-col items-center md:items-start flex-1 text-center md:text-left">
+            <div class="flex flex-col items-center md:items-start flex-1 text-center md:text-left relative z-10">
                 <h1
                     class="text-4xl leading-tight md:text-5xl md:leading-tight lg:text-6xl lg:leading-tight font-bold uppercase">
                     {{ __('home.hero_welcome') }}
@@ -19,10 +19,12 @@
                 </p>
             </div>
 
-            <div class="flex-1 flex justify-center md:justify-end relative">
-                <img src="{{ asset('img/buffont.png') }}" alt="hero"
-                    class="max-w-xs md:max-w-sm lg:max-w-md xl:max-w-lg transition-all duration-300 drop-shadow-xl">
-            </div>
+            {{-- Mobile: gambar mengalir normal di bawah teks. Desktop (md+): absolute,
+                 ekor keluar batas section dan dimasking oleh wrapper section berikutnya. --}}
+            <img src="{{ asset('img/rfm-hero.png') }}" alt="Red-fronted Macaw"
+                class="relative z-10 max-w-xs w-auto drop-shadow-xl
+                       md:absolute md:right-0 md:top-0 md:z-0 md:h-[115%] md:max-h-none
+                       md:w-auto md:object-contain md:pointer-events-none md:drop-shadow-none">
         </div>
     </section>
 
@@ -30,7 +32,9 @@
         window.CarouselData = @json($carouselCollections->isNotEmpty() ? $carouselCollections : null);
     </script>
 
-    <section class="w-full max-w-7xl mx-auto py-10 px-6 flex flex-col gap-12">
+    {{-- Wrapper full-width: memask ekor macaw yang overflow dari hero (z-10 di atas z-0) --}}
+    <div class="relative z-10 bg-white dark:bg-gray-900">
+        <section class="w-full max-w-7xl mx-auto py-10 px-6 flex flex-col gap-12">
         <div class="flex flex-col lg:flex-row items-center gap-10 lg:gap-20">
 
             <div class="w-full lg:w-1/3 flex flex-col items-center lg:items-start text-center lg:text-left space-y-4">
@@ -80,5 +84,6 @@
         </div>
 
     </section>
+    </div>
     <x-site.whatsapp />
 </x-site.layout>

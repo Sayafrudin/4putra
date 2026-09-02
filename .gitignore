@@ -17,5 +17,9 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
-auth_info/
-public/chatbot/node_modules
+.opencode/
+.codegraph/
+node_modules/
+vendor/
+public/chatbot/auth_info/
+public/chatbot/node_modules/

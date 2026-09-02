@@ -19,20 +19,18 @@
                 </p>
 
                 {{-- Credential chips: fakta dari copy hero, mengisi kolom kiri & meninggikan hero agar tubuh macaw bebas --}}
-                <div class="mt-10 flex flex-wrap gap-3">
+                <div class="mt-10 flex flex-wrap justify-center gap-3 md:justify-start">
                     <span class="rounded-full border border-gray-200 dark:border-gray-700 px-4 py-2 text-sm text-gray-600 dark:text-gray-300">{{ __('home.chip_since') }}</span>
                     <span class="rounded-full border border-gray-200 dark:border-gray-700 px-4 py-2 text-sm text-gray-600 dark:text-gray-300">{{ __('home.chip_location') }}</span>
-                    <span class="rounded-full border border-gray-200 dark:border-gray-700 px-4 py-2 text-sm text-gray-600 dark:text-gray-300">{{ __('home.chip_legal') }}</span>
                 </div>
             </div>
 
-            {{-- Mobile: gambar mengalir normal di bawah teks. Desktop (md+): absolute besar
-                 memenuhi sisi kanan, ekor menjulur melewati batas section (di belakang konten wrapper berikutnya).
-                 WAJIB md:max-w-none agar max-w-xs mobile tidak memenjarakan lebar gambar. --}}
+            {{-- Mobile: disembunyikan (identitas visual tetap via desktop; PNG juga tak lagi diunduh mobile).
+                 Desktop (md+): absolute besar memenuhi sisi kanan, ekor menjulur melewati batas section
+                 (di belakang konten wrapper berikutnya). --}}
             <img src="{{ asset('img/rfm-hero.png') }}" alt="Red-fronted Macaw"
-                class="relative z-10 max-w-xs w-auto drop-shadow-xl
-                       md:absolute md:right-0 md:-top-24 lg:-top-36 md:z-0 md:h-auto md:max-h-none md:max-w-none
-                       md:w-[min(44vw,920px)] md:object-contain md:pointer-events-none md:drop-shadow-none">
+                class="hidden md:block md:absolute md:right-0 md:-top-24 lg:-top-36 md:z-0
+                       md:w-[min(44vw,920px)] md:object-contain md:pointer-events-none">
         </div>
     </section>
 
@@ -59,13 +57,7 @@
             </div>
 
             <div id="marquee-wrapper"
-                class="w-full lg:w-2/3 overflow-hidden relative cursor-pointer h-[24rem] flex items-center">
-                <div
-                    class="absolute left-0 top-0 h-full w-24 z-20 pointer-events-none bg-linear-to-r from-white dark:from-gray-900 to-transparent">
-                </div>
-                <div
-                    class="absolute right-0 top-0 h-full w-24 z-20 pointer-events-none bg-linear-to-l from-white dark:from-gray-900 to-transparent">
-                </div>
+                class="w-full lg:w-2/3 overflow-hidden relative cursor-pointer h-[24rem] flex items-center [mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)] [-webkit-mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)]">
 
                 <div id="marquee-track" class="marquee-inner flex w-fit">
                     <div id="cards-container" class="flex items-center"></div>

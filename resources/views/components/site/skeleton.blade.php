@@ -24,11 +24,10 @@
                 <div class="flex gap-3 mt-10">
                     <div class="h-9 w-28 rounded-full bg-gray-200"></div>
                     <div class="h-9 w-32 rounded-full bg-gray-200"></div>
-                    <div class="h-9 w-36 rounded-full bg-gray-200"></div>
                 </div>
             </div>
             <div class="flex-1 flex justify-center md:justify-end">
-                <div class="max-w-xs md:max-w-sm lg:max-w-md xl:max-w-lg aspect-square bg-gray-200 rounded-lg"></div>
+                <div class="hidden md:block max-w-sm lg:max-w-md xl:max-w-lg aspect-square bg-gray-200 rounded-lg"></div>
             </div>
         </div>
     </section>
@@ -68,7 +67,7 @@
     </div>
 @elseif($type === 'marquee')
     {{-- Skeleton untuk marquee --}}
-    <div class="w-full lg:w-2/3 overflow-hidden h-[24rem] flex items-center animate-pulse">
+    <div class="w-full lg:w-2/3 overflow-hidden h-[24rem] flex items-center animate-pulse [mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)] [-webkit-mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)]">
         <div class="flex gap-4">
             @for($i = 0; $i < 4; $i++)
                 <div class="w-56 h-[20rem] bg-gray-200 rounded flex-shrink-0"></div>

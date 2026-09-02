@@ -21,6 +21,10 @@
     
     "home.btn_view_more": "View More Collections",
 
+    "home.chip_since": "Since 2019",
+    "home.chip_location": "West Surabaya",
+    "home.chip_legal": "Licensed Macaw Breeding",
+
 
     "_comment3": "Collections page translations",
     "collections.title_prefix": "Meet Our Bird",

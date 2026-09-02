@@ -1,6 +1,6 @@
 <x-site.layout>
 
-    <section class="relative w-full px-6 md:px-12 lg:px-16 pb-20 pt-10">
+    <section class="relative w-full px-6 md:px-12 lg:px-16 pb-20 pt-10 md:pb-48">
         <div class="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-16 lg:gap-24 max-w-7xl mx-auto">
 
             <div class="flex flex-col items-center md:items-start flex-1 text-center md:text-left relative z-10">
@@ -17,15 +17,22 @@
                     <br><br>
                     {{ __('home.hero_desc_3') }}
                 </p>
+
+                {{-- Credential chips: fakta dari copy hero, mengisi kolom kiri & meninggikan hero agar tubuh macaw bebas --}}
+                <div class="mt-10 flex flex-wrap gap-3">
+                    <span class="rounded-full border border-gray-200 dark:border-gray-700 px-4 py-2 text-sm text-gray-600 dark:text-gray-300">{{ __('home.chip_since') }}</span>
+                    <span class="rounded-full border border-gray-200 dark:border-gray-700 px-4 py-2 text-sm text-gray-600 dark:text-gray-300">{{ __('home.chip_location') }}</span>
+                    <span class="rounded-full border border-gray-200 dark:border-gray-700 px-4 py-2 text-sm text-gray-600 dark:text-gray-300">{{ __('home.chip_legal') }}</span>
+                </div>
             </div>
 
             {{-- Mobile: gambar mengalir normal di bawah teks. Desktop (md+): absolute besar
-                 memenuhi sisi kanan, ekor keluar batas section dan dimasking wrapper berikutnya.
+                 memenuhi sisi kanan, ekor menjulur melewati batas section (di belakang konten wrapper berikutnya).
                  WAJIB md:max-w-none agar max-w-xs mobile tidak memenjarakan lebar gambar. --}}
             <img src="{{ asset('img/rfm-hero.png') }}" alt="Red-fronted Macaw"
                 class="relative z-10 max-w-xs w-auto drop-shadow-xl
-                       md:absolute md:right-0 md:top-0 md:z-0 md:h-[140%] md:max-h-none md:max-w-none
-                       md:w-auto md:object-contain md:pointer-events-none md:drop-shadow-none">
+                       md:absolute md:right-0 md:-top-24 lg:-top-36 md:z-0 md:h-auto md:max-h-none md:max-w-none
+                       md:w-[min(44vw,920px)] md:object-contain md:pointer-events-none md:drop-shadow-none">
         </div>
     </section>
 
@@ -33,8 +40,8 @@
         window.CarouselData = @json($carouselCollections->isNotEmpty() ? $carouselCollections : null);
     </script>
 
-    {{-- Wrapper full-width: memask ekor macaw yang overflow dari hero (z-10 di atas z-0) --}}
-    <div class="relative z-10 bg-white dark:bg-gray-900">
+    {{-- Wrapper full-width: konten render di depan ekor macaw yang menjulur dari hero (z-10 di atas z-0) --}}
+    <div class="relative z-10">
         <section class="w-full max-w-7xl mx-auto py-10 px-6 flex flex-col gap-12">
         <div class="flex flex-col lg:flex-row items-center gap-10 lg:gap-20">
 

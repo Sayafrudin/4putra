@@ -3,7 +3,7 @@
     <section class="relative w-full px-6 md:px-12 lg:px-16 pb-20 pt-10 md:pb-48">
         <div class="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-16 lg:gap-24 max-w-7xl mx-auto">
 
-            <div class="flex flex-col items-center md:items-start flex-1 text-center md:text-left relative z-10">
+            <div class="flex flex-col items-center md:items-start flex-1 text-center md:text-left relative z-30">
                 <h1
                     class="text-4xl leading-tight md:text-5xl md:leading-tight lg:text-6xl lg:leading-tight font-bold uppercase">
                     {{ __('home.hero_welcome') }}
@@ -26,10 +26,10 @@
             </div>
 
             {{-- Mobile: disembunyikan (identitas visual tetap via desktop; PNG juga tak lagi diunduh mobile).
-                 Desktop (md+): absolute besar memenuhi sisi kanan, ekor menjulur melewati batas section
-                 (di belakang konten wrapper berikutnya). --}}
+                 Desktop (md+): absolute besar memenuhi sisi kanan sebagai layer foreground (z-20, di depan
+                 konten wrapper Explore z-10, di bawah teks hero z-30) dengan bayangan lembut. --}}
             <img src="{{ asset('img/rfm-hero.png') }}" alt="Red-fronted Macaw"
-                class="hidden md:block md:absolute md:right-0 md:-top-24 lg:-top-36 md:z-0
+                class="hidden md:block md:absolute md:right-0 md:-top-24 lg:-top-36 md:z-20 md:drop-shadow-xl
                        md:w-[min(44vw,920px)] md:object-contain md:pointer-events-none">
         </div>
     </section>
@@ -38,7 +38,7 @@
         window.CarouselData = @json($carouselCollections->isNotEmpty() ? $carouselCollections : null);
     </script>
 
-    {{-- Wrapper full-width: konten render di depan ekor macaw yang menjulur dari hero (z-10 di atas z-0) --}}
+    {{-- Wrapper full-width: konten Explore di bawah ekor macaw foreground (z-10 < z-20), teks hero z-30 --}}
     <div class="relative z-10">
         <section class="w-full max-w-7xl mx-auto py-10 px-6 flex flex-col gap-12">
         <div class="flex flex-col lg:flex-row items-center gap-10 lg:gap-20">
@@ -57,7 +57,7 @@
             </div>
 
             <div id="marquee-wrapper"
-                class="w-full lg:w-2/3 overflow-hidden relative cursor-pointer h-[24rem] flex items-center [mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)] [-webkit-mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)]">
+                class="w-full lg:w-2/3 overflow-hidden relative cursor-pointer h-[24rem] flex items-center [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)] [-webkit-mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]">
 
                 <div id="marquee-track" class="marquee-inner flex w-fit">
                     <div id="cards-container" class="flex items-center"></div>

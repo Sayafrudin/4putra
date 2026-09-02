@@ -11,7 +11,7 @@
     </div>
 @elseif($type === 'hero')
     {{-- Skeleton untuk hero section --}}
-    <section class="w-full px-6 md:px-12 lg:px-16 pb-20 pt-10 animate-pulse">
+    <section class="w-full px-6 md:px-12 lg:px-16 pb-20 pt-10 md:pb-48 animate-pulse">
         <div class="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-16 lg:gap-24 max-w-7xl mx-auto">
             <div class="flex flex-col items-center md:items-start flex-1 text-center md:text-left space-y-4">
                 <div class="h-10 bg-gray-200 rounded w-3/4"></div>
@@ -20,6 +20,11 @@
                     <div class="h-4 bg-gray-200 rounded w-full"></div>
                     <div class="h-4 bg-gray-200 rounded w-5/6"></div>
                     <div class="h-4 bg-gray-200 rounded w-4/6"></div>
+                </div>
+                <div class="flex gap-3 mt-10">
+                    <div class="h-9 w-28 rounded-full bg-gray-200"></div>
+                    <div class="h-9 w-32 rounded-full bg-gray-200"></div>
+                    <div class="h-9 w-36 rounded-full bg-gray-200"></div>
                 </div>
             </div>
             <div class="flex-1 flex justify-center md:justify-end">

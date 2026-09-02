@@ -19,11 +19,12 @@
                 </p>
             </div>
 
-            {{-- Mobile: gambar mengalir normal di bawah teks. Desktop (md+): absolute,
-                 ekor keluar batas section dan dimasking oleh wrapper section berikutnya. --}}
+            {{-- Mobile: gambar mengalir normal di bawah teks. Desktop (md+): absolute besar
+                 memenuhi sisi kanan, ekor keluar batas section dan dimasking wrapper berikutnya.
+                 WAJIB md:max-w-none agar max-w-xs mobile tidak memenjarakan lebar gambar. --}}
             <img src="{{ asset('img/rfm-hero.png') }}" alt="Red-fronted Macaw"
                 class="relative z-10 max-w-xs w-auto drop-shadow-xl
-                       md:absolute md:right-0 md:top-0 md:z-0 md:h-[115%] md:max-h-none
+                       md:absolute md:right-0 md:top-0 md:z-0 md:h-[140%] md:max-h-none md:max-w-none
                        md:w-auto md:object-contain md:pointer-events-none md:drop-shadow-none">
         </div>
     </section>

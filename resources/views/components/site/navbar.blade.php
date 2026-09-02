@@ -2,7 +2,7 @@
     class="fixed top-0 left-0 bg-transparent w-full flex items-center justify-between px-4 md:px-32 lg:px-48 xl:px-64 transition-all duration-500 z-50 text-white">
 
     <a href="/">
-        <x-logo id="nav-logo" class="w-40 transition-colors duration-300"></x-logo>
+        <x-logo id="nav-logo" class="h-8 md:h-10 w-auto transition-colors duration-300"></x-logo>
     </a>
 
     <div class="hidden md:flex items-center gap-4 lg:gap-8 nav-items-container">

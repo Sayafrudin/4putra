@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="turbo-prefetch" content="true">
     <title>4Putra Vertex Aviary</title>
     <link rel="icon" href="img/4Putraico.png" type="image/png">
 

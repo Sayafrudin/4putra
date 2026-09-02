@@ -42,7 +42,7 @@
                         <th class="px-6 py-4 w-40 text-right">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+                <tbody data-admin-list class="divide-y divide-gray-200 dark:divide-gray-800">
                     @forelse($inventaris as $item)
                         <tr class="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#262d3a] transition-colors">
                             <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{{ $item->nama_spesies }}</td>
@@ -252,7 +252,7 @@
             </div>
             <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2" id="sukses_title">Berhasil!</h3>
             <p class="text-sm text-gray-500 dark:text-gray-400 mb-6" id="sukses_message">Data berhasil disimpan.</p>
-            <button onclick="tutupModal('modalSukses'); location.reload();"
+            <button onclick="tutupModal('modalSukses'); refreshAdminList();"
                 class="px-5 py-2.5 text-sm font-bold text-white bg-green-600 rounded-xl hover:bg-green-700 transition-colors">
                 OK
             </button>

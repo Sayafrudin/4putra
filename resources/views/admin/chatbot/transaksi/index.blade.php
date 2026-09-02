@@ -75,7 +75,7 @@
                         <th class="px-6 py-4 w-36 text-center">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+                <tbody data-admin-list class="divide-y divide-gray-200 dark:divide-gray-800">
                     @forelse($transaksi as $trx)
                         <tr class="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#262d3a] transition-colors" data-order-id="{{ $trx->midtrans_order_id }}" data-trx-id="{{ $trx->id }}">
                             <td class="px-6 py-4 text-xs font-mono text-gray-500 dark:text-gray-400">{{ $trx->midtrans_order_id ?? '-' }}</td>
@@ -231,7 +231,7 @@
                 const data = await res.json();
                 if (res.ok && data.status === 'OK') {
                     showToast('success', 'Berhasil', data.message);
-                    setTimeout(() => location.reload(), 800);
+                    refreshAdminList();
                 } else {
                     showToast('error', 'Gagal', data.message || 'Gagal mengubah status');
                 }
@@ -265,7 +265,7 @@
                 if (res.ok && data.status === 'OK') {
                     if (data.updated > 0) {
                         text.textContent = `âœ… ${data.updated} transaksi berhasil diperbarui! Memuat ulang...`;
-                        setTimeout(() => location.reload(), 1500);
+                        refreshAdminList();
                     } else {
                         text.textContent = data.message || 'Semua transaksi pending belum ada perubahan status dari Midtrans.';
                         setTimeout(() => info.classList.add('hidden'), 4000);
@@ -296,7 +296,7 @@
                 });
                 const data = await res.json();
                 if (res.ok && data.updated > 0) {
-                    location.reload();
+                    refreshAdminList();
                 }
             } catch (e) {
                 // Silent fail

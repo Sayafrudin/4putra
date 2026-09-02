@@ -34,7 +34,7 @@
                         <th class="px-6 py-4 w-40 text-right">Tindakan</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-800 text-gray-600 dark:text-gray-300">
+                <tbody data-admin-list class="divide-y divide-gray-200 dark:divide-gray-800 text-gray-600 dark:text-gray-300">
                     @forelse($collections as $collection)
                         <tr class="hover:bg-gray-800/50 transition-colors duration-150">
                             <td class="px-6 py-4">

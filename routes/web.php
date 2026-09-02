@@ -34,13 +34,19 @@ Route::middleware(\App\Http\Middleware\CachePublic::class)->group(function () {
             return redirect('/admin');
         }
 
-        // Ambil data koleksi untuk carousel (random)
-        $carouselCollections = \App\Models\Collection::select('name', 'name_en', 'image_path')
-            ->whereNotNull('image_path')
-            ->inRandomOrder()
-            ->limit(8)
-            ->get()
-            ->map(function ($item) {
+        // Pool koleksi di-cache 1 jam (tanpa acak di SQL); 8 pilihan acak diambil
+        // per request di PHP agar tiap load tetap berbeda tanpa query TiDB.
+        $pool = \Illuminate\Support\Facades\Cache::remember('public.carousel_pool', 60 * 60, function () {
+            return \App\Models\Collection::select('name', 'name_en', 'image_path')
+                ->whereNotNull('image_path')
+                ->get()
+                ->all();
+        });
+
+        $carouselCollections = collect();
+
+        if (! empty($pool)) {
+            $carouselCollections = collect($pool)->random(min(8, count($pool)))->map(function ($item) {
                 $imgUrl = str_starts_with($item->image_path, 'http')
                     ? str_replace('/upload/', '/upload/w_400,c_fill,q_auto,f_auto/', $item->image_path)
                     : asset('storage/collections/'.$item->image_path);
@@ -50,6 +56,7 @@ Route::middleware(\App\Http\Middleware\CachePublic::class)->group(function () {
                     'image' => $imgUrl,
                 ];
             });
+        }
 
         return view('index', compact('carouselCollections'));
     });

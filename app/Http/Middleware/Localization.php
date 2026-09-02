@@ -11,9 +11,11 @@ class Localization
 {
     public function handle(Request $request, Closure $next)
     {
-        // Cek apakah ada data bahasa di session user
-        if (Session::has('locale')) {
-            App::setLocale(Session::get('locale'));
+        // Prioritas plain cookie 'locale' (stabil, tidak dienkripsi ulang -> aman untuk
+        // cache Vary: Cookie); fallback ke session untuk kompatibilitas kunjungan lama.
+        $locale = $request->cookie('locale') ?: Session::get('locale');
+        if ($locale && in_array($locale, ['en', 'id'])) {
+            App::setLocale($locale);
         }
 
         return $next($request);

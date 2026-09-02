@@ -249,7 +249,7 @@
             })
             .then(function () {
                 showToast('success', successTitle, successMsg);
-                setTimeout(function () { location.reload(); }, 1000);
+                refreshAdminList();
             })
             .catch(function (e) {
                 console.error('Submit error:', e);

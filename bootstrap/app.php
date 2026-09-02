@@ -12,8 +12,17 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Paling luar: retry sekali saat koneksi DB gagal sesaat (SSL abort TiDB)
-        $middleware->prepend(\App\Http\Middleware\RetryDbConnection::class);
+        // Cookie 'locale' plain (tidak dienkripsi ulang): nilainya stabil antar request
+        // sehingga cache browser/edge dengan Vary: Cookie bisa hit, tanpa salah bahasa.
+        $middleware->encryptCookies(except: ['locale']);
+
+        // Paling luar: buang Set-Cookie di halaman publik cacheable (agar HTTP cache
+        // browser & edge Vercel aktif), lalu retry sekali saat koneksi DB gagal sesaat
+        // (SSL abort TiDB). Urutan prepend: elemen pertama jadi paling luar.
+        $middleware->prepend([
+            \App\Http\Middleware\StripCookiesOnPublicCache::class,
+            \App\Http\Middleware\RetryDbConnection::class,
+        ]);
 
         // --- DAFTARKAN DISINI ---
         $middleware->web(append: [

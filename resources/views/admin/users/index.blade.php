@@ -57,7 +57,7 @@
                         <th class="px-6 py-4 w-48 text-right">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+                <tbody data-admin-list class="divide-y divide-gray-200 dark:divide-gray-800">
                     @forelse($users as $u)
                         <tr class="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#262d3a] transition-colors duration-150">
                             <td class="px-6 py-4 text-sm font-medium">
@@ -376,7 +376,7 @@
                 if (res.ok) {
                     tutupModal('modalTambahUser');
                     showToast('success', 'Berhasil', 'User baru berhasil ditambahkan!');
-                    setTimeout(() => location.reload(), 500);
+                    refreshAdminList();
                 } else {
                     if (data.errors) {
                         if (data.errors.name) showError('err_tambah_name', data.errors.name[0]);
@@ -440,7 +440,7 @@
                 if (res.ok) {
                     tutupModal('modalEditUser');
                     showToast('success', 'Berhasil', 'Data user berhasil diperbarui!');
-                    setTimeout(() => location.reload(), 500);
+                    refreshAdminList();
                 } else {
                     if (data.errors) {
                         if (data.errors.name) showError('err_edit_name', data.errors.name[0]);
@@ -482,7 +482,7 @@
                 if (res.ok) {
                     tutupModal('modalHapusUser');
                     showToast('success', 'Berhasil', 'User berhasil dihapus!');
-                    setTimeout(() => location.reload(), 500);
+                    refreshAdminList();
                 } else {
                     showToast('error', 'Gagal', data.message || 'Gagal menghapus user');
                 }

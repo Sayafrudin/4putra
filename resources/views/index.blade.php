@@ -20,12 +20,12 @@
             </div>
 
             {{-- Mobile: gambar mengalir normal di bawah teks. Desktop (md+): absolute besar
-                 memenuhi sisi kanan, ekor keluar batas section dan dimasking wrapper berikutnya.
+                 memenuhi sisi kanan, ekor menjulur melewati batas section (di belakang konten wrapper berikutnya).
                  WAJIB md:max-w-none agar max-w-xs mobile tidak memenjarakan lebar gambar. --}}
             <img src="{{ asset('img/rfm-hero.png') }}" alt="Red-fronted Macaw"
                 class="relative z-10 max-w-xs w-auto drop-shadow-xl
-                       md:absolute md:right-0 md:top-0 md:z-0 md:h-[140%] md:max-h-none md:max-w-none
-                       md:w-auto md:object-contain md:pointer-events-none md:drop-shadow-none">
+                       md:absolute md:right-0 md:top-0 md:z-0 md:h-auto md:max-h-none md:max-w-none
+                       md:w-[min(44vw,920px)] md:object-contain md:pointer-events-none md:drop-shadow-none">
         </div>
     </section>
 
@@ -33,8 +33,8 @@
         window.CarouselData = @json($carouselCollections->isNotEmpty() ? $carouselCollections : null);
     </script>
 
-    {{-- Wrapper full-width: memask ekor macaw yang overflow dari hero (z-10 di atas z-0) --}}
-    <div class="relative z-10 bg-white dark:bg-gray-900">
+    {{-- Wrapper full-width: konten render di depan ekor macaw yang menjulur dari hero (z-10 di atas z-0) --}}
+    <div class="relative z-10">
         <section class="w-full max-w-7xl mx-auto py-10 px-6 flex flex-col gap-12">
         <div class="flex flex-col lg:flex-row items-center gap-10 lg:gap-20">
 

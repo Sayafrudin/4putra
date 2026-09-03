@@ -122,8 +122,11 @@ class CollectionVariantTest extends TestCase
         $response = $this->get('/collections');
 
         $response->assertStatus(200);
-        // Varian hanya dirender di grid induk, bukan sebagai card tersendiri
+        // Card induk dirender server-side tepat sekali
         $this->assertSame(1, substr_count($response->getContent(), 'alt="Uji IRN Unik"'));
-        $this->assertSame(1, substr_count($response->getContent(), 'alt="Uji IRN Albino Unik"'));
+        // Varian TIDAK dirender sebagai card/alt tersendiri
+        $this->assertSame(0, substr_count($response->getContent(), 'alt="Uji IRN Albino Unik"'));
+        // Nama varian hadir tepat sekali di data JSON modal (@js($variantData))
+        $this->assertSame(1, substr_count($response->getContent(), 'Uji IRN Albino Unik'));
     }
 }

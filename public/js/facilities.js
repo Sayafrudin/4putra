@@ -249,6 +249,7 @@
                 return r.json();
             })
             .then(function () {
+                closeModal(formEl.id === 'form-create-facilities' ? 'create' : 'edit');
                 showToast('success', successTitle, successMsg);
                 refreshAdminList();
             })

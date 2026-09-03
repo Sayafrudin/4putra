@@ -203,6 +203,7 @@
                     return r.json();
                 })
                 .then(function () {
+                    closeModal('create-collection');
                     showToast('success', 'Berhasil!', 'Koleksi baru telah ditambahkan.');
                     refreshAdminList();
                 })
@@ -299,6 +300,7 @@
                     return r.json();
                 })
                 .then(function () {
+                    closeModal('edit-collection');
                     showToast('success', 'Berhasil!', 'Data koleksi diperbarui.');
                     refreshAdminList();
                 })

@@ -77,10 +77,6 @@
                                     <span class="absolute top-2.5 right-2.5 z-10 px-2.5 py-1 rounded-full bg-[#E62C37]/90 text-white text-xs font-bold shadow-lg">
                                         {{ trans_choice('collections.variant_count', $variantCount, ['n' => $variantCount]) }}
                                     </span>
-                                    <svg class="absolute bottom-3 right-3 z-10 w-5 h-5 text-white drop-shadow"
-                                        fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
-                                    </svg>
                                 </div>
                             </button>
                         @else
@@ -108,16 +104,14 @@
 
             <template x-if="open && items[idx]">
                 <div class="relative h-full flex flex-col">
-                    {{-- Header modal --}}
-                    <div class="shrink-0 flex items-start justify-between gap-4 px-5 sm:px-8 pt-5 pb-4 border-b border-white/10">
-                        <div class="min-w-0">
-                            <p class="text-xs font-semibold uppercase tracking-wider text-[#ff6b73]"
-                                x-show="items[idx].scientific" x-text="items[idx].scientific"></p>
-                            <h3 class="mt-1 text-lg sm:text-2xl font-bold uppercase leading-snug text-white"
-                                x-text="items[idx].name"></h3>
-                        </div>
+                    {{-- Header modal: terpusat, nama lebih besar --}}
+                    <div class="relative shrink-0 text-center px-14 sm:px-20 pt-6 pb-5 border-b border-white/10">
+                        <p class="text-xs sm:text-sm font-semibold uppercase tracking-[0.25em] text-[#ff6b73]"
+                            x-show="items[idx].scientific" x-text="items[idx].scientific"></p>
+                        <h3 class="mt-1.5 text-2xl sm:text-3xl font-bold uppercase leading-snug text-white"
+                            x-text="items[idx].name"></h3>
                         <button type="button" @click="close()" aria-label="Tutup"
-                            class="shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-[#E62C37] text-white text-2xl leading-none transition-colors">
+                            class="absolute right-4 top-4 sm:right-6 sm:top-6 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-[#E62C37] text-white text-2xl leading-none transition-colors">
                             &times;
                         </button>
                     </div>

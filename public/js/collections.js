@@ -129,11 +129,35 @@
     // =============================================
     window.openCollectionCreateModal = function () {
         if (els.formCreate) els.formCreate.reset();
+        var parentInfo = document.getElementById('create-col-parent-info');
+        if (parentInfo) parentInfo.classList.add('hidden');
         showModal('create-collection');
         requestAnimationFrame(function () {
             initDzCreate();
             if (dzCreate) { try { dzCreate.removeAllFiles(true); } catch (e) {} }
         });
+    };
+
+    // Info "Menambahkan varian untuk: ..." hilang saat dropdown induk dikosongkan manual
+    var parentSelectCreate = document.getElementById('create-col-parent');
+    if (parentSelectCreate) {
+        parentSelectCreate.addEventListener('change', function () {
+            var info = document.getElementById('create-col-parent-info');
+            if (info && !parentSelectCreate.value) info.classList.add('hidden');
+        });
+    }
+
+    window.openCreateVariantModal = function (col) {
+        window.openCollectionCreateModal();
+        var select = document.getElementById('create-col-parent');
+        var info = document.getElementById('create-col-parent-info');
+        var cat = document.getElementById('create-col-category');
+        if (select) select.value = String(col.id);
+        if (cat && col.category) cat.value = col.category;
+        if (info) {
+            info.textContent = 'Menambahkan varian untuk: ' + (col.name || '');
+            info.classList.remove('hidden');
+        }
     };
 
     var submitCreateBtn = document.getElementById('submit-create-collection-btn');
@@ -206,6 +230,15 @@
         document.getElementById('edit-col-category-en').value = col.category_en || '';
         document.getElementById('edit-col-sort-order').value = col.sort_order ?? 0;
         els.formEdit.action = CFG.collectionsBaseUrl + '/' + col.id;
+
+        var parentSelect = document.getElementById('edit-col-parent');
+        if (parentSelect) {
+            parentSelect.value = col.parent_id ? String(col.parent_id) : '';
+            // Induk tidak boleh dirinya sendiri
+            Array.prototype.forEach.call(parentSelect.options, function (opt) {
+                opt.disabled = opt.value === String(col.id);
+            });
+        }
 
         var photoWrap = document.getElementById('edit-col-existing-photo');
         if (col.image_path) {

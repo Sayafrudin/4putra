@@ -123,7 +123,7 @@ class CollectionVariantTest extends TestCase
 
         $response->assertStatus(200);
         // Varian hanya dirender di grid induk, bukan sebagai card tersendiri
-        $this->assertSame(1, substr_count($response->getContent(), 'Uji IRN Unik'));
-        $this->assertSame(1, substr_count($response->getContent(), 'Uji IRN Albino Unik'));
+        $this->assertSame(1, substr_count($response->getContent(), 'alt="Uji IRN Unik"'));
+        $this->assertSame(1, substr_count($response->getContent(), 'alt="Uji IRN Albino Unik"'));
     }
 }

@@ -4,6 +4,11 @@
 /* Dark mode: gunakan class strategy (bukan media) */
 @variant dark (&:where(.dark, .dark *));
 
+/* Alpine.js: sembunyikan elemen sebelum Alpine start (mencegah flash) */
+[x-cloak] {
+    display: none !important;
+}
+
 html {
     font-family: 'Inter', sans-serif;
     scroll-behavior: smooth;

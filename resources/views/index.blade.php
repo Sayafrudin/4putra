@@ -29,8 +29,8 @@
                  Desktop (md+): absolute besar memenuhi sisi kanan sebagai layer foreground (z-20, di depan
                  konten wrapper Explore z-10, di bawah teks hero z-30) dengan bayangan lembut. --}}
             <img src="{{ asset('img/rfm-hero.png') }}" alt="Red-fronted Macaw"
-                class="hidden md:block md:absolute md:-right-10 lg:right-0 md:h-[80%] lg:h-[115%] md:-top-24 lg:-top-36 md:z-20 md:drop-shadow-xl
-                       md:w-[min(44vw,920px)] md:object-contain md:pointer-events-none">
+                class="hidden md:block md:absolute md:-right-10 lg:right-0 md:-top-24 lg:-top-36 md:z-20 md:drop-shadow-xl
+                       md:w-[min(38vw,920px)] lg:w-[min(44vw,920px)] md:object-contain md:pointer-events-none">
         </div>
     </section>
 

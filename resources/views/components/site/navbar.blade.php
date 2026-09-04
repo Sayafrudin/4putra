@@ -1,11 +1,11 @@
 <nav id="navbar"
-    class="fixed top-0 left-0 bg-transparent w-full flex items-center justify-between px-4 md:px-32 lg:px-48 xl:px-64 transition-all duration-500 z-50 text-white">
+    class="fixed top-0 left-0 bg-transparent w-full flex items-center justify-between px-4 md:px-8 lg:px-16 xl:px-64 transition-all duration-500 z-50 text-white">
 
-    <a href="/">
+    <a href="/" class="shrink-0">
         <x-logo id="nav-logo" class="h-8 md:h-10 w-auto transition-colors duration-300"></x-logo>
     </a>
 
-    <div class="hidden md:flex items-center gap-4 lg:gap-8 nav-items-container">
+    <div class="hidden lg:flex items-center gap-4 lg:gap-8 nav-items-container">
         <a href="/"
             class="nav-link font-medium transition-colors duration-300 border-b-2 {{ request()->is('/') ? 'border-[#E62C37]' : 'border-transparent hover:border-[#E62C37]' }} text-gray-900 dark:text-white">
             {{ __('Home') }}
@@ -48,7 +48,7 @@
         </a>
     </div>
 
-    <div class="hidden md:flex items-center ml-4" x-data="{ lang: '{{ app()->getLocale() }}' }">
+    <div class="hidden lg:flex items-center ml-4" x-data="{ lang: '{{ app()->getLocale() }}' }">
         <span class="lang-label mr-3 text-sm font-bold text-[#E62C37] transition-colors duration-300">ID</span>
 
         <label class="relative flex items-center cursor-pointer">
@@ -84,7 +84,7 @@
     </div>
 
     <button id="hamburger-btn"
-        class="group inline-flex w-12 h-12 md:hidden text-[#E62C37] text-center items-center justify-center focus:outline-none transition-colors duration-300"
+        class="group inline-flex w-12 h-12 lg:hidden text-[#E62C37] text-center items-center justify-center focus:outline-none transition-colors duration-300"
         aria-pressed="false">
 
         <svg class="w-6 h-6 fill-current pointer-events-none" viewBox="0 0 16 16">
@@ -370,14 +370,6 @@
         handleScroll();
 
         // --- 4. MOBILE MENU LOGIC (+ RESIZE FIX) ---
-        // Fungsi helper buat tutup menu
-        const closeMenu = () => {
-            if (mobileMenu && !mobileMenu.classList.contains('invisible')) {
-                mobileMenu.classList.add('invisible', 'opacity-0', '-translate-y-2');
-                // Balikin icon hamburger kalau ada animasinya (opsional)
-            }
-        };
-
         if (hamburgerBtn && mobileMenu) {
             hamburgerBtn.addEventListener('click', () => {
                 const isOpen = !mobileMenu.classList.contains('invisible');
@@ -398,7 +390,7 @@
 
             if (window.__navResize) window.removeEventListener('resize', window.__navResize);
             window.__navResize = () => {
-                if (window.innerWidth >= 768) {
+                if (window.innerWidth >= 1024) {
                     closeMenu();
                 }
             };

@@ -389,6 +389,6 @@
         };
     </script>
 
-    <script type="module" src="{{ asset('js/facilities.js') }}">
+    <script type="module" src="{{ asset('js/facilities.js') }}?v={{ filemtime(public_path('js/facilities.js')) }}">
     </script>
 @endsection

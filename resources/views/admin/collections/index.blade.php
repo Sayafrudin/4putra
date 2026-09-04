@@ -35,7 +35,13 @@
                     </tr>
                 </thead>
                 <tbody data-admin-list class="divide-y divide-gray-200 dark:divide-gray-800 text-gray-600 dark:text-gray-300">
-                    @forelse($collections as $collection)
+                    @php
+                        $variantsByParent = $collections->groupBy(fn ($c) => (string) $c->parent_id);
+                    @endphp
+                    @forelse($collections->filter(fn ($c) => empty($c->parent_id)) as $collection)
+                        @php
+                            $variants = $variantsByParent->get((string) $collection->id, collect());
+                        @endphp
                         <tr class="hover:bg-gray-800/50 transition-colors duration-150">
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-4">
@@ -56,7 +62,12 @@
                                         </div>
                                     @endif
                                     <div>
-                                        <div class="font-bold text-gray-900 dark:text-white uppercase text-sm">{{ $collection->name }}</div>
+                                        <div class="font-bold text-gray-900 dark:text-white uppercase text-sm">
+                                            {{ $collection->name }}
+                                            @if ($variants->isNotEmpty())
+                                                <span class="ml-2 px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/40 align-middle normal-case">{{ $variants->count() }} Varian</span>
+                                            @endif
+                                        </div>
                                         @if ($collection->name_en)
                                             <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ $collection->name_en }}</div>
                                         @endif
@@ -72,6 +83,8 @@
                             <td class="px-6 py-4 text-xs italic text-gray-500 dark:text-gray-400">{{ $collection->scientific_name ?: '-' }}</td>
                             <td class="px-6 py-4 text-right">
                                 <div class="inline-flex items-center gap-2">
+                                    <button onclick='openCreateVariantModal({{ json_encode($collection, JSON_BIGINT_AS_STRING) }})'
+                                        class="action-btn px-3 py-1.5 text-xs font-bold uppercase tracking-wider border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white transition-all duration-200 focus:outline-none">+ Varian</button>
                                     <button onclick='openCollectionEditModal({{ json_encode($collection, JSON_BIGINT_AS_STRING) }})'
                                         class="action-btn px-3 py-1.5 text-xs font-bold uppercase tracking-wider border-2 border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-white transition-all duration-200 focus:outline-none">Ubah</button>
                                     <button onclick="openCollectionDeleteModal({{ $collection->id }}, '{{ addslashes($collection->name) }}')"
@@ -79,6 +92,53 @@
                                 </div>
                             </td>
                         </tr>
+                        @foreach ($variants as $variant)
+                            <tr class="hover:bg-gray-800/50 transition-colors duration-150 bg-gray-50/50 dark:bg-black/20">
+                                <td class="px-6 py-3">
+                                    <div class="flex items-center gap-3 pl-14">
+                                        @if ($variant->image_path)
+                                            @php
+                                                $vImg = str_starts_with($variant->image_path, 'http')
+                                                    ? str_replace('/upload/', '/upload/w_100,c_fill,q_auto,f_auto/', $variant->image_path)
+                                                    : asset('storage/collections/' . $variant->image_path);
+                                            @endphp
+                                            <img src="{{ $vImg }}"
+                                                class="w-10 h-10 rounded border border-gray-300 dark:border-gray-700 object-cover cursor-pointer hover:scale-125 hover:z-10 hover:border-[#E62C37] shadow-sm transition-all duration-200 relative"
+                                                onclick="zoomImage(this.src)" alt="{{ $variant->name }}">
+                                        @else
+                                            <div class="w-10 h-10 rounded bg-gray-800 border border-gray-300 dark:border-gray-700 flex items-center justify-center">
+                                                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159" />
+                                                </svg>
+                                            </div>
+                                        @endif
+                                        <div>
+                                            <div class="font-semibold text-gray-900 dark:text-white text-sm">
+                                                <span class="text-gray-400 dark:text-gray-500 mr-1" aria-hidden="true">↳</span>{{ $variant->name }}
+                                            </div>
+                                            @if ($variant->name_en)
+                                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ $variant->name_en }}</div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-3">
+                                    <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/40">Varian</span>
+                                </td>
+                                <td class="px-6 py-3 text-center">
+                                    <span class="text-xs font-mono text-gray-500 dark:text-gray-400">{{ $variant->sort_order }}</span>
+                                </td>
+                                <td class="px-6 py-3 text-xs italic text-gray-500 dark:text-gray-400">{{ $variant->scientific_name ?: '-' }}</td>
+                                <td class="px-6 py-3 text-right">
+                                    <div class="inline-flex items-center gap-2">
+                                        <button onclick='openCollectionEditModal({{ json_encode($variant, JSON_BIGINT_AS_STRING) }})'
+                                            class="action-btn px-3 py-1.5 text-xs font-bold uppercase tracking-wider border-2 border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-white transition-all duration-200 focus:outline-none">Ubah</button>
+                                        <button onclick="openCollectionDeleteModal({{ $variant->id }}, '{{ addslashes($variant->name) }}')"
+                                            class="action-btn px-3 py-1.5 text-xs font-bold uppercase tracking-wider border-2 border-[#E62C37] text-[#E62C37] hover:bg-[#E62C37] hover:text-white transition-all duration-200 focus:outline-none">Hapus</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
                     @empty
                         <tr>
                             <td colspan="5" class="px-6 py-12 text-sm text-center text-gray-500 bg-white dark:bg-[#151a22]">Belum ada data koleksi burung.</td>
@@ -129,6 +189,17 @@
                     <input type="text" name="category_en" placeholder="Contoh: Macaw"
                         class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
                 </div>
+            </div>
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Induk Koleksi <span class="normal-case text-gray-400">(opsional — kosongkan untuk kategori utama)</span></label>
+                <select name="parent_id" id="create-col-parent"
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
+                    <option value="">— Kategori Utama —</option>
+                    @foreach ($parents as $parentOption)
+                        <option value="{{ $parentOption->id }}">{{ $parentOption->name }}</option>
+                    @endforeach
+                </select>
+                <p id="create-col-parent-info" class="hidden text-xs font-semibold text-blue-500 mt-1"></p>
             </div>
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Urutan (Sort Order)</label>
@@ -195,6 +266,16 @@
                     <input type="text" id="edit-col-category-en" name="category_en"
                         class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500">
                 </div>
+            </div>
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Induk Koleksi <span class="normal-case text-gray-400">(opsional — kosongkan untuk kategori utama)</span></label>
+                <select name="parent_id" id="edit-col-parent"
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500">
+                    <option value="">— Kategori Utama —</option>
+                    @foreach ($parents as $parentOption)
+                        <option value="{{ $parentOption->id }}">{{ $parentOption->name }}</option>
+                    @endforeach
+                </select>
             </div>
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Urutan (Sort Order)</label>
@@ -264,5 +345,5 @@
             }
         };
     </script>
-    <script src="{{ asset('js/collections.js') }}"></script>
+    <script src="{{ asset('js/collections.js') }}?v={{ filemtime(public_path('js/collections.js')) }}"></script>
 @endsection

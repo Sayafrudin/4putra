@@ -18,6 +18,7 @@ class Collection extends Model
         'category_en',
         'image_path',
         'sort_order',
+        'parent_id',
     ];
 
     protected function casts(): array
@@ -25,5 +26,15 @@ class Collection extends Model
         return [
             'id' => 'string',
         ];
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(Collection::class, 'parent_id');
+    }
+
+    public function variants()
+    {
+        return $this->hasMany(Collection::class, 'parent_id')->orderBy('sort_order');
     }
 }

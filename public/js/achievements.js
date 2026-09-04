@@ -314,6 +314,7 @@
                     return r.json();
                 })
                 .then(function () {
+                    closeModal('create');
                     showToast('success', 'Berhasil!', 'Portofolio baru aviary telah ditambahkan.');
                     refreshAdminList();
                 })
@@ -399,6 +400,7 @@
                     return r.json();
                 })
                 .then(function () {
+                    closeModal('edit');
                     showToast('success', 'Berhasil Diubah!', 'Data pencapaian telah diperbarui.');
                     refreshAdminList();
                 })

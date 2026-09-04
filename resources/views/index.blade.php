@@ -1,9 +1,9 @@
 <x-site.layout>
 
     <section class="relative w-full px-6 md:px-12 lg:px-16 pb-20 pt-10 md:pb-48">
-        <div class="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-16 lg:gap-24 max-w-7xl mx-auto">
+        <div class="flex flex-col md:flex-row items-center justify-center md:justify-start gap-10 md:gap-16 lg:gap-24 max-w-7xl mx-auto">
 
-            <div class="flex flex-col items-center md:items-start flex-1 text-center md:text-left relative z-30">
+            <div class="flex flex-col items-center md:items-start w-full md:w-[60%] lg:w-1/2 text-center md:text-left relative z-30">
                 <h1
                     class="text-4xl leading-tight md:text-5xl md:leading-tight lg:text-6xl lg:leading-tight font-bold uppercase">
                     {{ __('home.hero_welcome') }}
@@ -29,7 +29,7 @@
                  Desktop (md+): absolute besar memenuhi sisi kanan sebagai layer foreground (z-20, di depan
                  konten wrapper Explore z-10, di bawah teks hero z-30) dengan bayangan lembut. --}}
             <img src="{{ asset('img/rfm-hero.png') }}" alt="Red-fronted Macaw"
-                class="hidden md:block md:absolute md:right-0 md:-top-24 lg:-top-36 md:z-20 md:drop-shadow-xl
+                class="hidden md:block md:absolute md:-right-10 lg:right-0 md:h-[80%] lg:h-[115%] md:-top-24 lg:-top-36 md:z-20 md:drop-shadow-xl
                        md:w-[min(44vw,920px)] md:object-contain md:pointer-events-none">
         </div>
     </section>

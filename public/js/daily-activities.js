@@ -248,6 +248,7 @@
                 return r.json();
             })
             .then(function () {
+                closeModal(formEl.id === 'form-create-daily-activities' ? 'create' : 'edit');
                 showToast('success', successTitle, successMsg);
                 refreshAdminList();
             })

@@ -30,11 +30,11 @@
     {{-- Shared toast notification system --}}
     <script src="{{ asset('js/toast.js') }}" defer></script>
 
-    {{-- Session timeout auto-logout --}}
-    <script src="{{ asset('js/session-timeout.js') }}" defer></script>
+    {{-- Session timeout auto-logout (cache-busting agar fix JS langsung sampai ke browser) --}}
+    <script src="{{ asset('js/session-timeout.js') }}?v={{ filemtime(public_path('js/session-timeout.js')) }}" defer></script>
 
     {{-- Client-side table search --}}
-    <script src="{{ asset('js/table-search.js') }}" defer></script>
+    <script src="{{ asset('js/table-search.js') }}?v={{ filemtime(public_path('js/table-search.js')) }}" defer></script>
 
     {{-- Refresh daftar tanpa reload penuh setelah CRUD --}}
     <script src="{{ asset('js/admin-refresh.js') }}" defer></script>

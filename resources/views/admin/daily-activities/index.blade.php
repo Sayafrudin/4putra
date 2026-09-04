@@ -361,6 +361,6 @@
         };
     </script>
 
-    <script type="module" src="{{ asset('js/daily-activities.js') }}">
+    <script type="module" src="{{ asset('js/daily-activities.js') }}?v={{ filemtime(public_path('js/daily-activities.js')) }}">
     </script>
 @endsection

@@ -29,6 +29,7 @@
     "collections.title_prefix": "Temukan Koleksi",
     "collections.title_suffix": "Burung Kami",
     "collections.desc": "Koleksi Parrot di Aviary Kami",
+    "collections.variant_count": "1 Varian|:n Varian",
     "category.conure": "Conure",
     "category.macaw": "Macaw",
 

@@ -60,4 +60,27 @@ class AdminSessionPingTest extends TestCase
 
         $user->delete();
     }
+
+    public function test_ping_touches_session_last_activity_and_returns_current_csrf(): void
+    {
+        $user = User::updateOrCreate(
+            ['email' => 'admin-ping-test@4putra.test'],
+            [
+                'name' => 'Admin Ping Test',
+                'password' => bcrypt('password123'),
+                'role' => 'admin',
+            ]
+        );
+
+        $response = $this->actingAs($user)->getJson('/admin/ping');
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'ok' => true,
+            ]);
+        $this->assertNotNull(session('last_activity'));
+        $this->assertSame(session()->token(), $response->json('csrf'));
+
+        $user->delete();
+    }
 }

@@ -41,12 +41,13 @@
 
     /**
      * Ping endpoint keep-alive.
-     * Resolve {csrf} saat sukses (sesi diperbarui server),
-     * resolve {expired:true} saat 401/419 (sesi telah mati).
+     * Resolve {ok,csrf} saat sukses (sesi diperbarui server),
+     * resolve {expired:true} saat 401/419 (sesi telah mati),
+     * resolve {failed:true} untuk respons lain (redirect 308, 500, HTML, jaringan).
      */
     function requestPing() {
         return fetch('/admin/ping', {
-            method: 'GET',
+            method: 'GET', // GET = bebas 419 CSRF palsu; endpoint juga menerima POST
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json',
@@ -54,10 +55,19 @@
             },
             credentials: 'same-origin',
         }).then(function (res) {
-            if (res.ok && (res.headers.get('content-type') || '').indexOf('application/json') !== -1) {
-                return res.json();
+            if (res.status === 401 || res.status === 419) {
+                return { expired: true };
             }
-            return { expired: res.status === 401 || res.status === 419 };
+            var ct = res.headers.get('content-type') || '';
+            if (res.ok && ct.indexOf('application/json') !== -1) {
+                return res.json().then(function (data) {
+                    return data && data.ok ? data : { failed: true };
+                });
+            }
+            // 308 redirect (AdminDomain), 500, HTML, dll = BUKAN sukses
+            return { failed: true };
+        }).catch(function () {
+            return { failed: true }; // jaringan putus — tidak lagi ditelan diam-diam
         });
     }
 
@@ -87,6 +97,7 @@
                 '</div>' +
                 '<p class="text-sm text-gray-400 mb-2">Anda telah tidak aktif selama ' + (TIMEOUT_MINUTES - WARNING_MINUTES) + ' menit.</p>' +
                 '<p class="text-sm text-gray-400 mb-4">Sesi akan berakhir dalam <span id="session-countdown" class="text-yellow-400 font-bold">' + WARNING_MINUTES + ':00</span></p>' +
+                '<p id="session-modal-status" class="hidden text-xs text-red-400 mb-2"></p>' +
                 '<div class="flex justify-end gap-3">' +
                     '<button id="session-logout-btn" class="px-4 py-2 text-sm text-gray-300 hover:text-white border border-gray-600 rounded-lg hover:border-gray-500 transition-colors">' +
                         'Logout' +
@@ -172,7 +183,7 @@
             titleEl.textContent = 'Sesi Anda Telah Berakhir';
         }
         if (paragraphs.length > 0) {
-            paragraphs[0].textContent = 'Silakan login kembali untuk melanjutkan.';
+            paragraphs[0].textContent = 'Sesi telah benar-benar habis. Silakan login kembali untuk melanjutkan.';
         }
         if (paragraphs.length > 1) {
             paragraphs[1].textContent = 'Data pada form tidak terkirim — salin teks penting terlebih dahulu bila diperlukan.';
@@ -194,6 +205,7 @@
 
     function hideWarning() {
         warningShown = false;
+        setStatus('');
 
         if (logoutTimer) {
             clearInterval(logoutTimer);
@@ -216,6 +228,26 @@
         }
     }
 
+    function setStatus(msg) {
+        var el = document.getElementById('session-modal-status');
+        if (el) {
+            el.textContent = msg || '';
+            el.classList.toggle('hidden', !msg);
+        }
+    }
+
+    function setExtending(busy) {
+        var btn = document.getElementById('session-extend-btn');
+        if (!btn) return;
+        btn.disabled = busy;
+        if (busy) {
+            btn.dataset.label = btn.textContent;
+            btn.textContent = 'Memperbarui...';
+        } else if (btn.dataset.label) {
+            btn.textContent = btn.dataset.label;
+        }
+    }
+
     function extendSession(e) {
         if (e && typeof e.preventDefault === 'function') {
             e.preventDefault();
@@ -224,18 +256,25 @@
             e.stopPropagation();
         }
 
-        // Tunggu keputusan server sebelum menutup modal atau mereset timer,
-        // agar tidak ada reset palsu saat sesi ternyata sudah kedaluwarsa.
+        setExtending(true);
+        setStatus('');
         requestPing().then(function (data) {
+            setExtending(false);
             if (data && data.expired) {
+                // Sesi benar-benar habis di server → arahkan ke login
                 showExpiredState();
+                return;
+            }
+            if (data && data.failed) {
+                // Jangan tutup modal pada kegagalan — beri kesempatan retry
+                setStatus('Gagal memperbarui sesi. Periksa koneksi lalu klik Perpanjang Sesi lagi.');
                 return;
             }
             applyCsrf(data);
             // Sukses: tutup popup + reset timer lokal ke 0, tanpa reload halaman.
             hideWarning();
             resetTimer();
-        }).catch(function () {});
+        });
     }
 
     function logoutNow() {

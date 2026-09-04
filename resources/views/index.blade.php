@@ -1,9 +1,9 @@
 <x-site.layout>
 
-    <section class="relative w-full px-6 md:px-12 lg:px-16 pb-20 pt-10 md:pb-48">
-        <div class="relative flex flex-col md:flex-row items-center justify-center md:justify-start gap-10 md:gap-16 lg:gap-24 max-w-7xl mx-auto">
+    <section class="relative w-full px-6 md:px-12 lg:px-16 pb-20 pt-10 md:pb-24 xl:pb-48">
+        <div class="flex flex-col md:flex-row items-center justify-center md:justify-start gap-10 md:gap-16 lg:gap-24 max-w-7xl mx-auto">
 
-            <div class="flex flex-col items-center md:items-start w-full md:w-[60%] lg:w-1/2 text-center md:text-left relative z-30">
+            <div class="flex flex-col items-center md:items-start w-full md:flex-1 xl:flex-none xl:w-1/2 text-center md:text-left relative z-30">
                 <h1
                     class="text-4xl leading-tight md:text-5xl md:leading-tight lg:text-6xl lg:leading-tight font-bold uppercase">
                     {{ __('home.hero_welcome') }}
@@ -25,13 +25,14 @@
                 </div>
             </div>
 
-            {{-- Mobile: disembunyikan (identitas visual tetap via desktop; PNG juga tak lagi diunduh mobile).
-                 Desktop (md+): absolute besar memenuhi sisi kanan sebagai layer foreground (z-20, di depan
-                 konten wrapper Explore z-10, di bawah teks hero z-30) dengan bayangan lembut. --}}
+            {{-- Mobile: disembunyikan.
+                 Tablet (md-lg): kolom flex IN-FLOW -> items-center mensejajarkan burung
+                 tepat di tengah vertikal terhadap teks, tanpa angka posisi manual.
+                 Desktop (xl+): absolute ke SECTION (full-bleed) -> right-0 flush ke tepi
+                 kanan viewport; top-12 + 33vw = paritas look lama (dari bbox alpha PNG). --}}
             <img src="{{ asset('img/rfm-hero.png') }}" alt="Red-fronted Macaw"
-                class="hidden md:block md:absolute md:right-0 md:top-1/2 md:-translate-y-1/2 xl:top-12 xl:translate-y-0
-                       md:z-20 md:drop-shadow-xl md:object-contain md:pointer-events-none
-                       md:w-[min(38vw,920px)] lg:w-[min(36vw,920px)] xl:w-[min(33vw,690px)]">
+                class="hidden md:block md:shrink-0 md:object-contain md:drop-shadow-xl md:pointer-events-none
+                       md:w-[42%] lg:w-[40%] xl:absolute xl:right-0 xl:top-12 xl:z-20 xl:w-[min(33vw,690px)]">
         </div>
     </section>
 

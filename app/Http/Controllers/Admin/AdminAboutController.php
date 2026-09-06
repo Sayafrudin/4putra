@@ -18,7 +18,7 @@ class AdminAboutController extends Controller
     {
         try {
             $request->validate([
-                'media_type' => 'required|in:image,video',
+                'media_type' => 'required|in:image,video,embed',
                 'media_path' => 'required|string',
             ]);
 

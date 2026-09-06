@@ -10,6 +10,13 @@ class Leadership extends Model
 {
     protected $fillable = ['name', 'role', 'role_en', 'photo_path', 'sort_order'];
 
+    protected $appends = ['photo_url'];
+
+    public function getPhotoUrlAttribute(): string
+    {
+        return $this->photoUrl();
+    }
+
     public function photoUrl(): string
     {
         return str_starts_with($this->photo_path, 'http') ? $this->photo_path : asset($this->photo_path);

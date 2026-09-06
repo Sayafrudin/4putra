@@ -111,16 +111,17 @@
     </div>
 
     {{-- ===================== SEKSI 2: MANAJEMEN ABOUT US ===================== --}}
-    <div class="my-10 flex items-center gap-4">
-        <div class="flex-1 h-px bg-gray-200 dark:bg-gray-800"></div>
-        <h2 class="text-xl font-bold tracking-tight text-gray-900 dark:text-white uppercase whitespace-nowrap">
-            Manajemen About Us
-        </h2>
-        <div class="flex-1 h-px bg-gray-200 dark:bg-gray-800"></div>
+    <div
+        class="my-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b-2 border-gray-300 dark:border-gray-700 pb-5">
+        <div>
+            <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">
+                Manajemen About Us
+            </h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Kelola media hero & tim leadership halaman publik About Us
+            </p>
+        </div>
     </div>
-    <p class="text-sm text-gray-500 dark:text-gray-400 -mt-6 mb-6 text-center">
-        Kelola media hero & tim leadership halaman publik About Us
-    </p>
 
     {{-- ===== Sub-seksi: Media Hero ===== --}}
     <div class="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -139,9 +140,15 @@
     </div>
 
     <div class="w-full bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 shadow-sm mb-10 p-5 flex flex-col sm:flex-row items-start gap-5">
+        @php $embedUrl = $aboutPage->media_type === 'embed' ? $aboutPage->embedUrl() : null; @endphp
         @if ($aboutPage->media_type === 'video')
             <video src="{{ $aboutPage->mediaUrl() }}" muted controls preload="metadata"
                 class="max-h-56 rounded-lg border border-gray-300 dark:border-gray-700"></video>
+        @elseif ($aboutPage->media_type === 'embed' && $embedUrl)
+            <div class="w-56 aspect-video rounded-lg overflow-hidden border border-gray-300 dark:border-gray-700 bg-black shrink-0">
+                <iframe src="{{ $embedUrl }}" class="w-full h-full border-0" loading="lazy"
+                    allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+            </div>
         @else
             <img src="{{ $aboutPage->mediaUrl() }}" alt="Media hero About Us"
                 class="h-40 w-32 object-cover rounded-lg border border-gray-300 dark:border-gray-700"
@@ -149,7 +156,7 @@
         @endif
         <div>
             <span class="inline-block px-2.5 py-1 text-xs font-bold border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#151a22] rounded uppercase">
-                Tipe saat ini: {{ $aboutPage->media_type === 'video' ? 'Video' : 'Foto' }}
+                Tipe saat ini: {{ ['image' => 'Foto', 'video' => 'Video', 'embed' => 'Link'][$aboutPage->media_type] ?? $aboutPage->media_type }}
             </span>
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-3 break-all max-w-xl">
                 {{ $aboutPage->media_path }}
@@ -208,7 +215,7 @@
                             <td class="px-4 sm:px-6 py-4 text-right">
                                 <div class="inline-flex items-center gap-2 whitespace-nowrap">
                                     <button onclick='openLeaderModal({{ json_encode($leader, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) }})'
-                                        class="action-btn px-3 py-1.5 text-xs font-bold uppercase tracking-wider border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white transition-all duration-200 focus:outline-none">Ubah</button>
+                                        class="action-btn px-3 py-1.5 text-xs font-bold uppercase tracking-wider border-2 border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-white transition-all duration-200 focus:outline-none">Ubah</button>
                                     <button onclick="openLeaderDeleteModal({{ $leader->id }}, '{{ addslashes($leader->name) }}')"
                                         class="action-btn px-3 py-1.5 text-xs font-bold uppercase tracking-wider border-2 border-[#E62C37] text-[#E62C37] hover:bg-[#E62C37] hover:text-white transition-all duration-200 focus:outline-none">Hapus</button>
                                 </div>
@@ -631,6 +638,10 @@
                 @if ($aboutPage->media_type === 'video')
                     <video src="{{ $aboutPage->mediaUrl() }}" muted controls preload="metadata"
                         class="max-h-40 rounded-lg border border-gray-300 dark:border-gray-700"></video>
+                @elseif ($aboutPage->media_type === 'embed' && $embedUrl)
+                    <div class="w-48 aspect-video rounded-lg overflow-hidden border border-gray-300 dark:border-gray-700 bg-black">
+                        <iframe src="{{ $embedUrl }}" class="w-full h-full border-0" loading="lazy" allowfullscreen></iframe>
+                    </div>
                 @else
                     <img src="{{ $aboutPage->mediaUrl() }}" alt="Media saat ini"
                         class="h-32 w-24 object-cover rounded-lg border border-gray-300 dark:border-gray-700">
@@ -639,20 +650,31 @@
 
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
-                    File Baru <span class="font-normal normal-case text-gray-500">(foto atau video, diupload langsung ke Cloudinary)</span>
+                    Link Video Eksternal <span class="font-normal normal-case text-gray-500">(opsional: GDrive, Instagram, TikTok, YouTube, dll)</span>
                 </label>
-                <input type="file" id="about-media-file" accept="image/*,video/*"
-                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white file:mr-3 file:px-3 file:py-1.5 file:text-xs file:font-bold file:uppercase file:border-0 file:rounded-lg file:bg-[#E62C37] file:text-white file:cursor-pointer focus:outline-none focus:border-[#E62C37]">
-                <p id="about-media-error" class="hidden mt-2 text-xs font-semibold text-red-500"></p>
-                <div id="about-media-preview" class="hidden mt-3"></div>
+                <input type="url" id="about-media-link" placeholder="https://drive.google.com/file/d/... atau link IG/TikTok..."
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
+                <p class="text-xs text-gray-400 mt-1">
+                    Catatan: autoplay &amp; tanpa download hanya berlaku untuk file video upload (Cloudinary) — embed mengikuti player platformnya.
+                </p>
             </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
+                    Atau Upload File Baru <span class="font-normal normal-case text-gray-500">(foto/video, diupload otomatis ke Cloudinary)</span>
+                </label>
+                <div id="dropzone-about-media"
+                    class="dropzone !bg-white dark:bg-[#151a22] border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-6 text-center cursor-pointer hover:border-[#E62C37] transition-colors"></div>
+            </div>
+
+            <p id="about-media-error" class="hidden text-xs font-semibold text-red-500"></p>
         </div>
 
         <div class="flex gap-3 justify-end mt-6">
             <button type="button" onclick="closeModal('about-media')"
-                class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">Batal</button>
+                class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 bg-white dark:bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">Batal</button>
             <button type="button" id="about-media-submit-btn" onclick="submitAboutMedia()"
-                class="px-4 py-2.5 text-sm font-bold text-white bg-[#E62C37] rounded-xl hover:bg-[#c5242d] transition-colors disabled:opacity-50">Simpan Media</button>
+                class="px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white bg-[#E62C37] hover:bg-[#c5242d] transition-colors rounded-xl disabled:opacity-50">Simpan Media</button>
         </div>
     </x-admin.modal>
 
@@ -697,19 +719,23 @@
                         <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
                             Foto <span class="font-normal normal-case text-gray-500" id="leader-photo-hint">(*wajib)</span>
                         </label>
-                        <input type="file" id="leader-photo" accept="image/*"
-                            class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white file:mr-3 file:px-3 file:py-1.5 file:text-xs file:font-bold file:uppercase file:border-0 file:rounded-lg file:bg-[#E62C37] file:text-white file:cursor-pointer focus:outline-none focus:border-[#E62C37]">
+                        <div id="dropzone-leader-photo"
+                            class="dropzone !bg-white dark:bg-[#151a22] border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-4 text-center cursor-pointer hover:border-[#E62C37] transition-colors min-h-[80px]"></div>
                     </div>
                 </div>
-                <img id="leader-photo-preview" src="" alt="" class="hidden h-32 w-32 object-cover rounded-lg border border-gray-300 dark:border-gray-700">
+                <div class="flex items-center gap-3">
+                    <img id="leader-photo-preview" src="" alt="Foto saat ini"
+                        class="hidden h-28 w-28 object-cover rounded-lg border border-gray-300 dark:border-gray-700">
+                    <span id="leader-photo-preview-label" class="hidden text-xs text-gray-500 dark:text-gray-400">Foto saat ini</span>
+                </div>
                 <p id="leader-error" class="hidden text-xs font-semibold text-red-500"></p>
             </div>
 
             <div class="flex gap-3 justify-end mt-6">
                 <button type="button" onclick="closeModal('leader')"
-                    class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">Batal</button>
+                    class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 bg-white dark:bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">Batal</button>
                 <button type="button" id="leader-submit-btn" onclick="submitLeader()"
-                    class="px-4 py-2.5 text-sm font-bold text-white bg-[#E62C37] rounded-xl hover:bg-[#c5242d] transition-colors disabled:opacity-50">Simpan</button>
+                    class="px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white bg-[#E62C37] hover:bg-[#c5242d] transition-colors rounded-xl disabled:opacity-50">Simpan</button>
             </div>
         </form>
     </x-admin.modal>

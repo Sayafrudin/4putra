@@ -28,11 +28,14 @@
             {{-- Mobile: disembunyikan.
                  Tablet (md-lg): kolom flex IN-FLOW -> items-center mensejajarkan burung
                  tepat di tengah vertikal terhadap teks, tanpa angka posisi manual.
+                 -mr menetralkan padding kontainer agar ranting flush ke tepi kanan viewport.
                  Desktop (xl+): absolute ke SECTION (full-bleed) -> right-0 flush ke tepi
-                 kanan viewport; top-12 + 33vw = paritas look lama (dari bbox alpha PNG). --}}
+                 kanan viewport (mr-0 reset agar -mr tablet tidak mendorong keluar viewport);
+                 top-12 + 33vw = paritas look lama (dari bbox alpha PNG). --}}
             <img src="{{ asset('img/rfm-hero.png') }}" alt="Red-fronted Macaw"
                 class="hidden md:block md:shrink-0 md:object-contain md:drop-shadow-xl md:pointer-events-none
-                       md:w-[42%] lg:w-[40%] xl:absolute xl:right-0 xl:top-12 xl:z-20 xl:w-[min(33vw,690px)]">
+                       md:w-[42%] lg:w-[40%] md:-mr-12 lg:-mr-16 xl:mr-0
+                       xl:absolute xl:right-0 xl:top-12 xl:z-20 xl:w-[min(33vw,690px)]">
         </div>
     </section>
 

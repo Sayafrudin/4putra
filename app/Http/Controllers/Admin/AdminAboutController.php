@@ -37,6 +37,8 @@ class AdminAboutController extends Controller
                 $about->getAttributes()
             );
 
+            Cache::forget('admin.about');
+
             return response()->json(['success' => true, 'message' => 'Media About Us berhasil diperbarui']);
         } catch (\Exception $e) {
             \Log::error('About media update error: ' . $e->getMessage());
@@ -64,6 +66,7 @@ class AdminAboutController extends Controller
             );
 
             Cache::forget('about.leaderships');
+            Cache::forget('admin.about');
 
             return response()->json(['success' => true, 'message' => 'Leadership berhasil ditambahkan']);
         } catch (\Exception $e) {
@@ -90,6 +93,7 @@ class AdminAboutController extends Controller
             );
 
             Cache::forget('about.leaderships');
+            Cache::forget('admin.about');
 
             return response()->json(['success' => true, 'message' => 'Leadership berhasil diperbarui']);
         } catch (\Exception $e) {
@@ -114,6 +118,7 @@ class AdminAboutController extends Controller
         $leader->delete();
 
         Cache::forget('about.leaderships');
+        Cache::forget('admin.about');
 
         return response()->json(['success' => true, 'message' => 'Leadership berhasil dihapus']);
     }

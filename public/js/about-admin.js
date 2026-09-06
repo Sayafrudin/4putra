@@ -175,6 +175,9 @@
         document.getElementById('leader-sort').value = isEdit ? data.sort_order : '0';
         document.getElementById('leader-photo-hint').textContent = isEdit ? '(opsional, kosongkan jika tetap)' : '(*wajib)';
 
+        document.getElementById('leader-modal-title').innerHTML =
+            '<span class="w-2 h-2 bg-[#E62C37]"></span> ' + (isEdit ? 'Ubah Management' : 'Tambah Management');
+
         var prev = document.getElementById('leader-photo-preview');
         var prevLabel = document.getElementById('leader-photo-preview-label');
         prev.classList.add('hidden');

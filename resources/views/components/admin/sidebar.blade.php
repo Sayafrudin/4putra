@@ -18,7 +18,7 @@
                 </button>
             </div>
 
-            <ul class="mt-6" x-data="{ openMenu: {{ request()->routeIs('admin.achievements.*') || request()->routeIs('admin.collections.*') || request()->routeIs('admin.daily-activities.*') || request()->routeIs('admin.facilities.*') ? 'true' : 'false' }} }">
+            <ul class="mt-6" x-data="{ openMenu: {{ request()->routeIs('admin.achievements.*') || request()->routeIs('admin.about.*') || request()->routeIs('admin.collections.*') || request()->routeIs('admin.daily-activities.*') || request()->routeIs('admin.facilities.*') ? 'true' : 'false' }} }">
                 <li class="relative px-6 py-3">
                     @if (request()->routeIs('admin.dashboard'))
                         <span class="absolute inset-y-0 left-0 w-1 bg-[#E62C37] rounded-tr-lg rounded-br-lg"
@@ -37,6 +37,7 @@
 
                 <li class="relative px-6 py-3">
                     @if (request()->routeIs('admin.achievements.*') ||
+                            request()->routeIs('admin.about.*') ||
                             request()->routeIs('admin.collections.*') ||
                             request()->routeIs('admin.daily-activities.*') ||
                             request()->routeIs('admin.facilities.*'))
@@ -44,7 +45,7 @@
                             aria-hidden="true"></span>
                     @endif
                     <button @click="openMenu = !openMenu"
-                        class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.achievements.*') || request()->routeIs('admin.collections.*') || request()->routeIs('admin.daily-activities.*') || request()->routeIs('admin.facilities.*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
+                        class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.achievements.*') || request()->routeIs('admin.about.*') || request()->routeIs('admin.collections.*') || request()->routeIs('admin.daily-activities.*') || request()->routeIs('admin.facilities.*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
                         <span class="inline-flex items-center">
                             <svg class="w-5 h-5" fill="none" stroke-linecap="round" stroke-linejoin="round"
                                 stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -75,7 +76,7 @@
                             Koleksi (Collections)
                         </a>
                         <a href="{{ route('admin.achievements.index') }}" @click="sidebarOpen = false"
-                            class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.achievements.*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
+                            class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.achievements.*') || request()->routeIs('admin.about.*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round"

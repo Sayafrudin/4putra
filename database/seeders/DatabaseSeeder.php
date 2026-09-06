@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             ChatbotInventarisSeeder::class,
             DailyActivitySeeder::class,
             FacilitySeeder::class,
+            AboutSeeder::class,
         ]);
     }
 }

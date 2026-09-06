@@ -219,6 +219,8 @@
                 </label>
                 <div id="create-external-link-list" class="space-y-2">
                     <div class="flex items-center gap-2">
+                        <input type="text" name="external_label[]" placeholder="Nama headline (opsional)"
+                            class="w-2/5 p-2.5 text-xs bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
                         <input type="url" name="external_link[]" placeholder="https://berita.com/artikel..."
                             class="flex-1 p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
                         <button type="button" onclick="tambahLinkItem('create-external-link-list')" class="px-3 py-2.5 text-sm font-bold bg-green-600/20 text-green-400 border border-green-500/30 rounded-xl hover:bg-green-600/30 transition-colors">+</button>
@@ -357,7 +359,7 @@
 
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Link Eksternal
-                    <span class="font-normal normal-case text-gray-500">(opsional, link berita/artikel terkait, bisa lebih dari 1)</span>
+                    <span class="font-normal normal-case text-gray-500">(opsional, nama headline diisi manual / otomatis dari judul halaman, kosongkan untuk ambil otomatis)</span>
                 </label>
                 <div id="edit-external-link-list" class="space-y-2">
                     {{-- diisi dinamis oleh JS --}}

@@ -50,14 +50,19 @@
                                 if (!is_array($extLinks)) { $extLinks = [$extLinks]; }
                             @endphp
                             @foreach ($extLinks as $link)
-                                @if ($link)
+                                @php
+                                    {{-- Format baru {url,label} / format lama string URL --}}
+                                    $extUrl = is_array($link) ? ($link['url'] ?? '') : $link;
+                                    $extLabel = is_array($link) ? ($link['label'] ?? null) : null;
+                                @endphp
+                                @if ($extUrl)
                                     <div class="mt-2">
-                                        <a href="{{ $link }}" target="_blank"
+                                        <a href="{{ $extUrl }}" target="_blank" rel="noopener noreferrer"
                                             class="inline-flex items-center gap-2 text-[#E62C37] hover:underline text-sm font-semibold">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                                             </svg>
-                                            Lihat Artikel Terkait {{ $loop->count > 1 ? ($loop->iteration) : '' }}
+                                            {{ $extLabel ?: 'Lihat Artikel Terkait'.($loop->count > 1 ? ' '.$loop->iteration : '') }}
                                         </a>
                                     </div>
                                 @endif

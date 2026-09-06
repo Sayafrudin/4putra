@@ -483,6 +483,9 @@
         wrapper.className = 'flex items-center gap-2';
         var isVideo = containerId.indexOf('video') !== -1;
         wrapper.innerHTML =
+            (isVideo ? '' :
+                '<input type="text" name="external_label[]" placeholder="Nama headline (opsional)" ' +
+                'class="w-2/5 p-2.5 text-xs bg-[#151a22] border border-gray-700 rounded-xl text-white focus:outline-none focus:border-[#E62C37]">') +
             '<input type="url" name="' + (isVideo ? 'video_url[]' : 'external_link[]') + '" ' +
             'placeholder="' + (isVideo ? 'https://...' : 'https://berita.com/artikel...') + '" ' +
             'class="flex-1 p-2.5 text-sm bg-[#151a22] border border-gray-700 rounded-xl text-white focus:outline-none focus:border-[#E62C37]">' +
@@ -494,6 +497,11 @@
         btn.closest('.flex').remove();
     }
 
+    function escAttr(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // items: array of string (format lama) atau {url, label} (format baru)
     function populateLinkList(containerId, links) {
         var container = document.getElementById(containerId);
         if (!container) return;
@@ -506,11 +514,16 @@
             arr = links;
         }
         if (arr.length === 0) arr = [''];
-        arr.forEach(function (url) {
+        arr.forEach(function (item) {
+            var url = typeof item === 'string' ? item : ((item && item.url) || '');
+            var label = (typeof item === 'object' && item) ? (item.label || '') : '';
             var wrapper = document.createElement('div');
             wrapper.className = 'flex items-center gap-2';
             wrapper.innerHTML =
-                '<input type="url" name="' + (isVideo ? 'video_url[]' : 'external_link[]') + '" value="' + (url || '') + '" ' +
+                (isVideo ? '' :
+                    '<input type="text" name="external_label[]" value="' + escAttr(label) + '" placeholder="Nama headline (opsional)" ' +
+                    'class="w-2/5 p-2.5 text-xs bg-[#151a22] border border-gray-700 rounded-xl text-white focus:outline-none focus:border-[#E62C37]">') +
+                '<input type="url" name="' + (isVideo ? 'video_url[]' : 'external_link[]') + '" value="' + escAttr(url) + '" ' +
                 'placeholder="' + (isVideo ? 'https://...' : 'https://berita.com/artikel...') + '" ' +
                 'class="flex-1 p-2.5 text-sm bg-[#151a22] border border-gray-700 rounded-xl text-white focus:outline-none focus:border-[#E62C37]">' +
                 '<button type="button" onclick="hapusLinkItem(this)" class="px-2.5 py-2.5 text-sm font-bold bg-red-600/20 text-red-400 border border-red-500/30 rounded-xl hover:bg-red-600/30 transition-colors">&times;</button>';

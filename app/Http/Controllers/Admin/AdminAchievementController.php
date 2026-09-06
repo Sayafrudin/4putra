@@ -8,6 +8,7 @@ use App\Models\AchievementImage;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
 class AdminAchievementController extends Controller
 {
@@ -34,14 +35,7 @@ class AdminAchievementController extends Controller
                 'description' => 'required|string',
             ]);
 
-            $externalLinks = $request->external_link;
-            if (is_string($externalLinks)) {
-                $externalLinks = json_decode($externalLinks, true) ?: [];
-            }
-            if (! is_array($externalLinks)) {
-                $externalLinks = $externalLinks ? [$externalLinks] : [];
-            }
-            $externalLinks = array_values(array_filter($externalLinks, fn ($l) => filter_var($l, FILTER_VALIDATE_URL)));
+            $externalLinks = $this->buildExternalLinks($request);
 
             $videoUrls = $request->video_url;
             if (is_string($videoUrls)) {
@@ -141,14 +135,7 @@ class AdminAchievementController extends Controller
             $achievement = Achievement::findOrFail($id);
             $oldValues = $achievement->getOriginal();
 
-            $externalLinks = $request->external_link;
-            if (is_string($externalLinks)) {
-                $externalLinks = json_decode($externalLinks, true) ?: [];
-            }
-            if (! is_array($externalLinks)) {
-                $externalLinks = $externalLinks ? [$externalLinks] : [];
-            }
-            $externalLinks = array_values(array_filter($externalLinks, fn ($l) => filter_var($l, FILTER_VALIDATE_URL)));
+            $externalLinks = $this->buildExternalLinks($request);
 
             $videoUrls = $request->video_url;
             if (is_string($videoUrls)) {
@@ -209,5 +196,78 @@ class AdminAchievementController extends Controller
                 'message' => 'Gagal memperbarui: '.$e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Pasangkan URL eksternal dengan label opsional (input paralel external_link[] / external_label[]).
+     * Label kosong -> auto-fetch judul halaman; gagal -> null (publik fallback "Lihat Artikel Terkait N").
+     * Format lama (array of string URL) tetap terbaca di sisi tampilan.
+     */
+    private function buildExternalLinks(Request $request): array
+    {
+        $urls = $request->external_link;
+        if (is_string($urls)) {
+            $urls = json_decode($urls, true) ?: [];
+        }
+        if (! is_array($urls)) {
+            $urls = $urls ? [$urls] : [];
+        }
+
+        $labels = $request->external_label;
+        if (is_string($labels)) {
+            $labels = json_decode($labels, true) ?: [];
+        }
+        if (! is_array($labels)) {
+            $labels = $labels ? [$labels] : [];
+        }
+
+        $links = [];
+        foreach (array_values($urls) as $i => $url) {
+            if (! filter_var($url, FILTER_VALIDATE_URL)) {
+                continue;
+            }
+            $label = trim($labels[$i] ?? '');
+            if ($label === '') {
+                $label = (string) $this->fetchLinkTitle($url);
+            }
+
+            $links[] = ['url' => $url, 'label' => $label !== '' ? $label : null];
+        }
+
+        return $links;
+    }
+
+    /**
+     * ponytail: fetch sinkron maks 4 dtk/link hanya saat simpan (label kosong);
+     * pindahkan ke queue job jika proses simpan terasa lambat.
+     */
+    private function fetchLinkTitle(string $url): ?string
+    {
+        try {
+            $res = Http::withHeaders(['User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'])
+                ->timeout(4)->connectTimeout(2)->get($url);
+            if (! $res->ok()) {
+                return null;
+            }
+
+            $patterns = [
+                '/property=["\']og:title["\'][^>]*content=["\']([^"\']+)["\']/i',
+                '/content=["\']([^"\']+)["\'][^>]*property=["\']og:title["\']/i',
+                '/name=["\']twitter:title["\'][^>]*content=["\']([^"\']+)["\']/i',
+                '/content=["\']([^"\']+)["\'][^>]*name=["\']twitter:title["\']/i',
+                '/<title[^>]*>([^<]+)<\/title>/i',
+            ];
+            foreach ($patterns as $re) {
+                if (preg_match($re, $res->body(), $m)) {
+                    $title = trim(html_entity_decode($m[1], ENT_QUOTES, 'UTF-8'));
+
+                    return mb_substr($title, 0, 100) ?: null;
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::info('Fetch link title gagal (diabaikan): '.$e->getMessage());
+        }
+
+        return null;
     }
 }

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AchievementController;
 use App\Http\Controllers\Admin\AdminAchievementController;
+use App\Http\Controllers\Admin\AdminAboutController;
 use App\Http\Controllers\Admin\AdminCollectionController;
 use App\Http\Controllers\Admin\AdminDailyActivityController;
 use App\Http\Controllers\Admin\AdminFacilityController;
@@ -69,8 +70,13 @@ Route::middleware(\App\Http\Middleware\CachePublic::class)->group(function () {
     Route::get('/daily-activities', [DailyActivityController::class, 'index'])->name('daily.activities');
 
     Route::get('/about', function () {
-        return view('about');
-    });
+        $aboutPage = \App\Models\AboutPage::current();
+        $leaderships = \Illuminate\Support\Facades\Cache::remember('about.leaderships', 300, function () {
+            return \App\Models\Leadership::orderBy('sort_order')->get();
+        });
+
+        return view('about', compact('aboutPage', 'leaderships'));
+    })->name('about');
 });
 
 Route::get('/contact', fn () => redirect('/about#contact'))->name('contact');
@@ -147,6 +153,12 @@ Route::prefix('admin')->middleware(['admin.auth', 'admin.domain'])->group(functi
         'update' => 'admin.achievements.update',
         'destroy' => 'admin.achievements.destroy',
     ]);
+
+    // CRUD About Us (media hero + leadership) - satu halaman dengan Achievements
+    Route::post('/about/media', [AdminAboutController::class, 'updateMedia'])->name('admin.about.media.update');
+    Route::post('/about/leaderships', [AdminAboutController::class, 'storeLeader'])->name('admin.about.leadership.store');
+    Route::put('/about/leaderships/{leadership}', [AdminAboutController::class, 'updateLeader'])->name('admin.about.leadership.update');
+    Route::delete('/about/leaderships/{leadership}', [AdminAboutController::class, 'destroyLeader'])->name('admin.about.leadership.destroy');
 
     // CRUD Collections
     Route::resource('collections', AdminCollectionController::class)->names([

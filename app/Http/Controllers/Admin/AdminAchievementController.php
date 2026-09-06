@@ -22,7 +22,11 @@ class AdminAchievementController extends Controller
                 ->latest()->get();
         });
 
-        return view('admin.achievements.index', compact('achievements'));
+        // Seksi About Us (halaman sama, tabel terpisah)
+        $aboutPage = \App\Models\AboutPage::current();
+        $leaderships = \App\Models\Leadership::orderBy('sort_order')->get();
+
+        return view('admin.achievements.index', compact('achievements', 'aboutPage', 'leaderships'));
     }
 
     public function store(Request $request)

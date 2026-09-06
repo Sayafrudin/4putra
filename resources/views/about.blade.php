@@ -23,6 +23,27 @@
                         class="w-full h-full object-cover transition-all duration-500 hover:scale-105">
                     <div class="absolute inset-0 ring-1 ring-black/5 pointer-events-none"></div>
                 </div>
+
+                {{-- VIDEO GDRIVE (rasio mengikuti video): aktifkan salah satu varian di bawah,
+                     ganti GANTI_FILE_ID dengan ID dari link GDrive
+                     (contoh: https://drive.google.com/file/d/GANTI_FILE_ID/view),
+                     lalu hapus blok <img> di atas dan hapus pembuka/penutup komentar ini.
+                     Note: player GDrive otomatis letterbox, video selalu tampil pada rasio aslinya.
+
+                     VARIAN LANDSCAPE 16:9 (default):
+                <div class="w-full max-w-md rounded-2xl overflow-hidden shadow-xl aspect-video relative group">
+                    <iframe src="https://drive.google.com/file/d/GANTI_FILE_ID/preview"
+                        class="w-full h-full" allow="autoplay" allowfullscreen loading="lazy"></iframe>
+                    <div class="absolute inset-0 ring-1 ring-black/5 pointer-events-none"></div>
+                </div>
+
+                     VARIAN VERTICAL 9:16 (video tegak, tinggal pindahkan blok ini ke aktif):
+                <div class="w-full max-w-xs mx-auto rounded-2xl overflow-hidden shadow-xl aspect-[9/16] relative group">
+                    <iframe src="https://drive.google.com/file/d/GANTI_FILE_ID/preview"
+                        class="w-full h-full" allow="autoplay" allowfullscreen loading="lazy"></iframe>
+                    <div class="absolute inset-0 ring-1 ring-black/5 pointer-events-none"></div>
+                </div>
+                --}}
             </div>
         </div>
     </section>

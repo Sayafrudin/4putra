@@ -8,7 +8,6 @@
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "*",
         "cloudinary-labs/cloudinary-laravel": "*",
-        "colopl/laravel-tidb": "*",
         "laravel/framework": "^11.0",
         "laravel/socialite": "^5.28",
         "laravel/tinker": "^2.9"

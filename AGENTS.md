@@ -62,6 +62,11 @@ node public/chatbot/test.js       # Standalone Apriori report
 - Branch kerja default adalah `development`.
 - Pesan commit wajib deskriptif dalam Bahasa Indonesia.
 
+## Aturan Kebersihan Data Uji & Performa
+
+- Wajib hapus data dummy/uji setelah selesai mengetes sebuah fitur (mis. card koleksi, portofolio, aktivitas, foto/video yang diupload hanya untuk test). Data uji tidak boleh tertinggal di database agar tidak menumpuk data tidak berguna dan tidak membebani performa situs maupun admin dashboard.
+- Jaga performa tetap prioritas: hindari query N+1 (selalu eager loading `with()`), manfaatkan cache (`Cache::remember` + `Cache::forget` saat data berubah), dan jangan menambah beban render yang tidak perlu.
+
 ## Checklist Verifikasi & Testing Mandatory
 
 Setiap modifikasi wajib melewati validasi berikut sebelum diselesaikan:
@@ -71,6 +76,7 @@ Setiap modifikasi wajib melewati validasi berikut sebelum diselesaikan:
 3. Database TiDB: Migrasi kompatibel. `PDO::ATTR_STRINGIFY_FETCHES` aktif. Hindari komparasi strict (`===`) pada ID.
 4. Performa Serverless: `APP_DEBUG=false`. File statis dilayani oleh Vercel Edge CDN dengan Cache-Control yang tepat.
 5. Error Handling: Penanganan AJAX error menampilkan pesan jelas. Bebas error 500.
+6. Smoke Render Halaman: Setiap Blade yang diubah wajib diakses sungguhan via HTTP (bukan hanya lulus test suite) untuk memastikan tidak ada ParseError di view — komentar `{{-- --}}` dilarang di dalam blok `@php ... @endphp` (gunakan komentar PHP `//`).
 
 ## Protokol Orkestrasi Skill Otonom
 

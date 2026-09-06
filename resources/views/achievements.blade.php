@@ -51,7 +51,6 @@
                             @endphp
                             @foreach ($extLinks as $link)
                                 @php
-                                    {{-- Format baru {url,label} / format lama string URL --}}
                                     $extUrl = is_array($link) ? ($link['url'] ?? '') : $link;
                                     $extLabel = is_array($link) ? ($link['label'] ?? null) : null;
                                 @endphp

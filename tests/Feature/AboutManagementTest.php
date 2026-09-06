@@ -102,6 +102,7 @@ class AboutManagementTest extends TestCase
         $admin = $this->adminUser();
         $before = \App\Models\AboutPage::current();
 
+        // Video upload (Cloudinary)
         $this->actingAs($admin)
             ->postJson(route('admin.about.media.update'), [
                 'media_type' => 'video',
@@ -110,6 +111,26 @@ class AboutManagementTest extends TestCase
 
         $this->assertSame('video', \App\Models\AboutPage::current()->media_type);
         $this->get('/about')->assertSee('<video', false);
+
+        // Link eksternal (GDrive) -> embed iframe
+        $this->actingAs($admin)
+            ->postJson(route('admin.about.media.update'), [
+                'media_type' => 'embed',
+                'media_path' => 'https://drive.google.com/file/d/TESTID123/view?usp=sharing',
+            ])->assertJson(['success' => true]);
+
+        $this->get('/about')
+            ->assertSee('drive.google.com/file/d/TESTID123/preview', false)
+            ->assertSee('allowfullscreen', false);
+
+        // Link yang tidak dikenali -> fallback tombol Buka Video
+        $this->actingAs($admin)
+            ->postJson(route('admin.about.media.update'), [
+                'media_type' => 'embed',
+                'media_path' => 'https://contoh-platform.com/video/abc',
+            ])->assertJson(['success' => true]);
+
+        $this->get('/about')->assertSee('Buka Video');
 
         // Kembalikan ke kondisi semula
         $this->actingAs($admin)

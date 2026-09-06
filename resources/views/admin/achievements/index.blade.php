@@ -110,6 +110,122 @@
         </div>
     </div>
 
+    {{-- ===================== SEKSI 2: MANAJEMEN ABOUT US ===================== --}}
+    <div class="my-10 flex items-center gap-4">
+        <div class="flex-1 h-px bg-gray-200 dark:bg-gray-800"></div>
+        <h2 class="text-xl font-bold tracking-tight text-gray-900 dark:text-white uppercase whitespace-nowrap">
+            Manajemen About Us
+        </h2>
+        <div class="flex-1 h-px bg-gray-200 dark:bg-gray-800"></div>
+    </div>
+    <p class="text-sm text-gray-500 dark:text-gray-400 -mt-6 mb-6 text-center">
+        Kelola media hero & tim leadership halaman publik About Us
+    </p>
+
+    {{-- ===== Sub-seksi: Media Hero ===== --}}
+    <div class="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+            <h3 class="text-base font-bold uppercase tracking-wide text-gray-900 dark:text-white flex items-center gap-2">
+                <span class="w-2 h-2 bg-[#E62C37]"></span> Media Hero
+            </h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                Foto/video utama About Us (upload Cloudinary; video otomatis autoplay & tanpa download)
+            </p>
+        </div>
+        <button onclick="openMediaModal()"
+            class="action-btn px-5 py-2.5 text-sm font-bold uppercase tracking-wider text-white bg-[#E62C37] hover:bg-[#c5242d] transition-colors duration-200 shadow-md focus:outline-none">
+            Ubah Media
+        </button>
+    </div>
+
+    <div class="w-full bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 shadow-sm mb-10 p-5 flex flex-col sm:flex-row items-start gap-5">
+        @if ($aboutPage->media_type === 'video')
+            <video src="{{ $aboutPage->mediaUrl() }}" muted controls preload="metadata"
+                class="max-h-56 rounded-lg border border-gray-300 dark:border-gray-700"></video>
+        @else
+            <img src="{{ $aboutPage->mediaUrl() }}" alt="Media hero About Us"
+                class="h-40 w-32 object-cover rounded-lg border border-gray-300 dark:border-gray-700"
+                onclick="zoomImage(this.src)">
+        @endif
+        <div>
+            <span class="inline-block px-2.5 py-1 text-xs font-bold border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#151a22] rounded uppercase">
+                Tipe saat ini: {{ $aboutPage->media_type === 'video' ? 'Video' : 'Foto' }}
+            </span>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-3 break-all max-w-xl">
+                {{ $aboutPage->media_path }}
+            </p>
+        </div>
+    </div>
+
+    {{-- ===== Sub-seksi: Leadership ===== --}}
+    <div class="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+            <h3 class="text-base font-bold uppercase tracking-wide text-gray-900 dark:text-white flex items-center gap-2">
+                <span class="w-2 h-2 bg-[#E62C37]"></span> Leadership
+            </h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                Tim manajemen di bagian "Meet Our Leadership" (nama, role, foto, urutan)
+            </p>
+        </div>
+        <button onclick="openLeaderModal()"
+            class="action-btn px-5 py-2.5 text-sm font-bold uppercase tracking-wider text-white bg-[#E62C37] hover:bg-[#c5242d] transition-colors duration-200 shadow-md focus:outline-none">
+            + Tambah Management
+        </button>
+    </div>
+
+    <div class="w-full overflow-hidden bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 shadow-sm mb-10">
+        <div class="w-full overflow-x-auto">
+            <table class="w-full min-w-[640px] text-left border-collapse">
+                <thead>
+                    <tr class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-white dark:bg-[#151a22] border-b border-gray-200 dark:border-gray-800">
+                        <th class="px-4 sm:px-6 py-4">Foto</th>
+                        <th class="px-4 sm:px-6 py-4">Nama</th>
+                        <th class="px-4 sm:px-6 py-4">Role (ID)</th>
+                        <th class="px-4 sm:px-6 py-4">Role (EN)</th>
+                        <th class="px-4 sm:px-6 py-4">Urutan</th>
+                        <th class="px-4 sm:px-6 py-4 text-right">Tindakan Kontrol</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-800 text-gray-600 dark:text-gray-300">
+                    @forelse($leaderships as $leader)
+                        <tr class="hover:bg-gray-800/50 transition-colors duration-150">
+                            <td class="px-4 sm:px-6 py-4">
+                                <img src="{{ $leader->photoUrl() }}" alt="{{ $leader->name }}"
+                                    onclick="zoomImage(this.src)"
+                                    class="w-12 h-12 rounded-lg border border-gray-300 dark:border-gray-700 object-cover cursor-pointer hover:scale-125 hover:z-10 hover:border-[#E62C37] shadow-sm transition-all duration-200 relative"
+                                    loading="lazy">
+                            </td>
+                            <td class="px-4 sm:px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">
+                                {{ $leader->name }}
+                            </td>
+                            <td class="px-4 sm:px-6 py-4 text-sm">{{ $leader->role }}</td>
+                            <td class="px-4 sm:px-6 py-4 text-sm">{{ $leader->role_en ?? '-' }}</td>
+                            <td class="px-4 sm:px-6 py-4">
+                                <span class="px-2.5 py-1 text-xs font-bold border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#151a22] rounded">
+                                    {{ $leader->sort_order }}
+                                </span>
+                            </td>
+                            <td class="px-4 sm:px-6 py-4 text-right">
+                                <div class="inline-flex items-center gap-2 whitespace-nowrap">
+                                    <button onclick='openLeaderModal({{ json_encode($leader, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) }})'
+                                        class="action-btn px-3 py-1.5 text-xs font-bold uppercase tracking-wider border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white transition-all duration-200 focus:outline-none">Ubah</button>
+                                    <button onclick="openLeaderDeleteModal({{ $leader->id }}, '{{ addslashes($leader->name) }}')"
+                                        class="action-btn px-3 py-1.5 text-xs font-bold uppercase tracking-wider border-2 border-[#E62C37] text-[#E62C37] hover:bg-[#E62C37] hover:text-white transition-all duration-200 focus:outline-none">Hapus</button>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="px-4 sm:px-6 py-12 text-sm text-center text-gray-500 bg-white dark:bg-[#151a22]">
+                                Belum ada data leadership
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     {{-- ===================== MODAL CREATE ===================== --}}
     <x-admin.modal id="create" maxWidth="max-w-2xl">
         <x-admin.modal-close id="create" />
@@ -500,6 +616,130 @@
         </div>
     </x-admin.modal>
 
+    {{-- ===================== MODAL UBAH MEDIA ABOUT ===================== --}}
+    <x-admin.modal id="about-media" maxWidth="max-w-xl">
+        <x-admin.modal-close id="about-media" />
+        <div class="flex items-center justify-between mb-6 pb-2 border-b border-gray-200 dark:border-gray-800 pr-12">
+            <h3 class="text-lg font-bold uppercase tracking-wide text-gray-900 dark:text-white flex items-center gap-2">
+                <span class="w-2 h-2 bg-[#E62C37]"></span> Ubah Media Hero About Us
+            </h3>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Media Saat Ini</label>
+                @if ($aboutPage->media_type === 'video')
+                    <video src="{{ $aboutPage->mediaUrl() }}" muted controls preload="metadata"
+                        class="max-h-40 rounded-lg border border-gray-300 dark:border-gray-700"></video>
+                @else
+                    <img src="{{ $aboutPage->mediaUrl() }}" alt="Media saat ini"
+                        class="h-32 w-24 object-cover rounded-lg border border-gray-300 dark:border-gray-700">
+                @endif
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
+                    File Baru <span class="font-normal normal-case text-gray-500">(foto atau video, diupload langsung ke Cloudinary)</span>
+                </label>
+                <input type="file" id="about-media-file" accept="image/*,video/*"
+                    class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white file:mr-3 file:px-3 file:py-1.5 file:text-xs file:font-bold file:uppercase file:border-0 file:rounded-lg file:bg-[#E62C37] file:text-white file:cursor-pointer focus:outline-none focus:border-[#E62C37]">
+                <p id="about-media-error" class="hidden mt-2 text-xs font-semibold text-red-500"></p>
+                <div id="about-media-preview" class="hidden mt-3"></div>
+            </div>
+        </div>
+
+        <div class="flex gap-3 justify-end mt-6">
+            <button type="button" onclick="closeModal('about-media')"
+                class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">Batal</button>
+            <button type="button" id="about-media-submit-btn" onclick="submitAboutMedia()"
+                class="px-4 py-2.5 text-sm font-bold text-white bg-[#E62C37] rounded-xl hover:bg-[#c5242d] transition-colors disabled:opacity-50">Simpan Media</button>
+        </div>
+    </x-admin.modal>
+
+    {{-- ===================== MODAL LEADERSHIP (CREATE/EDIT) ===================== --}}
+    <x-admin.modal id="leader" maxWidth="max-w-xl">
+        <x-admin.modal-close id="leader" />
+        <div class="flex items-center justify-between mb-6 pb-2 border-b border-gray-200 dark:border-gray-800 pr-12">
+            <h3 id="leader-modal-title" class="text-lg font-bold uppercase tracking-wide text-gray-900 dark:text-white flex items-center gap-2">
+                <span class="w-2 h-2 bg-[#E62C37]"></span> Tambah Management
+            </h3>
+        </div>
+
+        <form id="leader-form" onsubmit="return false;" novalidate>
+            <input type="hidden" id="leader-id" value="">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Nama <span class="text-[#E62C37]">*</span></label>
+                    <input type="text" id="leader-name" placeholder="Nama lengkap..."
+                        class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Role (ID) <span class="text-[#E62C37]">*</span></label>
+                        <input type="text" id="leader-role" placeholder="cth: Direktur"
+                            class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
+                            Role (EN) <span class="font-normal normal-case text-gray-500">(opsional)</span>
+                        </label>
+                        <input type="text" id="leader-role-en" placeholder="cth: Director"
+                            class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Urutan Tampil</label>
+                        <input type="number" id="leader-sort" min="0" value="0"
+                            class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
+                            Foto <span class="font-normal normal-case text-gray-500" id="leader-photo-hint">(*wajib)</span>
+                        </label>
+                        <input type="file" id="leader-photo" accept="image/*"
+                            class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white file:mr-3 file:px-3 file:py-1.5 file:text-xs file:font-bold file:uppercase file:border-0 file:rounded-lg file:bg-[#E62C37] file:text-white file:cursor-pointer focus:outline-none focus:border-[#E62C37]">
+                    </div>
+                </div>
+                <img id="leader-photo-preview" src="" alt="" class="hidden h-32 w-32 object-cover rounded-lg border border-gray-300 dark:border-gray-700">
+                <p id="leader-error" class="hidden text-xs font-semibold text-red-500"></p>
+            </div>
+
+            <div class="flex gap-3 justify-end mt-6">
+                <button type="button" onclick="closeModal('leader')"
+                    class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">Batal</button>
+                <button type="button" id="leader-submit-btn" onclick="submitLeader()"
+                    class="px-4 py-2.5 text-sm font-bold text-white bg-[#E62C37] rounded-xl hover:bg-[#c5242d] transition-colors disabled:opacity-50">Simpan</button>
+            </div>
+        </form>
+    </x-admin.modal>
+
+    {{-- ===================== MODAL KONFIRMASI HAPUS LEADERSHIP ===================== --}}
+    <x-admin.modal id="confirm-delete-leader" maxWidth="max-w-md" zIndex="z-[60]">
+        <x-admin.modal-close id="confirm-delete-leader" />
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                </svg>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Hapus Leadership</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Tindakan ini tidak dapat dibatalkan</p>
+            </div>
+        </div>
+        <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">
+            Yakin menghapus <span id="leader-delete-name" class="font-bold text-gray-900 dark:text-white"></span> dari tim leadership?
+        </p>
+        <div class="flex gap-3 justify-end">
+            <button type="button" onclick="closeModal('confirm-delete-leader')"
+                class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">Batal</button>
+            <button type="button" id="confirm-delete-leader-btn"
+                class="px-4 py-2.5 text-sm font-bold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors">Ya, Hapus</button>
+        </div>
+    </x-admin.modal>
+
     <script>
         window.AchievementsConfig = {
             csrfToken: document.querySelector('meta[name="csrf-token"]')?.content ?? '{{ csrf_token() }}',
@@ -516,5 +756,19 @@
 
     {{-- File JS terpisah -- taruh di public/js/achievements.js --}}
     <script type="module" src="{{ asset('js/achievements.js') }}?v={{ filemtime(public_path('js/achievements.js')) }}">
+    </script>
+
+    {{-- Seksi About Us: data & URL untuk about-admin.js --}}
+    <script>
+        window.AboutAdminConfig = {
+            csrfToken: document.querySelector('meta[name="csrf-token"]')?.content ?? '{{ csrf_token() }}',
+            mediaUpdateUrl: @json(route('admin.about.media.update')),
+            leaderStoreUrl: @json(route('admin.about.leadership.store')),
+            leadersBaseUrl: @json(url('/admin/about/leaderships')),
+            currentMediaUrl: @json($aboutPage->mediaUrl()),
+            currentMediaType: @json($aboutPage->media_type),
+        };
+    </script>
+    <script type="module" src="{{ asset('js/about-admin.js') }}?v={{ filemtime(public_path('js/about-admin.js')) }}">
     </script>
 @endsection

@@ -18,31 +18,22 @@
             </div>
 
             <div class="flex-1 lg:flex-none lg:w-4/12 flex justify-center md:justify-end relative">
-                <div class="w-full max-w-sm rounded-2xl overflow-hidden shadow-xl aspect-[4/5] relative group">
-                    <img src="{{ asset('img/achievement1.jpg') }}" alt="About Hero"
-                        class="w-full h-full object-cover transition-all duration-500 hover:scale-105">
-                    <div class="absolute inset-0 ring-1 ring-black/5 pointer-events-none"></div>
-                </div>
-
-                {{-- VIDEO HERO ABOUT (pengganti gambar di atas):
-                     1. Ganti GANTI_URL_MP4 dengan URL direct file video (berakhiran .mp4,
-                        BUKAN link halaman drive.google.com/file/d/.../view).
-                     2. Hapus blok <img> di atas, lalu hapus pembuka/penutup komentar ini.
-
-                     PENTING: iframe GDrive (/preview) TIDAK mendukung autoplay, tidak bisa
-                     menyembunyikan tombol download, dan selalu letterbox (bar hitam). Untuk
-                     perilaku di bawah ini (autoplay, pause/seek/mute/fullscreen, tanpa
-                     download, tanpa bar hitam, rasio otomatis mengikuti video - 16:9 maupun
-                     9:16 tanpa ubah kode) gunakan URL direct MP4: upload video ke Cloudinary
-                     (sudah dipakai admin Achievements untuk upload video) lalu salin URL-nya.
-                     Catatan: autoplay oleh browser wajib mulai tanpa suara (muted);
-                     pengunjung bisa unmute lewat tombol speaker di player.
-                <div class="w-full max-w-md rounded-2xl overflow-hidden shadow-xl relative group">
-                    <video src="GANTI_URL_MP4" class="w-full h-auto block" autoplay muted controls playsinline
-                        controlslist="nodownload noremoteplayback" disablepictureinpicture preload="metadata"></video>
-                    <div class="absolute inset-0 ring-1 ring-black/5 pointer-events-none"></div>
-                </div>
-                --}}
+                @if ($aboutPage->media_type === 'video')
+                    {{-- Video hero: autoplay tanpa suara, kontrol penuh, tanpa download,
+                         tanpa letterbox (rasio otomatis mengikuti video) --}}
+                    <div class="w-full max-w-md rounded-2xl overflow-hidden shadow-xl relative group">
+                        <video src="{{ $aboutPage->mediaUrl() }}" class="w-full h-auto block" autoplay muted controls
+                            playsinline controlslist="nodownload noremoteplayback" disablepictureinpicture
+                            preload="metadata"></video>
+                        <div class="absolute inset-0 ring-1 ring-black/5 pointer-events-none"></div>
+                    </div>
+                @else
+                    <div class="w-full max-w-sm rounded-2xl overflow-hidden shadow-xl aspect-[4/5] relative group">
+                        <img src="{{ $aboutPage->mediaUrl() }}" alt="About Hero"
+                            class="w-full h-full object-cover transition-all duration-500 hover:scale-105">
+                        <div class="absolute inset-0 ring-1 ring-black/5 pointer-events-none"></div>
+                    </div>
+                @endif
             </div>
         </div>
     </section>
@@ -62,18 +53,15 @@
 
         <div class="flex flex-wrap items-center justify-center gap-10">
 
-            <x-site.card :zoomable="false" gambar="{{ asset('img/manager.png') }}" name="Rachmad Hidayat"
-                SName="{{ __('about.team_role3') }}">
-            </x-site.card>
-
-            <x-site.card :zoomable="false" gambar="{{ asset('img/direktur.png') }}" name="Dedy Murya Budi, SE"
-                SName="{{ __('about.team_role1') }}">
-            </x-site.card>
-
-            <x-site.card :zoomable="false" gambar="{{ asset('img/komisaris.png') }}" name="Syafrudin Hendra Lumanto"
-                SName="{{ __('about.team_role2') }}">
-            </x-site.card>
-
+            @forelse ($leaderships as $leader)
+                <x-site.card :zoomable="false" gambar="{{ $leader->photoUrl() }}" name="{{ $leader->name }}"
+                    SName="{{ $leader->roleForLocale(app()->getLocale()) }}">
+                </x-site.card>
+            @empty
+                <p class="text-sm text-gray-500 dark:text-gray-400 text-center py-8">
+                    {{ __('about.team_desc') }}
+                </p>
+            @endforelse
 
         </div>
 

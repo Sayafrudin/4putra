@@ -542,4 +542,5 @@
     window.openDeleteModal = openDeleteModal;
     window.closeModal = closeModal;
     window.zoomImage = zoomImage;
+    window.uploadToCloudinary = uploadToCloudinary; // dipakai about-admin.js (halaman sama)
 })();

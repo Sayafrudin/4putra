@@ -22,9 +22,15 @@ class AdminAchievementController extends Controller
                 ->latest()->get();
         });
 
-        // Seksi About Us (halaman sama, tabel terpisah)
-        $aboutPage = \App\Models\AboutPage::current();
-        $leaderships = \App\Models\Leadership::orderBy('sort_order')->get();
+        // Seksi About Us (halaman sama, tabel terpisah) - di-cache seperti achievements
+        $aboutData = Cache::remember('admin.about', 120, function () {
+            return [
+                'page' => \App\Models\AboutPage::current(),
+                'leaderships' => \App\Models\Leadership::orderBy('sort_order')->get(),
+            ];
+        });
+        $aboutPage = $aboutData['page'];
+        $leaderships = $aboutData['leaderships'];
 
         return view('admin.achievements.index', compact('achievements', 'aboutPage', 'leaderships'));
     }

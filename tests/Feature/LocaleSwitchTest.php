@@ -44,7 +44,9 @@ class LocaleSwitchTest extends TestCase
 
         $response->assertRedirect();
         $this->assertStringContainsString('/facilities?v=', $response->headers->get('Location'));
-        $this->assertSame('en', $response->getCookie('locale')->getValue());
+        // Cookie 'locale' sengaja plain (encryptCookies except) agar stabil untuk
+        // edge cache Vary: Cookie -> ambil tanpa dekripsi.
+        $this->assertSame('en', $response->getCookie('locale', false)->getValue());
     }
 
     /**

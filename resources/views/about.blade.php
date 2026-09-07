@@ -40,11 +40,14 @@
             @php $mediaColClass = ($isVideo || $isEmbed) ? 'w-full flex-1 lg:flex-none lg:w-6/12' : 'flex-1 lg:flex-none lg:w-4/12'; @endphp
             <div class="{{ $mediaColClass }} flex justify-center md:justify-end relative">
                 @if ($isVideo)
-                    {{-- Video hero: 16:9 di kolom kanan, Video.js skin default, loop, tanpa autoplay/mute --}}
+                    {{-- Video hero: 16:9 di kolom kanan, Video.js skin default.
+                         autoplay "any": coba dengan suara, jika browser blokir -> fallback mute.
+                         loop: video berulang otomatis. --}}
                     <div class="w-full rounded-2xl overflow-hidden shadow-xl relative">
                         <video class="video-js vjs-default-skin vjs-big-play-centered w-full block" controls loop
                             playsinline controlslist="nodownload noremoteplayback" disablepictureinpicture
-                            preload="metadata" data-setup='{"fluid": true}'>
+                            preload="metadata"
+                            data-setup='{"autoplay": "any", "loop": true, "fluid": true}'>
                             <source src="{{ $aboutPage->mediaUrl() }}" type="{{ $vType }}">
                         </video>
                     </div>

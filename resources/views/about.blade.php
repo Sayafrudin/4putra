@@ -2,7 +2,7 @@
     @php
         $isVideo = $aboutPage->media_type === 'video';
         $isEmbed = $aboutPage->media_type === 'embed';
-        // Tipe MIME untuk Video.js ditentukan dari ekstensi file
+        // Tipe MIME video ditentukan dari ekstensi file
         $vType = 'video/mp4';
         if ($isVideo) {
             $ext = strtolower(pathinfo(parse_url($aboutPage->mediaUrl(), PHP_URL_PATH) ?? '', PATHINFO_EXTENSION));
@@ -10,50 +10,6 @@
             elseif ($ext === 'mov') $vType = 'video/quicktime';
         }
     @endphp
-    @if ($isVideo)
-        @push('styles')
-            <link href="https://cdnjs.cloudflare.com/ajax/libs/video-js/8.10.0/video-js.min.css" rel="stylesheet">
-        @endpush
-        @push('scripts')
-            <script>
-                // Autoplay programatik (pola resmi Video.js): play() dengan suara dulu;
-                // jika browser memblokir (kebijakan autoplay), fallback mute agar tetap jalan.
-                window.initAboutHeroPlayer = function () {
-                    var el = document.getElementById('about-hero-player');
-                    if (!el || !window.videojs) return;
-                    if (el.classList.contains('vjs-tech')) return; // sudah dibungkus player
-                    try {
-                        var player = window.videojs(el, { loop: true, fluid: true });
-                        player.ready(function () {
-                            var p = this;
-                            var tryPlay = function () {
-                                var pr = p.play();
-                                if (pr && pr.catch) {
-                                    pr.catch(function () {
-                                        p.muted(true);
-                                        p.play().catch(function () {});
-                                    });
-                                }
-                            };
-                            if (p.readyState() >= 2) tryPlay();
-                            else p.one('canplay', tryPlay);
-                        });
-                    } catch (e) {}
-                };
-                if (!window.__aboutPlayerHooked) {
-                    window.__aboutPlayerHooked = true;
-                    document.addEventListener('turbo:load', window.initAboutHeroPlayer);
-                    document.addEventListener('turbo:before-cache', function () {
-                        var p = window.videojs && window.videojs.getPlayer('about-hero-player');
-                        if (p) { try { p.dispose(); } catch (e) {} }
-                    });
-                }
-                if (document.readyState !== 'loading') window.initAboutHeroPlayer();
-            </script>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/video-js/8.10.0/video.min.js" defer
-                onload="if (window.initAboutHeroPlayer) window.initAboutHeroPlayer()"></script>
-        @endpush
-    @endif
 
     <section class="w-full px-6 md:px-12 lg:px-16 pb-20 pt-10">
         <div class="flex flex-col md:flex-row items-center justify-center gap-10 lg:gap-12 max-w-7xl mx-auto">
@@ -76,12 +32,10 @@
             @php $mediaColClass = ($isVideo || $isEmbed) ? 'w-full flex-1 lg:flex-none lg:w-6/12' : 'flex-1 lg:flex-none lg:w-4/12'; @endphp
             <div class="{{ $mediaColClass }} flex justify-center md:justify-end relative">
                 @if ($isVideo)
-                    {{-- Video hero: 16:9 di kolom kanan, Video.js skin default.
-                         Autoplay + fallback mute + loop di-init via script di atas. --}}
+                    {{-- Video hero: native muted autoplay (reliable cross-browser), loop, kontrol unmute tersedia --}}
                     <div class="w-full rounded-2xl overflow-hidden shadow-xl relative">
-                        <video id="about-hero-player"
-                            class="video-js vjs-default-skin vjs-big-play-centered w-full block" controls loop
-                            playsinline controlslist="nodownload noremoteplayback" disablepictureinpicture
+                        <video class="w-full block" controls autoplay muted loop playsinline
+                            controlslist="nodownload noremoteplayback" disablepictureinpicture
                             preload="metadata">
                             <source src="{{ $aboutPage->mediaUrl() }}" type="{{ $vType }}">
                         </video>

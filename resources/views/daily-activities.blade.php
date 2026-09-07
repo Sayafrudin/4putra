@@ -1,10 +1,6 @@
 <x-site.layout>
     @push('styles')
     <style>[x-cloak] { display: none !important; }</style>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/video-js/8.10.0/video-js.min.css" rel="stylesheet">
-    @endpush
-    @push('scripts')
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/video-js/8.10.0/video.min.js"></script>
     @endpush
 
     @php
@@ -67,7 +63,7 @@
                     continue;
                 }
                 if ($isVideoFile($u)) {
-                    // File video langsung -> diputar dengan Video.js
+                    // File video langsung -> native <video>
                     $media[] = ['type' => 'video-file', 'src' => $u, 'poster' => $videoPoster($u)];
                 } else {
                     $ve = $parseEmbed($u);
@@ -118,22 +114,10 @@
                     open: false,
                     idx: 0,
                     cur: 0,
-                    player: null,
-                    initPlayer(el, item) {
-                        if (!window.videojs || !el) return;
-                        const src = document.createElement('source');
-                        src.src = item.src;
-                        src.type = /\.webm(\?|#|$)/i.test(item.src) ? 'video/webm' : 'video/mp4';
-                        el.appendChild(src);
-                        try { this.player = videojs(el, { fluid: true, controlBar: { pictureInPictureToggle: false } }); } catch (e) {}
-                    },
-                    killPlayer() {
-                        if (this.player) { try { this.player.dispose(); } catch (e) {} this.player = null; }
-                    },
-                    openAt(i) { this.killPlayer(); this.idx = i; this.cur = 0; this.open = true; document.documentElement.style.overflow = 'hidden'; this.warm(1) },
-                    close() { this.killPlayer(); this.open = false; document.documentElement.style.overflow = '' },
-                    prev() { this.killPlayer(); const n = this.items[this.idx].media.length; this.cur = (this.cur - 1 + n) % n; this.warm(-1) },
-                    next() { this.killPlayer(); const n = this.items[this.idx].media.length; this.cur = (this.cur + 1) % n; this.warm(1) },
+                    openAt(i) { this.idx = i; this.cur = 0; this.open = true; document.documentElement.style.overflow = 'hidden'; this.warm(1) },
+                    close() { this.open = false; document.documentElement.style.overflow = '' },
+                    prev() { const n = this.items[this.idx].media.length; this.cur = (this.cur - 1 + n) % n; this.warm(-1) },
+                    next() { const n = this.items[this.idx].media.length; this.cur = (this.cur + 1) % n; this.warm(1) },
                     warm(d) { const m = this.items[this.idx].media; if (m.length < 2) return; const nx = m[(this.cur + d + m.length) % m.length]; if (nx.type === 'image') new Image().src = nx.src }
                 }">
 
@@ -254,7 +238,7 @@
 
                                     {{-- Slider utama: video (jika ada) jadi item pertama.
                                          x-for ber-key idx+cur memaksa re-render per navigasi,
-                                         sehingga Video.js di-init ulang dengan source yang benar. --}}
+                                         sehingga playback otomatis berhenti saat pindah item. --}}
                                     <div class="relative transform-gpu will-change-transform">
                                         <div
                                             class="aspect-[16/10] sm:aspect-[16/9] overflow-hidden rounded-lg border border-white/10 bg-black/40">
@@ -278,12 +262,11 @@
                                                             <div class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-black to-transparent z-10 pointer-events-none"></div>
                                                         </div>
                                                     </template>
-                                                    {{-- File video langsung -> Video.js (init saat render, dispose saat navigasi/tutup) --}}
+                                                    {{-- File video langsung -> native <video> (re-render per navigasi via x-for keyed) --}}
                                                     <template x-if="m.type === 'video-file'">
-                                                        <video class="video-js vjs-default-skin vjs-big-play-centered w-full h-full block"
+                                                        <video :src="open ? m.src : ''" class="w-full h-full block"
                                                             controls playsinline disablepictureinpicture preload="metadata"
-                                                            :poster="m.poster ? m.poster : null"
-                                                            x-init="initPlayer($el, m)"></video>
+                                                            :poster="m.poster ? m.poster : null"></video>
                                                     </template>
                                                     <template x-if="m.type === 'image'">
                                                         <img :src="open ? m.src : ''" loading="lazy"

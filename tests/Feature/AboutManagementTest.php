@@ -110,14 +110,12 @@ class AboutManagementTest extends TestCase
             ])->assertJson(['success' => true]);
 
         $this->assertSame('video', \App\Models\AboutPage::current()->media_type);
-        // Video.js: player dengan id khusus, loop aktif, autoplay programatik
-        // dengan fallback mute (pola resmi Video.js saat browser memblokir autoplay)
+        // Native video: autoplay muted loop (autoplay reliable cross-browser, tanpa library)
         $this->get('/about')
             ->assertSee('<video', false)
-            ->assertSee('video-js', false)
-            ->assertSee('id="about-hero-player"', false)
-            ->assertSee('controls loop', false)
-            ->assertSee('muted(true)', false)
+            ->assertSee('autoplay muted loop', false)
+            ->assertSee('controls', false)
+            ->assertDontSee('video-js', false)
             ->assertDontSee('data-setup', false);
 
         // Link eksternal (GDrive) -> embed iframe

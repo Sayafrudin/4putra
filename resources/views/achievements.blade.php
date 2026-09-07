@@ -1,8 +1,4 @@
 <x-site.layout>
-    @push('styles')
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/video-js/8.10.0/video-js.min.css" rel="stylesheet">
-    @endpush
-
     {{-- Header halaman --}}
     <section class="w-full px-6 md:px-12 lg:px-16 pt-10 pb-2">
         <h1 class="text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-100 text-center">
@@ -107,10 +103,8 @@
                                                 $vfExt = strtolower(pathinfo(parse_url($videoFileSrc, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION));
                                                 $vfType = $vfExt === 'webm' ? 'video/webm' : ($vfExt === 'mov' ? 'video/quicktime' : 'video/mp4');
                                             @endphp
-                                            <video id="vjs-video-file-{{ $achievement->id }}"
-                                                class="video-js vjs-default-skin vjs-big-play-centered w-full h-full"
-                                                controls preload="metadata"
-                                                data-setup='{"fluid": true, "playbackRates": [0.5, 1, 1.5, 2]}'>
+                                            <video class="w-full h-full" controls preload="metadata"
+                                                playsinline disablepictureinpicture>
                                                 <source src="{{ $videoFileSrc }}" type="{{ $vfType }}">
                                             </video>
                                         </div>
@@ -247,8 +241,4 @@
     @endforelse
 
     <x-site.whatsapp />
-
-    @push('scripts')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/video-js/8.10.0/video.min.js"></script>
-    @endpush
 </x-site.layout>

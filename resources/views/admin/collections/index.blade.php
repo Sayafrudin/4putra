@@ -24,7 +24,7 @@
 
     <div class="w-full overflow-hidden bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 shadow-sm mb-10 table-search-wrapper">
         <div class="w-full overflow-x-auto">
-            <table class="table-searchable w-full text-left border-collapse">
+            <table class="table-searchable w-full min-w-[640px] text-left border-collapse">
                 <thead>
                     <tr class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-white dark:bg-[#151a22] border-b border-gray-200 dark:border-gray-800">
                         <th class="px-6 py-4">Gambar & Nama</th>
@@ -159,7 +159,7 @@
         </div>
         <form id="form-create-collection" action="{{ route('admin.collections.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
             @csrf
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Nama Burung (ID)</label>
                     <input type="text" id="create-col-name" name="name" required
@@ -177,7 +177,7 @@
                 <input type="text" name="scientific_name" placeholder="Contoh: Ara ararauna"
                     class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
             </div>
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Kategori (ID)</label>
                     <input type="text" id="create-col-category" name="category" required placeholder="Contoh: Macaw"
@@ -236,7 +236,7 @@
         <form id="form-edit-collection" method="POST" enctype="multipart/form-data" class="space-y-4">
             @csrf
             @method('PUT')
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Nama Burung (ID)</label>
                     <input type="text" id="edit-col-name" name="name" required
@@ -254,7 +254,7 @@
                 <input type="text" id="edit-col-scientific" name="scientific_name"
                     class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500">
             </div>
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Kategori (ID)</label>
                     <input type="text" id="edit-col-category" name="category" required

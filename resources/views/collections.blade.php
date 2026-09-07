@@ -79,7 +79,7 @@
                                 @click="openAt('{{ $item->id }}')"
                                 aria-haspopup="dialog"
                                 aria-label="{{ $variantCount > 0 ? trans_choice('collections.variant_count', $variantCount, ['n' => $variantCount]) : '' }}{{ $photoCount > 1 ? ' +' . trans_choice('collections.photo_count', $photoCount, ['n' => $photoCount]) : '' }} - {{ $name }}"
-                                class="relative w-72 rounded-2xl overflow-hidden shadow-lg group text-left cursor-pointer hover:-translate-y-1 hover:shadow-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E62C37] transition-all duration-300">
+                                class="relative w-72 max-w-full rounded-2xl overflow-hidden shadow-lg group text-left cursor-pointer hover:-translate-y-1 hover:shadow-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E62C37] transition-all duration-300">
                                 <div class="relative w-full aspect-[4/5] rounded-2xl overflow-hidden">
                                     <img src="{{ $imgUrl }}" alt="{{ $name }}" loading="lazy" decoding="async"
                                         class="w-full h-full object-cover object-top group-hover:scale-105 transition-all duration-500">

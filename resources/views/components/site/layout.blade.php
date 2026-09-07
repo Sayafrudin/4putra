@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="turbo-prefetch" content="true">
     <title>4Putra Vertex Aviary</title>
-    <link rel="icon" href="img/4Putraico.png" type="image/png">
+    <link rel="icon" href="{{ asset('img/4Putraico.png') }}" type="image/png">
 
     {{-- Preconnect ke external resources --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">

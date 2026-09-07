@@ -13,11 +13,6 @@
     @if ($isVideo)
         @push('styles')
             <link href="https://cdnjs.cloudflare.com/ajax/libs/video-js/8.10.0/video-js.min.css" rel="stylesheet">
-            <style>
-                .video-js { font-family: 'Inter', sans-serif; }
-                .video-js .vjs-big-play-button { border: none; border-radius: 50%; width: 64px; height: 64px; line-height: 64px; }
-                .video-js .vjs-control-bar { background: linear-gradient(transparent, rgba(0,0,0,0.7)); border-radius: 0 0 8px 8px; }
-            </style>
         @endpush
         @push('scripts')
             <script src="https://cdnjs.cloudflare.com/ajax/libs/video-js/8.10.0/video.min.js"></script>
@@ -25,54 +20,44 @@
     @endif
 
     <section class="w-full px-6 md:px-12 lg:px-16 pb-20 pt-10">
-        <div class="max-w-7xl mx-auto">
-            <div class="flex flex-col md:flex-row items-center justify-center gap-10 lg:gap-12">
-                <div class="flex flex-col items-center md:items-start flex-1 text-center md:text-left">
-                    <h1
-                        class="text-3xl leading-tight md:text-5xl md:leading-tight lg:text-6xl lg:leading-tight font-bold uppercase">
-                        {{ __('about.hero_welcome') }}
-                        <span class="text-[#E62C37] font-normal">{{ __('about.hero_aviary') }}</span>
-                    </h1>
+        <div class="flex flex-col md:flex-row items-center justify-center gap-10 lg:gap-12 max-w-7xl mx-auto">
+            <div class="flex flex-col items-center md:items-start flex-1 text-center md:text-left">
+                <h1
+                    class="text-3xl leading-tight md:text-5xl md:leading-tight lg:text-6xl lg:leading-tight font-bold uppercase">
+                    {{ __('about.hero_welcome') }}
+                    <span class="text-[#E62C37] font-normal">{{ __('about.hero_aviary') }}</span>
+                </h1>
 
-                    <p class="text-gray-700 dark:text-gray-300 mt-6 md:text-md leading-relaxed">
-                        {{ __('about.hero_desc_1') }}
-                        <br><br>
-                        {{ __('about.hero_desc_2') }}
-                        <br><br>
-                        {{ __('about.hero_desc_3') }}
-                    </p>
-                </div>
-
-                @if (! $isVideo && ! $isEmbed)
-                    <div class="flex-1 lg:flex-none lg:w-4/12 flex justify-center md:justify-end relative">
-                        <div class="w-full max-w-sm rounded-2xl overflow-hidden shadow-xl aspect-[4/5] relative group">
-                            <img src="{{ $aboutPage->mediaUrl() }}" alt="About Hero"
-                                class="w-full h-full object-cover transition-all duration-500 hover:scale-105">
-                            <div class="absolute inset-0 ring-1 ring-black/5 pointer-events-none"></div>
-                        </div>
-                    </div>
-                @endif
+                <p class="text-gray-700 dark:text-gray-300 mt-6 md:text-md leading-relaxed">
+                    {{ __('about.hero_desc_1') }}
+                    <br><br>
+                    {{ __('about.hero_desc_2') }}
+                    <br><br>
+                    {{ __('about.hero_desc_3') }}
+                </p>
             </div>
 
-            @if ($isVideo)
-                {{-- Video hero: full-width 16:9, Video.js, loop, tanpa autoplay/mute, tanpa download --}}
-                <div class="w-full max-w-4xl mx-auto mt-10 lg:mt-12 rounded-2xl overflow-hidden shadow-xl relative">
-                    <video class="video-js vjs-default-skin vjs-big-play-centered w-full block" controls loop
-                        playsinline controlslist="nodownload noremoteplayback" disablepictureinpicture
-                        preload="metadata" data-setup='{"fluid": true}'>
-                        <source src="{{ $aboutPage->mediaUrl() }}" type="{{ $vType }}">
-                    </video>
-                </div>
-            @elseif ($isEmbed)
-                {{-- Link eksternal (GDrive/IG/TikTok/YouTube/dll) -> iframe embed full-width --}}
-                <div class="w-full max-w-4xl mx-auto mt-10 lg:mt-12 rounded-2xl overflow-hidden shadow-xl relative bg-black">
-                    @php $embedUrl = $aboutPage->embedUrl(); @endphp
-                    @if ($embedUrl)
-                        <div class="aspect-video">
-                            <iframe src="{{ $embedUrl }}" class="w-full h-full border-0" loading="lazy"
-                                allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-                                allowfullscreen></iframe>
-                        </div>
+            @php $mediaColClass = ($isVideo || $isEmbed) ? 'w-full flex-1 lg:flex-none lg:w-6/12' : 'flex-1 lg:flex-none lg:w-4/12'; @endphp
+            <div class="{{ $mediaColClass }} flex justify-center md:justify-end relative">
+                @if ($isVideo)
+                    {{-- Video hero: 16:9 di kolom kanan, Video.js skin default, loop, tanpa autoplay/mute --}}
+                    <div class="w-full rounded-2xl overflow-hidden shadow-xl relative">
+                        <video class="video-js vjs-default-skin vjs-big-play-centered w-full block" controls loop
+                            playsinline controlslist="nodownload noremoteplayback" disablepictureinpicture
+                            preload="metadata" data-setup='{"fluid": true}'>
+                            <source src="{{ $aboutPage->mediaUrl() }}" type="{{ $vType }}">
+                        </video>
+                    </div>
+                @elseif ($isEmbed)
+                    {{-- Link eksternal (GDrive/IG/TikTok/YouTube/dll) -> iframe embed --}}
+                    <div class="w-full rounded-2xl overflow-hidden shadow-xl relative bg-black">
+                        @php $embedUrl = $aboutPage->embedUrl(); @endphp
+                        @if ($embedUrl)
+                            <div class="aspect-video">
+                                <iframe src="{{ $embedUrl }}" class="w-full h-full border-0" loading="lazy"
+                                    allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+                                    allowfullscreen></iframe>
+                            </div>
                     @else
                         <a href="{{ $aboutPage->media_path }}" target="_blank" rel="noopener noreferrer"
                             class="flex flex-col items-center justify-center aspect-video bg-black text-white gap-2 hover:bg-gray-900 transition-colors">
@@ -80,6 +65,12 @@
                             <span class="text-sm font-semibold">Buka Video</span>
                         </a>
                     @endif
+                    <div class="absolute inset-0 ring-1 ring-black/5 pointer-events-none"></div>
+                </div>
+            @else
+                <div class="w-full max-w-sm rounded-2xl overflow-hidden shadow-xl aspect-[4/5] relative group">
+                    <img src="{{ $aboutPage->mediaUrl() }}" alt="About Hero"
+                        class="w-full h-full object-cover transition-all duration-500 hover:scale-105">
                     <div class="absolute inset-0 ring-1 ring-black/5 pointer-events-none"></div>
                 </div>
             @endif

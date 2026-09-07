@@ -2,11 +2,6 @@
     @push('styles')
     <style>[x-cloak] { display: none !important; }</style>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/video-js/8.10.0/video-js.min.css" rel="stylesheet">
-    <style>
-        .video-js { font-family: 'Inter', sans-serif; }
-        .video-js .vjs-big-play-button { border: none; border-radius: 50%; width: 64px; height: 64px; line-height: 64px; }
-        .video-js .vjs-control-bar { background: linear-gradient(transparent, rgba(0,0,0,0.7)); border-radius: 0 0 8px 8px; }
-    </style>
     @endpush
     @push('scripts')
         <script src="https://cdnjs.cloudflare.com/ajax/libs/video-js/8.10.0/video.min.js"></script>

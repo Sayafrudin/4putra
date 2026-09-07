@@ -1,6 +1,15 @@
 <x-site.layout>
     @push('styles')
     <style>[x-cloak] { display: none !important; }</style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/video-js/8.10.0/video-js.min.css" rel="stylesheet">
+    <style>
+        .video-js { font-family: 'Inter', sans-serif; }
+        .video-js .vjs-big-play-button { border: none; border-radius: 50%; width: 64px; height: 64px; line-height: 64px; }
+        .video-js .vjs-control-bar { background: linear-gradient(transparent, rgba(0,0,0,0.7)); border-radius: 0 0 8px 8px; }
+    </style>
+    @endpush
+    @push('scripts')
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/video-js/8.10.0/video.min.js"></script>
     @endpush
 
     @php
@@ -33,18 +42,45 @@
             return null;
         };
 
-        $feed = $activities->map(function ($a) use ($isEn, $transform, $parseEmbed) {
+        // Video file langsung (hasil upload Cloudinary / URL berakhiran ekstensi video)
+        $isVideoFile = fn (?string $url): bool => (bool) (
+            $url && (
+                preg_match('#res\.cloudinary\.com/.+/video/upload/#', $url)
+                || preg_match('/\.(mp4|webm|mov|m4v)(\?|#|$)/i', $url)
+            )
+        );
+
+        // Poster otomatis dari Cloudinary: frame detik ke-2 sebagai thumbnail
+        $videoPoster = function (string $url): string {
+            if (! preg_match('#res\.cloudinary\.com/.+/video/upload/#', $url)) {
+                return '';
+            }
+            $p = preg_replace('#(/upload/)#', '$1so_2,w_600,c_fill,q_auto,f_auto/', $url);
+
+            return preg_replace('/\.\w+(\?|#|$)/', '.jpg$1', $p);
+        };
+
+        $feed = $activities->map(function ($a) use ($isEn, $transform, $parseEmbed, $isVideoFile, $videoPoster) {
             $description = $isEn && $a->description_en ? $a->description_en : $a->description;
 
             // Galeri media slider: semua video (jika ada) menjadi item pertama
             $media = [];
-            $videoEmbeds = collect($a->video_urls ?? [])
-                ->map(fn ($u) => $parseEmbed($u))
-                ->filter()
-                ->values()
-                ->all();
-            foreach ($videoEmbeds as $ve) {
-                $media[] = ['type' => 'video', 'src' => $ve, 'drive' => str_contains($ve, 'drive.google.com')];
+            $videoCount = 0;
+            foreach ($a->video_urls ?? [] as $u) {
+                $u = trim((string) $u);
+                if ($u === '') {
+                    continue;
+                }
+                if ($isVideoFile($u)) {
+                    // File video langsung -> diputar dengan Video.js
+                    $media[] = ['type' => 'video-file', 'src' => $u, 'poster' => $videoPoster($u)];
+                } else {
+                    $ve = $parseEmbed($u);
+                    if ($ve) {
+                        $media[] = ['type' => 'video', 'src' => $ve, 'drive' => str_contains($ve, 'drive.google.com')];
+                    }
+                }
+                $videoCount++;
             }
             $thumbs = [];
             foreach ($a->images ?? [] as $u) {
@@ -61,7 +97,7 @@
                 'description' => $description,
                 'excerpt' => Str::limit(strip_tags($description), 170),
                 'date' => \Carbon\Carbon::parse($a->activity_date)->translatedFormat('d F Y'),
-                'videos' => $videoEmbeds,
+                'videos' => $videoCount,
                 'thumbs' => $thumbs,
                 'media' => $media,
             ];
@@ -87,10 +123,22 @@
                     open: false,
                     idx: 0,
                     cur: 0,
-                    openAt(i) { this.idx = i; this.cur = 0; this.open = true; document.documentElement.style.overflow = 'hidden'; this.warm(1) },
-                    close() { this.open = false; document.documentElement.style.overflow = '' },
-                    prev() { const n = this.items[this.idx].media.length; this.cur = (this.cur - 1 + n) % n; this.warm(-1) },
-                    next() { const n = this.items[this.idx].media.length; this.cur = (this.cur + 1) % n; this.warm(1) },
+                    player: null,
+                    initPlayer(el, item) {
+                        if (!window.videojs || !el) return;
+                        const src = document.createElement('source');
+                        src.src = item.src;
+                        src.type = /\.webm(\?|#|$)/i.test(item.src) ? 'video/webm' : 'video/mp4';
+                        el.appendChild(src);
+                        try { this.player = videojs(el, { fluid: true, controlBar: { pictureInPictureToggle: false } }); } catch (e) {}
+                    },
+                    killPlayer() {
+                        if (this.player) { try { this.player.dispose(); } catch (e) {} this.player = null; }
+                    },
+                    openAt(i) { this.killPlayer(); this.idx = i; this.cur = 0; this.open = true; document.documentElement.style.overflow = 'hidden'; this.warm(1) },
+                    close() { this.killPlayer(); this.open = false; document.documentElement.style.overflow = '' },
+                    prev() { this.killPlayer(); const n = this.items[this.idx].media.length; this.cur = (this.cur - 1 + n) % n; this.warm(-1) },
+                    next() { this.killPlayer(); const n = this.items[this.idx].media.length; this.cur = (this.cur + 1) % n; this.warm(1) },
                     warm(d) { const m = this.items[this.idx].media; if (m.length < 2) return; const nx = m[(this.cur + d + m.length) % m.length]; if (nx.type === 'image') new Image().src = nx.src }
                 }">
 
@@ -117,7 +165,7 @@
                                                 <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
                                                     <path d="M8 5v14l11-7z" />
                                                 </svg>
-                                                {{ count($item['videos']) }} Video
+                                                {{ $item['videos'] }} Video
                                             </span>
                                         @endif
                                     </div>
@@ -209,32 +257,45 @@
                             <div class="flex-1 overflow-y-auto overscroll-contain px-5 sm:px-8 py-5">
                                 <div class="max-w-5xl mx-auto">
 
-                                    {{-- Slider utama: video (jika ada) jadi item pertama --}}
+                                    {{-- Slider utama: video (jika ada) jadi item pertama.
+                                         x-for ber-key idx+cur memaksa re-render per navigasi,
+                                         sehingga Video.js di-init ulang dengan source yang benar. --}}
                                     <div class="relative transform-gpu will-change-transform">
                                         <div
                                             class="aspect-[16/10] sm:aspect-[16/9] overflow-hidden rounded-lg border border-white/10 bg-black/40">
-                                            <template x-if="items[idx].media[cur].type === 'video' && !items[idx].media[cur].drive">
-                                                <iframe :src="open ? items[idx].media[cur].src : ''"
-                                                    sandbox="allow-scripts allow-same-origin" loading="lazy"
-                                                    class="w-full h-full" frameborder="0"
-                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                    allowfullscreen></iframe>
-                                            </template>
-                                            <template x-if="items[idx].media[cur].type === 'video' && items[idx].media[cur].drive">
-                                                <div class="w-full h-full relative overflow-hidden">
-                                                    <iframe :src="open ? items[idx].media[cur].src : ''"
-                                                        sandbox="allow-scripts allow-same-origin" loading="lazy"
-                                                        class="w-full border-0 block"
-                                                        style="height: calc(100% + 70px); margin-top: -60px;"
-                                                        allow="autoplay" allowfullscreen></iframe>
-                                                    <div class="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-black to-transparent z-10 pointer-events-none"></div>
-                                                    <div class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-black to-transparent z-10 pointer-events-none"></div>
+                                            <template x-for="m in [items[idx].media[cur]]" :key="idx + '-' + cur">
+                                                <div class="w-full h-full">
+                                                    <template x-if="m.type === 'video' && !m.drive">
+                                                        <iframe :src="open ? m.src : ''"
+                                                            sandbox="allow-scripts allow-same-origin" loading="lazy"
+                                                            class="w-full h-full" frameborder="0"
+                                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                            allowfullscreen></iframe>
+                                                    </template>
+                                                    <template x-if="m.type === 'video' && m.drive">
+                                                        <div class="w-full h-full relative overflow-hidden">
+                                                            <iframe :src="open ? m.src : ''"
+                                                                sandbox="allow-scripts allow-same-origin" loading="lazy"
+                                                                class="w-full border-0 block"
+                                                                style="height: calc(100% + 70px); margin-top: -60px;"
+                                                                allow="autoplay" allowfullscreen></iframe>
+                                                            <div class="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-black to-transparent z-10 pointer-events-none"></div>
+                                                            <div class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-black to-transparent z-10 pointer-events-none"></div>
+                                                        </div>
+                                                    </template>
+                                                    {{-- File video langsung -> Video.js (init saat render, dispose saat navigasi/tutup) --}}
+                                                    <template x-if="m.type === 'video-file'">
+                                                        <video class="video-js vjs-default-skin vjs-big-play-centered w-full h-full block"
+                                                            controls playsinline disablepictureinpicture preload="metadata"
+                                                            :poster="m.poster ? m.poster : null"
+                                                            x-init="initPlayer($el, m)"></video>
+                                                    </template>
+                                                    <template x-if="m.type === 'image'">
+                                                        <img :src="open ? m.src : ''" loading="lazy"
+                                                            decoding="async" :alt="items[idx].title + ' ' + (cur + 1)"
+                                                            class="w-full h-full object-contain">
+                                                    </template>
                                                 </div>
-                                            </template>
-                                            <template x-if="items[idx].media[cur].type === 'image'">
-                                                <img :src="open ? items[idx].media[cur].src : ''" loading="lazy"
-                                                    decoding="async" :alt="items[idx].title + ' ' + (cur + 1)"
-                                                    class="w-full h-full object-contain">
                                             </template>
                                         </div>
 
@@ -264,6 +325,26 @@
                                                     class="shrink-0 w-16 h-16 rounded border-2 overflow-hidden transition-colors flex items-center justify-center"
                                                     :class="cur === ti ? 'border-[#E62C37]' : 'border-transparent opacity-60 hover:opacity-100'">
                                                     <template x-if="m.type === 'video'">
+                                                        <span
+                                                            class="w-full h-full flex items-center justify-center bg-black text-white">
+                                                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                                                <path d="M8 5v14l11-7z" />
+                                                            </svg>
+                                                        </span>
+                                                    </template>
+                                                    {{-- Video file: poster frame Cloudinary, fallback tile play --}}
+                                                    <template x-if="m.type === 'video-file' && m.poster">
+                                                        <span class="relative w-full h-full">
+                                                            <img :src="m.poster" loading="lazy" decoding="async"
+                                                                class="w-full h-full object-cover" alt="">
+                                                            <span class="absolute inset-0 flex items-center justify-center text-white bg-black/30">
+                                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                                    <path d="M8 5v14l11-7z" />
+                                                                </svg>
+                                                            </span>
+                                                        </span>
+                                                    </template>
+                                                    <template x-if="m.type === 'video-file' && !m.poster">
                                                         <span
                                                             class="w-full h-full flex items-center justify-center bg-black text-white">
                                                             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">

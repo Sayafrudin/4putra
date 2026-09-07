@@ -36,9 +36,9 @@ class AboutPage extends Model
             return null;
         }
 
-        // YouTube
+        // YouTube (loop aktif via playlist param — video berulang otomatis)
         if (preg_match('/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([^\?&]+)/', $url, $m)) {
-            return 'https://www.youtube.com/embed/'.$m[1];
+            return 'https://www.youtube.com/embed/'.$m[1].'?loop=1&playlist='.$m[1];
         }
         // Google Drive
         if (preg_match('/drive\.google\.com\/file\/d\/([^\/\?]+)/', $url, $m)) {

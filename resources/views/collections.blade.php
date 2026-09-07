@@ -7,12 +7,24 @@
                 ? str_replace('/upload/', '/upload/w_600,c_fill,q_auto,f_auto/', $path)
                 : asset('storage/collections/' . $path))
             : asset('img/placeholder.jpg');
+        // URL galeri: w_600 untuk grid modal, w_1600 untuk zoom lightbox
+        $galleryUrl = fn ($path, $w = 'w_600') => str_starts_with($path, 'http')
+            ? str_replace('/upload/', '/upload/' . $w . ',c_fill,q_auto,f_auto/', $path)
+            : asset('storage/collections/' . $path);
+        $zoomUrl = fn ($path) => str_starts_with($path, 'http')
+            ? str_replace('/upload/', '/upload/w_1600,q_auto,f_auto/', $path)
+            : asset('storage/collections/' . $path);
         $variantData = collect($collections)->flatten()
-            ->filter(fn ($i) => $i->variants->isNotEmpty())->values()
+            ->filter(fn ($i) => $i->variants->isNotEmpty() || count($i->images ?? []) > 1)->values()
             ->map(fn ($i) => [
                 'id' => (string) $i->id,
                 'name' => $locName($i),
                 'scientific' => $i->scientific_name ?: '',
+                'photos' => collect($i->images ?? [])
+                    ->map(fn ($p) => [
+                        'thumb' => $galleryUrl($p, 'w_600'),
+                        'full' => $zoomUrl($p),
+                    ])->all(),
                 'variants' => $i->variants->map(fn ($v) => [
                     'name' => $locName($v),
                     'image' => $imgUrl($v->image_path),
@@ -57,15 +69,16 @@
                             : asset('img/placeholder.jpg');
                         $name = app()->getLocale() == 'en' && $item->name_en ? $item->name_en : $item->name;
                         $variantCount = $item->variants->count();
+                        $photoCount = count($item->images ?? []);
                     @endphp
 
                     <div class="flex flex-col items-center">
-                        @if ($variantCount > 0)
-                            {{-- Card induk: klik membuka modal varian fullscreen, tanpa navigasi --}}
+                        @if ($variantCount > 0 || $photoCount > 1)
+                            {{-- Card induk: klik membuka modal varian/foto fullscreen, tanpa navigasi --}}
                             <button type="button"
                                 @click="openAt('{{ $item->id }}')"
                                 aria-haspopup="dialog"
-                                aria-label="{{ __('collections.variant_count', ['n' => $variantCount]) }} - {{ $name }}"
+                                aria-label="{{ $variantCount > 0 ? trans_choice('collections.variant_count', $variantCount, ['n' => $variantCount]) : '' }}{{ $photoCount > 1 ? ' +' . trans_choice('collections.photo_count', $photoCount, ['n' => $photoCount]) : '' }} - {{ $name }}"
                                 class="relative w-72 rounded-2xl overflow-hidden shadow-lg group text-left cursor-pointer hover:-translate-y-1 hover:shadow-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E62C37] transition-all duration-300">
                                 <div class="relative w-full aspect-[4/5] rounded-2xl overflow-hidden">
                                     <img src="{{ $imgUrl }}" alt="{{ $name }}" loading="lazy" decoding="async"
@@ -74,8 +87,17 @@
                                         <p class="text-white font-bold text-sm tracking-wide">{{ $name }}</p>
                                         <p class="text-red-400 font-semibold text-xs tracking-wider uppercase">{{ $item->scientific_name ?: '' }}</p>
                                     </div>
-                                    <span class="absolute top-2.5 right-2.5 z-10 px-2.5 py-1 rounded-full bg-[#E62C37]/90 text-white text-xs font-bold shadow-lg">
-                                        {{ trans_choice('collections.variant_count', $variantCount, ['n' => $variantCount]) }}
+                                    <span class="absolute top-2.5 right-2.5 z-10 flex flex-col items-end gap-1.5">
+                                        @if ($variantCount > 0)
+                                            <span class="px-2.5 py-1 rounded-full bg-[#E62C37]/90 text-white text-xs font-bold shadow-lg">
+                                                {{ trans_choice('collections.variant_count', $variantCount, ['n' => $variantCount]) }}
+                                            </span>
+                                        @endif
+                                        @if ($photoCount > 1)
+                                            <span class="px-2.5 py-1 rounded-full bg-[#E62C37]/90 text-white text-xs font-bold shadow-lg">
+                                                +{{ trans_choice('collections.photo_count', $photoCount, ['n' => $photoCount]) }}
+                                            </span>
+                                        @endif
                                     </span>
                                 </div>
                             </button>
@@ -116,17 +138,43 @@
                         </button>
                     </div>
 
-                    {{-- Body: grid varian gambar besar (seukuran card induk) --}}
+                    {{-- Body: section foto (multi-angle) lalu grid varian gambar besar (seukuran card induk) --}}
                     <div class="flex-1 overflow-y-auto overscroll-contain px-5 sm:px-8 py-6">
-                        <div class="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <template x-for="(v, vi) in items[idx].variants" :key="vi">
-                                <div class="rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-[#151a22] border border-gray-200 dark:border-gray-700 group">
-                                    <div class="w-full aspect-[4/5] overflow-hidden">
-                                        <img :src="v.image" :alt="v.name" loading="lazy" decoding="async"
-                                            @click="zoomMedia(v.image)"
-                                            class="w-full h-full object-cover object-top cursor-pointer group-hover:scale-105 transition-all duration-500">
+                        <div class="max-w-5xl mx-auto space-y-8">
+                            {{-- Section foto galeri --}}
+                            <template x-if="items[idx].photos && items[idx].photos.length > 0">
+                                <div>
+                                    <h4 class="text-sm font-bold uppercase tracking-[0.2em] text-gray-400 mb-4">{{ __('collections.photos_title') }}</h4>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        <template x-for="(p, pi) in items[idx].photos" :key="pi">
+                                            <div class="rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-[#151a22] border border-gray-200 dark:border-gray-700 group">
+                                                <div class="w-full aspect-[4/5] overflow-hidden">
+                                                    <img :src="p.thumb" loading="lazy" decoding="async"
+                                                        @click="zoomMedia(p.full)"
+                                                        class="w-full h-full object-cover object-top cursor-pointer group-hover:scale-105 transition-all duration-500">
+                                                </div>
+                                            </div>
+                                        </template>
                                     </div>
-                                    <p class="text-sm font-bold text-center py-2.5 px-2 text-gray-800 dark:text-gray-100" x-text="v.name"></p>
+                                </div>
+                            </template>
+
+                            {{-- Section varian --}}
+                            <template x-if="items[idx].variants && items[idx].variants.length > 0">
+                                <div>
+                                    <h4 class="text-sm font-bold uppercase tracking-[0.2em] text-gray-400 mb-4">{{ __('collections.variants_title') }}</h4>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        <template x-for="(v, vi) in items[idx].variants" :key="vi">
+                                            <div class="rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-[#151a22] border border-gray-200 dark:border-gray-700 group">
+                                                <div class="w-full aspect-[4/5] overflow-hidden">
+                                                    <img :src="v.image" :alt="v.name" loading="lazy" decoding="async"
+                                                        @click="zoomMedia(v.image)"
+                                                        class="w-full h-full object-cover object-top cursor-pointer group-hover:scale-105 transition-all duration-500">
+                                                </div>
+                                                <p class="text-sm font-bold text-center py-2.5 px-2 text-gray-800 dark:text-gray-100" x-text="v.name"></p>
+                                            </div>
+                                        </template>
+                                    </div>
                                 </div>
                             </template>
                         </div>

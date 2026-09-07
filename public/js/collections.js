@@ -242,11 +242,18 @@
         }
 
         var photoWrap = document.getElementById('edit-col-existing-photo');
-        if (col.image_path) {
-            var imgSrc = col.image_path.startsWith('http') ? col.image_path : CFG.storageUrl + '/' + col.image_path;
-            photoWrap.innerHTML = '<div class="relative group" data-photo-id="' + col.id + '">' +
-                '<img src="' + imgSrc + '" class="w-20 h-16 rounded border border-gray-700 object-cover">' +
-                '<button type="button" title="Hapus foto" class="btn-delete-col-photo absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-[#E62C37] text-white text-xs font-bold shadow hover:bg-red-700 transition-colors">&times;</button></div>';
+        // Reset penanda hapus foto sebelumnya
+        els.formEdit.querySelectorAll('[name="remove_images[]"]').forEach(function (el) { el.remove(); });
+
+        // Multi-foto: data baru dari images[], fallback data lama dari image_path
+        var photos = (col.images && col.images.length) ? col.images : (col.image_path ? [col.image_path] : []);
+        if (photos.length) {
+            photoWrap.innerHTML = photos.map(function (url, i) {
+                var src = url.startsWith('http') ? url : CFG.storageUrl + '/' + url;
+                return '<div class="relative group" data-photo-idx="' + i + '">' +
+                    '<img src="' + src + '" class="w-20 h-16 rounded border border-gray-700 object-cover">' +
+                    '<button type="button" title="Hapus foto" class="btn-delete-col-photo absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-[#E62C37] text-white text-xs font-bold shadow hover:bg-red-700 transition-colors">&times;</button></div>';
+            }).join('');
         } else {
             photoWrap.innerHTML = '<p class="text-xs text-gray-500 py-2">Belum ada foto.</p>';
         }
@@ -317,11 +324,11 @@
         });
     }
 
-    // Delete photo from edit modal
+    // Delete photo from edit modal (per indeks galeri)
     document.addEventListener('click', function (e) {
         var btn = e.target.closest('.btn-delete-col-photo');
         if (!btn) return;
-        pendingDeletePhotoEl = btn.closest('[data-photo-id]');
+        pendingDeletePhotoEl = btn.closest('[data-photo-idx]');
         showModal('confirm-delete-col-photo');
     });
 
@@ -332,12 +339,14 @@
             closeModal('confirm-delete-col-photo');
             var input = document.createElement('input');
             input.type = 'hidden';
-            input.name = 'remove_image';
-            input.value = '1';
+            input.name = 'remove_images[]';
+            input.value = pendingDeletePhotoEl.getAttribute('data-photo-idx');
             els.formEdit.appendChild(input);
-            pendingDeletePhotoEl.remove();
             var photoWrap = document.getElementById('edit-col-existing-photo');
-            photoWrap.innerHTML = '<p class="text-xs text-gray-500 py-2">Foto akan dihapus saat menyimpan.</p>';
+            if (photoWrap.querySelectorAll('[data-photo-idx]').length <= 1) {
+                photoWrap.innerHTML = '<p class="text-xs text-gray-500 py-2">Foto akan dihapus saat menyimpan.</p>';
+            }
+            pendingDeletePhotoEl.remove();
             showToast('success', 'Siap', 'Foto akan dihapus saat Anda menyimpan perubahan.');
             pendingDeletePhotoEl = null;
         });

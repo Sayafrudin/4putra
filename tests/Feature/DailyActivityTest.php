@@ -165,4 +165,31 @@ class DailyActivityTest extends TestCase
         $activity->delete();
         Cache::forget('public.daily_activities');
     }
+
+    public function test_public_page_renders_cloudinary_video_file_with_poster(): void
+    {
+        DailyActivity::where('title', 'Uji Video File Publik')->delete();
+
+        $activity = DailyActivity::create([
+            'title' => 'Uji Video File Publik',
+            'description' => 'Deskripsi video file Cloudinary.',
+            'activity_date' => '2026-09-01',
+            'video_urls' => [
+                'https://res.cloudinary.com/demo/video/upload/v1700000000/4putra/daily_activities/contoh.mp4',
+            ],
+        ]);
+        Cache::forget('public.daily_activities');
+
+        // File video dirender sebagai tipe 'video-file' (Video.js) dengan poster
+        // frame detik ke-2, bukan sebagai iframe embed — dan URL asli tidak diubah
+        // (catatan: @js() meng-escape "/" menjadi "\/", jadi asser tanpa slash)
+        $this->get('/daily-activities')
+            ->assertStatus(200)
+            ->assertSee('video-file', false)
+            ->assertSee('contoh.mp4', false)
+            ->assertSee('so_2,w_600', false);
+
+        $activity->delete();
+        Cache::forget('public.daily_activities');
+    }
 }

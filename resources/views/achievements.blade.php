@@ -103,11 +103,20 @@
                                         <div x-show="activeMedia === 'video-file'" x-transition:enter="transition ease-out duration-300"
                                             x-transition:enter-start="opacity-50" x-transition:enter-end="opacity-100"
                                             class="w-full h-full flex items-center justify-center bg-black">
+                                            @php
+                                                // video_file kini berisi URL Cloudinary penuh (upload baru)
+                                                // atau nama file lokal legacy di storage/achievements/videos/
+                                                $videoFileSrc = str_starts_with($achievement->video_file, 'http')
+                                                    ? $achievement->video_file
+                                                    : asset('storage/achievements/videos/' . $achievement->video_file);
+                                                $vfExt = strtolower(pathinfo(parse_url($videoFileSrc, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION));
+                                                $vfType = $vfExt === 'webm' ? 'video/webm' : ($vfExt === 'mov' ? 'video/quicktime' : 'video/mp4');
+                                            @endphp
                                             <video id="vjs-video-file-{{ $achievement->id }}"
                                                 class="video-js vjs-default-skin vjs-big-play-centered w-full h-full"
                                                 controls preload="metadata"
                                                 data-setup='{"fluid": true, "playbackRates": [0.5, 1, 1.5, 2]}'>
-                                                <source src="{{ asset('storage/achievements/videos/' . $achievement->video_file) }}" type="video/mp4">
+                                                <source src="{{ $videoFileSrc }}" type="{{ $vfType }}">
                                             </video>
                                         </div>
                                     @endif

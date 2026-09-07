@@ -16,3 +16,12 @@ window.Turbo.config.drive.progressBarDelay = 0;
 document.addEventListener('click', (e) => {
     if (e.target.closest('a[href*="/lang/"]')) window.Turbo?.cache?.clear();
 }, true);
+
+// Turbo mengganti <body> tapi <html> tidak — overflow:hidden milik modal/lightbox
+// bisa yatim dan mematikan scroll permanen. Reset sebelum render & sebelum cache.
+const resetScrollLock = () => {
+    document.documentElement.style.overflow = '';
+    document.body.style.overflow = '';
+};
+document.addEventListener('turbo:before-render', resetScrollLock);
+document.addEventListener('turbo:before-cache', resetScrollLock);

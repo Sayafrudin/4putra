@@ -68,7 +68,7 @@
                 autoProcessQueue: false,
                 paramName: 'media',
                 maxFiles: 1,
-                maxFilesize: 50,
+                maxFilesize: 100,
                 acceptedFiles: 'image/jpeg,image/png,image/jpg,image/gif,video/mp4,video/mov,video/webm,video/avi',
                 addRemoveLinks: true,
                 dictDefaultMessage: 'Tarik file foto/video ke sini atau klik untuk memilih',

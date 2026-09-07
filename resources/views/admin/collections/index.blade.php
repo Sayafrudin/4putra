@@ -24,7 +24,7 @@
 
     <div class="w-full overflow-hidden bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 shadow-sm mb-10 table-search-wrapper">
         <div class="w-full overflow-x-auto">
-            <table class="table-searchable w-full text-left border-collapse">
+            <table class="table-searchable w-full min-w-[640px] text-left border-collapse">
                 <thead>
                     <tr class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-white dark:bg-[#151a22] border-b border-gray-200 dark:border-gray-800">
                         <th class="px-6 py-4">Gambar & Nama</th>
@@ -159,7 +159,7 @@
         </div>
         <form id="form-create-collection" action="{{ route('admin.collections.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
             @csrf
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Nama Burung (ID)</label>
                     <input type="text" id="create-col-name" name="name" required
@@ -177,7 +177,7 @@
                 <input type="text" name="scientific_name" placeholder="Contoh: Ara ararauna"
                     class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
             </div>
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Kategori (ID)</label>
                     <input type="text" id="create-col-category" name="category" required placeholder="Contoh: Macaw"
@@ -208,10 +208,10 @@
                 <p class="text-xs text-gray-500 mt-1">Angka lebih kecil = tampil lebih dulu. Default: 0</p>
             </div>
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Foto Burung</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Foto Burung <span class="normal-case text-gray-400">(bisa banyak — foto pertama jadi cover card)</span></label>
                 <div id="dz-collection-create"
                     class="dropzone !bg-white dark:!bg-[#151a22] border-2 border-dashed border-gray-300 dark:border-gray-700 rounded p-6 text-center cursor-pointer hover:border-[#E62C37] transition-colors min-h-[140px]">
-                    <div class="dz-message text-sm text-gray-500 dark:text-gray-400">Tarik file foto ke sini atau klik untuk memilih</div>
+                    <div class="dz-message text-sm text-gray-500 dark:text-gray-400">Tarik beberapa file foto ke sini atau klik untuk memilih</div>
                 </div>
                 <span id="error-create-col-photo" class="hidden text-xs font-semibold text-[#E62C37] mt-1">Foto wajib diunggah</span>
             </div>
@@ -236,7 +236,7 @@
         <form id="form-edit-collection" method="POST" enctype="multipart/form-data" class="space-y-4">
             @csrf
             @method('PUT')
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Nama Burung (ID)</label>
                     <input type="text" id="edit-col-name" name="name" required
@@ -254,7 +254,7 @@
                 <input type="text" id="edit-col-scientific" name="scientific_name"
                     class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500">
             </div>
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Kategori (ID)</label>
                     <input type="text" id="edit-col-category" name="category" required
@@ -283,16 +283,16 @@
                     class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500">
                 <p class="text-xs text-gray-500 mt-1">Angka lebih kecil = tampil lebih dulu. Default: 0</p>
             </div>
-            {{-- Foto tersimpan --}}
+            {{-- Foto tersimpan (multi) --}}
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Foto Tersimpan</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Foto Tersimpan <span class="normal-case text-gray-400">(foto pertama = cover card)</span></label>
                 <div id="edit-col-existing-photo" class="flex flex-wrap gap-2 p-3 bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded min-h-[70px]"></div>
             </div>
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Upload Foto Baru</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Upload Foto Baru <span class="normal-case text-gray-400">(bisa banyak, otomatis masuk galeri)</span></label>
                 <div id="dz-collection-edit"
                     class="dropzone !bg-white dark:!bg-[#151a22] border-2 border-dashed border-gray-300 dark:border-gray-700 rounded p-6 text-center cursor-pointer hover:border-amber-500 transition-colors min-h-[140px]">
-                    <div class="dz-message text-sm text-gray-500 dark:text-gray-400">Tarik file foto baru ke sini</div>
+                    <div class="dz-message text-sm text-gray-500 dark:text-gray-400">Tarik beberapa file foto baru ke sini</div>
                 </div>
             </div>
             <div class="flex justify-end gap-3 pt-3 border-t border-gray-200 dark:border-gray-800">

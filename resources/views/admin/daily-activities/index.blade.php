@@ -163,7 +163,7 @@
 
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Link Video
-                    <span class="font-normal normal-case text-gray-500">(opsional, bisa YouTube/GDrive/Vimeo/dll)</span>
+                    <span class="font-normal normal-case text-gray-500">(opsional — link YouTube/GDrive/Vimeo, atau upload file video langsung di Dropzone di bawah)</span>
                 </label>
                 <div id="create-video-url-list" class="space-y-2">
                     <div class="flex items-center gap-2">
@@ -176,12 +176,12 @@
 
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Upload Foto Dokumentasi
-                    <span class="font-normal normal-case text-gray-500">(bisa beberapa foto sekaligus)</span>
-                </label>
+                <span class="font-normal normal-case text-gray-500">(bisa beberapa foto sekaligus, plus file video mp4/webm/mov maks 100MB — video otomatis masuk daftar video)</span>
+            </label>
                 <div id="dropzone-create"
                     class="dropzone !bg-white dark:bg-[#151a22] border-2 border-dashed border-gray-300 dark:border-gray-700 rounded p-6 text-center cursor-pointer hover:border-[#E62C37] transition-colors min-h-[140px]">
                     <div class="dz-message text-sm text-gray-500 dark:text-gray-400">
-                        Tarik file foto ke sini atau klik untuk memilih
+                        Tarik file foto atau video ke sini atau klik untuk memilih
                     </div>
                 </div>
                 <span id="error-create-photos" class="hidden text-xs font-semibold text-[#E62C37] mt-1">Minimal unggah
@@ -252,7 +252,7 @@
 
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Link Video
-                    <span class="font-normal normal-case text-gray-500">(opsional, bisa YouTube/GDrive/Vimeo/dll)</span>
+                    <span class="font-normal normal-case text-gray-500">(opsional — link YouTube/GDrive/Vimeo, atau upload file video langsung di Dropzone di bawah)</span>
                 </label>
                 <div id="edit-video-url-list" class="space-y-2"></div>
                 <button type="button" onclick="tambahVideoRow('edit-video-url-list')" class="mt-2 px-3 py-1.5 text-xs font-bold bg-green-600/20 text-green-400 border border-green-500/30 rounded-lg hover:bg-green-600/30 transition-colors">+ Tambah Link Video</button>
@@ -272,11 +272,11 @@
             </div>
 
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Tambah Foto Dokumentasi Baru</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Tambah Foto/Video Dokumentasi Baru</label>
                 <div id="dropzone-edit"
                     class="dropzone !bg-white dark:bg-[#151a22] border-2 border-dashed border-gray-300 dark:border-gray-700 rounded p-6 text-center cursor-pointer hover:border-amber-500 transition-colors min-h-[140px]">
                     <div class="dz-message text-sm text-gray-500 dark:text-gray-400">
-                        Tarik file foto baru ke sini untuk menambah koleksi
+                        Tarik file foto atau video baru ke sini untuk menambah koleksi
                     </div>
                 </div>
             </div>

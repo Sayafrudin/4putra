@@ -16,7 +16,7 @@ class AdminCollectionController extends Controller
     public function index()
     {
         $collections = Cache::remember('admin.collections', 120, function () {
-            return Collection::select('id', 'name', 'name_en', 'scientific_name', 'category', 'category_en', 'image_path', 'sort_order', 'parent_id')
+            return Collection::select('id', 'name', 'name_en', 'scientific_name', 'category', 'category_en', 'image_path', 'images', 'sort_order', 'parent_id')
                 ->orderBy('category')->orderBy('sort_order')->get();
         });
         $parents = $collections->filter(fn ($c) => empty($c->parent_id))->values();
@@ -58,10 +58,8 @@ class AdminCollectionController extends Controller
             $request->validate($this->variantRules());
 
             // Gambar di-upload langsung dari browser ke Cloudinary
-            $imagePath = null;
-            if ($request->has('cloudinary_urls') && ! empty($request->cloudinary_urls[0])) {
-                $imagePath = $request->cloudinary_urls[0];
-            }
+            // Multi-foto: semua URL masuk images[], foto pertama jadi cover image_path
+            $images = array_values(array_filter((array) $request->input('cloudinary_urls', [])));
 
             Collection::create([
                 'name' => $request->name,
@@ -69,7 +67,8 @@ class AdminCollectionController extends Controller
                 'scientific_name' => $request->scientific_name,
                 'category' => $request->category,
                 'category_en' => $request->category_en,
-                'image_path' => $imagePath,
+                'image_path' => $images[0] ?? null,
+                'images' => $images ?: null,
                 'sort_order' => (int) ($request->sort_order ?: 0),
                 'parent_id' => $request->filled('parent_id') ? $request->input('parent_id') : null,
             ]);
@@ -80,7 +79,7 @@ class AdminCollectionController extends Controller
                 'Collections',
                 null,
                 ['name' => $request->name, 'category' => $request->category, 'scientific_name' => $request->scientific_name],
-                $imagePath ? [$imagePath] : null
+                $images ?: null
             );
 
             Cache::forget('admin.collections');
@@ -114,15 +113,41 @@ class AdminCollectionController extends Controller
                 $data['parent_id'] = $request->filled('parent_id') ? $request->input('parent_id') : null;
             }
 
-            if ($request->input('remove_image') == '1') {
-                $data['image_path'] = null;
+            // Galeri multi-foto: seed dari data lama, hapus per indeks, tambah upload baru,
+            // lalu sinkronkan cover image_path = foto pertama
+            $images = $collection->images ?? [];
+            if (empty($images) && $collection->image_path) {
+                $images = [$collection->image_path];
             }
 
-            // Gambar di-upload langsung dari browser ke Cloudinary
-            if ($request->has('cloudinary_urls') && ! empty($request->cloudinary_urls[0])) {
-                $data['image_path'] = $request->cloudinary_urls[0];
-                $imagePreviews[] = $data['image_path'];
+            if ($request->input('remove_image') == '1') {
+                foreach ($images as $url) {
+                    if (str_starts_with($url, 'http')) {
+                        $this->deleteCloudinaryImage($url);
+                    }
+                }
+                $images = [];
             }
+
+            foreach (array_map('intval', (array) $request->input('remove_images', [])) as $idx) {
+                if (isset($images[$idx])) {
+                    if (str_starts_with($images[$idx], 'http')) {
+                        $this->deleteCloudinaryImage($images[$idx]);
+                    }
+                    unset($images[$idx]);
+                }
+            }
+            $images = array_values($images);
+
+            // Gambar di-upload langsung dari browser ke Cloudinary
+            $newUrls = array_values(array_filter((array) $request->input('cloudinary_urls', [])));
+            foreach ($newUrls as $url) {
+                $images[] = $url;
+            }
+            $imagePreviews = $newUrls;
+
+            $data['image_path'] = $images[0] ?? null;
+            $data['images'] = $images ?: null;
 
             $collection->update($data);
 
@@ -153,12 +178,13 @@ class AdminCollectionController extends Controller
 
     public function destroy(Collection $collection)
     {
-        $imagePreviews = [];
-        if ($collection->image_path) {
-            $imagePreviews[] = $collection->image_path;
-            // Hapus gambar dari Cloudinary
-            if (str_starts_with($collection->image_path, 'http')) {
-                $this->deleteCloudinaryImage($collection->image_path);
+        $urls = $collection->images ?? [];
+        if (empty($urls) && $collection->image_path) {
+            $urls = [$collection->image_path];
+        }
+        foreach ($urls as $url) {
+            if (str_starts_with($url, 'http')) {
+                $this->deleteCloudinaryImage($url);
             }
         }
 
@@ -168,7 +194,7 @@ class AdminCollectionController extends Controller
             'Collections',
             $collection->getOriginal(),
             null,
-            ! empty($imagePreviews) ? $imagePreviews : null
+            $urls ?: null
         );
 
         $collection->delete();

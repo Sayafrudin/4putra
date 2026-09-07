@@ -145,7 +145,8 @@ Route::prefix('admin')->middleware(['admin.auth', 'admin.domain'])->group(functi
         ->name('admin.achievements.images.destroy');
 
     // CRUD Achievements
-    Route::resource('achievements', AdminAchievementController::class)->names([
+    // show dikecualikan: UI memakai modal, method show() tidak ada (hindari 500)
+    Route::resource('achievements', AdminAchievementController::class)->except(['show'])->names([
         'index' => 'admin.achievements.index',
         'create' => 'admin.achievements.create',
         'store' => 'admin.achievements.store',
@@ -161,7 +162,7 @@ Route::prefix('admin')->middleware(['admin.auth', 'admin.domain'])->group(functi
     Route::delete('/about/leaderships/{leadership}', [AdminAboutController::class, 'destroyLeader'])->name('admin.about.leadership.destroy');
 
     // CRUD Collections
-    Route::resource('collections', AdminCollectionController::class)->names([
+    Route::resource('collections', AdminCollectionController::class)->except(['show'])->names([
         'index' => 'admin.collections.index',
         'create' => 'admin.collections.create',
         'store' => 'admin.collections.store',
@@ -192,7 +193,7 @@ Route::prefix('admin')->middleware(['admin.auth', 'admin.domain'])->group(functi
 
     // Manajemen User (hanya admin)
     Route::middleware('admin.only')->group(function () {
-        Route::resource('users', AdminUserController::class)->names([
+        Route::resource('users', AdminUserController::class)->except(['show'])->names([
             'index' => 'admin.users.index',
             'create' => 'admin.users.create',
             'store' => 'admin.users.store',

@@ -113,7 +113,7 @@
                         </div>
                     </div>
 
-                    {{-- Toggle Bot â†” Human --}}
+                    {{-- Toggle Bot ↔ Human --}}
                     <div class="flex items-center gap-2 sm:gap-3 shrink-0">
                         <button onclick="clearChat()"
                             class="px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 border border-gray-600 hover:border-gray-500 hover:text-gray-900 dark:text-white rounded-lg transition-colors">
@@ -155,7 +155,8 @@
                         @if ($isIncoming)
                             <div class="flex justify-start mb-1.5" data-msg-id="{{ $chat->id }}"
                                 data-msg-text="{{ e($chat->pesan_pengirim) }}" data-msg-sender="pelanggan"
-                                oncontextmenu="showContextMenu(event, {{ $chat->id }})">
+                                oncontextmenu="showContextMenu(event, {{ $chat->id }})"
+                                ondblclick="showContextMenu(event, {{ $chat->id }})">
                                 <div class="max-w-[85%] sm:max-w-[65%] bg-gray-100 dark:bg-[#2a3343] rounded-2xl rounded-br-2xl px-3 py-2 relative group break-words min-w-0">
                                     {{-- Forward indicator --}}
                                     @if ($chat->is_forwarded)
@@ -225,7 +226,7 @@
                                     {{-- Reply button --}}
                                     <button
                                         onclick="setReply({{ $chat->id }}, '{{ e(Str::limit($chat->pesan_pengirim ?? '[Media]', 40)) }}', 'pelanggan')"
-                                        class="absolute -right-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-500 hover:text-[#E62C37]">
+                                        class="absolute -right-8 top-1/2 -translate-y-1/2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity p-1 text-gray-500 hover:text-[#E62C37]">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
                                             viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -245,7 +246,8 @@
                             @endphp
                             <div class="flex justify-end mb-1.5" data-msg-id="{{ $chat->id }}"
                                 data-msg-text="{{ e($chat->pesan_balasan) }}" data-msg-sender="admin"
-                                oncontextmenu="showContextMenu(event, {{ $chat->id }})">
+                                oncontextmenu="showContextMenu(event, {{ $chat->id }})"
+                                ondblclick="showContextMenu(event, {{ $chat->id }})">
                                 <div
                                     class="max-w-[85%] sm:max-w-[65%] rounded-2xl px-3 py-2 relative group break-words min-w-0 {{ $bubbleClass }}">
 
@@ -1077,7 +1079,7 @@
                                 <div class="max-w-[85%] sm:max-w-[65%] bg-gray-100 dark:bg-[#2a3343] rounded-2xl rounded-br-2xl px-3 py-2 relative group break-words min-w-0">
                                     ${forwardHtml}${replyHtml}${mediaHtml}${textHtml}
                                     <p class="text-[10px] text-gray-400 mt-1 text-right">${new Date(msg.created_at).toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'})}</p>
-                                    <button onclick="setReply(${msg.id}, '${escapeHtml((msg.pesan_pengirim || '[Media]').substring(0, 40))}', 'pelanggan')" class="absolute -right-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-500 hover:text-[#E62C37]">
+                                    <button onclick="setReply(${msg.id}, '${escapeHtml((msg.pesan_pengirim || '[Media]').substring(0, 40))}', 'pelanggan')" class="absolute -right-8 top-1/2 -translate-y-1/2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity p-1 text-gray-500 hover:text-[#E62C37]">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>
                                     </button>
                                 </div>

@@ -9,7 +9,7 @@
     }
 @endphp
 
-<div class="w-72 rounded-2xl overflow-hidden shadow-lg group"
+<div class="w-72 max-w-full rounded-2xl overflow-hidden shadow-lg group"
     @if($zoomable) x-data="{ showLightbox: false }" @endif>
 
     <div class="relative w-full aspect-[4/5] rounded-2xl overflow-hidden {{ $zoomable ? 'cursor-pointer' : '' }}"
@@ -49,8 +49,7 @@
             </button>
             <div class="min-h-screen flex items-center justify-center p-4">
                 <img src="{{ $gambarFull }}" alt="{{ $name }}"
-                    class="block rounded shadow-2xl"
-                    style="max-width: none;"
+                    class="block rounded shadow-2xl max-w-[90vw] max-h-[85vh] object-contain"
                     @click.stop>
             </div>
         </div>

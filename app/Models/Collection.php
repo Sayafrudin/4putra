@@ -17,6 +17,7 @@ class Collection extends Model
         'category',
         'category_en',
         'image_path',
+        'images',
         'sort_order',
         'parent_id',
     ];
@@ -25,6 +26,7 @@ class Collection extends Model
     {
         return [
             'id' => 'string',
+            'images' => 'array',
         ];
     }
 

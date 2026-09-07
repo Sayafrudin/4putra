@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Collection;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class CollectionVariantTest extends TestCase
@@ -128,5 +129,94 @@ class CollectionVariantTest extends TestCase
         $this->assertSame(0, substr_count($response->getContent(), 'alt="Uji IRN Albino Unik"'));
         // Nama varian hadir tepat sekali di data JSON modal (@js($variantData))
         $this->assertSame(1, substr_count($response->getContent(), 'Uji IRN Albino Unik'));
+    }
+
+    public function test_admin_index_renders_collection_table(): void
+    {
+        $admin = $this->makeAdmin();
+
+        $response = $this->actingAs($admin)->get(route('admin.collections.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Manajemen Koleksi Burung');
+        $response->assertSee('Foto Tersimpan');
+        $response->assertSee('Upload Foto Baru');
+
+        $admin->delete();
+    }
+
+    public function test_admin_store_accepts_multiple_gallery_images(): void
+    {
+        $admin = $this->makeAdmin();
+
+        $this->actingAs($admin)
+            ->postJson(route('admin.collections.store'), [
+                'name' => 'Uji Multi Foto',
+                'category' => 'uji-varian',
+                'cloudinary_urls' => [
+                    'https://res.cloudinary.com/demo/image/upload/foto1.jpg',
+                    'https://res.cloudinary.com/demo/image/upload/foto2.jpg',
+                    'https://res.cloudinary.com/demo/image/upload/foto3.jpg',
+                ],
+            ])
+            ->assertStatus(200)
+            ->assertJson(['success' => true]);
+
+        $col = Collection::where('name', 'Uji Multi Foto')->first();
+        $this->assertCount(3, $col->images);
+        // Cover = foto pertama
+        $this->assertSame('https://res.cloudinary.com/demo/image/upload/foto1.jpg', $col->image_path);
+    }
+
+    public function test_admin_update_removes_photo_by_index_and_syncs_cover(): void
+    {
+        $admin = $this->makeAdmin();
+        $col = $this->makeCollection([
+            'name' => 'Uji Hapus Foto',
+            'images' => [
+                'https://res.cloudinary.com/demo/image/upload/cover.jpg',
+                'https://res.cloudinary.com/demo/image/upload/foto2.jpg',
+                'https://res.cloudinary.com/demo/image/upload/foto3.jpg',
+            ],
+        ]);
+
+        // Hapus foto indeks 0 (cover) — cover naik ke foto berikutnya
+        $this->actingAs($admin)
+            ->putJson(route('admin.collections.update', ['collection' => $col]), [
+                'name' => 'Uji Hapus Foto',
+                'category' => 'uji-varian',
+                'remove_images' => ['0'],
+            ])
+            ->assertStatus(200)
+            ->assertJson(['success' => true]);
+
+        $fresh = $col->refresh();
+        $this->assertCount(2, $fresh->images);
+        $this->assertSame('https://res.cloudinary.com/demo/image/upload/foto2.jpg', $fresh->image_path);
+    }
+
+    public function test_public_page_shows_photo_badge_and_modal_gallery(): void
+    {
+        $this->makeCollection([
+            'name' => 'Uji Badge Foto',
+            'images' => [
+                'https://res.cloudinary.com/demo/image/upload/cover.jpg',
+                'https://res.cloudinary.com/demo/image/upload/foto2.jpg',
+            ],
+        ]);
+        Cache::forget('public.collections');
+
+        $response = $this->get('/collections');
+        $response->assertStatus(200);
+        $content = $response->getContent();
+        // Badge "+N Foto" tampil di card (teks bergantung locale aktif)
+        $this->assertTrue(
+            str_contains($content, '+2 Foto') || str_contains($content, '+2 Photos'),
+            'Badge foto tidak dirender.'
+        );
+        // URL galeri masuk data JSON modal
+        $this->assertStringContainsString('foto2.jpg', $content);
+
+        Cache::forget('public.collections');
     }
 }

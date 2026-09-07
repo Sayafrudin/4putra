@@ -1,4 +1,24 @@
 <x-site.layout>
+    @php
+        $isVideo = $aboutPage->media_type === 'video';
+        $isEmbed = $aboutPage->media_type === 'embed';
+        // Tipe MIME untuk Video.js ditentukan dari ekstensi file
+        $vType = 'video/mp4';
+        if ($isVideo) {
+            $ext = strtolower(pathinfo(parse_url($aboutPage->mediaUrl(), PHP_URL_PATH) ?? '', PATHINFO_EXTENSION));
+            if ($ext === 'webm') $vType = 'video/webm';
+            elseif ($ext === 'mov') $vType = 'video/quicktime';
+        }
+    @endphp
+    @if ($isVideo)
+        @push('styles')
+            <link href="https://cdnjs.cloudflare.com/ajax/libs/video-js/8.10.0/video-js.min.css" rel="stylesheet">
+        @endpush
+        @push('scripts')
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/video-js/8.10.0/video.min.js"></script>
+        @endpush
+    @endif
+
     <section class="w-full px-6 md:px-12 lg:px-16 pb-20 pt-10">
         <div class="flex flex-col md:flex-row items-center justify-center gap-10 lg:gap-12 max-w-7xl mx-auto">
             <div class="flex flex-col items-center md:items-start flex-1 text-center md:text-left">
@@ -17,43 +37,43 @@
                 </p>
             </div>
 
-            <div class="flex-1 lg:flex-none lg:w-4/12 flex justify-center md:justify-end relative">
-                @if ($aboutPage->media_type === 'video')
-                    {{-- Video hero: autoplay tanpa suara, kontrol penuh, tanpa download,
-                         tanpa letterbox (rasio otomatis mengikuti video) --}}
-                    <div class="w-full max-w-md rounded-2xl overflow-hidden shadow-xl relative group">
-                        <video src="{{ $aboutPage->mediaUrl() }}" class="w-full h-auto block" autoplay muted controls
+            @php $mediaColClass = ($isVideo || $isEmbed) ? 'w-full flex-1 lg:flex-none lg:w-6/12' : 'flex-1 lg:flex-none lg:w-4/12'; @endphp
+            <div class="{{ $mediaColClass }} flex justify-center md:justify-end relative">
+                @if ($isVideo)
+                    {{-- Video hero: 16:9 di kolom kanan, Video.js skin default, loop, tanpa autoplay/mute --}}
+                    <div class="w-full rounded-2xl overflow-hidden shadow-xl relative">
+                        <video class="video-js vjs-default-skin vjs-big-play-centered w-full block" controls loop
                             playsinline controlslist="nodownload noremoteplayback" disablepictureinpicture
-                            preload="metadata"></video>
-                        <div class="absolute inset-0 ring-1 ring-black/5 pointer-events-none"></div>
+                            preload="metadata" data-setup='{"fluid": true}'>
+                            <source src="{{ $aboutPage->mediaUrl() }}" type="{{ $vType }}">
+                        </video>
                     </div>
-                @elseif ($aboutPage->media_type === 'embed')
+                @elseif ($isEmbed)
                     {{-- Link eksternal (GDrive/IG/TikTok/YouTube/dll) -> iframe embed --}}
-                    <div class="w-full max-w-md rounded-2xl overflow-hidden shadow-xl relative group">
+                    <div class="w-full rounded-2xl overflow-hidden shadow-xl relative bg-black">
                         @php $embedUrl = $aboutPage->embedUrl(); @endphp
                         @if ($embedUrl)
-                            <div class="aspect-video bg-black">
+                            <div class="aspect-video">
                                 <iframe src="{{ $embedUrl }}" class="w-full h-full border-0" loading="lazy"
                                     allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
                                     allowfullscreen></iframe>
                             </div>
-                        @else
-                            <a href="{{ $aboutPage->media_path }}" target="_blank" rel="noopener noreferrer"
-                                class="flex flex-col items-center justify-center aspect-video bg-black text-white gap-2 hover:bg-gray-900 transition-colors">
-                                <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                                <span class="text-sm font-semibold">Buka Video</span>
-                            </a>
-                        @endif
-                        <div class="absolute inset-0 ring-1 ring-black/5 pointer-events-none"></div>
-                    </div>
-                @else
-                    <div class="w-full max-w-sm rounded-2xl overflow-hidden shadow-xl aspect-[4/5] relative group">
-                        <img src="{{ $aboutPage->mediaUrl() }}" alt="About Hero"
-                            class="w-full h-full object-cover transition-all duration-500 hover:scale-105">
-                        <div class="absolute inset-0 ring-1 ring-black/5 pointer-events-none"></div>
-                    </div>
-                @endif
-            </div>
+                    @else
+                        <a href="{{ $aboutPage->media_path }}" target="_blank" rel="noopener noreferrer"
+                            class="flex flex-col items-center justify-center aspect-video bg-black text-white gap-2 hover:bg-gray-900 transition-colors">
+                            <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                            <span class="text-sm font-semibold">Buka Video</span>
+                        </a>
+                    @endif
+                    <div class="absolute inset-0 ring-1 ring-black/5 pointer-events-none"></div>
+                </div>
+            @else
+                <div class="w-full max-w-sm rounded-2xl overflow-hidden shadow-xl aspect-[4/5] relative group">
+                    <img src="{{ $aboutPage->mediaUrl() }}" alt="About Hero"
+                        class="w-full h-full object-cover transition-all duration-500 hover:scale-105">
+                    <div class="absolute inset-0 ring-1 ring-black/5 pointer-events-none"></div>
+                </div>
+            @endif
         </div>
     </section>
 

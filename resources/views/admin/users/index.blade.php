@@ -136,7 +136,7 @@
 
     {{-- ==================== MODAL TAMBAH USER ==================== --}}
     <div id="modalTambahUser" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
-        <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6">
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-lg font-bold text-gray-900 dark:text-white">Tambah User Baru</h3>
                 <button onclick="tutupModal('modalTambahUser')" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
@@ -206,7 +206,7 @@
 
     {{-- ==================== MODAL EDIT USER ==================== --}}
     <div id="modalEditUser" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
-        <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6">
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-lg font-bold text-gray-900 dark:text-white">Edit User</h3>
                 <button onclick="tutupModal('modalEditUser')" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">

@@ -247,7 +247,7 @@
             const text = document.getElementById('statusText');
 
             btn.disabled = true;
-            btn.innerHTML = '<span class="inline-block animate-spin mr-2">â³</span> Mengecek...';
+            btn.innerHTML = '<span class="inline-block animate-spin mr-2">⏳</span> Mengecek...';
             info.classList.remove('hidden');
             text.textContent = 'Mengecek status pembayaran dari Midtrans...';
 
@@ -264,18 +264,18 @@
                 const data = await res.json();
                 if (res.ok && data.status === 'OK') {
                     if (data.updated > 0) {
-                        text.textContent = `âœ… ${data.updated} transaksi berhasil diperbarui! Memuat ulang...`;
+                        text.textContent = `✅ ${data.updated} transaksi berhasil diperbarui! Memuat ulang...`;
                         refreshAdminList();
                     } else {
                         text.textContent = data.message || 'Semua transaksi pending belum ada perubahan status dari Midtrans.';
                         setTimeout(() => info.classList.add('hidden'), 4000);
                     }
                 } else {
-                    text.textContent = 'âŒ Gagal: ' + (data.message || 'Unknown error');
+                    text.textContent = '❌ Gagal: ' + (data.message || 'Unknown error');
                     setTimeout(() => info.classList.add('hidden'), 4000);
                 }
             } catch (err) {
-                text.textContent = 'âŒ Error: ' + err.message;
+                text.textContent = '❌ Error: ' + err.message;
                 setTimeout(() => info.classList.add('hidden'), 4000);
             } finally {
                 btn.disabled = false;

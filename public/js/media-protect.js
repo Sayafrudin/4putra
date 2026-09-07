@@ -89,8 +89,15 @@
         protectVideos();
     }
     // Jaga-jaga jika ada video yang di-inject secara dinamis
+    // (debounce via rAF: batch banyak mutasi jadi satu scan per frame)
+    var rafPending = false;
     var videoObserver = new MutationObserver(function () {
-        protectVideos();
+        if (rafPending) return;
+        rafPending = true;
+        requestAnimationFrame(function () {
+            rafPending = false;
+            protectVideos();
+        });
     });
     // Observe documentElement agar bertahan saat Turbo menggantikan body
     videoObserver.observe(document.documentElement, { childList: true, subtree: true });
@@ -123,7 +130,12 @@
             overlay.querySelector('.zoom-media-img').style.transform = 'scale(1)';
         });
 
+        function escHandler(e) {
+            if (e.key === 'Escape') closeZoom();
+        }
+
         function closeZoom() {
+            document.removeEventListener('keydown', escHandler);
             overlay.style.opacity = '0';
             overlay.querySelector('.zoom-media-img').style.transform = 'scale(0.9)';
             setTimeout(function () {
@@ -139,11 +151,6 @@
             e.stopPropagation();
             closeZoom();
         });
-        document.addEventListener('keydown', function esc(e) {
-            if (e.key === 'Escape') {
-                closeZoom();
-                document.removeEventListener('keydown', esc);
-            }
-        });
+        document.addEventListener('keydown', escHandler);
     };
 })();

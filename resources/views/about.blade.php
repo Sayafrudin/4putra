@@ -15,7 +15,43 @@
             <link href="https://cdnjs.cloudflare.com/ajax/libs/video-js/8.10.0/video-js.min.css" rel="stylesheet">
         @endpush
         @push('scripts')
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/video-js/8.10.0/video.min.js"></script>
+            <script>
+                // Autoplay programatik (pola resmi Video.js): play() dengan suara dulu;
+                // jika browser memblokir (kebijakan autoplay), fallback mute agar tetap jalan.
+                window.initAboutHeroPlayer = function () {
+                    var el = document.getElementById('about-hero-player');
+                    if (!el || !window.videojs) return;
+                    if (el.classList.contains('vjs-tech')) return; // sudah dibungkus player
+                    try {
+                        var player = window.videojs(el, { loop: true, fluid: true });
+                        player.ready(function () {
+                            var p = this;
+                            var tryPlay = function () {
+                                var pr = p.play();
+                                if (pr && pr.catch) {
+                                    pr.catch(function () {
+                                        p.muted(true);
+                                        p.play().catch(function () {});
+                                    });
+                                }
+                            };
+                            if (p.readyState() >= 2) tryPlay();
+                            else p.one('canplay', tryPlay);
+                        });
+                    } catch (e) {}
+                };
+                if (!window.__aboutPlayerHooked) {
+                    window.__aboutPlayerHooked = true;
+                    document.addEventListener('turbo:load', window.initAboutHeroPlayer);
+                    document.addEventListener('turbo:before-cache', function () {
+                        var p = window.videojs && window.videojs.getPlayer('about-hero-player');
+                        if (p) { try { p.dispose(); } catch (e) {} }
+                    });
+                }
+                if (document.readyState !== 'loading') window.initAboutHeroPlayer();
+            </script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/video-js/8.10.0/video.min.js" defer
+                onload="if (window.initAboutHeroPlayer) window.initAboutHeroPlayer()"></script>
         @endpush
     @endif
 
@@ -41,13 +77,12 @@
             <div class="{{ $mediaColClass }} flex justify-center md:justify-end relative">
                 @if ($isVideo)
                     {{-- Video hero: 16:9 di kolom kanan, Video.js skin default.
-                         autoplay "any": coba dengan suara, jika browser blokir -> fallback mute.
-                         loop: video berulang otomatis. --}}
+                         Autoplay + fallback mute + loop di-init via script di atas. --}}
                     <div class="w-full rounded-2xl overflow-hidden shadow-xl relative">
-                        <video class="video-js vjs-default-skin vjs-big-play-centered w-full block" controls loop
+                        <video id="about-hero-player"
+                            class="video-js vjs-default-skin vjs-big-play-centered w-full block" controls loop
                             playsinline controlslist="nodownload noremoteplayback" disablepictureinpicture
-                            preload="metadata"
-                            data-setup='{"autoplay": "any", "loop": true, "fluid": true}'>
+                            preload="metadata">
                             <source src="{{ $aboutPage->mediaUrl() }}" type="{{ $vType }}">
                         </video>
                     </div>

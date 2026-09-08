@@ -29,7 +29,7 @@
         "DB_CONNECTION": "mysql",
         "LOG_CHANNEL": "stderr",
         "SESSION_DRIVER": "cookie",
-        "SESSION_LIFETIME": "120",
+        "SESSION_LIFETIME": "60",
         "SESSION_ENCRYPT": "false",
         "SESSION_SECURE_COOKIE": "true",
         "BAILEYS_BOT_URL": "http://127.0.0.1:3001",

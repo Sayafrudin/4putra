@@ -25,7 +25,7 @@ class AdminRememberMeTest extends TestCase
         );
     }
 
-    public function test_login_always_issues_remember_cookie_for_30_days(): void
+    public function test_login_always_issues_remember_cookie_for_14_days(): void
     {
         $user = $this->makeAdmin();
 
@@ -41,7 +41,8 @@ class AdminRememberMeTest extends TestCase
             ->first(fn ($c) => str_starts_with($c->getName(), 'remember_web_'));
 
         $this->assertNotNull($recaller, 'Cookie remember wajib diterbitkan saat login');
-        $this->assertSame(30 * 24 * 60 * 60, $recaller->getMaxAge());
+        // Toleransi 1 detik: Max-Age dihitung dari timestamp Expires yang membulat
+        $this->assertEqualsWithDelta(14 * 24 * 60 * 60, $recaller->getMaxAge(), 1);
 
         $user->delete();
     }

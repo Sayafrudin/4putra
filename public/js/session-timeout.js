@@ -190,11 +190,14 @@
         }
 
         if (extendBtn) {
-            var loginBtn = extendBtn.cloneNode(true); // clone tanpa listener lama
-            loginBtn.textContent = 'Ke Halaman Login';
-            extendBtn.parentNode.replaceChild(loginBtn, extendBtn);
-            loginBtn.addEventListener('click', function () {
-                window.location.href = '/login';
+            var reloadBtn = extendBtn.cloneNode(true); // clone tanpa listener lama
+            reloadBtn.textContent = 'Muat Ulang Halaman';
+            extendBtn.parentNode.replaceChild(reloadBtn, extendBtn);
+            reloadBtn.addEventListener('click', function () {
+                // Reload URL sekarang: dengan remember → kembali langsung tanpa
+                // login; tanpa remember → login singkat lalu balik ke halaman ini
+                // (URL intended dipertahankan server).
+                window.location.reload();
             });
         }
 
@@ -274,6 +277,10 @@
             // Sukses: tutup popup + reset timer lokal ke 0, tanpa reload halaman.
             hideWarning();
             resetTimer();
+            // Konfirmasi eksplisit bahwa sesi benar-benar diperpanjang di server.
+            if (window.showToast) {
+                window.showToast('success', 'Sesi Diperpanjang', 'Sesi diperpanjang \u00b1' + TIMEOUT_MINUTES + ' menit.');
+            }
         });
     }
 
@@ -301,9 +308,13 @@
     function resetTimer() {
         if (warningTimer) clearTimeout(warningTimer);
 
+        // Clamp minimal 1 menit: jika lifetime < window warning, popup jangan
+        // muncul instan begitu halaman dibuka.
+        var warningDelay = Math.max(60 * 1000, TIMEOUT_MS - WARNING_MS);
+
         warningTimer = setTimeout(function () {
             showWarning();
-        }, TIMEOUT_MS - WARNING_MS);
+        }, warningDelay);
     }
 
     // Event listeners untuk deteksi aktivitas

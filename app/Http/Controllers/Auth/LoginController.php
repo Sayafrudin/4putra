@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class LoginController extends Controller
 {
@@ -25,10 +26,11 @@ class LoginController extends Controller
             'password.required' => 'Password wajib diisi.',
         ]);
 
-        // Remember-me selalu aktif 30 hari (ala website besar): cookie remember
+        // Remember-me selalu aktif 14 hari (ala website besar): cookie remember
         // memungkinkan sesi admin dipulihkan otomatis tanpa login ulang saat
         // sesi web kedaluwarsa — klik "Perpanjang Sesi" tetap menyelamatkan sesi.
-        Auth::setRememberDuration(30 * 24 * 60);
+        // Logout (manual maupun timeout) menghapus cookie ini.
+        Auth::setRememberDuration(14 * 24 * 60);
 
         if (Auth::attempt($credentials, true)) {
             $request->session()->regenerate();
@@ -39,6 +41,11 @@ class LoginController extends Controller
 
             return redirect()->intended(route('admin.dashboard'))->with('success', 'Selamat datang kembali, '.Auth::user()->name.'!');
         }
+
+        Log::warning('Percobaan login gagal', [
+            'email' => $credentials['email'],
+            'ip' => $request->ip(),
+        ]);
 
         return back()->withErrors([
             'email' => 'Email atau password salah.',

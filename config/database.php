@@ -58,7 +58,9 @@ return [
                 str_contains(env('DB_HOST', ''), 'tidbcloud.com')
                     ? [
                         PDO::MYSQL_ATTR_SSL_CA => env('DB_SSL_CA', null),
-                        PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
+                        // Verifikasi sertifikat wajib saat CA disediakan (prod TiDB);
+                        // lokal tanpa CA tetap boleh tanpa verifikasi.
+                        PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => (bool) env('DB_SSL_CA'),
                         PDO::ATTR_PERSISTENT => true,
                         PDO::ATTR_STRINGIFY_FETCHES => true,
                         PDO::ATTR_TIMEOUT => 10,

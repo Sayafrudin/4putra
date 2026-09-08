@@ -44,7 +44,9 @@ class GoogleController extends Controller
             }
         }
 
-        Auth::login($user);
+        // Remember 7 hari agar sesi admin dapat dipulihkan otomatis tanpa login ulang.
+        Auth::setRememberDuration(7 * 24 * 60);
+        Auth::login($user, true);
 
         // Regenerate session untuk keamanan
         request()->session()->regenerate();

@@ -107,7 +107,8 @@ Route::get('lang/{locale}', function ($locale) {
 // Autentikasi
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'show'])->name('login');
-    Route::post('/login', [LoginController::class, 'login']);
+    // Throttle: blokir brute force password (5 percobaan/menit per IP).
+    Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:5,1');
 });
 
 Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('auth.google.redirect');

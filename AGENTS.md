@@ -78,6 +78,28 @@ Setiap modifikasi wajib melewati validasi berikut sebelum diselesaikan:
 5. Error Handling: Penanganan AJAX error menampilkan pesan jelas. Bebas error 500.
 6. Smoke Render Halaman: Setiap Blade yang diubah wajib diakses sungguhan via HTTP (bukan hanya lulus test suite) untuk memastikan tidak ada ParseError di view — komentar `{{-- --}}` dilarang di dalam blok `@php ... @endphp` (gunakan komentar PHP `//`).
 
+## Protokol Testing Intensif Wajib (Anti-Error Menjalar)
+
+Setiap fitur yang dirubah/diperbaiki/ditambahkan wajib lulus SEMUA lapisan ini sebelum commit — hasil harus diverifikasi dari SISI SERVER (status code, state database, cookie), bukan hanya tampilan UI (bukan gimmick):
+
+1. **PHPUnit Penuh**: `php artisan test` keseluruhan suite (bukan hanya test yang terkait perubahan), tanpa skip.
+2. **Smoke Render HTTP**: setiap Blade yang disentuh diakses sungguhan via HTTP dengan server berjalan.
+3. **E2E Browser Nyata** (wajib untuk fitur interaktif: modal, tombol, AJAX, session): gunakan `npm run test:e2e` (`tests/e2e/session-flow.mjs`, playwright-core + Edge terpasang). Tombol yang berubah perilaku WAJIB diklik sungguhan dan efek sisi server diverifikasi (contoh: klik "Perpanjang Sesi" → ping 200 + sesi benar-benar diperpanjang — bukti: siklus popup kedua muncul setelah idle melewati lifetime lagi).
+4. **E2E Sesi/Auth dengan Server Berjalan**: uji dengan cookie asli + lifetime diperpendek via env (mis. `SESSION_LIFETIME=1`), bukan simulasi cache. Skenario wajib: login → expire → perilaku pemulihan → redirect balik ke halaman asal (intended URL).
+5. **Audit Performa**: tidak menambah N+1 (eager `with()`), cache tetap hit, ukur waktu load halaman utama saat E2E (< 3 detik lokal). Script E2E mencatat NavigationTiming.
+6. **Kebersihan Data Uji**: semua user/entri CRUD/foto dummy yang dibuat saat testing wajib dihapus dari database.
+7. **Pasca-Deploy**: setelah merge ke `main`, cek status deploy Vercel dan uji ulang alur inti (login, halaman admin, switch bahasa) di URL produksi.
+
+## Aturan Keamanan Wajib (Auth, Session, Database)
+
+1. Rate limit semua endpoint autentikasi (`POST /login` → `throttle:5,1`). Jangan dihapus saat refactor routing.
+2. Percobaan login gagal wajib ter-log (`Log::warning` — email + IP, dilarang menyimpan password).
+3. `TrustProxies(at: '*')` wajib tetap ada di `bootstrap/app.php` (Vercel = semua trafik lewat proxy; tanpa ini rate limit per-IP salah).
+4. Security headers (`SecurityHeaders` middleware: X-Frame-Options, X-Content-Type-Options, Referrer-Policy) wajib pada semua response web.
+5. Koneksi TiDB: SSL wajib; jika `DB_SSL_CA` tersedia, verifikasi sertifikat wajib aktif (`PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => (bool) env('DB_SSL_CA')`).
+6. Cookie remember-me (14 hari, selalu aktif): logout manual maupun timeout wajib menghapusnya (`Auth::logout` → cycleRememberToken). Jangan pernah membuat jalur login yang tidak meregenerasi session.
+7. Dilarang menurunkan `APP_DEBUG=false` produksi atau mengaktifkan debug output di response.
+
 ## Protokol Orkestrasi Skill Otonom
 
 Sistem wajib memicu skill berikut secara mandiri berdasarkan konteks fase pekerjaan:

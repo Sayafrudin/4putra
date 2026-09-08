@@ -44,9 +44,9 @@ class GoogleController extends Controller
             }
         }
 
-        // Remember-me 30 hari (ala website besar) agar sesi admin dapat
-        // dipulihkan otomatis tanpa login ulang.
-        Auth::setRememberDuration(30 * 24 * 60);
+        // Remember-me 14 hari (ala website besar) agar sesi admin dapat
+        // dipulihkan otomatis tanpa login ulang. Logout menghapusnya.
+        Auth::setRememberDuration(14 * 24 * 60);
         Auth::login($user, true);
 
         // Regenerate session untuk keamanan

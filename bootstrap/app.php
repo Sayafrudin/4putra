@@ -12,6 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Vercel/serverless: semua request datang lewat reverse proxy.
+        // Tanpa ini, $request->ip() = IP proxy (rate limit & HTTPS detection salah).
+        $middleware->trustProxies(at: '*');
         // Cookie 'locale' plain (tidak dienkripsi ulang): nilainya stabil antar request
         // sehingga cache browser/edge dengan Vary: Cookie bisa hit, tanpa salah bahasa.
         $middleware->encryptCookies(except: ['locale']);
@@ -28,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             Localization::class,
             \App\Http\Middleware\TrackActivity::class,
+            \App\Http\Middleware\SecurityHeaders::class,
         ]);
 
         $middleware->alias([

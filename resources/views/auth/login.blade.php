@@ -112,12 +112,6 @@
                     @enderror
                 </div>
 
-                <div class="mb-6 flex items-center gap-2">
-                    <input type="checkbox" name="remember" id="remember"
-                        class="w-4 h-4 rounded border-gray-300 text-[#E62C37] focus:ring-[#E62C37]/30 cursor-pointer">
-                    <label for="remember" class="text-sm text-gray-600 cursor-pointer select-none">Ingat saya selama 7 hari</label>
-                </div>
-
                 <button type="submit"
                     class="w-full py-3 px-4 bg-[#E62C37] hover:bg-[#c7242f] text-white font-semibold rounded-xl transition-colors duration-200 shadow-sm">
                     Masuk

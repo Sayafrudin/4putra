@@ -186,7 +186,7 @@
             paragraphs[0].textContent = 'Sesi telah benar-benar habis. Silakan login kembali untuk melanjutkan.';
         }
         if (paragraphs.length > 1) {
-            paragraphs[1].textContent = 'Data pada form tidak terkirim — salin teks penting terlebih dahulu bila diperlukan.';
+            paragraphs[1].textContent = 'Data pada form tidak terkirim — salin teks penting terlebih dahulu bila diperlukan. Setelah login ulang, Anda dikembalikan otomatis ke halaman ini.';
         }
 
         if (extendBtn) {
@@ -332,6 +332,33 @@
 
     // Mulai timer pertama kali
     resetTimer();
+
+    // Validasi ulang saat tab kembali aktif (bangun dari sleep / pindah tab).
+    // Server-side bisa saja sudah mati lebih dulu karena interval ping tidak
+    // jalan selama tab dibekukan browser. Dengan remember-me, ping ini juga
+    // memulihkan sesi yang telah mati → klik Perpanjang Sesi tetap berhasil.
+    function validateOnWake() {
+        requestPing().then(function (data) {
+            if (data && data.expired) {
+                showExpiredState(); // jujur sejak awal, sebelum user klik apa pun
+                return;
+            }
+            if (data && data.ok) {
+                applyCsrf(data);
+                if (warningShown) {
+                    hideWarning(); // sesi ternyata masih hidup → tutup warning basi
+                }
+                resetTimer();
+            }
+            // failed (jaringan/redirect) → abaikan, timer lokal tetap berjalan
+        });
+    }
+
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') {
+            validateOnWake();
+        }
+    });
 
     // Mulai periodic ping untuk keep-alive session (setiap 10 menit)
     pingTimer = setInterval(pingSession, PING_INTERVAL_MS);

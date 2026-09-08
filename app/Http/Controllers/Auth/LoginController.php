@@ -25,7 +25,11 @@ class LoginController extends Controller
             'password.required' => 'Password wajib diisi.',
         ]);
 
-        if (Auth::attempt($credentials)) {
+        // "Ingat saya" 7 hari — cookie remember memungkinkan sesi admin
+        // dipulihkan otomatis tanpa login ulang saat sesi web kedaluwarsa.
+        Auth::setRememberDuration(7 * 24 * 60);
+
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
             // Update last_login_at langsung ke database

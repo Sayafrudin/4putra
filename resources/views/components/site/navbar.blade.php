@@ -227,6 +227,7 @@
 
         // Toggle Selectors
         const langLabels = document.querySelectorAll('.lang-label');
+        const langTrack = document.querySelector('#lang-toggle + div');
 
         // --- DARK MODE TOGGLE ---
         const html = document.documentElement;
@@ -293,6 +294,10 @@
                     el.classList.remove('text-[#E62C37]');
                     el.classList.add('text-white');
                 });
+                if (langTrack) {
+                    // Track merah menyatu dengan bg navbar merah saat EN aktif → ganti abu
+                    langTrack.classList.replace('peer-checked:bg-[#E62C37]', 'peer-checked:bg-gray-300');
+                }
                 if (hamburgerBtn) {
                     hamburgerBtn.classList.remove('text-[#E62C37]');
                     hamburgerBtn.classList.add('text-white');
@@ -334,6 +339,9 @@
                     el.classList.remove('text-white');
                     el.classList.add('text-[#E62C37]');
                 });
+                if (langTrack) {
+                    langTrack.classList.replace('peer-checked:bg-gray-300', 'peer-checked:bg-[#E62C37]');
+                }
                 if (hamburgerBtn) {
                     hamburgerBtn.classList.remove('text-white');
                     hamburgerBtn.classList.add('text-[#E62C37]');

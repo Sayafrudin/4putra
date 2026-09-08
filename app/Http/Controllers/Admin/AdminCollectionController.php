@@ -83,7 +83,7 @@ class AdminCollectionController extends Controller
             );
 
             Cache::forget('admin.collections');
-            Cache::forget('public.collections');
+            Cache::forget('public.collections.v2');
 
             return response()->json(['success' => true, 'message' => 'Koleksi berhasil ditambahkan.']);
         } catch (ValidationException $e) {
@@ -161,7 +161,7 @@ class AdminCollectionController extends Controller
             );
 
             Cache::forget('admin.collections');
-            Cache::forget('public.collections');
+            Cache::forget('public.collections.v2');
 
             return response()->json(['success' => true, 'message' => 'Koleksi berhasil diperbarui.']);
         } catch (ValidationException $e) {
@@ -200,7 +200,7 @@ class AdminCollectionController extends Controller
         $collection->delete();
 
         Cache::forget('admin.collections');
-        Cache::forget('public.collections');
+        Cache::forget('public.collections.v2');
 
         return redirect()->route('admin.collections.index')->with('success', 'Koleksi berhasil dihapus.');
     }

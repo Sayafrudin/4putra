@@ -18,7 +18,7 @@ class CollectionCacheTest extends TestCase
 
         // Hangatkan cache publik
         $this->get('/collections')->assertStatus(200);
-        $this->assertTrue(Cache::has('public.collections'));
+        $this->assertTrue(Cache::has('public.collections.v2'));
 
         $user = User::updateOrCreate(
             ['email' => 'admin-uji-cache-collection@4putra.test'],
@@ -41,7 +41,7 @@ class CollectionCacheTest extends TestCase
 
         $response->assertRedirect(route('admin.collections.index'));
 
-        $this->assertFalse(Cache::has('public.collections'));
+        $this->assertFalse(Cache::has('public.collections.v2'));
         $this->assertFalse(Cache::has('admin.collections'));
 
         $user->delete();

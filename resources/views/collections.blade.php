@@ -27,7 +27,11 @@
                     ])->all(),
                 'variants' => $i->variants->map(fn ($v) => [
                     'name' => $locName($v),
-                    'image' => $imgUrl($v->image_path),
+                    'cover' => $galleryUrl($v->image_path ?: ($v->images[0] ?? null), 'w_600'),
+                    'photos' => collect($v->images ?? [])->map(fn ($p) => [
+                        'thumb' => $galleryUrl($p, 'w_600'),
+                        'full' => $zoomUrl($p),
+                    ])->all(),
                 ])->all(),
             ])->all();
     @endphp
@@ -150,7 +154,7 @@
                                             <div class="rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-[#151a22] border border-gray-200 dark:border-gray-700 group">
                                                 <div class="w-full aspect-[4/5] overflow-hidden">
                                                     <img :src="p.thumb" loading="lazy" decoding="async"
-                                                        @click="zoomMedia(p.full)"
+                                                        @click="zoomMedia(p.full, items[idx].photos)"
                                                         class="w-full h-full object-cover object-top cursor-pointer group-hover:scale-105 transition-all duration-500">
                                                 </div>
                                             </div>
@@ -159,17 +163,20 @@
                                 </div>
                             </template>
 
-                            {{-- Section varian --}}
+                            {{-- Section varian: badge +N, klik membuka lightbox SEMUA foto varian --}}
                             <template x-if="items[idx].variants && items[idx].variants.length > 0">
                                 <div>
                                     <h4 class="text-sm font-bold uppercase tracking-[0.2em] text-gray-400 mb-4">{{ __('collections.variants_title') }}</h4>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                         <template x-for="(v, vi) in items[idx].variants" :key="vi">
                                             <div class="rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-[#151a22] border border-gray-200 dark:border-gray-700 group">
-                                                <div class="w-full aspect-[4/5] overflow-hidden">
-                                                    <img :src="v.image" :alt="v.name" loading="lazy" decoding="async"
-                                                        @click="zoomMedia(v.image)"
+                                                <div class="relative w-full aspect-[4/5] overflow-hidden">
+                                                    <img :src="v.cover" :alt="v.name" loading="lazy" decoding="async"
+                                                        @click="zoomMedia(v.photos.length > 1 ? v.photos[0].full : v.cover, v.photos)"
                                                         class="w-full h-full object-cover object-top cursor-pointer group-hover:scale-105 transition-all duration-500">
+                                                    <span x-show="v.photos.length > 1"
+                                                        class="absolute top-2.5 right-2.5 z-10 px-2.5 py-1 rounded-full bg-[#E62C37]/90 text-white text-xs font-bold shadow-lg pointer-events-none"
+                                                        x-text="'+' + v.photos.length"></span>
                                                 </div>
                                                 <p class="text-sm font-bold text-center py-2.5 px-2 text-gray-800 dark:text-gray-100" x-text="v.name"></p>
                                             </div>

@@ -204,7 +204,7 @@ class CollectionVariantTest extends TestCase
                 'https://res.cloudinary.com/demo/image/upload/foto2.jpg',
             ],
         ]);
-        Cache::forget('public.collections');
+        Cache::forget('public.collections.v2');
 
         $response = $this->get('/collections');
         $response->assertStatus(200);
@@ -217,6 +217,31 @@ class CollectionVariantTest extends TestCase
         // URL galeri masuk data JSON modal
         $this->assertStringContainsString('foto2.jpg', $content);
 
-        Cache::forget('public.collections');
+        Cache::forget('public.collections.v2');
+    }
+
+    public function test_public_variant_carries_multiple_photos_for_lightbox(): void
+    {
+        $parent = $this->makeCollection(['name' => 'Uji Induk Varian Foto']);
+        $this->makeCollection([
+            'name' => 'Uji Varian Multi Foto',
+            'parent_id' => $parent->id,
+            'images' => [
+                'https://res.cloudinary.com/demo/image/upload/var-1.jpg',
+                'https://res.cloudinary.com/demo/image/upload/var-2.jpg',
+                'https://res.cloudinary.com/demo/image/upload/var-3.jpg',
+            ],
+        ]);
+
+        $response = $this->get('/collections');
+        $response->assertStatus(200);
+        $content = $response->getContent();
+
+        // Data JSON modal memuat semua foto varian (thumbnail + full untuk lightbox)
+        $this->assertStringContainsString('var-1.jpg', $content);
+        $this->assertStringContainsString('var-2.jpg', $content);
+        $this->assertStringContainsString('var-3.jpg', $content);
+        // URL zoom w_1600 untuk lightbox varian
+        $this->assertStringContainsString('w_1600', $content);
     }
 }

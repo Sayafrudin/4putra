@@ -6,8 +6,11 @@
         $vType = 'video/mp4';
         if ($isVideo) {
             $ext = strtolower(pathinfo(parse_url($aboutPage->mediaUrl(), PHP_URL_PATH) ?? '', PATHINFO_EXTENSION));
-            if ($ext === 'webm') $vType = 'video/webm';
-            elseif ($ext === 'mov') $vType = 'video/quicktime';
+            if ($ext === 'webm') {
+                $vType = 'video/webm';
+            } elseif ($ext === 'mov') {
+                $vType = 'video/quicktime';
+            }
         }
     @endphp
 
@@ -35,8 +38,7 @@
                     {{-- Video hero: native muted autoplay (reliable cross-browser), loop, kontrol unmute tersedia --}}
                     <div class="w-full rounded-2xl overflow-hidden shadow-xl relative">
                         <video class="w-full block" controls autoplay muted loop playsinline
-                            controlslist="nodownload noremoteplayback" disablepictureinpicture
-                            preload="metadata">
+                            controlslist="nodownload noremoteplayback" disablepictureinpicture preload="metadata">
                             <source src="{{ $aboutPage->mediaUrl() }}" type="{{ $vType }}">
                         </video>
                     </div>
@@ -50,23 +52,25 @@
                                     allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
                                     allowfullscreen></iframe>
                             </div>
-                    @else
-                        <a href="{{ $aboutPage->media_path }}" target="_blank" rel="noopener noreferrer"
-                            class="flex flex-col items-center justify-center aspect-video bg-black text-white gap-2 hover:bg-gray-900 transition-colors">
-                            <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                            <span class="text-sm font-semibold">Buka Video</span>
-                        </a>
-                    @endif
-                    <div class="absolute inset-0 ring-1 ring-black/5 pointer-events-none"></div>
-                </div>
-            @else
-                <div class="w-full max-w-sm rounded-2xl overflow-hidden shadow-xl aspect-[4/5] relative group">
-                    <img src="{{ $aboutPage->mediaUrl() }}" alt="About Hero"
-                        class="w-full h-full object-cover transition-all duration-500 hover:scale-105">
-                    <div class="absolute inset-0 ring-1 ring-black/5 pointer-events-none"></div>
-                </div>
-            @endif
-        </div>
+                        @else
+                            <a href="{{ $aboutPage->media_path }}" target="_blank" rel="noopener noreferrer"
+                                class="flex flex-col items-center justify-center aspect-video bg-black text-white gap-2 hover:bg-gray-900 transition-colors">
+                                <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z" />
+                                </svg>
+                                <span class="text-sm font-semibold">Buka Video</span>
+                            </a>
+                        @endif
+                        <div class="absolute inset-0 ring-1 ring-black/5 pointer-events-none"></div>
+                    </div>
+                @else
+                    <div class="w-full max-w-sm rounded-2xl overflow-hidden shadow-xl aspect-[4/5] relative group">
+                        <img src="{{ $aboutPage->mediaUrl() }}" alt="About Hero"
+                            class="w-full h-full object-cover transition-all duration-500 hover:scale-105">
+                        <div class="absolute inset-0 ring-1 ring-black/5 pointer-events-none"></div>
+                    </div>
+                @endif
+            </div>
     </section>
 
     <section class="w-full px-6 md:px-12 lg:px-16 pb-10 pt-10 bg-[#F3F4F6] dark:bg-gray-800">
@@ -113,7 +117,8 @@
         <div class="container px-6 py-10 mx-auto">
 
             <div class="text-center mb-12">
-                <h1 class="mt-2 text-3xl font-bold text-gray-900 dark:text-white md:text-4xl">{{ __('contact.hero_welcome') }} <span
+                <h1 class="mt-2 text-3xl font-bold text-gray-900 dark:text-white md:text-4xl">
+                    {{ __('contact.hero_welcome') }} <span
                         class="text-[#E62C37]">{{ __('contact.hero_welcome2') }}</span></h1>
                 <p class="mt-3 text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
                     {{ __('contact.hero_desc_1') }}
@@ -124,7 +129,8 @@
 
                 <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-1">
 
-                    <div class="flex flex-col items-start p-6 bg-gray-50 dark:bg-gray-800 rounded-2xl hover:shadow-md transition-shadow">
+                    <div
+                        class="flex flex-col items-start p-6 bg-gray-50 dark:bg-gray-800 rounded-2xl hover:shadow-md transition-shadow">
                         <span class="inline-block p-3 text-[#E62C37] rounded-full bg-red-100 dark:bg-red-900/30">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -140,7 +146,8 @@
                         </a>
                     </div>
 
-                    <div class="flex flex-col items-start p-6 bg-gray-50 dark:bg-gray-800 rounded-2xl hover:shadow-md transition-shadow">
+                    <div
+                        class="flex flex-col items-start p-6 bg-gray-50 dark:bg-gray-800 rounded-2xl hover:shadow-md transition-shadow">
                         <span class="inline-block p-3 text-[#E62C37] rounded-full bg-red-100 dark:bg-red-900/30">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -150,14 +157,16 @@
                                     d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
                             </svg>
                         </span>
-                        <h2 class="mt-4 text-lg font-bold text-gray-800 dark:text-gray-200">{{ __('contact.card2_desc_1') }}</h2>
+                        <h2 class="mt-4 text-lg font-bold text-gray-800 dark:text-gray-200">
+                            {{ __('contact.card2_desc_1') }}</h2>
                         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ __('contact.card2_desc_2') }}</p>
                         <p class="mt-2 text-sm font-medium text-[#E62C37]">
                             Jl. Manukan Lor VIII D No.1, Banjar Sugihan, Surabaya, Jawa Timur
                         </p>
                     </div>
 
-                    <div class="flex flex-col items-start p-6 bg-gray-50 dark:bg-gray-800 rounded-2xl hover:shadow-md transition-shadow">
+                    <div
+                        class="flex flex-col items-start p-6 bg-gray-50 dark:bg-gray-800 rounded-2xl hover:shadow-md transition-shadow">
                         <span class="inline-block p-3 text-[#E62C37] rounded-full bg-red-100 dark:bg-red-900/30">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -165,7 +174,8 @@
                                     d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
                             </svg>
                         </span>
-                        <h2 class="mt-4 text-lg font-bold text-gray-800 dark:text-gray-200">{{ __('contact.card3_desc_1') }}</h2>
+                        <h2 class="mt-4 text-lg font-bold text-gray-800 dark:text-gray-200">
+                            {{ __('contact.card3_desc_1') }}</h2>
                         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ __('contact.card4_desc_2') }}</p>
                         <a href="https://wa.me/6282132267308" target="_blank"
                             class="mt-2 text-sm font-medium text-[#E62C37] hover:underline">

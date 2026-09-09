@@ -37,7 +37,7 @@
     <script src="{{ asset('js/table-search.js') }}?v={{ filemtime(public_path('js/table-search.js')) }}" defer></script>
 
     {{-- Refresh daftar tanpa reload penuh setelah CRUD --}}
-    <script src="{{ asset('js/admin-refresh.js') }}" defer></script>
+    <script src="{{ asset('js/admin-refresh.js') }}?v={{ filemtime(public_path('js/admin-refresh.js')) }}" defer></script>
 </head>
 
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">

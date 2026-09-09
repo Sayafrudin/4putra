@@ -50,6 +50,10 @@ document.addEventListener('submit', function (e) {
             if (!r.ok) throw new Error('HTTP ' + r.status);
         })
         .then(function () {
+            // Reset state tombol SEBELUM modal ditutup: semua baris memakai SATU
+            // komponen modal-confirm-delete per halaman. Tanpa reset, setelah delete
+            // pertama tombol tetap disabled + "Menghapus..." dan delete berikutnya mati.
+            if (btn) { btn.disabled = false; btn.textContent = 'Ya, Hapus'; }
             var modalRoot = form.closest('[id^="modal-"]');
             if (modalRoot) { modalRoot.classList.add('hidden'); modalRoot.classList.remove('flex'); }
             if (window.showToast) showToast('success', 'Terhapus!', 'Data berhasil dihapus.');

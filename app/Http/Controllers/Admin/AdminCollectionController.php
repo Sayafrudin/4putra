@@ -25,8 +25,8 @@ class AdminCollectionController extends Controller
     }
 
     /**
-     * Aturan validasi varian: induk harus ada, bukan diri sendiri, masih
-     * top-level, dan belum punya varian (kedalaman maksimum 1 level).
+     * Aturan validasi varian: induk harus ada, bukan diri sendiri, dan masih
+     * top-level (kedalaman maksimum 1 level). Satu induk boleh banyak varian.
      */
     private function variantRules(?Collection $self = null): array
     {
@@ -44,8 +44,6 @@ class AdminCollectionController extends Controller
                         $fail('Koleksi tidak dapat menjadi induk dirinya sendiri.');
                     } elseif (! empty($parent->parent_id)) {
                         $fail('Hanya koleksi utama yang dapat dipilih sebagai induk.');
-                    } elseif ($parent->variants()->exists()) {
-                        $fail('Koleksi yang sudah memiliki varian tidak dapat dipilih sebagai induk.');
                     }
                 },
             ],

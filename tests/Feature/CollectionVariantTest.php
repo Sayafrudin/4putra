@@ -64,6 +64,26 @@ class CollectionVariantTest extends TestCase
         $this->assertEquals($parent->id, $variant->parent_id);
     }
 
+    public function test_admin_can_store_multiple_variants_under_same_parent(): void
+    {
+        $parent = $this->makeCollection();
+        $admin = $this->makeAdmin();
+
+        foreach (['Uji IRN Varian 1', 'Uji IRN Varian 2'] as $nama) {
+            $this->actingAs($admin)
+                ->postJson(route('admin.collections.store'), [
+                    'name' => $nama,
+                    'category' => 'uji-varian',
+                    'parent_id' => $parent->id,
+                ])
+                ->assertStatus(200)
+                ->assertJson(['success' => true]);
+        }
+
+        // Kedua varian tersimpan di bawah induk yang sama (kedalaman 1 level)
+        $this->assertCount(2, Collection::where('parent_id', $parent->id)->get());
+    }
+
     public function test_admin_cannot_nest_variant_under_variant_or_self(): void
     {
         $parent = $this->makeCollection();

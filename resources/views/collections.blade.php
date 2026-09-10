@@ -148,7 +148,7 @@
                             {{-- Section foto galeri --}}
                             <template x-if="items[idx].photos && items[idx].photos.length > 0">
                                 <div>
-                                    <h4 class="text-sm font-bold uppercase tracking-[0.2em] text-gray-400 mb-4">{{ __('collections.photos_title') }}</h4>
+                                    <h4 class="text-center text-lg sm:text-xl font-bold uppercase tracking-[0.2em] text-white mb-5">{{ __('collections.photos_title') }}</h4>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                         <template x-for="(p, pi) in items[idx].photos" :key="pi">
                                             <div class="rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-[#151a22] border border-gray-200 dark:border-gray-700 group">
@@ -165,8 +165,8 @@
 
                             {{-- Section varian: badge +N, klik membuka lightbox SEMUA foto varian --}}
                             <template x-if="items[idx].variants && items[idx].variants.length > 0">
-                                <div>
-                                    <h4 class="text-sm font-bold uppercase tracking-[0.2em] text-gray-400 mb-4">{{ __('collections.variants_title') }}</h4>
+                                <div :class="items[idx].photos && items[idx].photos.length > 0 ? 'border-t border-white/10 pt-8' : ''">
+                                    <h4 class="text-center text-lg sm:text-xl font-bold uppercase tracking-[0.2em] text-white mb-5">{{ __('collections.variants_title') }}</h4>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                         <template x-for="(v, vi) in items[idx].variants" :key="vi">
                                             <div class="rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-[#151a22] border border-gray-200 dark:border-gray-700 group">
@@ -178,7 +178,7 @@
                                                         class="absolute top-2.5 right-2.5 z-10 px-2.5 py-1 rounded-full bg-[#E62C37]/90 text-white text-xs font-bold shadow-lg pointer-events-none"
                                                         x-text="'+' + v.photos.length"></span>
                                                 </div>
-                                                <p class="text-sm font-bold text-center py-2.5 px-2 text-gray-800 dark:text-gray-100" x-text="v.name"></p>
+                                                <p class="text-base font-bold text-center py-2.5 px-2 text-gray-800 dark:text-gray-100" x-text="v.name"></p>
                                             </div>
                                         </template>
                                     </div>

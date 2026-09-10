@@ -32,9 +32,9 @@ function cleanupDb() {
 function seed() {
     tinker(
         `$p = App\\Models\\Collection::firstOrCreate(['name'=>'${PARENT}'],` +
-        `['category'=>'Uji E2E Publik','sort_order'=>9998,'images'=>['https://res.cloudinary.com/demo/image/upload/u1.jpg','https://res.cloudinary.com/demo/image/upload/u2.jpg']]); ` +
-        `App\\Models\\Collection::firstOrCreate(['name'=>'${V1}'],['category'=>'Uji E2E Publik','parent_id'=>$p->id,'image_path'=>'https://res.cloudinary.com/demo/image/upload/v1.jpg']); ` +
-        `App\\Models\\Collection::firstOrCreate(['name'=>'${V2}'],['category'=>'Uji E2E Publik','parent_id'=>$p->id,'image_path'=>'https://res.cloudinary.com/demo/image/upload/v2.jpg']); ` +
+        `['category'=>'Uji E2E Publik','sort_order'=>9998,'scientific_name'=>'Cacatua Uji','images'=>['https://res.cloudinary.com/demo/image/upload/u1.jpg','https://res.cloudinary.com/demo/image/upload/u2.jpg']]); ` +
+        `App\\Models\\Collection::firstOrCreate(['name'=>'${V1}'],['category'=>'Uji E2E Publik','parent_id'=>$p->id,'scientific_name'=>'Eolophus Uji','image_path'=>'https://res.cloudinary.com/demo/image/upload/v1.jpg']); ` +
+        `App\\Models\\Collection::firstOrCreate(['name'=>'${V2}'],['category'=>'Uji E2E Publik','parent_id'=>$p->id,'scientific_name'=>'Eolophus Uji','image_path'=>'https://res.cloudinary.com/demo/image/upload/v2.jpg']); ` +
         `Illuminate\\Support\\Facades\\Cache::forget('public.collections.v2'); Illuminate\\Support\\Facades\\Cache::forget('admin.collections'); echo 'seed ok';`
     );
 }
@@ -93,11 +93,29 @@ try {
     assert(sep.border === 1, `Garis pembatas tampil (borderTopWidth=${sep.border}px)`);
     assert(sep.pad >= 32, `Jarak pembatas cukup (paddingTop=${sep.pad}px >= 32px)`);
 
-    // Nama varian di bawah gambar >= 16px
+    // Overlay nama varian gaya card koleksi: kotak gelap, nama putih bold, ilmiah merah uppercase
     const pNama = dialog.locator('p', { hasText: V1 }).first();
     await pNama.waitFor({ state: 'visible', timeout: 5000 });
-    const namaSize = await pNama.evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
-    assert(namaSize >= 16, `Nama varian terbaca (fontSize=${namaSize}px >= 16px)`);
+    const ovVar = await pNama.evaluate((el) => {
+        const s = getComputedStyle(el);
+        const box = getComputedStyle(el.parentElement);
+        const sci = el.parentElement.querySelectorAll('p')[1];
+        const ss = getComputedStyle(sci);
+        return {
+            color: s.color, bold: s.fontWeight, box: box.backgroundColor,
+            sciColor: ss.color, sciUpper: ss.textTransform,
+        };
+    });
+    assert(ovVar.bold === '700' && ovVar.color === 'rgb(255, 255, 255)', `Nama varian: putih bold (${ovVar.color}, w=${ovVar.bold})`);
+    assert(ovVar.box.includes('0.85'), `Overlay gelap ala card koleksi (bg=${ovVar.box})`);
+    assert(ovVar.sciUpper === 'uppercase', `Ilmiah varian uppercase (${ovVar.sciUpper})`);
+    assert(/oklch\(0\.704|rgb\(248, 113, 113\)/.test(ovVar.sciColor), `Ilmiah varian merah (${ovVar.sciColor})`);
+
+    // Overlay nama induk pada foto galeri section (nama + ilmiah induk)
+    const pFoto = dialog.locator('p', { hasText: PARENT }).first();
+    await pFoto.waitFor({ state: 'visible', timeout: 5000 });
+    const ovFoto = await pFoto.evaluate((el) => getComputedStyle(el.parentElement).backgroundColor);
+    assert(ovFoto.includes('0.85'), `Overlay nama induk di foto galeri (bg=${ovFoto})`);
 
     // Escape menutup modal (overflow pulih)
     await page.keyboard.press('Escape');

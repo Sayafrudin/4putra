@@ -153,14 +153,10 @@
                                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                         <template x-for="(p, pi) in items[idx].photos" :key="pi">
                                             <div class="rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-[#151a22] border border-gray-200 dark:border-gray-700 group">
-                                                <div class="relative w-full aspect-[4/5] overflow-hidden">
+                                                <div class="w-full aspect-[4/5] overflow-hidden">
                                                     <img :src="p.thumb" loading="lazy" decoding="async"
                                                         @click="zoomMedia(p.full, items[idx].photos)"
                                                         class="w-full h-full object-cover object-top cursor-pointer group-hover:scale-105 transition-all duration-500">
-                                                    <div class="absolute bottom-2.5 inset-x-2.5 z-10 rounded-xl bg-black/85 border border-white/10 p-2.5 text-center shadow-lg pointer-events-none">
-                                                        <p class="text-white font-bold text-sm tracking-wide" x-text="items[idx].name"></p>
-                                                        <p class="text-red-400 font-semibold text-xs tracking-wider uppercase" x-text="items[idx].scientific"></p>
-                                                    </div>
                                                 </div>
                                             </div>
                                         </template>

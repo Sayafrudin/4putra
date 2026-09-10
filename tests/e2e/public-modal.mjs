@@ -111,11 +111,9 @@ try {
     assert(ovVar.sciUpper === 'uppercase', `Ilmiah varian uppercase (${ovVar.sciUpper})`);
     assert(/oklch\(0\.704|rgb\(248, 113, 113\)/.test(ovVar.sciColor), `Ilmiah varian merah (${ovVar.sciColor})`);
 
-    // Overlay nama induk pada foto galeri section (nama + ilmiah induk)
-    const pFoto = dialog.locator('p', { hasText: PARENT }).first();
-    await pFoto.waitFor({ state: 'visible', timeout: 5000 });
-    const ovFoto = await pFoto.evaluate((el) => getComputedStyle(el.parentElement).backgroundColor);
-    assert(ovFoto.includes('0.85'), `Overlay nama induk di foto galeri (bg=${ovFoto})`);
+    // Foto galeri TANPA overlay nama (nama sudah di header modal) — hanya varian yang ber-overlay
+    const pFotoCount = await dialog.locator('p', { hasText: PARENT }).count();
+    assert(pFotoCount === 0, `Foto galeri tanpa overlay nama`);
 
     // Escape menutup modal (overflow pulih)
     await page.keyboard.press('Escape');

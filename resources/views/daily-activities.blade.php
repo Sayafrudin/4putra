@@ -297,7 +297,7 @@
 
                                     {{-- Strip thumbnail: video = tile play hitam, foto = thumb w_600 --}}
                                     <template x-if="items[idx].media.length > 1">
-                                        <div class="mt-4 flex gap-2 overflow-x-auto pb-1">
+                                        <div class="mt-4 flex gap-2 overflow-x-auto pb-1 media-strip">
                                             <template x-for="(m, ti) in items[idx].media" :key="ti">
                                                 <button type="button" @click="cur = ti"
                                                     class="shrink-0 w-16 h-16 rounded border-2 overflow-hidden transition-colors flex items-center justify-center"

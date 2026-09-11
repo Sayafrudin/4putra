@@ -277,7 +277,7 @@
 
                                     {{-- Strip thumbnail --}}
                                     <template x-if="items[idx].full.length > 1">
-                                        <div class="flex gap-2 overflow-x-auto pb-1 mb-6">
+                                        <div class="flex gap-2 overflow-x-auto pb-1 mb-6 media-strip">
                                             <template x-for="(img, ti) in items[idx].thumbs" :key="ti">
                                                 <button type="button" @click="cur = ti"
                                                     class="shrink-0 w-16 h-16 rounded border-2 overflow-hidden transition-colors"

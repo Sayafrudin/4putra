@@ -57,3 +57,14 @@ if (document.readyState === 'loading') {
     initMarquee();
 }
 document.addEventListener('turbo:load', initMarquee);
+
+// Mouse wheel → scroll horizontal pada strip galeri (desktop tanpa trackpad)
+document.addEventListener('wheel', (e) => {
+    const el = e.target.closest('.media-strip');
+    if (!el || el.scrollWidth <= el.clientWidth) return;
+    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+    // Di tepi strip: biarkan wheel meneruskan scroll halaman (anti scroll-chaining mati)
+    if ((e.deltaY > 0 && el.scrollLeft >= el.scrollWidth - el.clientWidth) || (e.deltaY < 0 && el.scrollLeft <= 0)) return;
+    el.scrollLeft += e.deltaY;
+    e.preventDefault();
+}, { passive: false });

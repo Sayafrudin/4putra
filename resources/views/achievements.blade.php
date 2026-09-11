@@ -178,7 +178,7 @@
 
                             {{-- Thumbnail bar --}}
                             <div class="w-full">
-                                <div class="flex gap-2 overflow-x-auto pb-1 px-1 scrollbar-hide snap-x cursor-pointer md:justify-center">
+                                <div class="flex gap-2 overflow-x-auto pb-1 px-1 media-strip snap-x cursor-pointer">
                                     @if ($achievement->video_file)
                                         <div @click="activeMedia = 'video-file'"
                                             :class="activeMedia === 'video-file'

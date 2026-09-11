@@ -29,6 +29,31 @@ body,
     display: none;
 }
 
+/* Strip galeri media: scrollbar tipis terlihat di desktop (mouse),
+   tetap disembunyikan di touch (swipe natural) */
+.media-strip {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+.media-strip::-webkit-scrollbar {
+    height: 6px;
+}
+.media-strip::-webkit-scrollbar-track {
+    background: transparent;
+}
+.media-strip::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.5);
+    border-radius: 9999px;
+}
+@media (pointer: coarse) {
+    .media-strip {
+        scrollbar-width: none;
+    }
+    .media-strip::-webkit-scrollbar {
+        display: none;
+    }
+}
+
 /* Toast notification container */
 #toast-container {
     position: fixed;

@@ -19,6 +19,7 @@ yarn-error.log
 /.vscode
 .opencode/
 .codegraph/
+.superpowers/
 node_modules/
 vendor/
 public/chatbot/auth_info/

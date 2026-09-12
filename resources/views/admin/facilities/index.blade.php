@@ -196,13 +196,13 @@
             </div>
 
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Upload Foto Fasilitas
-                    <span class="font-normal normal-case text-gray-500">(bisa beberapa foto sekaligus)</span>
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Upload Foto/Video Fasilitas
+                    <span class="font-normal normal-case text-gray-500">(bisa beberapa file sekaligus)</span>
                 </label>
                 <div id="dropzone-create"
                     class="dropzone !bg-white dark:bg-[#151a22] border-2 border-dashed border-gray-300 dark:border-gray-700 rounded p-6 text-center cursor-pointer hover:border-[#E62C37] transition-colors min-h-[140px]">
                     <div class="dz-message text-sm text-gray-500 dark:text-gray-400">
-                        Tarik file foto ke sini atau klik untuk memilih
+                        Tarik file foto/video ke sini atau klik untuk memilih
                     </div>
                 </div>
                 <span id="error-create-photos" class="hidden text-xs font-semibold text-[#E62C37] mt-1">Minimal unggah
@@ -300,11 +300,11 @@
             </div>
 
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Tambah Foto Fasilitas Baru</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Tambah Foto/Video Fasilitas Baru</label>
                 <div id="dropzone-edit"
                     class="dropzone !bg-white dark:bg-[#151a22] border-2 border-dashed border-gray-300 dark:border-gray-700 rounded p-6 text-center cursor-pointer hover:border-amber-500 transition-colors min-h-[140px]">
                     <div class="dz-message text-sm text-gray-500 dark:text-gray-400">
-                        Tarik file foto baru ke sini untuk menambah koleksi
+                        Tarik file foto/video baru ke sini untuk menambah koleksi
                     </div>
                 </div>
             </div>

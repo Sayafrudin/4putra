@@ -58,9 +58,9 @@ if (document.readyState === 'loading') {
 }
 document.addEventListener('turbo:load', initMarquee);
 
-// Mouse wheel → scroll horizontal pada strip galeri (desktop tanpa trackpad)
+// Mouse wheel → scroll horizontal pada strip galeri & tabel admin (desktop tanpa trackpad)
 document.addEventListener('wheel', (e) => {
-    const el = e.target.closest('.media-strip');
+    const el = e.target.closest('.media-strip, .overflow-x-auto');
     if (!el || el.scrollWidth <= el.clientWidth) return;
     if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
     // Di tepi strip: biarkan wheel meneruskan scroll halaman (anti scroll-chaining mati)

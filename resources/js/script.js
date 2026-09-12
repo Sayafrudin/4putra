@@ -63,8 +63,10 @@ document.addEventListener('wheel', (e) => {
     const el = e.target.closest('.media-strip, .overflow-x-auto');
     if (!el || el.scrollWidth <= el.clientWidth) return;
     if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
-    // Di tepi strip: biarkan wheel meneruskan scroll halaman (anti scroll-chaining mati)
-    if ((e.deltaY > 0 && el.scrollLeft >= el.scrollWidth - el.clientWidth) || (e.deltaY < 0 && el.scrollLeft <= 0)) return;
+    // Tabel admin: wheel murni milik tabel (page tidak ikut scroll walau di tepi).
+    // Strip galeri publik: di tepi biarkan wheel meneruskan scroll halaman.
+    const isTable = el.classList.contains('overflow-x-auto');
+    if (!isTable && ((e.deltaY > 0 && el.scrollLeft >= el.scrollWidth - el.clientWidth) || (e.deltaY < 0 && el.scrollLeft <= 0))) return;
     el.scrollLeft += e.deltaY;
     e.preventDefault();
 }, { passive: false });

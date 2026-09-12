@@ -78,7 +78,7 @@ try {
         // Page scroll terjadi di <main> (shell h-screen overflow-hidden), bukan window
         const getMainY = () => page.evaluate(() => document.querySelector('main').scrollTop);
 
-        // A3: di tepi kanan → wheel meneruskan scroll halaman (di <main>)
+        // A3: di tepi kanan → page TETAP (wheel murni milik tabel, page terkunci)
         await scroller.evaluate((el) => { el.scrollLeft = el.scrollWidth; });
         await page.evaluate(() => { document.querySelector('main').scrollTop = 0; });
         await sleep(300);
@@ -86,16 +86,33 @@ try {
         await wheel(480);
         await sleep(400);
         const pageY1 = await getMainY();
-        assert(pageY1 > pageY0, `A3 di tepi kanan wheel meneruskan scroll halaman (${pageY0} → ${pageY1})`);
+        const edgeLeft = await scroller.evaluate((el) => el.scrollLeft >= el.scrollWidth - el.clientWidth - 1);
+        assert(pageY1 === pageY0 && edgeLeft, `A3 di tepi kanan page terkunci, tabel tetap di tepi (main ${pageY0} → ${pageY1})`);
 
-        // A4: di tepi kiri + wheel ke atas → halaman scroll naik
+        // A4: di tepi kiri + wheel ke atas → page TETAP
         await scroller.evaluate((el) => { el.scrollLeft = 0; });
         await sleep(200);
         const pageY2 = await getMainY();
         await wheel(-480);
         await sleep(400);
         const pageY3 = await getMainY();
-        assert(pageY3 < pageY2, `A4 di tepi kiri wheel ke atas → halaman naik (${pageY2} → ${pageY3})`);
+        assert(pageY3 === pageY2, `A4 di tepi kiri page terkunci (main ${pageY2} → ${pageY3})`);
+
+        // A6: wheel DI LUAR tabel → page scroll normal lagi
+        const box6 = await scroller.boundingBox();
+        const cdp6 = await ctx.newCDPSession(page);
+        await page.evaluate(() => { document.querySelector('main').scrollTop = 0; });
+        await sleep(300);
+        await cdp6.send('Input.dispatchMouseEvent', {
+            type: 'mouseWheel',
+            x: Math.round(box6.x + box6.width / 2),
+            y: Math.max(60, Math.min(Math.round(box6.y - 40), 700)), // area header, di luar tabel
+            deltaX: 0,
+            deltaY: 480,
+        });
+        await sleep(400);
+        const pageY6 = await getMainY();
+        assert(pageY6 > 0, `A6 wheel di luar tabel → page scroll normal (main 0 → ${pageY6})`);
     }
 
     // A5: container tabel lain juga ter-scroll (collections, sudah login)

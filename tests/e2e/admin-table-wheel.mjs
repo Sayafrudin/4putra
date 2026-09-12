@@ -12,7 +12,7 @@
  */
 import { chromium } from 'playwright-core';
 
-const BASE = 'http://127.0.0.1:8000';
+const BASE = process.env.BASE_URL || 'http://127.0.0.1:8000';
 const ADMIN = { email: 'admin@4putra.com', password: 'password123' };
 
 let failures = 0;
@@ -36,7 +36,7 @@ try {
     await page.click('#password');
     await page.fill('#password', ADMIN.password);
     await page.click('button[type="submit"]');
-    await page.waitForURL(`${BASE}/admin`, { timeout: 15000 });
+    await page.waitForURL(`${BASE.replace(/\/$/, '')}/admin`, { timeout: 15000 });
     assert(true, 'A0 login admin → /admin');
 
     // Cari container tabel admin yang benar-benar overflow

@@ -12,12 +12,13 @@ class Achievement extends Model
 
     public $incrementing = true;
 
-    protected $fillable = ['title', 'title_en', 'title_highlight', 'title_highlight_en', 'year', 'description', 'description_en', 'date', 'date_end', 'location', 'video_url', 'video_file', 'external_link'];
+    protected $fillable = ['title', 'title_en', 'title_highlight', 'title_highlight_en', 'year', 'description', 'description_en', 'date', 'date_end', 'location', 'video_url', 'video_file', 'video_urls', 'external_link'];
 
     protected function casts(): array
     {
         return [
             'id' => 'string',
+            'video_urls' => 'array',
         ];
     }
 

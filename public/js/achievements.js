@@ -119,16 +119,7 @@
         populateLinkList('edit-video-url-list', achievement.video_url);
         populateLinkList('edit-external-link-list', achievement.external_link);
 
-        var videoWrap = document.getElementById('edit-existing-video-wrap');
-        var videoName = document.getElementById('edit-video-name');
-        if (videoWrap && videoName) {
-            if (achievement.video_file) {
-                videoName.textContent = achievement.video_file;
-                videoWrap.classList.remove('hidden');
-            } else {
-                videoWrap.classList.add('hidden');
-            }
-        }
+        renderExistingVideos(achievement.video_urls || []);
 
         renderExistingPhotos(achievement.images || []);
         showModal('edit');
@@ -136,6 +127,34 @@
             initDzEdit();
             if (dzEdit) { try { dzEdit.removeAllFiles(true); } catch (e) {} }
         });
+    }
+
+    function renderExistingVideos(videos) {
+        var wrapRow = document.getElementById('edit-existing-videos');
+        var wrap = document.getElementById('edit-existing-videos-wrap');
+        if (!wrapRow || !wrap) return;
+        wrapRow.innerHTML = '';
+        var list = Array.isArray(videos) ? videos.filter(Boolean) : [];
+
+        if (!list.length) {
+            wrap.classList.add('hidden');
+            return;
+        }
+
+        var frag = document.createDocumentFragment();
+        list.forEach(function (url) {
+            var row = document.createElement('div');
+            row.className = 'flex items-center gap-3 p-3 bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded';
+            row.dataset.videoUrl = url;
+            row.innerHTML =
+                '<input type="hidden" name="keep_video_urls[]" value="' + escAttr(url) + '">' +
+                '<svg class="w-5 h-5 text-amber-500 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>' +
+                '<span class="text-xs text-gray-600 dark:text-gray-300 truncate flex-1">' + escAttr(url) + '</span>' +
+                '<button type="button" title="Hapus video ini" class="btn-delete-existing-video px-2 py-1 text-xs font-bold uppercase tracking-wider text-[#E62C37] border border-[#E62C37] hover:bg-[#E62C37] hover:text-white transition-colors rounded">Hapus</button>';
+            frag.appendChild(row);
+        });
+        wrapRow.appendChild(frag);
+        wrap.classList.remove('hidden');
     }
 
     function renderExistingPhotos(images) {
@@ -210,23 +229,28 @@
         });
     }
 
-    var btnDeleteVideo = document.getElementById('btn-delete-video');
-    if (btnDeleteVideo) {
-        btnDeleteVideo.addEventListener('click', function () { showModal('confirm-delete-video'); });
+    // =============================================
+    // HAPUS VIDEO TERSIMPAN (per-baris, konfirmasi modal)
+    // =============================================
+    var pendingDeleteVideoRow = null;
+
+    var existingVideosWrap = document.getElementById('edit-existing-videos');
+    if (existingVideosWrap) {
+        existingVideosWrap.addEventListener('click', function (e) {
+            var btn = e.target.closest('.btn-delete-existing-video');
+            if (!btn) return;
+            pendingDeleteVideoRow = btn.closest('[data-video-url]');
+            showModal('confirm-delete-video');
+        });
     }
 
     var confirmDeleteVideoBtn = document.getElementById('confirm-delete-video-btn');
     if (confirmDeleteVideoBtn) {
         confirmDeleteVideoBtn.addEventListener('click', function () {
             closeModal('confirm-delete-video');
-            var existing = els.formEdit.querySelector('input[name="remove_video"]');
-            if (!existing) {
-                var input = document.createElement('input');
-                input.type = 'hidden'; input.name = 'remove_video'; input.value = '1';
-                els.formEdit.appendChild(input);
-            }
-            var videoWrap = document.getElementById('edit-existing-video-wrap');
-            if (videoWrap) videoWrap.classList.add('hidden');
+            if (!pendingDeleteVideoRow) return;
+            pendingDeleteVideoRow.remove(); // hidden input keep_video_urls[] ikut terhapus -> server simpan sisanya
+            pendingDeleteVideoRow = null;
             showToast('success', 'Siap', 'Video akan dihapus saat Anda menyimpan perubahan.');
         });
     }
@@ -292,10 +316,15 @@
             Promise.all(uploads)
                 .then(function (results) {
                     var fd = new FormData(els.formCreate);
-                    results.forEach(function (r) {
+results.forEach(function (r) {
+                    // Video file -> video_urls[] (multi), gambar -> cloudinary_urls[] seperti biasa
+                    if (r.resource_type === 'video') {
+                        fd.append('video_urls[]', r.url);
+                    } else {
                         fd.append('cloudinary_urls[]', r.url);
                         fd.append('cloudinary_types[]', r.resource_type);
-                    });
+                    }
+                });
                     fd.delete('images');
 
                     return fetch(CFG.storeUrl, {
@@ -378,10 +407,15 @@
             uploadPromise
                 .then(function (results) {
                     var fd = new FormData(els.formEdit);
-                    results.forEach(function (r) {
+results.forEach(function (r) {
+                    // Video file -> video_urls[] (multi), gambar -> cloudinary_urls[] seperti biasa
+                    if (r.resource_type === 'video') {
+                        fd.append('video_urls[]', r.url);
+                    } else {
                         fd.append('cloudinary_urls[]', r.url);
                         fd.append('cloudinary_types[]', r.resource_type);
-                    });
+                    }
+                });
                     fd.delete('images');
 
                     return fetch(els.formEdit.action, {

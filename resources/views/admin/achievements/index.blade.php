@@ -490,20 +490,14 @@
                 <button type="button" onclick="tambahLinkItem('edit-external-link-list')" class="mt-2 px-3 py-1.5 text-xs font-bold bg-green-600/20 text-green-400 border border-green-500/30 rounded-lg hover:bg-green-600/30 transition-colors">+ Tambah Link Eksternal</button>
             </div>
 
-            {{-- Video tersimpan --}}
-            <div id="edit-existing-video-wrap" class="hidden">
+            {{-- Video tersimpan (bisa banyak) --}}
+            <div id="edit-existing-videos-wrap" class="hidden">
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Video Tersimpan</label>
-                <div id="edit-existing-video"
-                    class="flex items-center gap-3 p-3 bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded">
-                    <svg class="w-5 h-5 text-amber-500 shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z" />
-                    </svg>
-                    <span id="edit-video-name" class="text-xs text-gray-600 dark:text-gray-300 truncate flex-1"></span>
-                    <button type="button" id="btn-delete-video"
-                        class="px-2 py-1 text-xs font-bold uppercase tracking-wider text-[#E62C37] border border-[#E62C37] hover:bg-[#E62C37] hover:text-white transition-colors rounded">
-                        Hapus
-                    </button>
+                <div id="edit-existing-videos" class="space-y-2">
+                    {{-- diisi dinamis oleh achievements.js --}}
                 </div>
+                <p class="text-[11px] text-gray-500 mt-1">Klik Hapus pada video untuk menghapusnya saat menyimpan
+                    perubahan.</p>
             </div>
 
             {{-- GALERI FOTO TERSIMPAN + HAPUS PER-FOTO --}}

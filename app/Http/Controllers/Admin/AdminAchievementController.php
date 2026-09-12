@@ -18,7 +18,7 @@ class AdminAchievementController extends Controller
     {
         $achievements = Cache::remember('admin.achievements', 120, function () {
             return Achievement::with('images:id,achievement_id,image_path')
-                ->select('id', 'title', 'title_en', 'title_highlight', 'title_highlight_en', 'year', 'description', 'description_en', 'date', 'date_end', 'location', 'video_url', 'video_file', 'external_link')
+                ->select('id', 'title', 'title_en', 'title_highlight', 'title_highlight_en', 'year', 'description', 'description_en', 'date', 'date_end', 'location', 'video_url', 'video_urls', 'external_link')
                 ->latest()->get();
         });
 
@@ -56,6 +56,11 @@ class AdminAchievementController extends Controller
             }
             $videoUrls = array_values(array_filter($videoUrls, fn ($l) => filter_var($l, FILTER_VALIDATE_URL)));
 
+            // Video file hasil upload browser masuk video_urls[] (multi), link video tetap video_url[]
+            $uploadVideoUrls = collect($request->input('video_urls', []))
+                ->filter(fn ($u) => filter_var($u, FILTER_VALIDATE_URL))
+                ->values()->all();
+
             $achievement = Achievement::create([
                 'title' => $request->title,
                 'title_en' => $request->title_en,
@@ -68,6 +73,7 @@ class AdminAchievementController extends Controller
                 'description' => $request->description,
                 'description_en' => $request->description_en,
                 'video_url' => ! empty($videoUrls) ? json_encode($videoUrls) : null,
+                'video_urls' => $uploadVideoUrls ?: null,
                 'external_link' => ! empty($externalLinks) ? json_encode($externalLinks) : null,
             ]);
 
@@ -76,15 +82,18 @@ class AdminAchievementController extends Controller
             $cloudTypes = $request->input('cloudinary_types', []);
 
             foreach ($cloudUrls as $i => $url) {
-                $type = $cloudTypes[$i] ?? 'image';
-                if ($type === 'video') {
-                    $achievement->update(['video_file' => $url]);
+                if (($cloudTypes[$i] ?? 'image') === 'video') {
+                    $uploadVideoUrls[] = $url;
                 } else {
                     AchievementImage::create([
                         'achievement_id' => $achievement->id,
                         'image_path' => $url,
                     ]);
                 }
+            }
+
+            if ($uploadVideoUrls) {
+                $achievement->update(['video_urls' => array_values(array_unique($uploadVideoUrls))]);
             }
 
             $this->logDataChange(
@@ -167,23 +176,26 @@ class AdminAchievementController extends Controller
 
             $imagePreviews = [];
 
-            if ($request->input('remove_video') == '1' && $achievement->video_file) {
-                $achievement->update(['video_file' => null]);
-            }
+            // Video tersimpan yang dipertahankan (baris tidak dihapus di modal) + video baru hasil upload
+            $uploadVideoUrls = collect($request->input('keep_video_urls', []))
+                ->merge($request->input('video_urls', []))
+                ->filter(fn ($u) => filter_var($u, FILTER_VALIDATE_URL))
+                ->values()->all();
 
             // Gambar/video di-upload langsung dari browser ke Cloudinary
             $cloudUrls = $request->input('cloudinary_urls', []);
             $cloudTypes = $request->input('cloudinary_types', []);
 
             foreach ($cloudUrls as $i => $url) {
-                $type = $cloudTypes[$i] ?? 'image';
-                if ($type === 'video') {
-                    $achievement->update(['video_file' => $url]);
+                if (($cloudTypes[$i] ?? 'image') === 'video') {
+                    $uploadVideoUrls[] = $url;
                 } else {
                     AchievementImage::create(['achievement_id' => $achievement->id, 'image_path' => $url]);
                     $imagePreviews[] = $url;
                 }
             }
+
+            $achievement->update(['video_urls' => $uploadVideoUrls ?: null]);
 
             $this->logDataChange(
                 $request, 'update',

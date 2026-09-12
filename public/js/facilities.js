@@ -51,7 +51,7 @@
                             dzInstance.emit('success', file);
                             dzInstance.emit('complete', file);
                         }
-                        resolve(data.secure_url);
+                        resolve({ url: data.secure_url, resource_type: data.resource_type || 'image' });
                     } else {
                         reject(new Error('Cloudinary tidak mengembalikan URL'));
                     }
@@ -226,10 +226,15 @@
             : Promise.resolve([]);
 
         return uploadPromise
-            .then(function (urls) {
+            .then(function (results) {
                 var fd = new FormData(formEl);
-                urls.forEach(function (url) {
-                    fd.append('cloudinary_urls[]', url);
+                results.forEach(function (r) {
+                    // Video file -> video_urls[] (diputar Video.js di publik), gambar -> cloudinary_urls[]
+                    if (r.resource_type === 'video') {
+                        fd.append('video_urls[]', r.url);
+                    } else {
+                        fd.append('cloudinary_urls[]', r.url);
+                    }
                 });
                 fd.delete('images');
 
@@ -362,10 +367,10 @@
                 uploadMultiple: true,
                 parallelUploads: 10,
                 paramName: 'images',
-                maxFilesize: 20,
-                acceptedFiles: 'image/jpeg,image/png,image/jpg,image/gif,image/webp',
+                maxFilesize: 100,
+                acceptedFiles: 'image/jpeg,image/png,image/jpg,image/gif,image/webp,video/mp4,video/mov,video/webm,video/avi',
                 addRemoveLinks: true,
-                dictDefaultMessage: 'Tarik file foto ke sini atau klik untuk memilih',
+                dictDefaultMessage: 'Tarik file foto/video ke sini atau klik untuk memilih',
                 dictRemoveFile: 'Hapus',
             });
             dzCreateInitialized = true;
@@ -387,10 +392,10 @@
                 uploadMultiple: true,
                 parallelUploads: 10,
                 paramName: 'images',
-                maxFilesize: 20,
-                acceptedFiles: 'image/jpeg,image/png,image/jpg,image/gif,image/webp',
+                maxFilesize: 100,
+                acceptedFiles: 'image/jpeg,image/png,image/jpg,image/gif,image/webp,video/mp4,video/mov,video/webm,video/avi',
                 addRemoveLinks: true,
-                dictDefaultMessage: 'Tarik file foto baru ke sini',
+                dictDefaultMessage: 'Tarik file foto/video baru ke sini',
                 dictRemoveFile: 'Hapus',
             });
             dzEditInitialized = true;

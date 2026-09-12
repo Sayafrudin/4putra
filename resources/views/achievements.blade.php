@@ -80,26 +80,28 @@
                                 $videoUrls = $achievement->video_url;
                             }
                         }
-                        $hasVideo = $achievement->video_file || count($videoUrls) > 0;
+                        // Video file hasil upload (bisa banyak) dari kolom JSON video_urls
+                        $videoFiles = collect($achievement->video_urls ?? [])->filter(fn ($u) => trim((string) $u) !== '')->values()->all();
+                        $hasVideo = count($videoFiles) > 0 || count($videoUrls) > 0;
+                        $firstMedia = $hasVideo ? (count($videoFiles) ? 'vfile-0' : 'video-0') : 'img-0';
                     @endphp
 
                     @if ($hasImages || $hasVideo)
                         <div class="w-full lg:w-5/12 flex flex-col space-y-4"
-                            x-data="{ activeMedia: '{{ $hasVideo ? 'video-0' : 'img-0' }}' }">
+                            x-data="{ activeMedia: '{{ $firstMedia }}' }">
 
                             {{-- Area utama: video atau gambar --}}
                             <div class="w-full aspect-[4/3] md:aspect-[5/4] bg-gray-100 dark:bg-gray-800 overflow-hidden shadow-lg relative group shrink-0 border border-gray-100 dark:border-gray-700">
                                 @if ($hasVideo)
-                                    @if ($achievement->video_file)
-                                        <div x-show="activeMedia === 'video-file'" x-transition:enter="transition ease-out duration-300"
+                                    @foreach ($videoFiles as $vfIdx => $vFileUrl)
+                                        <div x-show="activeMedia === 'vfile-{{ $vfIdx }}'" x-transition:enter="transition ease-out duration-300"
                                             x-transition:enter-start="opacity-50" x-transition:enter-end="opacity-100"
-                                            class="w-full h-full flex items-center justify-center bg-black">
+                                            class="w-full h-full flex items-center justify-center bg-black absolute inset-0">
                                             @php
-                                                // video_file kini berisi URL Cloudinary penuh (upload baru)
-                                                // atau nama file lokal legacy di storage/achievements/videos/
-                                                $videoFileSrc = str_starts_with($achievement->video_file, 'http')
-                                                    ? $achievement->video_file
-                                                    : asset('storage/achievements/videos/' . $achievement->video_file);
+                                                // URL Cloudinary penuh (upload baru) atau nama file lokal legacy
+                                                $videoFileSrc = str_starts_with($vFileUrl, 'http')
+                                                    ? $vFileUrl
+                                                    : asset('storage/achievements/videos/' . $vFile);
                                                 $vfExt = strtolower(pathinfo(parse_url($videoFileSrc, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION));
                                                 $vfType = $vfExt === 'webm' ? 'video/webm' : ($vfExt === 'mov' ? 'video/quicktime' : 'video/mp4');
                                             @endphp
@@ -108,7 +110,7 @@
                                                 <source src="{{ $videoFileSrc }}" type="{{ $vfType }}">
                                             </video>
                                         </div>
-                                    @endif
+                                    @endforeach
 
                                     @foreach ($videoUrls as $vIdx => $vUrl)
                                         @php
@@ -179,9 +181,9 @@
                             {{-- Thumbnail bar --}}
                             <div class="w-full">
                                 <div class="flex gap-2 overflow-x-auto pb-1 px-1 media-strip snap-x cursor-pointer">
-                                    @if ($achievement->video_file)
-                                        <div @click="activeMedia = 'video-file'"
-                                            :class="activeMedia === 'video-file'
+                                    @foreach ($videoFiles as $vfIdx => $vFileUrl)
+                                        <div @click="activeMedia = 'vfile-{{ $vfIdx }}'"
+                                            :class="activeMedia === 'vfile-{{ $vfIdx }}'
                                                 ? 'border-[#E62C37] opacity-100 ring-2 ring-[#E62C37]/30'
                                                 : 'border-transparent opacity-60 hover:opacity-100'"
                                             class="thumb shrink-0 w-16 h-12 md:w-20 md:h-16 bg-black border-2 transition-all duration-200 snap-start shadow-sm flex items-center justify-center rounded">
@@ -189,7 +191,7 @@
                                                 <path d="M8 5v14l11-7z" />
                                             </svg>
                                         </div>
-                                    @endif
+                                    @endforeach
 
                                     @if (!empty($videoUrls))
                                         @foreach ($videoUrls as $vIdx => $vUrl)

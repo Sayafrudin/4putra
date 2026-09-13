@@ -40,7 +40,7 @@
 
                     <button
                         class="bg-blue-50 cursor-pointer rounded-md shadow-md shadow-transparent transition-all duration-300 hover:shadow-indigo-200">
-                        <a href="https://www.facebook.com/putra.parrot.54/" target="_blank" rel="noopener noreferrer">
+                        <a href="https://www.facebook.com/profile.php?id=100086123436506" target="_blank" rel="noopener noreferrer">
                             <svg class="" xmlns="http://www.w3.org/2000/svg" width="48" height="48"
                                 viewBox="0 0 92 92" fill="none">
                                 <rect x="0.138672" width="" height="" rx="15" fill="#EDF4FF" />
@@ -149,7 +149,7 @@
 
                         <button
                             class="bg-blue-50 cursor-pointer rounded-md shadow-md shadow-transparent transition-all duration-300 hover:shadow-indigo-200">
-                            <a href="https://www.facebook.com/putra.parrot.54/" target="_blank"
+                            <a href="https://www.facebook.com/profile.php?id=100086123436506" target="_blank"
                                 rel="noopener noreferrer">
                                 <svg class="" xmlns="http://www.w3.org/2000/svg" width="48" height="48"
                                     viewBox="0 0 92 92" fill="none">

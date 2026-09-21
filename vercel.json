@@ -10,6 +10,10 @@
             "dest": "/public/$1/$2"
         },
         {
+            "src": "/(robots\\.txt|sitemap\\.xml|llms\\.txt|favicon\\.ico)",
+            "dest": "/public/$1"
+        },
+        {
             "src": "/public/chatbot/(.*)",
             "dest": "/api/index.php"
         },

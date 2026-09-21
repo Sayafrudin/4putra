@@ -74,7 +74,7 @@ Setiap modifikasi wajib melewati validasi berikut sebelum diselesaikan:
 1. CRUD & Media: Create, Read, Update, Delete berjalan normal. Upload file berhasil dan dirender.
 2. Routing & Caching: Middleware `AdminOnly` berfungsi. Tidak ada loop redirect. Turbo Drive tidak mengalami cache collision pada pergantian bahasa.
 3. Database TiDB: Migrasi kompatibel. `PDO::ATTR_STRINGIFY_FETCHES` aktif. Hindari komparasi strict (`===`) pada ID. Package `colopl/laravel-tidb` TELAH DIHAPUS karena Blueprint override-nya membuat `$table->id()` menghasilkan kolom tanpa primary key/auto_increment pada koneksi driver `mysql` — setelah membuat tabel baru, verifikasi `SHOW CREATE TABLE` memuat `AUTO_INCREMENT` + `PRIMARY KEY`.
-4. Performa Serverless: `APP_DEBUG=false`. File statis dilayani oleh Vercel Edge CDN dengan Cache-Control yang tepat.
+4. Performa Serverless: `APP_DEBUG=false`. File statis dilayani oleh Vercel Edge CDN dengan Cache-Control yang tepat. File statis baru di `public/` (robots.txt, sitemap.xml, favicon.ico, dll) WAJIB didaftarkan di route map `vercel.json` — route hanya memetakan daftar direktori eksplisit, tanpa itu URL-nya masuk ke PHP (404).
 5. Error Handling: Penanganan AJAX error menampilkan pesan jelas. Bebas error 500.
 6. Smoke Render Halaman: Setiap Blade yang diubah wajib diakses sungguhan via HTTP (bukan hanya lulus test suite) untuk memastikan tidak ada ParseError di view — komentar `{{-- --}}` dilarang di dalam blok `@php ... @endphp` (gunakan komentar PHP `//`).
 

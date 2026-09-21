@@ -22,5 +22,6 @@ yarn-error.log
 .superpowers/
 node_modules/
 vendor/
-public/chatbot/auth_info/
+storage/app/chatbot-auth/
+storage/app/chatbot.env
 public/chatbot/node_modules/

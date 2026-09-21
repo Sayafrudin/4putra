@@ -10,6 +10,10 @@
             "dest": "/public/$1/$2"
         },
         {
+            "src": "/public/chatbot/(.*)",
+            "dest": "/api/index.php"
+        },
+        {
             "src": "/((?!public/).*)",
             "dest": "/api/index.php"
         }

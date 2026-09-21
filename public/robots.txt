@@ -1,2 +1,4 @@
 User-agent: *
 Disallow:
+
+Sitemap: https://4putra.vercel.app/sitemap.xml

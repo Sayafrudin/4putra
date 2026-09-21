@@ -5,14 +5,15 @@ import fs from 'fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 config({ path: join(__dirname, '../../.env') });
-config({ path: join(__dirname, '.env'), override: true });
+// Rahasia di luar folder publik — php artisan serve menyajikan file mentah di bawah public/
+config({ path: join(__dirname, '../../storage/app/chatbot.env'), override: true });
 import { makeWASocket, useMultiFileAuthState, DisconnectReason, downloadMediaMessage } from '@whiskeysockets/baileys';
 import pino from 'pino';
 import { Groq } from 'groq-sdk';
 import express from 'express';
 import { eksekusiAprioriLengkap } from './apriori.js';
 import { query, queryOne, insert, update } from './db.js';
-import { createTransaction } from './midtrans.js';
+import { createTransaction, getTransactionStatus } from './midtrans.js';
 import { kirimHandoffKeFirebase, hapusHandoffFirebase } from './firebase.js';
 
 // ============================================================
@@ -24,6 +25,9 @@ const GROQ_MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-20b';
 const groq = new Groq({ apiKey: GROQ_API_KEY });
 const logger = pino({ level: 'silent' });
 const RATE_LIMIT_MS = 2000;
+// Idle reset dihitung SQL-side (TIMESTAMPDIFF ke NOW()) — jam DB bisa beda
+// beberapa jam dengan jam Node; komparasi di JS memicu reset palsu tiap pesan
+const IDLE_RESET_DETIK = 6 * 3600;
 const JUMLAH_PERCAKAPAN_KONTEKS = 10;
 
 let cacheApriori = null;
@@ -162,12 +166,12 @@ async function dapatkanPelanggan(remoteJid, pushName = '') {
         jidType = 'unknown';
     }
 
-    // Cari pelanggan berdasarkan full JID
-    let pelanggan = await queryOne('SELECT id, nomor_wa, nama, sesi_aktif, riwayat_konteks, metadata_sesi, pesan_terakhir FROM pelanggan WHERE nomor_wa = ?', [remoteJid]);
+    // Cari pelanggan berdasarkan full JID (idle_detik dihitung sisi SQL agar bebas clock skew)
+    let pelanggan = await queryOne('SELECT id, nomor_wa, nama, sesi_aktif, riwayat_konteks, metadata_sesi, pesan_terakhir, TIMESTAMPDIFF(SECOND, pesan_terakhir, NOW()) AS idle_detik FROM pelanggan WHERE nomor_wa = ?', [remoteJid]);
 
     // Jika tidak ada, coba cari berdasarkan nomor saja (untuk migrasi dari format lama)
     if (!pelanggan) {
-        pelanggan = await queryOne('SELECT id, nomor_wa, nama, sesi_aktif, riwayat_konteks, metadata_sesi, pesan_terakhir FROM pelanggan WHERE nomor_wa = ? OR nomor_wa LIKE ?',
+        pelanggan = await queryOne('SELECT id, nomor_wa, nama, sesi_aktif, riwayat_konteks, metadata_sesi, pesan_terakhir, TIMESTAMPDIFF(SECOND, pesan_terakhir, NOW()) AS idle_detik FROM pelanggan WHERE nomor_wa = ? OR nomor_wa LIKE ?',
             [nomorWa, nomorWa + '@%']);
     }
 
@@ -204,11 +208,9 @@ async function dapatkanPelanggan(remoteJid, pushName = '') {
 }
 
 async function cekRateLimit(pelangganId) {
-    const pelanggan = await queryOne('SELECT pesan_terakhir FROM pelanggan WHERE id = ?', [pelangganId]);
-    if (!pelanggan || !pelanggan.pesan_terakhir) return false;
-
-    const selisih = Date.now() - new Date(pelanggan.pesan_terakhir).getTime();
-    return selisih < RATE_LIMIT_MS;
+    // Selisih pesan dihitung di sisi SQL — komparasi Date JS meleset karena jam DB beda zona dengan jam Node
+    const r = await queryOne('SELECT TIMESTAMPDIFF(SECOND, pesan_terakhir, NOW()) AS idle FROM pelanggan WHERE id = ?', [pelangganId]);
+    return r && r.idle !== null && (r.idle * 1000) < RATE_LIMIT_MS;
 }
 
 async function simpanPercakapan(pelangganId, pesanPengirim, pesanBalasan, sumber, extra = {}) {
@@ -234,7 +236,7 @@ async function dapatkanInventaris() {
 // Ambil riwayat transaksi pelanggan
 async function dapatkanRiwayatTransaksi(pelangganId) {
     return await query(
-        `SELECT t.id, t.pelanggan_id, t.inventaris_id, t.nominal_dp, t.total_harga, t.quantity, t.status, t.midtrans_order_id, t.created_at, i.nama_spesies, i.fase, i.harga
+        `SELECT t.id, t.pelanggan_id, t.inventaris_id, t.nominal_dp, t.total_harga, t.quantity, t.status, t.midtrans_order_id, t.created_at, DATE_FORMAT(t.created_at, '%Y-%m-%d %H:%i:%s') AS tanggal_str, i.nama_spesies, i.fase, i.harga
          FROM transaksi_chatbot t
          LEFT JOIN inventaris_burung i ON t.inventaris_id = i.id
          WHERE t.pelanggan_id = ?
@@ -242,6 +244,18 @@ async function dapatkanRiwayatTransaksi(pelangganId) {
          LIMIT 10`,
         [pelangganId]
     );
+}
+
+// Offset jam DB terhadap jam Node (diukur sekali per proses).
+// Jam DB TiDB tertinggal beberapa jam dari jam nyata — koreksi ini hanya untuk
+// TAMPILAN tanggal; komparasi durasi tetap dihitung SQL-side.
+let offsetDbDetik = null;
+async function dapatkanOffsetDb() {
+    if (offsetDbDetik === null) {
+        const r = await queryOne('SELECT CAST(NOW() AS CHAR) AS db_now');
+        offsetDbDetik = Math.round((Date.now() - Date.parse(r.db_now.replace(' ', 'T') + 'Z')) / 1000);
+    }
+    return offsetDbDetik;
 }
 
 // Ambil rekomendasi berdasarkan pembelian sebelumnya
@@ -325,10 +339,13 @@ Gaya: panggil pelanggan 'Kak', maksimal 4 kalimat, hangat dan persuasif. Akhiri 
 }
 
 // Format riwayat transaksi untuk WhatsApp
-function formatRiwayatTransaksi(daftar) {
+async function formatRiwayatTransaksi(daftar) {
     if (!daftar || daftar.length === 0) {
         return '📦 *Riwayat Transaksi*\n\nBelum ada transaksi, Kak. Yuk mulai koleksi burung impian! 🦜';
     }
+
+    // tanggal_str = wall time DB; koreksi offset jam DB + 7 jam (WIB), diformat sebagai UTC agar tanggal WIB stabil
+    const offset = await dapatkanOffsetDb();
 
     let teks = '📦 *Riwayat Transaksi Kakak*\n\n';
 
@@ -336,7 +353,8 @@ function formatRiwayatTransaksi(daftar) {
         const harga = Number(trx.total_harga || trx.harga).toLocaleString('id-ID');
         const status = trx.status === 'paid' ? '✅ Lunas' : (trx.status === 'pending' ? '⏳ Pending' : '❌ ' + trx.status);
         const fase = trx.fase === 'anakan' ? 'Baby' : 'Dewasa';
-        const tanggal = new Date(trx.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+        const tanggal = new Date(Date.parse(trx.tanggal_str.replace(' ', 'T') + 'Z') + (offset + 7 * 3600) * 1000)
+            .toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 
         teks += `*${trx.nama_spesies || 'Produk'}* (${fase})\n`;
         teks += `   Tanggal: ${tanggal}\n`;
@@ -604,7 +622,7 @@ function antrePesan(remoteJid, tugas) {
 // FUNGSI UTAMA BOT
 // ============================================================
 async function hubungkanKeWhatsApp() {
-    const { state, saveCreds } = await useMultiFileAuthState(join(__dirname, 'auth_info'));
+    const { state, saveCreds } = await useMultiFileAuthState(join(__dirname, '../../storage/app/chatbot-auth'));
 
     const sock = makeWASocket({
         logger,
@@ -829,16 +847,12 @@ async function hubungkanKeWhatsApp() {
             await update('UPDATE pelanggan SET pesan_terakhir = NOW() WHERE id = ?', [pelanggan.id]);
 
             // Sesi bot menganggur > 6 jam → sambut ulang dengan menu
-            // (pelanggan.pesan_terakhir masih nilai lama — diambil sebelum NOW() di atas)
+            // idle_detik diukur SQL-side (TIMESTAMPDIFF ke NOW()) — diambil sebelum pesan_terakhir di-update
             // Mode AI sengaja dikecualikan: pelanggan ditahan di sesi AI sampai mengetik "menu"
-            const IDLE_RESET_MS = 6 * 60 * 60 * 1000;
-            if (['inventory_select', 'checkout_qty'].includes(pelanggan.sesi_aktif) && pelanggan.pesan_terakhir) {
-                const idleSelisih = Date.now() - new Date(pelanggan.pesan_terakhir).getTime();
-                if (idleSelisih > IDLE_RESET_MS) {
-                    await update('UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = NULL WHERE id = ?', ['menu', pelanggan.id]);
-                    pelanggan.sesi_aktif = 'menu';
-                    console.log(`[SESI] Sesi pelanggan ${pelanggan.id} idle ${Math.round(idleSelisih / 3600000)} jam → reset ke menu`);
-                }
+            if (['inventory_select', 'checkout_qty'].includes(pelanggan.sesi_aktif) && pelanggan.idle_detik != null && pelanggan.idle_detik > IDLE_RESET_DETIK) {
+                await update('UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = NULL WHERE id = ?', ['menu', pelanggan.id]);
+                pelanggan.sesi_aktif = 'menu';
+                console.log(`[SESI] Sesi pelanggan ${pelanggan.id} idle ${Math.round(pelanggan.idle_detik / 3600)} jam → reset ke menu`);
             }
 
             // ============================================================
@@ -963,7 +977,7 @@ async function hubungkanKeWhatsApp() {
 
                 if (teksMasuk === 'menu_transaksi' || teksMasuk === '4' || teksMasukLower === 'transaksi' || teksMasukLower === 'riwayat') {
                     const transaksi = await dapatkanRiwayatTransaksi(pelanggan.id);
-                    let balasan = formatRiwayatTransaksi(transaksi);
+                    let balasan = await formatRiwayatTransaksi(transaksi);
 
                     // Rekomendasi Apriori diterjemahkan Groq AI (fallback: template statis)
                     const namaPelanggan = pelanggan.nama || 'Kak';
@@ -1132,13 +1146,24 @@ async function hubungkanKeWhatsApp() {
                         await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'menu');
                     } else if (teksMasuk === '4') {
                         const transaksi = await dapatkanRiwayatTransaksi(pelanggan.id);
-                        let balasan = formatRiwayatTransaksi(transaksi);
+                        let balasan = await formatRiwayatTransaksi(transaksi);
                         balasan += '\n\nKetik *menu* untuk kembali ke menu utama.';
                         await sockInstance.sendMessage(remoteJid, { text: balasan });
                         await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'menu');
                     } else if (teksMasuk === '5') {
                         await kirimDaftarCheckout(pelanggan, remoteJid, teksMasuk);
                     }
+                    return;
+                }
+
+                // Sapaan / permintaan menu di mode AI → tampilkan menu utama langsung,
+                // tanpa basa-basi "Ada yang bisa saya bantu hari ini?" (kembali ke state menu)
+                if (KEYWORD_SAPAAN.includes(teksMasukLower) || teksMasukLower.includes('menu')) {
+                    await update('UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = NULL WHERE id = ?', ['menu', pelanggan.id]);
+                    pelanggan.sesi_aktif = 'menu';
+                    const pesanUtuh = await buatSapaanHybrid(pelanggan.nama || 'Kak');
+                    await sockInstance.sendMessage(remoteJid, { text: pesanUtuh });
+                    await simpanPercakapan(pelanggan.id, teksMasuk, pesanUtuh, 'menu');
                     return;
                 }
 
@@ -1194,6 +1219,76 @@ async function hubungkanKeWhatsApp() {
         }
     }
 }
+
+// ============================================================
+// POLLER STATUS MIDTRANS (localhost-friendly)
+// Midtrans tidak bisa mengirim webhook ke localhost — status transaksi
+// pending yang dibuat via bot dicek langsung ke API Midtrans (S2S),
+// lalu status DB + notifikasi WA/admin diperbarui (paritas webhook index.js)
+// ============================================================
+const POLL_INTERVAL_MS = 45000;
+
+async function prosesStatusPending() {
+    try {
+        const daftar = await query(
+            `SELECT id, pelanggan_id, status, midtrans_order_id, total_harga FROM transaksi_chatbot
+             WHERE status = 'pending' AND midtrans_order_id LIKE '4PUTRA-%'
+             ORDER BY created_at DESC LIMIT 20`
+        );
+
+        for (const trx of daftar) {
+            try {
+                const st = await getTransactionStatus(trx.midtrans_order_id);
+                const s = st.transaction_status;
+                if (!s || s === 'pending') continue;
+
+                let statusBaru = 'pending';
+                if (s === 'settlement' || s === 'capture') statusBaru = 'paid';
+                else if (s === 'expire') statusBaru = 'expired';
+                else if (s === 'cancel' || s === 'deny') statusBaru = 'cancelled';
+                if (statusBaru === 'pending' || statusBaru === trx.status) continue;
+
+                // Idempotensi: guard status lama agar transisi tunggal
+                const berubah = await update('UPDATE transaksi_chatbot SET status = ?, updated_at = NOW() WHERE id = ? AND status = ?', [statusBaru, trx.id, trx.status]);
+                if (!berubah) continue;
+
+                await insert(
+                    'INSERT INTO pembayarans (transaksi_id, midtrans_txn_id, metode, nominal, status, raw_webhook, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())',
+                    [trx.id, st.transaction_id || '-', st.payment_type || 'qris', st.gross_amount || trx.total_harga, s, JSON.stringify({ source: 'poller', data: st })]
+                );
+
+                if (sockInstance && isConnected) {
+                    const pelanggan = await queryOne('SELECT id, nomor_wa, nama FROM pelanggan WHERE id = ?', [trx.pelanggan_id]);
+                    if (statusBaru === 'paid') {
+                        await insert(
+                            'INSERT INTO notifikasi_admins (tipe, judul, isi, pelanggan_id, dibaca, created_at, updated_at) VALUES (?, ?, ?, ?, 0, NOW(), NOW())',
+                            ['pembayaran', 'Pembayaran Diterima!', `Pembayaran dari ${pelanggan?.nama || pelanggan?.nomor_wa} sebesar Rp ${Number(st.gross_amount || trx.total_harga).toLocaleString('id-ID')} telah berhasil.`, trx.pelanggan_id]
+                        );
+                        await sockInstance.sendMessage(pelanggan.nomor_wa, {
+                            text: `✅ *Pembayaran Berhasil!*\n\n` +
+                                  `Order ID: ${trx.midtrans_order_id}\n` +
+                                  `Nominal: Rp ${Number(st.gross_amount || trx.total_harga).toLocaleString('id-ID')}\n` +
+                                  `Metode: ${st.payment_type || 'QRIS'}\n\n` +
+                                  `Terima kasih telah berbelanja di PT 4Putra Vertex Aviary! Admin kami akan segera menghubungi Kakak untuk pengiriman.`,
+                        });
+                    } else {
+                        await sockInstance.sendMessage(pelanggan.nomor_wa, {
+                            text: `⏰ Pembayaran untuk Order ${trx.midtrans_order_id} kedaluwarsa/dibatalkan. Ketik *menu* untuk memesan ulang ya, Kak.`,
+                        });
+                    }
+                }
+                console.log(`[MIDTRANS-POLL] Order ${trx.midtrans_order_id} → ${statusBaru}`);
+            } catch (e) {
+                // Order belum ter-registrasi di Midtrans (baru dibuat / gagal Snap) → skip, cek lagi nanti
+            }
+        }
+    } catch (e) {
+        console.error('[MIDTRANS-POLL] Gagal polling:', e.message);
+    }
+}
+
+setInterval(prosesStatusPending, POLL_INTERVAL_MS);
+setTimeout(prosesStatusPending, 10000);
 
 // ============================================================
 // HTTP SERVER UNTUK MENERIMA REQUEST DARI INDEX.JS / LARAVEL
@@ -1394,7 +1489,7 @@ const API_PORT = process.env.PORT || 3001;
 
 // Reset auth_info untuk generate QR baru
 async function resetAuth() {
-    const authPath = join(__dirname, 'auth_info');
+    const authPath = join(__dirname, '../../storage/app/chatbot-auth');
     if (!fs.existsSync(authPath)) {
         return { success: true };
     }
@@ -1453,7 +1548,7 @@ apiApp.post('/reset', async (req, res) => {
 });
 
 apiApp.get('/reset', async (req, res) => {
-    const authPath = join(__dirname, 'auth_info');
+    const authPath = join(__dirname, '../../storage/app/chatbot-auth');
     const hasAuth = fs.existsSync(authPath);
 
     if (req.query.confirm === '1') {
@@ -1491,7 +1586,7 @@ a.btn:hover{background:#dc2626;}
 
 // Status detail bot
 apiApp.get('/status', (req, res) => {
-    const authExists = fs.existsSync(join(__dirname, 'auth_info'));
+    const authExists = fs.existsSync(join(__dirname, '../../storage/app/chatbot-auth'));
     res.json({
         status: 'OK',
         bot_connected: isConnected,
@@ -1501,7 +1596,7 @@ apiApp.get('/status', (req, res) => {
     });
 });
 
-apiApp.listen(API_PORT, '0.0.0.0', () => {
+apiApp.listen(API_PORT, '127.0.0.1', () => {
     console.log(`Baileys API berjalan di port ${API_PORT}`);
 
     // Mulai koneksi WhatsApp SETELAH Express server aktif

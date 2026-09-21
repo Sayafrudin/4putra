@@ -4,15 +4,18 @@ import { config } from 'dotenv';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 config({ path: join(__dirname, '../../.env') });
-config({ path: join(__dirname, '.env'), override: true });
+// Rahasia di luar folder publik — php artisan serve menyajikan file mentah di bawah public/
+config({ path: join(__dirname, '../../storage/app/chatbot.env'), override: true });
 
 import express from 'express';
 import axios from 'axios';
+import crypto from 'crypto';
 import { query, queryOne, insert, update } from './db.js';
 import { verifySignature, getTransactionStatus } from './midtrans.js';
 
 const app = express();
-app.use(express.json());
+// Simpan raw body untuk verifikasi signature X-Hub-Signature-256 dari Meta
+app.use(express.json({ verify: (req, buf) => { req.rawBody = buf; } }));
 
 // Konfigurasi Meta Cloud API dari environment variables
 const TOKEN_META = process.env.META_TOKEN;
@@ -21,7 +24,31 @@ const ID_NOMOR_TELEPON = process.env.META_PHONE_NUMBER_ID;
 // ============================================================
 // ENDPOINT 1: META CLOUD API WEBHOOK (WhatsApp)
 // ============================================================
+// GET: verifikasi langganan webhook oleh Meta (hub.challenge + verify token)
+app.get('/webhook', (req, res) => {
+    if (req.query['hub.verify_token'] && req.query['hub.verify_token'] === process.env.META_VERIFY_TOKEN) {
+        return res.status(200).send(req.query['hub.challenge']);
+    }
+    return res.sendStatus(403);
+});
+
+// Verifikasi signature Meta (HMAC-SHA256 dari raw body dengan META_APP_SECRET)
+function verifikasiSignatureMeta(req) {
+    const secret = process.env.META_APP_SECRET;
+    if (!secret) return false;
+    const tanda = req.headers['x-hub-signature-256'] || '';
+    const dihitung = 'sha256=' + crypto.createHmac('sha256', secret).update(req.rawBody).digest('hex');
+    const a = Buffer.from(tanda);
+    const b = Buffer.from(dihitung);
+    return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
 app.post('/webhook', (req, res) => {
+    // Fail-closed: tanpa signature valid, payload dianggap palsu
+    if (!verifikasiSignatureMeta(req)) {
+        console.error('[META] Webhook ditolak: signature tidak valid / META_APP_SECRET belum di-set');
+        return res.sendStatus(403);
+    }
     const body = req.body;
 
     if (body.object) {
@@ -412,7 +439,7 @@ app.post('/api/chat/toggle', async (req, res) => {
 // JALANKAN SERVER
 // ============================================================
 const PORT = 3000;
-app.listen(PORT, () => {
+app.listen(PORT, '127.0.0.1', () => {
     console.log('==================================================');
     console.log(`SERVER WEBHOOK 4PUTRA BERJALAN DI PORT ${PORT}`);
     console.log(`Meta Webhook: http://localhost:${PORT}/webhook`);

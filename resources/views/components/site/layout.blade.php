@@ -5,8 +5,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="turbo-prefetch" content="true">
-    <title>4Putra Vertex Aviary</title>
+    @php
+        // SEO per halaman: title/description bisa dioverride lewat props komponen
+        $seoTitle = $title ?? 'PT 4Putra Vertex Aviary — Penangkaran Burung Paruh Bengkok Premium';
+        $seoDesc = $description ?? 'Penangkaran burung paruh bengkok premium di Surabaya Barat sejak 2019: African Grey, Macaw, Sun Conure, Monk Parakeet, Indian Ring Neck.';
+        $seoUrl = request()->path() === '/'
+            ? request()->getSchemeAndHttpHost() . '/'
+            : request()->getSchemeAndHttpHost() . '/' . request()->path();
+    @endphp
+    <title>{{ $seoTitle }}</title>
+    <meta name="description" content="{{ $seoDesc }}">
+    <link rel="canonical" href="{{ $seoUrl }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="PT 4Putra Vertex Aviary">
+    <meta property="og:title" content="{{ $seoTitle }}">
+    <meta property="og:description" content="{{ $seoDesc }}">
+    <meta property="og:url" content="{{ $seoUrl }}">
+    <meta property="og:image" content="{{ asset('img/rfm-hero.png') }}">
     <link rel="icon" href="{{ asset('img/4Putraico.png') }}" type="image/png">
+    @if (!empty($jsonLd))
+    <script type="application/ld+json">@json($jsonLd)</script>
+    @endif
 
     {{-- Preconnect ke external resources --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">

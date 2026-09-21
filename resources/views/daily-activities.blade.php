@@ -1,4 +1,4 @@
-<x-site.layout>
+<x-site.layout :title="app()->getLocale() === 'en' ? 'Daily Activities — PT 4Putra Vertex Aviary' : 'Aktivitas Harian — PT 4Putra Vertex Aviary'" :description="app()->getLocale() === 'en' ? 'Daily care activities of our parrots: feeding, training, and health monitoring.' : 'Aktivitas harian perawatan burung kami: pemberian pakan, latihan, dan pemantauan kesehatan.'">
     @push('styles')
     <style>[x-cloak] { display: none !important; }</style>
     @endpush

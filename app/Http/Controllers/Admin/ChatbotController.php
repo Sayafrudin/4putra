@@ -621,10 +621,10 @@ class ChatbotController extends Controller
             $serverKey = env('MIDTRANS_SERVER_KEY');
             $auth = base64_encode($serverKey.':');
 
-            $response = Http::timeout(15)->withoutVerifying()->withHeaders([
+            $response = Http::timeout(15)->withHeaders([
                 'Authorization' => "Basic $auth",
                 'Accept' => 'application/json',
-            ])->get("https://app.sandbox.midtrans.com/v2/{$request->order_id}/status");
+            ])->get("https://api.sandbox.midtrans.com/v2/{$request->order_id}/status");
 
             if ($response->successful()) {
                 $data = $response->json();
@@ -708,8 +708,8 @@ class ChatbotController extends Controller
 
         foreach ($pendingTransaksis as $trx) {
             try {
-                $url = "https://app.sandbox.midtrans.com/v2/{$trx->midtrans_order_id}/status";
-                $response = Http::timeout(15)->withoutVerifying()->withHeaders([
+                $url = "https://api.sandbox.midtrans.com/v2/{$trx->midtrans_order_id}/status";
+                $response = Http::timeout(15)->withHeaders([
                     'Authorization' => "Basic $auth",
                     'Accept' => 'application/json',
                     'Content-Type' => 'application/json',
@@ -989,8 +989,8 @@ class ChatbotController extends Controller
 
         // Cek via V2 API
         try {
-            $url = "https://app.sandbox.midtrans.com/v2/{$orderId}/status";
-            $response = Http::timeout(15)->withoutVerifying()->withHeaders([
+            $url = "https://api.sandbox.midtrans.com/v2/{$orderId}/status";
+            $response = Http::timeout(15)->withHeaders([
                 'Authorization' => "Basic $auth",
                 'Accept' => 'application/json',
             ])->get($url);

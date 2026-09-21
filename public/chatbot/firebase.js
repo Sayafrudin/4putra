@@ -4,7 +4,8 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 config({ path: join(__dirname, '../../.env') });
-config({ path: join(__dirname, '.env'), override: true });
+// Rahasia di luar folder publik — php artisan serve menyajikan file mentah di bawah public/
+config({ path: join(__dirname, '../../storage/app/chatbot.env'), override: true });
 
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getDatabase } from 'firebase-admin/database';

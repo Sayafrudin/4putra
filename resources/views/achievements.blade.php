@@ -1,4 +1,5 @@
-<x-site.layout>
+@php $isEn = app()->getLocale() === 'en'; @endphp
+<x-site.layout :title="!$isEn ? 'Prestasi — PT 4Putra Vertex Aviary' : 'Achievements — PT 4Putra Vertex Aviary'" :description="!$isEn ? 'Prestasi dan pencapaian penangkaran PT 4Putra Vertex Aviary dalam kontes dan kompetisi burung paruh bengkok.' : 'Achievements of PT 4Putra Vertex Aviary in parrot competitions and contests.'">
     {{-- Header halaman --}}
     <section class="w-full px-6 md:px-12 lg:px-16 pt-10 pb-2">
         <h1 class="text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-100 text-center">
@@ -18,7 +19,7 @@
                 <div class="flex flex-col lg:flex-row items-start justify-between gap-10 md:gap-16 lg:gap-24 max-w-7xl mx-auto">
 
                     <div class="flex flex-col items-center md:items-start flex-1 text-center md:text-left">
-                        <h1 class="text-2xl leading-tight md:text-3xl md:leading-tight lg:text-3xl lg:leading-tight font-bold uppercase">
+                        <h2 class="text-2xl leading-tight md:text-3xl md:leading-tight lg:text-3xl lg:leading-tight font-bold uppercase">
                             {{ app()->getLocale() == 'en' && $achievement->title_en ? $achievement->title_en : $achievement->title }}
                             @php
                                 $highlight = app()->getLocale() == 'en' && $achievement->title_highlight_en
@@ -28,7 +29,7 @@
                             @if ($highlight)
                                 <span class="text-[#E62C37] font-normal">{{ $highlight }}</span>
                             @endif
-                        </h1>
+                        </h2>
 
                         <div class="text-gray-700 dark:text-gray-300 mt-6 md:text-md leading-relaxed max-w-2xl whitespace-pre-line">
                             {{ app()->getLocale() == 'en' && $achievement->description_en ? $achievement->description_en : $achievement->description }}

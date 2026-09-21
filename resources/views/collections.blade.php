@@ -1,4 +1,4 @@
-<x-site.layout>
+<x-site.layout :title="app()->getLocale() === 'en' ? 'Our Parrots — PT 4Putra Vertex Aviary' : 'Koleksi Burung — PT 4Putra Vertex Aviary'" :description="app()->getLocale() === 'en' ? 'Browse our premium parrot collection: African Grey, BNG Macaw, Sun Conure, Monk Parakeet, and Indian Ring Neck.' : 'Jelajahi koleksi burung paruh bengkok premium kami: African Grey, BNG Macaw, Sun Conure, Monk Parakeet, dan Indian Ring Neck.'">
     @php
         $isEn = app()->getLocale() == 'en';
         $locName = fn ($i) => $isEn && $i->name_en ? $i->name_en : $i->name;
@@ -154,7 +154,7 @@
                                         <template x-for="(p, pi) in items[idx].photos" :key="pi">
                                             <div class="rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-[#151a22] border border-gray-200 dark:border-gray-700 group">
                                                 <div class="w-full aspect-[4/5] overflow-hidden">
-                                                    <img :src="p.thumb" loading="lazy" decoding="async"
+                                                    <img :src="p.thumb" :alt="p.alt || 'Foto koleksi burung'" loading="lazy" decoding="async"
                                                         @click="zoomMedia(p.full, items[idx].photos)"
                                                         class="w-full h-full object-cover object-top cursor-pointer group-hover:scale-105 transition-all duration-500">
                                                 </div>

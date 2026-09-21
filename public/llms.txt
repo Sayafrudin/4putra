@@ -1,0 +1,23 @@
+# PT 4Putra Vertex Aviary
+
+> Penangkaran burung paruh bengkok premium di Surabaya Barat, Indonesia, berdiri sejak 2019.
+> Merawat, membudidayakan, dan menjual burung eksotis: African Grey, BNG Macaw (Blue & Gold),
+> Sun Conure, Monk Parakeet, dan Indian Ring Neck — tersedia fase Baby dan Dewasa.
+
+Situs resmi: https://4putra.vercel.app (bilingual Indonesia/Inggris)
+
+## Halaman
+
+- [/](https://4putra.vercel.app/): Beranda — profil penangkaran dan koleksi unggulan.
+- [/collections](https://4putra.vercel.app/collections): Koleksi burung lengkap dengan foto, nama ilmiah, dan varian.
+- [/achievements](https://4putra.vercel.app/achievements): Prestasi kontes dan kompetisi burung.
+- [/facilities](https://4putra.vercel.app/facilities): Fasilitas karantina, nursery, dan kandang modern.
+- [/daily-activities](https://4putra.vercel.app/daily-activities): Aktivitas harian perawatan burung.
+- [/about](https://4putra.vercel.app/about): Tentang kami, tim, dan kontak (WhatsApp admin).
+
+## Kontak
+
+- WhatsApp: +62 857-3736-6651
+- Alamat: Jl. Manukan Lor VIII D No.1, Banjar Sugihan, Surabaya, Jawa Timur
+
+Penawaran pembelian hanya melalui admin; transaksi resmi via QRIS Midtrans.

@@ -35,7 +35,7 @@
 @endphp
 
 <div id="chat-widget"></div>
-<script id="chat-admin-notifications" type="application/json">{!! json_encode($chatNotifications) !!}</script>
+<script id="chat-admin-notifications" type="application/json">{!! json_encode($chatNotifications, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!}</script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {

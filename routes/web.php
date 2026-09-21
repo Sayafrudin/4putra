@@ -83,7 +83,12 @@ Route::get('/contact', fn () => redirect('/about#contact'))->name('contact');
 
 // Midtrans webhook callback (tanpa auth, dipanggil oleh Midtrans server)
 Route::post('/midtrans/callback', [ChatbotController::class, 'midtransCallback'])->name('midtrans.callback');
-Route::post('/midtrans/status', [ChatbotController::class, 'midtransCheckStatus'])->name('midtrans.status');
+
+// Debug/test Midtrans: wajib admin (endpoint test bisa memaksa status transaksi)
+Route::middleware('admin.only')->group(function () {
+    Route::post('/midtrans/status', [ChatbotController::class, 'midtransCheckStatus'])->name('midtrans.status');
+    Route::get('/midtrans/test/{order_id}', [ChatbotController::class, 'midtransTestApi'])->name('midtrans.test');
+});
 
 Route::get('lang/{locale}', function ($locale) {
     if (in_array($locale, ['en', 'id'])) {
@@ -120,10 +125,10 @@ Route::middleware('auth')->group(function () {
 
 // Midtrans callback (public, tanpa auth — dipanggil oleh server Midtrans)
 Route::post('/midtrans/callback-laravel', [ChatbotController::class, 'midtransCallback'])->name('midtrans.callback.laravel');
-Route::get('/midtrans/test/{order_id}', [ChatbotController::class, 'midtransTestApi'])->name('midtrans.test');
 
 // Grup Rute Dashboard Admin PT 4Putra Vertex Aviary
-Route::prefix('admin')->middleware(['admin.auth', 'admin.domain'])->group(function () {
+// admin.only: role admin diverifikasi SERVER-SIDE untuk SELURUH grup (bukan hanya login)
+Route::prefix('admin')->middleware(['admin.auth', 'admin.only', 'admin.domain'])->group(function () {
 
     Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
 

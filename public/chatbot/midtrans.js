@@ -1,16 +1,23 @@
 import axios from 'axios';
 import crypto from 'crypto';
 
-// Konfigurasi Midtrans dari environment variables
-const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
-const MIDTRANS_CLIENT_KEY = process.env.MIDTRANS_CLIENT_KEY;
-const BASE_URL = process.env.MIDTRANS_BASE_URL || 'https://app.sandbox.midtrans.com';
+// Konfigurasi Midtrans dibaca LAZY (per-call) — const module-level menangkap
+// process.env SEBELUM config() dotenv di whatsapp.js/index.js berjalan (ESM
+// evaluasi import dulu), sehingga key selalu undefined → 401 Midtrans.
+function dapatkanServerKey() {
+    return process.env.MIDTRANS_SERVER_KEY || '';
+}
+function dapatkanBaseUrl() {
+    return process.env.MIDTRANS_BASE_URL || 'https://app.sandbox.midtrans.com';
+}
 // Core API memakai host api.* (bukan app.* milik Snap)
-const API_BASE_URL = BASE_URL.includes('sandbox') ? 'https://api.sandbox.midtrans.com' : 'https://api.midtrans.com';
+function dapatkanApiBaseUrl() {
+    return dapatkanBaseUrl().includes('sandbox') ? 'https://api.sandbox.midtrans.com' : 'https://api.midtrans.com';
+}
 
 // Membuat transaksi Snap dan mengembalikan token + redirect URL
 export async function createTransaction(orderId, grossAmount, customerDetails = {}, itemDetails = []) {
-    const auth = Buffer.from(MIDTRANS_SERVER_KEY + ':').toString('base64');
+    const auth = Buffer.from(dapatkanServerKey() + ':').toString('base64');
 
     const payload = {
         transaction_details: {
@@ -29,14 +36,16 @@ export async function createTransaction(orderId, grossAmount, customerDetails = 
                 name: customerDetails.nama_produk || 'Produk 4Putra',
             },
         ],
-        enabled_payments: ['qris'],
+        // Tanpa enabled_payments: Snap menampilkan semua channel aktif pada
+        // pengaturan akun Midtrans — filter ['qris'] membuat halaman kosong
+        // ("No payment channels available") bila QRIS tidak diaktifkan di dashboard.
         credit_card: {
             secure: true,
         },
     };
 
     try {
-        const response = await axios.post(`${BASE_URL}/snap/v1/transactions`, payload, {
+        const response = await axios.post(`${dapatkanBaseUrl()}/snap/v1/transactions`, payload, {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Basic ${auth}`,
@@ -55,7 +64,7 @@ export async function createTransaction(orderId, grossAmount, customerDetails = 
 
 // Membuat charge QRIS via Core API (payment_type: "qris") — menghasilkan URL gambar QR
 export async function createQrisCharge(orderId, grossAmount, customerDetails = {}, itemDetails = []) {
-    const auth = Buffer.from(MIDTRANS_SERVER_KEY + ':').toString('base64');
+    const auth = Buffer.from(dapatkanServerKey() + ':').toString('base64');
 
     const payload = {
         payment_type: 'qris',
@@ -81,7 +90,7 @@ export async function createQrisCharge(orderId, grossAmount, customerDetails = {
     };
 
     try {
-        const response = await axios.post(`${API_BASE_URL}/v2/charge`, payload, {
+        const response = await axios.post(`${dapatkanApiBaseUrl()}/v2/charge`, payload, {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Basic ${auth}`,
@@ -104,7 +113,7 @@ export async function createQrisCharge(orderId, grossAmount, customerDetails = {
 
 // Download gambar QR (butuh Basic auth)
 export async function unduhGambarQr(url) {
-    const auth = Buffer.from(MIDTRANS_SERVER_KEY + ':').toString('base64');
+    const auth = Buffer.from(dapatkanServerKey() + ':').toString('base64');
     const response = await axios.get(url, {
         headers: { 'Authorization': `Basic ${auth}` },
         responseType: 'arraybuffer',
@@ -113,12 +122,12 @@ export async function unduhGambarQr(url) {
     return Buffer.from(response.data);
 }
 
-// Mendapatkan status transaksi
+// Mendapatkan status transaksi (Core API di host api.* — host app.* milik Snap saja)
 export async function getTransactionStatus(orderId) {
-    const auth = Buffer.from(MIDTRANS_SERVER_KEY + ':').toString('base64');
+    const auth = Buffer.from(dapatkanServerKey() + ':').toString('base64');
 
     try {
-        const response = await axios.get(`${BASE_URL}/v2/${orderId}/status`, {
+        const response = await axios.get(`${dapatkanApiBaseUrl()}/v2/${orderId}/status`, {
             headers: {
                 'Authorization': `Basic ${auth}`,
             },
@@ -133,15 +142,15 @@ export async function getTransactionStatus(orderId) {
 
 // Verifikasi signature dari webhook Midtrans
 export function verifySignature(orderId, statusCode, grossAmount, signatureKey) {
-    const input = orderId + statusCode + grossAmount + MIDTRANS_SERVER_KEY;
+    const input = orderId + statusCode + grossAmount + dapatkanServerKey();
     const computed = crypto.createHash('sha512').update(input).digest('hex');
     return computed === signatureKey;
 }
 
-// Konfigurasi
+// Konfigurasi (getter agar tetap membaca env terkini)
 export const config = {
-    isProduction: false,
-    serverKey: MIDTRANS_SERVER_KEY,
-    clientKey: MIDTRANS_CLIENT_KEY,
-    baseUrl: BASE_URL,
+    get isProduction() { return !dapatkanBaseUrl().includes('sandbox'); },
+    get serverKey() { return dapatkanServerKey(); },
+    get clientKey() { return process.env.MIDTRANS_CLIENT_KEY; },
+    get baseUrl() { return dapatkanBaseUrl(); },
 };

@@ -90,6 +90,13 @@ Setiap fitur yang dirubah/diperbaiki/ditambahkan wajib lulus SEMUA lapisan ini s
 6. **Kebersihan Data Uji**: semua user/entri CRUD/foto dummy yang dibuat saat testing wajib dihapus dari database.
 7. **Pasca-Deploy**: setelah merge ke `main`, cek status deploy Vercel dan uji ulang alur inti (login, halaman admin, switch bahasa) di URL produksi.
 
+## Aturan Chatbot WhatsApp (Baileys) — Wajib
+
+1. **Clock skew TiDB**: Jam DB TiDB TERTINGGAL beberapa jam dari jam Node (`NOW()` ≈ jam nyata − 7 jam, terukur 2026-09-21). DILARANG membandingkan timestamp DB dengan jam Node di JS (`Date.now() - new Date(kolom_db)` salah selalu). Komparasi durasi (rate limit, idle reset) WAJIB dihitung SQL-side: `TIMESTAMPDIFF(SECOND, kolom, NOW())`. Untuk TAMPILAN tanggal di WhatsApp, gunakan offset terukur (`dapatkanOffsetDb` di `whatsapp.js`) + format `timeZone: 'UTC'` setelah koreksi +7 jam WIB.
+2. **Tombol WA floating hanya localhost**: Komponen `components/site/whatsapp.blade.php` wajib dibungkus `@if(app()->environment('local')) ... @endif` — tombol TIDAK BOLEH muncul di produksi/Vercel (tugas akhir hanya memakai localhost). Jangan hapus guard ini saat refactor; merge ke main harus tetap menyembunyikannya.
+3. **Rahasia di luar folder publik**: `chatbot.env` wajib berada di `storage/app/` (BUKAN `public/chatbot/.env`) dan sesi Baileys `auth_info` wajib di `storage/app/chatbot-auth/`. `php artisan serve` menyajikan file mentah di bawah `public/` — apa pun di `public/` dapat diunduh. `vercel.json` wajib memblok `/public/chatbot/(.*)` → 404.
+4. **Perubahan state machine**: state `sesi_aktif` (menu/ai/human/inventory_select/checkout_qty) hanya boleh diubah di handler state masing-masing; input angka jangan dibajak lintas state. Setiap pesan masuk diproses serial per-chat via `antrePesan`.
+
 ## Aturan Keamanan Wajib (Auth, Session, Database)
 
 1. Rate limit semua endpoint autentikasi (`POST /login` → `throttle:5,1`). Jangan dihapus saat refactor routing.
@@ -99,6 +106,43 @@ Setiap fitur yang dirubah/diperbaiki/ditambahkan wajib lulus SEMUA lapisan ini s
 5. Koneksi TiDB: SSL wajib; jika `DB_SSL_CA` tersedia, verifikasi sertifikat wajib aktif (`PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => (bool) env('DB_SSL_CA')`).
 6. Cookie remember-me (14 hari, selalu aktif): logout manual maupun timeout wajib menghapusnya (`Auth::logout` → cycleRememberToken). Jangan pernah membuat jalur login yang tidak meregenerasi session.
 7. Dilarang menurunkan `APP_DEBUG=false` produksi atau mengaktifkan debug output di response.
+8. **Rahasia**: dilarang hardcode secret/API key (GROQ, Midtrans, Meta, Firebase) di kode maupun file JS yang di-bundle; semua via env. `.env*` tidak pernah masuk git (verifikasi `git ls-files` tidak memuat `.env`), dilarang menaruh `.env` di bawah `public/`, log tidak boleh mencetak secret, dilarang menaruh secret di client-side JS. Midtrans pakai server-key di backend saja.
+9. **Input & injeksi**: semua request divalidasi (`$request->validate`) + sanitasi; query wajib binding/Eloquent (larang string concatenation di `whereRaw`/`DB::statement`); output via `{{ }}` escaping (larang `{!! !!}` untuk input user); laravel tidak pakai NoSQL — tapi input yang masuk ke modul Node chatbot juga wajib dibind (mysql2 `execute`).
+10. **Auth & authz server-side**: semua rute `/admin/*` wajib middleware `AdminOnly`; cek kepemilikan data (cross-user access dilarang); role admin diverifikasi di server, dilarang hanya di UI; alur reset password wajib token sekali-pakai + throttle.
+11. **Upload**: validasi `mimes` + ukuran maksimum, nama file acak, kompres/gunakan format efisien, dirender via symlink storage. Scan antivirus di serverless tidak realistis (ponytail ceiling: whitelist MIME + re-encode gambar bila perlu).
+12. **Abuse**: rate limit endpoint publik yang menulis (kontak, AJAX); API chatbot punya rate limit per pelanggan (`cekRateLimit`); spending caps Midtrans: total harga transaksi divalidasi server-side dari DB (bukan dari input client) — harga jangan pernah dihitung dari payload user.
+13. **Idempotensi**: tombol submit admin dilarang double-submit (disable saat loading); webhook Midtrans wajib cek `status` transaksi sebelum memproses ulang (duplicate notification = no-op); `midtrans_order_id` unik.
+14. **Database**: DB TiDB tidak publik (SSL + kredensial di env); index wajib untuk kolom filter/ORDER yang sering; query berat pakai `paginate()`; larang N+1 (`with()`); `Cache::remember` untuk halaman publik berat.
+15. **Resiliensi & UX**: setiap AJAX punya handler error dengan pesan jelas; loading state saat menunggu; empty state saat data kosong; handle failed request & API timeout (midtrans.js: timeout + retry sesuai kebutuhan); jangan biarkan request menggantung.
+16. **Operasional**: error logging aktif (`LOG_CHANNEL=stderr` di Vercel); uptime bisa dipantau via health endpoint (`/health` chatbot, halaman utama) + Vercel checks; backup TiDB diuji restore minimal 1× (catat hasil); uji konkurensi ringan sebelum demo (2-3 user simultan di alur inti).
+
+## Checklist Anti-AI-Slop & SEO (Situs Publik)
+
+Situs publik TIDAK BOLEH terlihat seperti hasil AI. Wajib:
+
+1. `<title>` unik per halaman (bukan satu judul statis untuk semua).
+2. `<meta name="description">` per halaman.
+3. Open Graph lengkap (og:title, og:description, og:image, og:url).
+4. JSON-LD structured data (Organization di home).
+5. Tepat SATU `<h1>` per halaman.
+6. `<link rel="canonical">` per halaman.
+7. `public/llms.txt` ada (deskripsi situs untuk AI crawler).
+8. `robots.txt` TIDAK memblokir AI crawler + memuat baris `Sitemap:`.
+9. Favicon ada + `<link rel="icon">` di layout.
+10. `public/sitemap.xml` ada (daftar halaman publik).
+11. `<html lang="id|en">` dinamis sesuai locale.
+12. Semua `<img>` punya `alt` bermakna.
+13. Tanpa source maps di build produksi (`vite build` sourcemap=false).
+14. Bebas console error (cek via E2E).
+15. Bundle JS ramping (chunk firebase/alpine terpisah; jangan muat chat.js/firebase di halaman yang tak memakainya).
+16. Halaman 404 kustom tersedia & dirender.
+17. SSR Blade — view source harus menampilkan konten (dilarang render-only-client).
+18. Catatan: URL vercel.app masih dipakai; bila domain kustom (GoDaddy) sudah diarahkan, ganti `APP_URL` + og:url/canonical.
+
+## Tooling & Visualisasi
+
+- `laramint/laravel-brain` (dev dependency): `php artisan brain:scan` → viewer interaktif `/_laravel-brain` (request lifecycle, class diagram, ERD/schema DB, route security view, export Mermaid/PNG). Dev-only — JANGAN ikut ter-install di Vercel (composer --no-dev), JANGAN biarkan overwrite AGENTS.md via `brain:generate-rules`.
+- Skill `antislop` (6 skill di `.opencode/skills/`): filter anti-AI-slop untuk UI, copywriting, aksesibilitas, layout mobile, dan komentar kode.
 
 ## Protokol Orkestrasi Skill Otonom
 
@@ -107,10 +151,10 @@ Sistem wajib memicu skill berikut secara mandiri berdasarkan konteks fase pekerj
 1. Fase Inisiasi & Perencanaan:
    `using-superpowers`, `brainstorming`, `grill-me`, `writing-plans`, `find-skills`.
 2. Fase Frontend & Visual UI:
-   `ui-ux-pro-max`, `impeccable`, `frontend-design`.
+   `ui-ux-pro-max`, `impeccable`, `frontend-design`, `antislop`, `antislop-ui`, `antislop-copywriting`, `antislop-human`, `antislop-layoutmobile`, `antislop-code`.
 3. Fase Eksekusi & Backend (KISS Principle):
    `ponytail`, `codebase-design`, `test-driven-development`, `executing-plans`, `using-git-worktrees`, `subagent-driven-development`, `dispatching-parallel-agents`.
 4. Fase Debugging & Validasi:
-   `systematic-debugging`, `fullstack-validator`.
+   `systematic-debugging`, `fullstack-validator`, `laravel-brain` (visualisasi lifecycle/schema untuk triase).
 5. Fase Tinjauan Kualitas & Finalisasi:
-   `no-ai-slop`, `ponytail-review`, `ponytail-audit`, `ponytail-debt`, `ponytail-gain`, `requesting-code-review`, `receiving-code-review`, `improve-codebase-architecture`, `verification-before-completion`, `finishing-a-development-branch`, `customize-opencode`, `writing-skills`, `ponytail-help`.
+   `antislop` (audit UI/copy), `no-ai-slop`, `ponytail-review`, `ponytail-audit`, `ponytail-debt`, `ponytail-gain`, `requesting-code-review`, `receiving-code-review`, `improve-codebase-architecture`, `verification-before-completion`, `finishing-a-development-branch`, `customize-opencode`, `writing-skills`, `ponytail-help`.

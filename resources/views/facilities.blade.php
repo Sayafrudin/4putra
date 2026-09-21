@@ -1,4 +1,4 @@
-<x-site.layout>
+<x-site.layout :title="app()->getLocale() === 'en' ? 'Facilities — PT 4Putra Vertex Aviary' : 'Fasilitas — PT 4Putra Vertex Aviary'" :description="app()->getLocale() === 'en' ? 'Breeding facilities of PT 4Putra Vertex Aviary: quarantine, nursery, and modern aviary in West Surabaya.' : 'Fasilitas penangkaran PT 4Putra Vertex Aviary: karantina, nursery, dan kandang modern di Surabaya Barat.'">
     @push('styles')
     <style>[x-cloak] { display: none !important; }</style>
     @endpush

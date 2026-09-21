@@ -1,4 +1,23 @@
-<x-site.layout>
+@php
+    // Structured data Organization (hanya di home)
+    $jsonLd = [
+        '@context' => 'https://schema.org',
+        '@type' => 'Organization',
+        'name' => 'PT 4Putra Vertex Aviary',
+        'url' => request()->getSchemeAndHttpHost() . '/',
+        'logo' => asset('img/4Putraico.png'),
+        'description' => 'Penangkaran burung paruh bengkok premium di Surabaya Barat sejak 2019.',
+        'address' => [
+            '@type' => 'PostalAddress',
+            'streetAddress' => 'Jl. Manukan Lor VIII D No.1, Banjar Sugihan',
+            'addressLocality' => 'Surabaya',
+            'addressRegion' => 'Jawa Timur',
+            'addressCountry' => 'ID',
+        ],
+    ];
+    $isEn = app()->getLocale() === 'en';
+@endphp
+<x-site.layout :title="!$isEn ? 'PT 4Putra Vertex Aviary — Penangkaran Burung Paruh Bengkok Premium' : 'PT 4Putra Vertex Aviary — Premium Parrot Breeding Farm'" :description="!$isEn ? 'Penangkaran burung paruh bengkok premium di Surabaya Barat sejak 2019: African Grey, Macaw, Sun Conure, Monk Parakeet, Indian Ring Neck.' : 'Premium parrot breeding farm in West Surabaya since 2019: African Grey, Macaw, Sun Conure, Monk Parakeet, Indian Ring Neck.'" :json-ld="$jsonLd">
 
     <section class="relative w-full px-6 md:px-12 lg:px-16 pb-20 pt-10 md:pb-24 xl:pb-48">
         <div class="flex flex-col md:flex-row items-center justify-center md:justify-start gap-10 md:gap-16 lg:gap-24 max-w-7xl mx-auto">
@@ -49,13 +68,13 @@
         <div class="flex flex-col lg:flex-row items-center gap-10 lg:gap-20">
 
             <div class="w-full lg:w-1/3 flex flex-col items-center lg:items-start text-center lg:text-left space-y-4">
-                <h1
+                <h2
                     class="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white leading-tight md:text-5xl md:leading-tight lg:leading-tight uppercase">
                     {{ __('home.explore_title') }} <br>
                     <span class="bg-clip-text text-[#E62C37] font-normal">
                         {{ __('home.popular_parrots') }}
                     </span>
-                </h1>
+                </h2>
                 <p class="text-gray-700 dark:text-gray-300 text-md leading-relaxed ">
                     {{ __('home.popular_desc') }}
                 </p>

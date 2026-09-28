@@ -91,7 +91,7 @@ class AdminCollectionController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menyimpan: '.$e->getMessage(),
+                'message' => 'Gagal menyimpan: terjadi kesalahan pada server.',
             ], 500);
         }
     }
@@ -169,7 +169,7 @@ class AdminCollectionController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memperbarui: '.$e->getMessage(),
+                'message' => 'Gagal memperbarui: terjadi kesalahan pada server.',
             ], 500);
         }
     }

@@ -608,7 +608,10 @@ class ChatbotController extends Controller
 
             return response()->json(['status' => 'OK']);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            \Log::error('Midtrans callback error: '.$e->getMessage());
+
+            // Webhook publik — dilarang bocorkan detail exception ke penelepon
+            return response()->json(['error' => 'Terjadi kesalahan pada server.'], 500);
         }
     }
 
@@ -677,7 +680,9 @@ class ChatbotController extends Controller
 
             return response()->json(['status' => 'ERROR', 'message' => 'Gagal cek status Midtrans']);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'ERROR', 'message' => $e->getMessage()]);
+            \Log::error('Midtrans check status error: '.$e->getMessage());
+
+            return response()->json(['status' => 'ERROR', 'message' => 'Gagal cek status: terjadi kesalahan pada server.']);
         }
     }
 

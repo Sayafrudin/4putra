@@ -1,15 +1,20 @@
 /**
  * E2E UI modal koleksi publik: heading PHOTOS/VARIANTS besar + center,
  * garis pembatas antar section, nama varian terbaca.
- * Jalankan: node tests/e2e/public-modal.mjs  (butuh php artisan serve di port 8000)
+ * Jalankan: node tests/e2e/public-modal.mjs  (spawn server sendiri, port 8025)
  */
 import { chromium } from 'playwright-core';
-import { execSync } from 'node:child_process';
+import { execSync, spawn } from 'node:child_process';
+import http from 'node:http';
 
-const BASE = 'http://127.0.0.1:8000';
+const PORT = 8025;
+const BASE = `http://127.0.0.1:${PORT}`;
 const PARENT = 'E2E Publik Induk';
 const V1 = 'E2E Publik Varian 1';
 const V2 = 'E2E Publik Varian 2';
+
+// Watchdog anti-stuck: proses wajib mati sendiri maksimal 5 menit
+setTimeout(() => { console.log('WATCHDOG: melewati 5 menit, proses dihentikan paksa'); process.exit(1); }, 5 * 60 * 1000).unref();
 
 let failures = 0;
 function assert(cond, label) {
@@ -39,10 +44,39 @@ function seed() {
     );
 }
 
+function waitForServer(retries = 30) {
+    return new Promise((resolve, reject) => {
+        const tryOnce = (n) => {
+            http.get(`${BASE}/login`, (res) => {
+                res.resume();
+                if (res.statusCode === 200) return resolve(200);
+                if (n <= 0) return reject(new Error(`Server tidak siap (terakhir: ${res.statusCode})`));
+                setTimeout(() => tryOnce(n - 1), 1000);
+            }).on('error', () => n <= 0 ? reject(new Error('Server tidak siap')) : setTimeout(() => tryOnce(n - 1), 1000));
+        };
+        tryOnce(retries);
+    });
+}
+
+let server = null;
 let browser = null;
+
+function matikanServer() {
+    if (!server) return;
+    try { execSync(`taskkill /pid ${server.pid} /T /F`, { stdio: 'ignore' }); }
+    catch { try { server.kill(); } catch { /* sudah mati */ } }
+    server = null;
+}
+
 try {
     cleanupDb();
     seed();
+
+    server = spawn('php', ['artisan', 'serve', '--host=127.0.0.1', `--port=${PORT}`], {
+        env: { ...process.env, PHP_CLI_SERVER_WORKERS: '4' },
+        stdio: 'ignore',
+    });
+    await waitForServer();
 
     browser = await chromium.launch({ channel: 'msedge', headless: true });
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
@@ -124,7 +158,8 @@ try {
     console.log('FAIL  Exception: ' + e.message);
     failures++;
 } finally {
-    if (browser) await browser.close();
+    if (browser) { try { await browser.close(); } catch { /* sudah tertutup */ } }
+    matikanServer();
     cleanupDb();
     console.log(failures === 0 ? '\nSEMUA PASS' : `\n${failures} GAGAL`);
     process.exit(failures === 0 ? 0 : 1);

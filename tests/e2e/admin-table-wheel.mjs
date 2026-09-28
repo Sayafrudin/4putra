@@ -7,13 +7,19 @@
  *  A4  Di tepi kiri + wheel ke atas → halaman ter-scroll ke atas
  *  A5  Halaman admin lain dengan tabel overflow juga bekerja (collections)
  *
- * Prasyarat: dev server Laravel sudah jalan di http://127.0.0.1:8000 (read-only, tanpa data uji).
+ * Prasyarat: tidak ada (spawn server sendiri, port 8026, read-only).
  * Jalankan: node tests/e2e/admin-table-wheel.mjs
  */
 import { chromium } from 'playwright-core';
+import { spawn, execSync } from 'node:child_process';
+import http from 'node:http';
 
-const BASE = process.env.BASE_URL || 'http://127.0.0.1:8000';
+const PORT = 8026;
+const BASE = `http://127.0.0.1:${PORT}`;
 const ADMIN = { email: 'admin@4putra.com', password: 'password123' };
+
+// Watchdog anti-stuck: proses wajib mati sendiri maksimal 5 menit
+setTimeout(() => { console.log('WATCHDOG: melewati 5 menit, proses dihentikan paksa'); process.exit(1); }, 5 * 60 * 1000).unref();
 
 let failures = 0;
 function assert(cond, label) {
@@ -23,8 +29,37 @@ function assert(cond, label) {
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+function waitForServer(retries = 30) {
+    return new Promise((resolve, reject) => {
+        const tryOnce = (n) => {
+            http.get(`${BASE}/login`, (res) => {
+                res.resume();
+                if (res.statusCode === 200) return resolve(200);
+                if (n <= 0) return reject(new Error(`Server tidak siap (terakhir: ${res.statusCode})`));
+                setTimeout(() => tryOnce(n - 1), 1000);
+            }).on('error', () => n <= 0 ? reject(new Error('Server tidak siap')) : setTimeout(() => tryOnce(n - 1), 1000));
+        };
+        tryOnce(retries);
+    });
+}
+
+let server = null;
 let browser = null;
+
+function matikanServer() {
+    if (!server) return;
+    try { execSync(`taskkill /pid ${server.pid} /T /F`, { stdio: 'ignore' }); }
+    catch { try { server.kill(); } catch { /* sudah mati */ } }
+    server = null;
+}
+
 try {
+    server = spawn('php', ['artisan', 'serve', '--host=127.0.0.1', `--port=${PORT}`], {
+        env: { ...process.env, PHP_CLI_SERVER_WORKERS: '4' },
+        stdio: 'ignore',
+    });
+    await waitForServer();
+
     browser = await chromium.launch({ channel: 'msedge', headless: true });
     const ctx = await browser.newContext({ viewport: { width: 1024, height: 768 } });
     const page = await ctx.newPage();
@@ -140,7 +175,8 @@ try {
     failures++;
     console.log(`FAIL  Exception: ${err.message}`);
 } finally {
-    if (browser) await browser.close();
+    if (browser) { try { await browser.close(); } catch { /* sudah tertutup */ } }
+    matikanServer();
 }
 
 console.log('='.repeat(50));

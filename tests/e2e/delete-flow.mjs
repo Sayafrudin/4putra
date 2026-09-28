@@ -2,16 +2,21 @@
  * E2E khusus bug: tombol Hapus macet setelah delete pertama (admin-refresh.js).
  * Skenario persis laporan user: hapus 1 data uji -> hapus data kedua -> tombol harus aktif.
  * Verifikasi sisi server: baris DB benar-benar terhapus (bukan cuma hilang dari DOM).
- * Jalankan: node tests/e2e/delete-flow.mjs  (butuh php artisan serve di port 8000)
+ * Jalankan: node tests/e2e/delete-flow.mjs  (spawn server sendiri, port 8022)
  */
 import { chromium } from 'playwright-core';
-import { execSync } from 'node:child_process';
+import { execSync, spawn } from 'node:child_process';
+import http from 'node:http';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const BASE = 'http://127.0.0.1:8000';
+const PORT = 8022;
+const BASE = `http://127.0.0.1:${PORT}`;
 const ADMIN = { email: 'admin@4putra.com', password: 'password123' };
 const N1 = 'E2E Hapus Uji 1';
 const N2 = 'E2E Hapus Uji 2';
+
+// Watchdog anti-stuck: proses wajib mati sendiri maksimal 5 menit
+setTimeout(() => { console.log('WATCHDOG: melewati 5 menit, proses dihentikan paksa'); process.exit(1); }, 5 * 60 * 1000).unref();
 
 let failures = 0;
 function assert(cond, label) {
@@ -42,11 +47,42 @@ function cleanupDb() {
     );
 }
 
+function waitForServer(retries = 30) {
+    return new Promise((resolve, reject) => {
+        const tryOnce = (n) => {
+            http.get(`${BASE}/login`, (res) => {
+                res.resume();
+                if (res.statusCode === 200) return resolve(200);
+                if (n <= 0) return reject(new Error(`Server tidak siap (terakhir: ${res.statusCode})`));
+                setTimeout(() => tryOnce(n - 1), 1000);
+            }).on('error', () => n <= 0 ? reject(new Error('Server tidak siap')) : setTimeout(() => tryOnce(n - 1), 1000));
+        };
+        tryOnce(retries);
+    });
+}
+
+let server = null;
 let browser = null;
+
+function matikanServer() {
+    if (!server) return;
+    try { execSync(`taskkill /pid ${server.pid} /T /F`, { stdio: 'ignore' }); }
+    catch { try { server.kill(); } catch { /* sudah mati */ } }
+    server = null;
+}
+
 try {
     cleanupDb();
     seed();
     assert(dbCount(N1) === 1 && dbCount(N2) === 1, 'Seed: 2 koleksi uji ada di DB');
+
+    // Server sendiri multi-worker: php serve 1 worker membuat delete + refresh
+    // ter-serialisasi dan melebihi timeout (posisi request antre, bukan bug app)
+    server = spawn('php', ['artisan', 'serve', '--host=127.0.0.1', `--port=${PORT}`], {
+        env: { ...process.env, PHP_CLI_SERVER_WORKERS: '4' },
+        stdio: 'ignore',
+    });
+    await waitForServer();
 
     browser = await chromium.launch({ channel: 'msedge', headless: true });
     const page = await browser.newPage();
@@ -116,7 +152,8 @@ try {
     console.log('FAIL  Exception: ' + e.message);
     failures++;
 } finally {
-    if (browser) await browser.close();
+    if (browser) { try { await browser.close(); } catch { /* sudah tertutup */ } }
+    matikanServer();
     cleanupDb();
     assert(dbCount(N1) === 0 && dbCount(N2) === 0, 'Cleanup: semua data uji dihapus dari DB');
     console.log(failures === 0 ? '\nSEMUA PASS' : `\n${failures} GAGAL`);

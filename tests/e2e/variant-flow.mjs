@@ -3,17 +3,22 @@
  * ("Koleksi yang sudah memiliki varian tidak dapat dipilih sebagai induk").
  * Alur nyata: klik "+ Varian" -> modal -> nama + foto -> Simpan (dua kali).
  * Verifikasi sisi server: 2 baris varian di DB dengan parent_id sama + badge "2 Varian".
- * Jalankan: node tests/e2e/variant-flow.mjs  (butuh php artisan serve di port 8000)
+ * Jalankan: node tests/e2e/variant-flow.mjs  (spawn server sendiri, port 8023)
  */
 import { chromium } from 'playwright-core';
-import { execSync } from 'node:child_process';
+import { execSync, spawn } from 'node:child_process';
+import http from 'node:http';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const BASE = 'http://127.0.0.1:8000';
+const PORT = 8023;
+const BASE = `http://127.0.0.1:${PORT}`;
 const ADMIN = { email: 'admin@4putra.com', password: 'password123' };
 const PARENT = 'E2E Induk Varian Uji';
 const V1 = 'E2E Varian Uji 1';
 const V2 = 'E2E Varian Uji 2';
+
+// Watchdog anti-stuck: proses wajib mati sendiri maksimal 5 menit
+setTimeout(() => { console.log('WATCHDOG: melewati 5 menit, proses dihentikan paksa'); process.exit(1); }, 5 * 60 * 1000).unref();
 
 let failures = 0;
 function assert(cond, label) {
@@ -80,12 +85,42 @@ async function addVariantViaModal(page, parentName, variantName) {
     assert(true, `Simpan varian "${variantName}" sukses (baris muncul via refresh daftar)`);
 }
 
+function waitForServer(retries = 30) {
+    return new Promise((resolve, reject) => {
+        const tryOnce = (n) => {
+            http.get(`${BASE}/login`, (res) => {
+                res.resume();
+                if (res.statusCode === 200) return resolve(200);
+                if (n <= 0) return reject(new Error(`Server tidak siap (terakhir: ${res.statusCode})`));
+                setTimeout(() => tryOnce(n - 1), 1000);
+            }).on('error', () => n <= 0 ? reject(new Error('Server tidak siap')) : setTimeout(() => tryOnce(n - 1), 1000));
+        };
+        tryOnce(retries);
+    });
+}
+
+let server = null;
 let browser = null;
+
+function matikanServer() {
+    if (!server) return;
+    try { execSync(`taskkill /pid ${server.pid} /T /F`, { stdio: 'ignore' }); }
+    catch { try { server.kill(); } catch { /* sudah mati */ } }
+    server = null;
+}
+
 try {
     cleanupDb();
     const parentId = seed();
     assert(dbCount(PARENT) === 1, 'Seed: 1 koleksi induk ada di DB');
     assert(parentId.trim() !== '', `Seed: id induk=${parentId}`);
+
+    // Server sendiri multi-worker: hindari serialisasi single-worker (delete/refresh > timeout)
+    server = spawn('php', ['artisan', 'serve', '--host=127.0.0.1', `--port=${PORT}`], {
+        env: { ...process.env, PHP_CLI_SERVER_WORKERS: '4' },
+        stdio: 'ignore',
+    });
+    await waitForServer();
 
     browser = await chromium.launch({ channel: 'msedge', headless: true });
     const page = await browser.newPage();
@@ -146,7 +181,8 @@ try {
     console.log('FAIL  Exception: ' + e.message);
     failures++;
 } finally {
-    if (browser) await browser.close();
+    if (browser) { try { await browser.close(); } catch { /* sudah tertutup */ } }
+    matikanServer();
     cleanupDb();
     assert(dbCount(PARENT) === 0 && dbCount(V1) === 0 && dbCount(V2) === 0, 'Cleanup DB: semua data uji terhapus');
     console.log(failures === 0 ? '\nSEMUA PASS' : `\n${failures} GAGAL`);

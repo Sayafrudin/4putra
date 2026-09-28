@@ -18,6 +18,9 @@ Prinsip Kerja Utama:
 
 Situs Laravel 11 untuk PT 4Putra Vertex Aviary. Bilingual (ID/EN), admin CRUD untuk achievements dan daily activities, di-deploy ke Vercel.
 
+- **Admin dashboard hanya LOCAL** (`php artisan serve`). Middleware `AdminDomain` membalas 404 untuk `/admin/*` di host non-local (produksi tidak punya admin). Domain `admin4putra.vercel.app` SUDAH DIHAPUS — jangan dibuat lagi.
+- **Rekomendasi Apriori di halaman Collections** (card burung + badge % keyakinan): fitur LOCAL-ONLY (`@if(app()->environment('local'))` di view + guard di `CollectionController`). Sumber: `public/chatbot/export-apriori.js` → `storage/app/apriori-rekomendasi.json` (di-gitignore). Jangan tampilkan di produksi.
+
 Chatbot WhatsApp independen di `public/chatbot/`:
 
 - `index.js`: Express server (port 3000) penerima Meta Cloud API webhooks, Midtrans payment webhooks, admin notification API.
@@ -36,6 +39,7 @@ php artisan db:seed        # Run seeders
 node public/chatbot/index.js      # Meta webhook + Midtrans server
 node public/chatbot/whatsapp.js   # Baileys direct bot + API server
 node public/chatbot/test.js       # Standalone Apriori report
+npm run export:apriori            # Ekspor aturan kuat Apriori → storage/app/apriori-rekomendasi.json
 ```
 
 ## Architecture
@@ -138,6 +142,35 @@ Situs publik TIDAK BOLEH terlihat seperti hasil AI. Wajib:
 16. Halaman 404 kustom tersedia & dirender.
 17. SSR Blade — view source harus menampilkan konten (dilarang render-only-client).
 18. Catatan: URL vercel.app masih dipakai; bila domain kustom (GoDaddy) sudah diarahkan, ganti `APP_URL` + og:url/canonical.
+
+## Audit Keamanan 56 Poin (Status Implementasi, Tugas Akhir)
+
+Semua poin wajib tetap terpenuhi; saat refactor, jangan menonaktifkan kontrol di bawah. Hasil audit terakhir: 2026-09-28.
+
+| # | Poin | Status & Lokasi |
+|---|------|-----------------|
+| 1-4 | API key aman, env tidak publik, tanpa hardcode secret, secret bebas dari git | `.env` di luar git (`git ls-files` bersih), semua secret via env (`process.env` di chatbot, `env()` di Laravel), `chatbot.env` di `storage/app/` (di-gitignore) |
+| 5-6 | Debug mode off, error tidak bocor | `APP_DEBUG=false` (vercel.json); pesan exception generik ke klien + detail ke log (semua controller admin, 2026-09-28) |
+| 7-9 | Validasi input, sanitasi, anti SQL injection | `$request->validate` di semua controller; query Eloquent/binding; Node pakai mysql2 `execute` (`db.js`) |
+| 10 | Anti XSS | Output `{{ }}` escaping; JSON hex-escape (`JSON_HEX_APOS`) untuk konten user di JS |
+| 11-13 | Server-side auth, cek akses user, role admin aman | `admin.auth`+`admin.only`+`admin.domain` di seluruh grup `/admin` (routes/web.php); role dicek di server (`AdminOnly`) |
+| 14-15 | DB tidak publik, DB permission ketat | TiDB private + SSL (`config/database.php`: `SSL_CA`, `VERIFY_SERVER_CERT`); gunakan user DB non-root dengan hak minimal di TiDB Cloud |
+| 16-17 | Hash password, session aman | `Hash::make` (AdminUserController, ProfileController); cookie `http_only`+`same_site=lax`+`secure` produksi; remember-me dihapus saat logout |
+| 18 | Reset password aman | Tidak ada alur reset mandiri (permukaan serangan nol); ganti password via admin (hash). Bila kelak dibuat: token sekali-pakai + throttle |
+| 19-20, 34-35 | Batasi/scan upload, kompres, limit ukuran | Upload langsung browser→Cloudinary (server read-only); whitelist preset + kompres `q_auto` di URL. Batasi preset di dashboard Cloudinary (allowed formats/folder/max size) |
+| 21-22 | Rate limiting, API limits | `throttle:5,1` login; `cekRateLimit` per pelanggan chatbot (SQL-side `TIMESTAMPDIFF`) |
+| 23, 30 | Spending caps, cegah pembayaran dobel | Harga selalu dari DB (`whatsapp.js` line 470, bukan payload user); webhook cek status sebelum proses (idempoten, `midtrans_order_id` unik + signature `verifySignature`) |
+| 24-28 | Error handling, loading/empty states, handle failed request/timeout | Handler AJAX + toast; `Http::timeout` di controller; `midtrans.js` timeout; empty state semua list |
+| 29 | Cegah submit dobel | Tombol admin `setBusy` disable saat loading |
+| 31-33, 36 | Optimasi query, index, paginate, cache | Eager `with()` (CollectionController), `Cache::remember` halaman publik + rekomendasi apriori; index pada kolom filter |
+| 37-38 | Uptime monitoring, error logging | `/up` Laravel + `/health` chatbot; `Log::error/warning` aktif, `LOG_CHANNEL=stderr` di Vercel |
+| 39-40 | Uji user simultan, uji restore backup | Prosedur manual sebelum demo (2-3 user); backup TiDB diuji restore, catat hasil |
+| 41-47 | Kredensial DB, .env publik, secret, log, authz, cross-user, DB perms, cloud misconfig | Tertutup poin 1-15; Cloudinary unsigned preset dibatasi via dashboard (folder + format + ukuran) |
+| 48 | Admin route terproteksi | `/admin/*` = 3 middleware; produksi → 404 (`AdminDomain`, admin local-only) |
+| 49-50 | SQL injection, NoSQL injection | Binding penuh (Laravel + mysql2); Laravel tidak pakai NoSQL |
+| 51-52 | Verbose error, auth lemah | Pesan generik + log detail; password min 8 + throttle login + log gagal |
+| 53-54 | Secret di git, secret di JS | Bersih (`git ls-files`); bundle client tidak memuat key (Midtrans/GROQ server-side saja) |
+| 55-56 | Client-only security, validasi input | Validasi & authz selalu server-side; UI hanya pelengkap |
 
 ## Tooling & Visualisasi
 

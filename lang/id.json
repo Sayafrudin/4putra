@@ -33,6 +33,10 @@
     "collections.photo_count": "1 Foto|:n Foto",
     "collections.photos_title": "Foto",
     "collections.variants_title": "Varian",
+    "collections.reco_title": "Rekomendasi Untuk Anda",
+    "collections.reco_desc": "Burung yang paling sering dibeli bersamaan, berdasarkan analisis pola pembelian pelanggan kami",
+    "collections.reco_because": "Cocok dengan pembeli",
+    "collections.reco_confidence": "Keyakinan",
     "category.conure": "Conure",
     "category.macaw": "Macaw",
 

@@ -33,6 +33,10 @@
     "collections.photo_count": "1 Photo|:n Photos",
     "collections.photos_title": "Photos",
     "collections.variants_title": "Variants",
+    "collections.reco_title": "Recommended For You",
+    "collections.reco_desc": "Birds most frequently bought together, based on our customer purchase pattern analysis",
+    "collections.reco_because": "Matches buyers of",
+    "collections.reco_confidence": "Confidence",
     "category.conure": "Conure",
     "category.macaw": "Macaw",
 

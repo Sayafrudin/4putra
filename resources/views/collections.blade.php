@@ -55,6 +55,33 @@
             {{ __('collections.desc') }}
         </p>
 
+        {{-- Rekomendasi Apriori: hanya di local (tugas akhir), tidak pernah tampil di produksi --}}
+        @if (app()->environment('local') && ! empty($rekomendasi))
+            <x-site.divider>{{ __('collections.reco_title') }}</x-site.divider>
+            <p class="text-gray-700 dark:text-gray-300 text-center text-sm mb-2">
+                {{ __('collections.reco_desc') }}
+            </p>
+            <div class="flex flex-wrap items-start justify-center gap-10 mb-12">
+                @foreach ($rekomendasi as $r)
+                    <div class="w-72 max-w-full rounded-2xl overflow-hidden shadow-lg group">
+                        <div class="relative w-full aspect-[4/5] overflow-hidden">
+                            <img src="{{ $r['image'] }}" alt="{{ $r['name'] }}" loading="lazy" decoding="async"
+                                class="w-full h-full object-cover object-top group-hover:scale-105 transition-all duration-500">
+                            <span class="absolute top-2.5 right-2.5 z-10 px-2.5 py-1 rounded-full bg-[#E62C37]/90 text-white text-xs font-bold shadow-lg"
+                                title="{{ __('collections.reco_confidence') }}: {{ $r['confidence'] }}">
+                                {{ $r['confidence'] }}
+                            </span>
+                            <div class="absolute bottom-2.5 inset-x-2.5 z-10 rounded-xl bg-black/85 border border-white/10 p-2.5 text-center shadow-lg pointer-events-none">
+                                <p class="text-white font-bold text-sm tracking-wide">{{ $r['name'] }}</p>
+                                <p class="text-red-400 font-semibold text-xs tracking-wider uppercase">{{ $r['scientific'] }}</p>
+                                <p class="text-gray-300 text-[11px] mt-0.5">{{ __('collections.reco_because') }} {{ $r['karena'] }}</p>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+
         @forelse($collections as $category => $items)
             @php
                 $catName =

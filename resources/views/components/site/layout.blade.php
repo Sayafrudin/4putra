@@ -34,7 +34,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
     {{-- Preload critical assets --}}
-    <link rel="preload" href="{{ asset('img/rfm-hero.png') }}" as="image" fetchpriority="high" media="(min-width: 768px)">
+    <link rel="preload" href="{{ asset('img/rfm-hero.webp') }}" as="image" fetchpriority="high" media="(min-width: 768px)">
 
     {{-- Dark mode init (harus di head untuk hindari glitch) --}}
     <script>
@@ -85,7 +85,7 @@
 
     <x-site.footer></x-site.footer>
 
-    <script src="{{ asset('js/media-protect.js') }}"></script>
+    <script src="{{ asset('js/media-protect.js') }}?v={{ filemtime(public_path('js/media-protect.js')) }}"></script>
     @stack('scripts')
 </body>
 

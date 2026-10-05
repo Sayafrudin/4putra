@@ -13,22 +13,25 @@
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-BtfvjeNX.js",
+    "file": "assets/app-jgffSTql.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
       "_alpine-A8h-QRCZ.js"
     ],
+    "dynamicImports": [
+      "resources/js/chat.js"
+    ],
     "css": [
       "assets/app-CIgf0F6L.css"
     ]
   },
   "resources/js/chat.js": {
-    "file": "assets/chat-FI41dY9M.js",
+    "file": "assets/chat-By4pVxT6.js",
     "name": "chat",
     "src": "resources/js/chat.js",
-    "isEntry": true,
+    "isDynamicEntry": true,
     "imports": [
       "_firebase-BqLH3y0R.js"
     ]

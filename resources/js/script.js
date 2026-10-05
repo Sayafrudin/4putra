@@ -2,10 +2,10 @@
 const cardData = window.CarouselData && window.CarouselData.length > 0
     ? window.CarouselData
     : [
-        { title: "Sun Conure", image: "/img/sunc.png" },
-        { title: "African Grey", image: "/img/afgrey.png" },
-        { title: "Verde Macaw", image: "/img/verde.png" },
-        { title: "Buffon Macaw", image: "/img/buffon2.png" },
+        { title: "Sun Conure", image: "/img/sunc.webp" },
+        { title: "African Grey", image: "/img/afgrey.webp" },
+        { title: "Verde Macaw", image: "/img/verde.webp" },
+        { title: "Buffon Macaw", image: "/img/buffon2.webp" },
     ];
 
 // Logic Initialization dengan optimasi performa

@@ -649,7 +649,7 @@
                 <input type="url" id="about-media-link" placeholder="https://drive.google.com/file/d/... atau link IG/TikTok..."
                     class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
                 <p class="text-xs text-gray-400 mt-1">
-                    Catatan: autoplay &amp; tanpa download hanya berlaku untuk file video upload (Cloudinary) — embed mengikuti player platformnya.
+                    Catatan: autoplay &amp; tanpa download hanya berlaku untuk file video upload (Cloudinary) - embed mengikuti player platformnya.
                 </p>
             </div>
 

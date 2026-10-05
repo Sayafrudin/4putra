@@ -45,7 +45,7 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
                 <h1>PT 4PUTRA VERTEX AVIARY</h1>
-                <p>Penangkaran Burung Paruh Bengkok Premium — Surabaya Barat</p>
+                <p>Penangkaran Burung Paruh Bengkok Premium - Surabaya Barat</p>
             </div>
             <div class="date">
                 <div style="font-size: 14px; font-weight: 700;">LAPORAN TRANSAKSI</div>
@@ -124,7 +124,7 @@
 
     <div class="footer">
         <p class="company">PT 4Putra Vertex Aviary</p>
-        <p>Penangkaran Burung Paruh Bengkok Premium — Surabaya Barat, Jawa Timur</p>
+        <p>Penangkaran Burung Paruh Bengkok Premium - Surabaya Barat, Jawa Timur</p>
         <p style="margin-top: 5px;">Dokumen ini dicetak secara otomatis oleh sistem. Tanda tangan tidak diperlukan.</p>
     </div>
 </body>

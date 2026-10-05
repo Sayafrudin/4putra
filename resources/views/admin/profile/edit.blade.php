@@ -12,7 +12,7 @@
                 <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">Profil Saya</h2>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     @if($isGoogleUser)
-                        Akun terhubung dengan Google — hanya nama yang dapat diubah
+                        Akun terhubung dengan Google - hanya nama yang dapat diubah
                     @else
                         Kelola informasi akun dan keamanan Anda
                     @endif

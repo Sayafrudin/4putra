@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Invoice {{ $transaksi->midtrans_order_id }} — PT 4Putra Vertex Aviary</title>
+    <title>Invoice {{ $transaksi->midtrans_order_id }} - PT 4Putra Vertex Aviary</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Helvetica', 'Arial', sans-serif; color: #1a1a2e; font-size: 12px; line-height: 1.6; }
@@ -56,7 +56,7 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
                 <h1>PT 4PUTRA VERTEX AVIARY</h1>
-                <p>Penangkaran Burung Paruh Bengkok Premium — Surabaya Barat</p>
+                <p>Penangkaran Burung Paruh Bengkok Premium - Surabaya Barat</p>
             </div>
             <div>
                 <div class="invoice-title">INVOICE</div>
@@ -157,7 +157,7 @@
 
     <div class="footer">
         <p class="company">PT 4Putra Vertex Aviary</p>
-        <p>Penangkaran Burung Paruh Bengkok Premium — Surabaya Barat, Jawa Timur</p>
+        <p>Penangkaran Burung Paruh Bengkok Premium - Surabaya Barat, Jawa Timur</p>
         <p style="margin-top: 5px;">Dokumen ini dicetak secara otomatis oleh sistem dan sah sebagai bukti transaksi.</p>
     </div>
 </body>

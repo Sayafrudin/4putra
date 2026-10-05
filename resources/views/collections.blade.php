@@ -1,4 +1,4 @@
-<x-site.layout :title="app()->getLocale() === 'en' ? 'Our Parrots — PT 4Putra Vertex Aviary' : 'Koleksi Burung — PT 4Putra Vertex Aviary'" :description="app()->getLocale() === 'en' ? 'Browse our premium parrot collection: African Grey, BNG Macaw, Sun Conure, Monk Parakeet, and Indian Ring Neck.' : 'Jelajahi koleksi burung paruh bengkok premium kami: African Grey, BNG Macaw, Sun Conure, Monk Parakeet, dan Indian Ring Neck.'">
+<x-site.layout :title="app()->getLocale() === 'en' ? 'Our Parrots - PT 4Putra Vertex Aviary' : 'Koleksi Burung - PT 4Putra Vertex Aviary'" :description="app()->getLocale() === 'en' ? 'Browse our premium parrot collection: African Grey, BNG Macaw, Sun Conure, Monk Parakeet, and Indian Ring Neck.' : 'Jelajahi koleksi burung paruh bengkok premium kami: African Grey, BNG Macaw, Sun Conure, Monk Parakeet, dan Indian Ring Neck.'">
     @php
         $isEn = app()->getLocale() == 'en';
         $locName = fn ($i) => $isEn && $i->name_en ? $i->name_en : $i->name;

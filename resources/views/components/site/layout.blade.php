@@ -7,7 +7,7 @@
     <meta name="turbo-prefetch" content="true">
     @php
         // SEO per halaman: title/description bisa dioverride lewat props komponen
-        $seoTitle = $title ?? 'PT 4Putra Vertex Aviary — Penangkaran Burung Paruh Bengkok Premium';
+        $seoTitle = $title ?? 'PT 4Putra Vertex Aviary - Penangkaran Burung Paruh Bengkok Premium';
         $seoDesc = $description ?? 'Penangkaran burung paruh bengkok premium di Surabaya Barat sejak 2019: African Grey, Macaw, Sun Conure, Monk Parakeet, Indian Ring Neck.';
         $seoUrl = request()->path() === '/'
             ? request()->getSchemeAndHttpHost() . '/'

@@ -1,5 +1,5 @@
 @php $isEn = app()->getLocale() === 'en'; @endphp
-<x-site.layout :title="!$isEn ? 'Prestasi — PT 4Putra Vertex Aviary' : 'Achievements — PT 4Putra Vertex Aviary'" :description="!$isEn ? 'Prestasi dan pencapaian penangkaran PT 4Putra Vertex Aviary dalam kontes dan kompetisi burung paruh bengkok.' : 'Achievements of PT 4Putra Vertex Aviary in parrot competitions and contests.'">
+<x-site.layout :title="!$isEn ? 'Prestasi - PT 4Putra Vertex Aviary' : 'Achievements - PT 4Putra Vertex Aviary'" :description="!$isEn ? 'Prestasi dan pencapaian penangkaran PT 4Putra Vertex Aviary dalam kontes dan kompetisi burung paruh bengkok.' : 'Achievements of PT 4Putra Vertex Aviary in parrot competitions and contests.'">
     {{-- Header halaman --}}
     <section class="w-full px-6 md:px-12 lg:px-16 pt-10 pb-2">
         <h1 class="text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-100 text-center">

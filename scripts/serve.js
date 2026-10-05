@@ -14,7 +14,7 @@
  * Pemakaian: npm run serve [-- --port=8021 --host=127.0.0.1]
  */
 import { spawn, execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import net from 'node:net';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -36,14 +36,37 @@ function devServerHidup(url) {
     });
 }
 
+// Build basi = ada file source lebih baru dari manifest build terakhir;
+// CSS/JS yang di-serve tidak memuat kelas/kode terbaru → layout rusak sebagian.
+function buildBasi() {
+    const manifest = join(root, 'public', 'build', 'manifest.json');
+    if (!existsSync(manifest)) return true;
+    const buildTime = statSync(manifest).mtimeMs;
+    const sumber = [join(root, 'resources'), join(root, 'vite.config.js')];
+    for (const s of sumber) {
+        if (!existsSync(s)) continue;
+        const st = statSync(s);
+        if (st.isDirectory()) {
+            for (const f of readdirSync(s, { recursive: true })) {
+                const p = join(s, String(f));
+                if (statSync(p).isFile() && statSync(p).mtimeMs > buildTime) return true;
+            }
+        } else if (st.mtimeMs > buildTime) return true;
+    }
+    return false;
+}
+
 if (existsSync(hotFile)) {
     const target = readFileSync(hotFile, 'utf8');
     if (await devServerHidup(target)) {
         console.log(`Vite dev server hidup di ${target.trim()} — aset dev dipakai (load pertama lebih lambat). Untuk demo cepat: matikan "npm run dev" lalu jalankan ulang npm run serve.`);
+        if (buildBasi()) console.log('PERINGATAN: ada source lebih baru dari build terakhir — aset dev boleh basi bila dev server baru di-restart. Jalankan "npm run build" bila tampilan tidak sesuai kode terbaru.');
     } else {
         rmSync(hotFile);
         console.log('Hot file Vite basi dihapus (dev server tidak hidup) — memakai aset build.');
     }
+} else if (await devServerHidup('http://[::1]:5173')) {
+    console.log('PERINGATAN: Vite dev server hidup tapi public/hot tidak ada — HMR tidak aktif, situs memakai aset build. Restart "npm run dev" bila butuh hot reload.');
 }
 
 if (!existsSync(iniPath)) {

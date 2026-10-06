@@ -30,8 +30,10 @@ Chatbot WhatsApp independen di `public/chatbot/`:
 ## Commands
 
 ```bash
-php artisan serve          # Dev server
-npm run dev                # Vite dev (Tailwind v4 + Alpine.js)
+npm run dev:all            # Jalankan artisan serve + Vite dev SEKALIGUS (Ctrl+C matikan keduanya)
+php artisan serve          # Dev server saja (aset build, tanpa HMR)
+npm run dev                # Vite dev saja (Tanpa backend)
+npm run serve              # artisan serve + opcache via scripts/serve.js
 npm run build              # Production frontend build
 php artisan test           # PHPUnit
 php artisan migrate        # Run migrations
@@ -41,6 +43,10 @@ node public/chatbot/whatsapp.js   # Baileys direct bot + API server
 node public/chatbot/test.js       # Standalone Apriori report
 npm run export:apriori            # Ekspor aturan kuat Apriori → storage/app/apriori-rekomendasi.json
 ```
+
+Penting: `php artisan serve & npm run dev` SELALU GAGAL di PowerShell — `&` bukan pemisah
+perintah di sana (ParserError, tidak ada yang jalan). Gunakan `npm run dev:all`, atau
+jalankan dua terminal terpisah.
 
 ## Architecture
 
@@ -59,6 +65,12 @@ npm run export:apriori            # Ekspor aturan kuat Apriori → storage/app/a
 - Design System: Gunakan `rounded-xl`, `border-gray-700`, latar belakang gelap `#151a22`. Tombol aksi menggunakan padding `px-4 py-2.5 text-sm font-semibold`.
 - Terminologi: Gunakan "Baby" untuk tampilan antarmuka menggantikan kata "Anakan". Database tetap menggunakan `anakan`.
 - Tombol Aksi Tabel: Wajib menggunakan elemen button dengan styling warna spesifik (edit biru, hapus merah). Dilarang menggunakan tautan teks polos.
+
+## Konvensi Format Kode (Prettier) — Wajib
+
+- Setiap kali menulis atau mengubah kode, hasilnya WAJIB diformat dengan Prettier: ekstensi VS Code "Prettier - Code formatter" (`esbenp.prettier-vscode`) sebagai formatter default + format on save, atau `npx prettier --write <file>` pada file yang disentuh sebelum commit.
+- Cakupan: JS/TS (termasuk `public/chatbot/*`), CSS, JSON, YAML, Markdown, dan HTML/Blade yang didukung Prettier.
+- Prettier otomatis mengikuti `.editorconfig` proyek — jangan buat konfigurasi duplikat tanpa kebutuhan nyata.
 
 ## Aturan Git & Deployment
 
@@ -176,6 +188,7 @@ Semua poin wajib tetap terpenuhi; saat refactor, jangan menonaktifkan kontrol di
 
 - `laramint/laravel-brain` (dev dependency): `php artisan brain:scan` → viewer interaktif `/_laravel-brain` (request lifecycle, class diagram, ERD/schema DB, route security view, export Mermaid/PNG). Dev-only — JANGAN ikut ter-install di Vercel (composer --no-dev), JANGAN biarkan overwrite AGENTS.md via `brain:generate-rules`.
 - Skill `antislop` (6 skill di `.opencode/skills/`): filter anti-AI-slop untuk UI, copywriting, aksesibilitas, layout mobile, dan komentar kode.
+- Skill global via `npx skills` di `~/.agents/skills/` (ter-install 2026-10-05): 10 `threejs-*`, 8 `gsap-*`, `genjutsu`, `motion-design`, `design-dna`. Perbarui dengan `npx skills update -g`. Session opencode perlu restart agar skill baru terbaca.
 
 ## Protokol Orkestrasi Skill Otonom
 
@@ -184,7 +197,7 @@ Sistem wajib memicu skill berikut secara mandiri berdasarkan konteks fase pekerj
 1. Fase Inisiasi & Perencanaan:
    `using-superpowers`, `brainstorming`, `grill-me`, `writing-plans`, `find-skills`.
 2. Fase Frontend & Visual UI:
-   `ui-ux-pro-max`, `impeccable`, `frontend-design`, `antislop`, `antislop-ui`, `antislop-copywriting`, `antislop-human`, `antislop-layoutmobile`, `antislop-code`.
+   `ui-ux-pro-max`, `impeccable`, `frontend-design`, `antislop`, `antislop-ui`, `antislop-copywriting`, `antislop-human`, `antislop-layoutmobile`, `antislop-code`, `genjutsu` (motion/polish UI kreatif + audit tells), `motion-design` (prinsip timing, easing, koreografi animasi), `design-dna` (ekstrak/terapkan design system dari screenshot/referensi), `gsap-core`, `gsap-timeline`, `gsap-scrolltrigger`, `gsap-plugins`, `gsap-utils`, `gsap-performance` (wajib saat animasi GSAP/scroll-driven), `threejs-fundamentals`, `threejs-geometry`, `threejs-materials`, `threejs-lighting`, `threejs-textures`, `threejs-animation`, `threejs-loaders`, `threejs-shaders`, `threejs-postprocessing`, `threejs-interaction` (wajib saat pekerjaan Three.js/3D), `gsap-react`, `gsap-frameworks` (hanya bila menyentuh kode React/Vue/Svelte).
 3. Fase Eksekusi & Backend (KISS Principle):
    `ponytail`, `codebase-design`, `test-driven-development`, `executing-plans`, `using-git-worktrees`, `subagent-driven-development`, `dispatching-parallel-agents`.
 4. Fase Debugging & Validasi:

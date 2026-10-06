@@ -3,6 +3,7 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
+        "dev:all": "node scripts/dev.js",
         "build": "vite build",
         "serve": "node scripts/serve.js",
         "demo": "npm run build && node scripts/serve.js",

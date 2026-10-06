@@ -8,11 +8,14 @@
  *  K5 Escape menutup lightbox; Escape juga menutup modal
  */
 import { chromium } from 'playwright-core';
-import { spawn } from 'node:child_process';
+import { spawn, execSync } from 'node:child_process';
 import http from 'node:http';
 
 const PORT = 8021;
 const BASE = `http://127.0.0.1:${PORT}`;
+
+// Watchdog anti-stuck: proses wajib mati sendiri maksimal 5 menit
+setTimeout(() => { console.log('WATCHDOG: melewati 5 menit, proses dihentikan paksa'); process.exit(1); }, 5 * 60 * 1000).unref();
 
 let failures = 0;
 function assert(cond, label) {
@@ -37,6 +40,16 @@ function waitForServer(retries = 30) {
 }
 
 let server = null;
+let browser = null;
+
+function matikanServer() {
+    if (!server) return;
+    // taskkill /T membunuh pohon proses (php artisan serve + PHP_CLI_SERVER_WORKERS)
+    try { execSync(`taskkill /pid ${server.pid} /T /F`, { stdio: 'ignore' }); }
+    catch { try { server.kill(); } catch { /* sudah mati */ } }
+    server = null;
+}
+
 try {
     server = spawn('php', ['artisan', 'serve', '--host=127.0.0.1', `--port=${PORT}`], {
         env: { ...process.env, PHP_CLI_SERVER_WORKERS: '4' },
@@ -44,13 +57,13 @@ try {
     });
     await waitForServer();
 
-    const browser = await chromium.launch({ channel: 'msedge', headless: true });
+    browser = await chromium.launch({ channel: 'msedge', headless: true });
     const page = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
 
-    // K1
+    // K1: card induk (punya varian/multi-foto) — target dinamis, tidak terikat nama burung di DB
     await page.goto(`${BASE}/collections`, { waitUntil: 'load' });
-    const card = page.locator('button', { hasText: /Blue-?[eE]yed Cockatoo/i }).first();
-    assert(await card.count() > 0, 'K1 card Blue-eyed Cockatoo ada di grid');
+    const card = page.locator('button[aria-haspopup="dialog"]').first();
+    assert(await card.count() > 0, 'K1 card induk dengan varian/multi-foto ada di grid');
 
     if (await card.count()) {
         // K2: buka modal induk
@@ -127,11 +140,13 @@ try {
     assert(dcl < 4000, `K6 render /collections = ${dcl}ms (< 4000ms)`);
 
     await browser.close();
+    browser = null;
 } catch (err) {
     failures++;
     console.log(`FAIL  Exception: ${err.message}`);
 } finally {
-    if (server) server.kill();
+    if (browser) { try { await browser.close(); } catch { /* sudah tertutup */ } }
+    matikanServer();
 }
 
 console.log('='.repeat(50));

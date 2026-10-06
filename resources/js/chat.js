@@ -746,3 +746,9 @@ function initChatWidget(currentUser) {
 }
 
 window.initChatWidget = initChatWidget;
+
+// Entry lazy: app.js mengimpor modul ini pasca event load — init otomatis
+// dengan identitas yang disiapkan x-admin.chat-widget.
+if (window.__chatUser) {
+    initChatWidget(window.__chatUser);
+}

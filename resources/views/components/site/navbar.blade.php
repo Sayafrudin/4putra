@@ -277,7 +277,7 @@
             const isDark = html.classList.contains('dark');
 
             if (isScrolled) {
-                // Mode Scrolled (Merah) — sama untuk light & dark
+                // Mode Scrolled (Merah) - sama untuk light & dark
                 navbar.classList.remove('bg-transparent', 'py-8', 'md:py-12');
                 navbar.classList.add('bg-[#E62C37]', 'shadow-md', 'py-6', 'md:py-8');
 
@@ -316,7 +316,7 @@
                     }
                 });
             } else {
-                // Mode Top (Transparan) — beda warna tergantung dark/light
+                // Mode Top (Transparan) - beda warna tergantung dark/light
                 navbar.classList.add('bg-transparent', 'py-8', 'md:py-12');
                 navbar.classList.remove('bg-[#E62C37]', 'shadow-md', 'py-6', 'md:py-8');
 

@@ -3,8 +3,13 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
+        "dev:all": "node scripts/dev.js",
         "build": "vite build",
-        "test:e2e": "node tests/e2e/session-flow.mjs && node tests/e2e/back-flow.mjs"
+        "serve": "node scripts/serve.js",
+        "demo": "npm run build && node scripts/serve.js",
+        "export:apriori": "node public/chatbot/export-apriori.js",
+        "test:e2e": "node tests/e2e/session-flow.mjs && node tests/e2e/back-flow.mjs",
+        "test:e2e:all": "node tests/e2e/session-flow.mjs && node tests/e2e/back-flow.mjs && node tests/e2e/public-modal.mjs && node tests/e2e/collections-flow.mjs && node tests/e2e/variant-flow.mjs && node tests/e2e/delete-flow.mjs && node tests/e2e/admin-table-wheel.mjs"
     },
     "devDependencies": {
         "axios": "^1.18.1",

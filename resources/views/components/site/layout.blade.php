@@ -7,7 +7,7 @@
     <meta name="turbo-prefetch" content="true">
     @php
         // SEO per halaman: title/description bisa dioverride lewat props komponen
-        $seoTitle = $title ?? 'PT 4Putra Vertex Aviary — Penangkaran Burung Paruh Bengkok Premium';
+        $seoTitle = $title ?? 'PT 4Putra Vertex Aviary - Penangkaran Burung Paruh Bengkok Premium';
         $seoDesc = $description ?? 'Penangkaran burung paruh bengkok premium di Surabaya Barat sejak 2019: African Grey, Macaw, Sun Conure, Monk Parakeet, Indian Ring Neck.';
         $seoUrl = request()->path() === '/'
             ? request()->getSchemeAndHttpHost() . '/'
@@ -34,7 +34,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
     {{-- Preload critical assets --}}
-    <link rel="preload" href="{{ asset('img/rfm-hero.png') }}" as="image" fetchpriority="high" media="(min-width: 768px)">
+    <link rel="preload" href="{{ asset('img/rfm-hero.webp') }}" as="image" fetchpriority="high" media="(min-width: 768px)">
 
     {{-- Dark mode init (harus di head untuk hindari glitch) --}}
     <script>
@@ -85,7 +85,7 @@
 
     <x-site.footer></x-site.footer>
 
-    <script src="{{ asset('js/media-protect.js') }}"></script>
+    <script src="{{ asset('js/media-protect.js') }}?v={{ filemtime(public_path('js/media-protect.js')) }}"></script>
     @stack('scripts')
 </body>
 

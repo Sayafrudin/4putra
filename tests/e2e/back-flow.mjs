@@ -5,12 +5,17 @@
  *  S2  Restore overlay zoom: back+forward → overlay hilang, body scroll bebas
  *  S3  Wheel desktop: strip galeri ter-scroll horizontal, scrollbar thin di desktop / none di mobile
  *
- * Prasyarat: dev server Laravel sudah jalan di http://127.0.0.1:8000 (read-only, tanpa data uji).
- * Jalankan: node tests/e2e/back-flow.mjs
+ * Jalankan: node tests/e2e/back-flow.mjs  (spawn server sendiri, port 8024, read-only)
  */
 import { chromium } from 'playwright-core';
+import { spawn, execSync } from 'node:child_process';
+import http from 'node:http';
 
-const BASE = 'http://127.0.0.1:8000';
+const PORT = 8024;
+const BASE = `http://127.0.0.1:${PORT}`;
+
+// Watchdog anti-stuck: proses wajib mati sendiri maksimal 5 menit
+setTimeout(() => { console.log('WATCHDOG: melewati 5 menit, proses dihentikan paksa'); process.exit(1); }, 5 * 60 * 1000).unref();
 
 let failures = 0;
 function assert(cond, label) {
@@ -30,8 +35,37 @@ async function findStrip(page, path) {
     return idx < 0 ? null : page.locator('.media-strip').nth(idx);
 }
 
+function waitForServer(retries = 30) {
+    return new Promise((resolve, reject) => {
+        const tryOnce = (n) => {
+            http.get(`${BASE}/collections`, (res) => {
+                res.resume();
+                if (res.statusCode === 200) return resolve(200);
+                if (n <= 0) return reject(new Error(`Server tidak siap (terakhir: ${res.statusCode})`));
+                setTimeout(() => tryOnce(n - 1), 1000);
+            }).on('error', () => n <= 0 ? reject(new Error('Server tidak siap')) : setTimeout(() => tryOnce(n - 1), 1000));
+        };
+        tryOnce(retries);
+    });
+}
+
+let server = null;
 let browser = null;
+
+function matikanServer() {
+    if (!server) return;
+    try { execSync(`taskkill /pid ${server.pid} /T /F`, { stdio: 'ignore' }); }
+    catch { try { server.kill(); } catch { /* sudah mati */ } }
+    server = null;
+}
+
 try {
+    server = spawn('php', ['artisan', 'serve', '--host=127.0.0.1', `--port=${PORT}`], {
+        env: { ...process.env, PHP_CLI_SERVER_WORKERS: '4' },
+        stdio: 'ignore',
+    });
+    await waitForServer();
+
     browser = await chromium.launch({ channel: 'msedge', headless: true });
 
     // ---------- S1: back Android menutup drawer ----------
@@ -123,7 +157,8 @@ try {
     failures++;
     console.log(`FAIL  Exception: ${err.message}`);
 } finally {
-    if (browser) await browser.close();
+    if (browser) { try { await browser.close(); } catch { /* sudah tertutup */ } }
+    matikanServer();
 }
 
 console.log('='.repeat(50));

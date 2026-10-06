@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://res.cloudinary.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/chat.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     {{-- FOUC prevention: cek localStorage sebelum render --}}
     <script>

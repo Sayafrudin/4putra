@@ -29,12 +29,6 @@ Route::get('/storage/{path}', [StorageController::class, 'serve'])
 Route::middleware(\App\Http\Middleware\CachePublic::class)->group(function () {
 
     Route::get('/', function () {
-        // Redirect admin domain root ke dashboard admin
-        $host = request()->getHost();
-        if (in_array($host, ['admin4putra.vercel.app'])) {
-            return redirect('/admin');
-        }
-
         // Pool koleksi di-cache 1 jam (tanpa acak di SQL); 8 pilihan acak diambil
         // per request di PHP agar tiap load tetap berbeda tanpa query TiDB.
         $pool = \Illuminate\Support\Facades\Cache::remember('public.carousel_pool', 60 * 60, function () {
@@ -127,8 +121,10 @@ Route::middleware('auth')->group(function () {
 Route::post('/midtrans/callback-laravel', [ChatbotController::class, 'midtransCallback'])->name('midtrans.callback.laravel');
 
 // Grup Rute Dashboard Admin PT 4Putra Vertex Aviary
+// admin.domain PALING DEPAN: host non-local langsung 404 (admin local-only),
+// sebelum auth check memunculkan redirect /login di host produksi.
 // admin.only: role admin diverifikasi SERVER-SIDE untuk SELURUH grup (bukan hanya login)
-Route::prefix('admin')->middleware(['admin.auth', 'admin.only', 'admin.domain'])->group(function () {
+Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'admin.only'])->group(function () {
 
     Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
 

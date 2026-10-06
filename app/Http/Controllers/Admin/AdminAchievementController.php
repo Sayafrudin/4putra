@@ -9,6 +9,7 @@ use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\ValidationException;
 
 class AdminAchievementController extends Controller
 {
@@ -112,12 +113,14 @@ class AdminAchievementController extends Controller
                 'success' => true,
                 'message' => 'Data portofolio berhasil disimpan',
             ], 200);
+        } catch (ValidationException $e) {
+            throw $e; // 422 dengan pesan validasi ke user
         } catch (\Exception $e) {
             \Log::error('Achievement store error: '.$e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menyimpan: '.$e->getMessage(),
+                'message' => 'Gagal menyimpan: terjadi kesalahan pada server.',
             ], 500);
         }
     }
@@ -210,12 +213,14 @@ class AdminAchievementController extends Controller
             Cache::forget('public.achievements');
 
             return response()->json(['success' => true, 'message' => 'Data berhasil diperbarui!']);
+        } catch (ValidationException $e) {
+            throw $e; // 422 dengan pesan validasi ke user
         } catch (\Exception $e) {
             \Log::error('Achievement update error: '.$e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memperbarui: '.$e->getMessage(),
+                'message' => 'Gagal memperbarui: terjadi kesalahan pada server.',
             ], 500);
         }
     }

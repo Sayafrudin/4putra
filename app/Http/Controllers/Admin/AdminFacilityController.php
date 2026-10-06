@@ -7,6 +7,7 @@ use App\Models\Facility;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\ValidationException;
 
 class AdminFacilityController extends Controller
 {
@@ -69,12 +70,14 @@ class AdminFacilityController extends Controller
                 'success' => true,
                 'message' => 'Fasilitas berhasil disimpan',
             ], 200);
+        } catch (ValidationException $e) {
+            throw $e; // 422 dengan pesan validasi ke user
         } catch (\Exception $e) {
             \Log::error('Facility store error: '.$e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menyimpan: '.$e->getMessage(),
+                'message' => 'Gagal menyimpan: terjadi kesalahan pada server.',
             ], 500);
         }
     }
@@ -130,12 +133,14 @@ class AdminFacilityController extends Controller
             Cache::forget('public.facilities');
 
             return response()->json(['success' => true, 'message' => 'Fasilitas berhasil diperbarui!']);
+        } catch (ValidationException $e) {
+            throw $e; // 422 dengan pesan validasi ke user
         } catch (\Exception $e) {
             \Log::error('Facility update error: '.$e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memperbarui: '.$e->getMessage(),
+                'message' => 'Gagal memperbarui: terjadi kesalahan pada server.',
             ], 500);
         }
     }

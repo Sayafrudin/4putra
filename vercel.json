@@ -4,6 +4,26 @@
     "functions": {
         "api/index.php": { "runtime": "vercel-php@0.7.1" }
     },
+    "headers": [
+        {
+            "source": "/build/assets/(.*)",
+            "headers": [
+                { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+            ]
+        },
+        {
+            "source": "/js/(.*)",
+            "headers": [
+                { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+            ]
+        },
+        {
+            "source": "/img/(.*)",
+            "headers": [
+                { "key": "Cache-Control", "value": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400" }
+            ]
+        }
+    ],
     "routes": [
         {
             "src": "/(css|js|images|img|build|storage)/(.*)",
@@ -25,7 +45,7 @@
     "env": {
         "APP_ENV": "production",
         "APP_DEBUG": "false",
-        "APP_URL": "https://admin4putra.vercel.app",
+        "APP_URL": "https://4putra.vercel.app",
         "APP_CONFIG_CACHE": "/tmp/config.php",
         "APP_EVENTS_CACHE": "/tmp/events.php",
         "APP_PACKAGES_CACHE": "/tmp/packages.php",

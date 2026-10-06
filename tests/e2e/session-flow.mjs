@@ -29,6 +29,13 @@ function assert(cond, label) {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const sec = (n) => n * 1000;
 
+// Watchdog anti-stuck: skrip wajib mati sendiri maksimal 12 menit
+// (runtime normal ~7 menit; di luar itu = hang → bunuh proses agar tidak menggantung task)
+setTimeout(() => {
+    console.log('WATCHDOG: melewati 12 menit, proses dihentikan paksa');
+    process.exit(1);
+}, 12 * 60 * 1000).unref();
+
 function waitForServer(retries = 30) {
     return new Promise((resolve, reject) => {
         const tryOnce = (n) => {
@@ -52,6 +59,17 @@ function cleanupDb() {
 }
 
 let server = null;
+let browser = null;
+
+function matikanServer() {
+    if (!server) return;
+    // taskkill /T membunuh pohon proses (php artisan serve + PHP_CLI_SERVER_WORKERS);
+    // server.kill() saja meninggalkan worker yatim di Windows
+    try { execSync(`taskkill /pid ${server.pid} /T /F`, { stdio: 'ignore' }); }
+    catch { try { server.kill(); } catch { /* sudah mati */ } }
+    server = null;
+}
+
 try {
     cleanupDb();
     execSync(
@@ -69,8 +87,7 @@ try {
     const status = await waitForServer();
     assert(status === 200, `Smoke HTTP /login = ${status}`);
 
-    const browser = await chromium.launch({ channel: 'msedge', headless: true });
-    const context = await browser.newContext();
+    browser = await chromium.launch({ channel: 'msedge', headless: true });    const context = await browser.newContext();
     const page = await context.newPage();
 
     const pingStatuses = [];
@@ -161,11 +178,13 @@ try {
     }
 
     await browser.close();
+    browser = null;
 } catch (err) {
     failures++;
     console.log(`FAIL  Exception: ${err.message}`);
 } finally {
-    if (server) server.kill();
+    if (browser) { try { await browser.close(); } catch { /* sudah tertutup */ } }
+    matikanServer();
     try { cleanupDb(); } catch { /* cleanup best-effort */ }
 }
 

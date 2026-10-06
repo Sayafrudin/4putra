@@ -38,14 +38,12 @@
 <script id="chat-admin-notifications" type="application/json">{!! json_encode($chatNotifications, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!}</script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        if (window.initChatWidget) {
-            window.initChatWidget({
-                id: {{ $user->id }},
-                name: '{{ addslashes($user->name) }}',
-                email: '{{ addslashes($user->email) }}',
-                role: '{{ $user->role }}'
-            });
-        }
-    });
+    // Data user disiapkan sinkron (sebelum module app.js dieksekusi) supaya
+    // chat.js — yang di-lazy-load pasca event load — langsung punya identitas.
+    window.__chatUser = {
+        id: {{ $user->id }},
+        name: '{{ addslashes($user->name) }}',
+        email: '{{ addslashes($user->email) }}',
+        role: '{{ $user->role }}'
+    };
 </script>

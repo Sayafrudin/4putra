@@ -18,6 +18,9 @@ Prinsip Kerja Utama:
 
 Situs Laravel 11 untuk PT 4Putra Vertex Aviary. Bilingual (ID/EN), admin CRUD untuk achievements dan daily activities, di-deploy ke Vercel.
 
+- **Admin dashboard hanya LOCAL** (`php artisan serve`). Middleware `AdminDomain` membalas 404 untuk `/admin/*` di host non-local (produksi tidak punya admin). Domain `admin4putra.vercel.app` SUDAH DIHAPUS — jangan dibuat lagi.
+- **Rekomendasi Apriori di halaman Collections** (card burung + badge % keyakinan): fitur LOCAL-ONLY (`@if(app()->environment('local'))` di view + guard di `CollectionController`). Sumber: `public/chatbot/export-apriori.js` → `storage/app/apriori-rekomendasi.json` (di-gitignore). Jangan tampilkan di produksi.
+
 Chatbot WhatsApp independen di `public/chatbot/`:
 
 - `index.js`: Express server (port 3000) penerima Meta Cloud API webhooks, Midtrans payment webhooks, admin notification API.
@@ -27,8 +30,10 @@ Chatbot WhatsApp independen di `public/chatbot/`:
 ## Commands
 
 ```bash
-php artisan serve          # Dev server
-npm run dev                # Vite dev (Tailwind v4 + Alpine.js)
+npm run dev:all            # Jalankan artisan serve + Vite dev SEKALIGUS (Ctrl+C matikan keduanya)
+php artisan serve          # Dev server saja (aset build, tanpa HMR)
+npm run dev                # Vite dev saja (Tanpa backend)
+npm run serve              # artisan serve + opcache via scripts/serve.js
 npm run build              # Production frontend build
 php artisan test           # PHPUnit
 php artisan migrate        # Run migrations
@@ -36,7 +41,12 @@ php artisan db:seed        # Run seeders
 node public/chatbot/index.js      # Meta webhook + Midtrans server
 node public/chatbot/whatsapp.js   # Baileys direct bot + API server
 node public/chatbot/test.js       # Standalone Apriori report
+npm run export:apriori            # Ekspor aturan kuat Apriori → storage/app/apriori-rekomendasi.json
 ```
+
+Penting: `php artisan serve & npm run dev` SELALU GAGAL di PowerShell — `&` bukan pemisah
+perintah di sana (ParserError, tidak ada yang jalan). Gunakan `npm run dev:all`, atau
+jalankan dua terminal terpisah.
 
 ## Architecture
 
@@ -55,6 +65,12 @@ node public/chatbot/test.js       # Standalone Apriori report
 - Design System: Gunakan `rounded-xl`, `border-gray-700`, latar belakang gelap `#151a22`. Tombol aksi menggunakan padding `px-4 py-2.5 text-sm font-semibold`.
 - Terminologi: Gunakan "Baby" untuk tampilan antarmuka menggantikan kata "Anakan". Database tetap menggunakan `anakan`.
 - Tombol Aksi Tabel: Wajib menggunakan elemen button dengan styling warna spesifik (edit biru, hapus merah). Dilarang menggunakan tautan teks polos.
+
+## Konvensi Format Kode (Prettier) — Wajib
+
+- Setiap kali menulis atau mengubah kode, hasilnya WAJIB diformat dengan Prettier: ekstensi VS Code "Prettier - Code formatter" (`esbenp.prettier-vscode`) sebagai formatter default + format on save, atau `npx prettier --write <file>` pada file yang disentuh sebelum commit.
+- Cakupan: JS/TS (termasuk `public/chatbot/*`), CSS, JSON, YAML, Markdown, dan HTML/Blade yang didukung Prettier.
+- Prettier otomatis mengikuti `.editorconfig` proyek — jangan buat konfigurasi duplikat tanpa kebutuhan nyata.
 
 ## Aturan Git & Deployment
 
@@ -139,10 +155,40 @@ Situs publik TIDAK BOLEH terlihat seperti hasil AI. Wajib:
 17. SSR Blade — view source harus menampilkan konten (dilarang render-only-client).
 18. Catatan: URL vercel.app masih dipakai; bila domain kustom (GoDaddy) sudah diarahkan, ganti `APP_URL` + og:url/canonical.
 
+## Audit Keamanan 56 Poin (Status Implementasi, Tugas Akhir)
+
+Semua poin wajib tetap terpenuhi; saat refactor, jangan menonaktifkan kontrol di bawah. Hasil audit terakhir: 2026-09-28.
+
+| # | Poin | Status & Lokasi |
+|---|------|-----------------|
+| 1-4 | API key aman, env tidak publik, tanpa hardcode secret, secret bebas dari git | `.env` di luar git (`git ls-files` bersih), semua secret via env (`process.env` di chatbot, `env()` di Laravel), `chatbot.env` di `storage/app/` (di-gitignore) |
+| 5-6 | Debug mode off, error tidak bocor | `APP_DEBUG=false` (vercel.json); pesan exception generik ke klien + detail ke log (semua controller admin, 2026-09-28) |
+| 7-9 | Validasi input, sanitasi, anti SQL injection | `$request->validate` di semua controller; query Eloquent/binding; Node pakai mysql2 `execute` (`db.js`) |
+| 10 | Anti XSS | Output `{{ }}` escaping; JSON hex-escape (`JSON_HEX_APOS`) untuk konten user di JS |
+| 11-13 | Server-side auth, cek akses user, role admin aman | `admin.auth`+`admin.only`+`admin.domain` di seluruh grup `/admin` (routes/web.php); role dicek di server (`AdminOnly`) |
+| 14-15 | DB tidak publik, DB permission ketat | TiDB private + SSL (`config/database.php`: `SSL_CA`, `VERIFY_SERVER_CERT`); gunakan user DB non-root dengan hak minimal di TiDB Cloud |
+| 16-17 | Hash password, session aman | `Hash::make` (AdminUserController, ProfileController); cookie `http_only`+`same_site=lax`+`secure` produksi; remember-me dihapus saat logout |
+| 18 | Reset password aman | Tidak ada alur reset mandiri (permukaan serangan nol); ganti password via admin (hash). Bila kelak dibuat: token sekali-pakai + throttle |
+| 19-20, 34-35 | Batasi/scan upload, kompres, limit ukuran | Upload langsung browser→Cloudinary (server read-only); whitelist preset + kompres `q_auto` di URL. Batasi preset di dashboard Cloudinary (allowed formats/folder/max size) |
+| 21-22 | Rate limiting, API limits | `throttle:5,1` login; `cekRateLimit` per pelanggan chatbot (SQL-side `TIMESTAMPDIFF`) |
+| 23, 30 | Spending caps, cegah pembayaran dobel | Harga selalu dari DB (`whatsapp.js` line 470, bukan payload user); webhook cek status sebelum proses (idempoten, `midtrans_order_id` unik + signature `verifySignature`) |
+| 24-28 | Error handling, loading/empty states, handle failed request/timeout | Handler AJAX + toast; `Http::timeout` di controller; `midtrans.js` timeout; empty state semua list |
+| 29 | Cegah submit dobel | Tombol admin `setBusy` disable saat loading |
+| 31-33, 36 | Optimasi query, index, paginate, cache | Eager `with()` (CollectionController), `Cache::remember` halaman publik + rekomendasi apriori; index pada kolom filter |
+| 37-38 | Uptime monitoring, error logging | `/up` Laravel + `/health` chatbot; `Log::error/warning` aktif, `LOG_CHANNEL=stderr` di Vercel |
+| 39-40 | Uji user simultan, uji restore backup | Prosedur manual sebelum demo (2-3 user); backup TiDB diuji restore, catat hasil |
+| 41-47 | Kredensial DB, .env publik, secret, log, authz, cross-user, DB perms, cloud misconfig | Tertutup poin 1-15; Cloudinary unsigned preset dibatasi via dashboard (folder + format + ukuran) |
+| 48 | Admin route terproteksi | `/admin/*` = 3 middleware; produksi → 404 (`AdminDomain`, admin local-only) |
+| 49-50 | SQL injection, NoSQL injection | Binding penuh (Laravel + mysql2); Laravel tidak pakai NoSQL |
+| 51-52 | Verbose error, auth lemah | Pesan generik + log detail; password min 8 + throttle login + log gagal |
+| 53-54 | Secret di git, secret di JS | Bersih (`git ls-files`); bundle client tidak memuat key (Midtrans/GROQ server-side saja) |
+| 55-56 | Client-only security, validasi input | Validasi & authz selalu server-side; UI hanya pelengkap |
+
 ## Tooling & Visualisasi
 
 - `laramint/laravel-brain` (dev dependency): `php artisan brain:scan` → viewer interaktif `/_laravel-brain` (request lifecycle, class diagram, ERD/schema DB, route security view, export Mermaid/PNG). Dev-only — JANGAN ikut ter-install di Vercel (composer --no-dev), JANGAN biarkan overwrite AGENTS.md via `brain:generate-rules`.
 - Skill `antislop` (6 skill di `.opencode/skills/`): filter anti-AI-slop untuk UI, copywriting, aksesibilitas, layout mobile, dan komentar kode.
+- Skill global via `npx skills` di `~/.agents/skills/` (ter-install 2026-10-05): 10 `threejs-*`, 8 `gsap-*`, `genjutsu`, `motion-design`, `design-dna`. Perbarui dengan `npx skills update -g`. Session opencode perlu restart agar skill baru terbaca.
 
 ## Protokol Orkestrasi Skill Otonom
 
@@ -151,7 +197,7 @@ Sistem wajib memicu skill berikut secara mandiri berdasarkan konteks fase pekerj
 1. Fase Inisiasi & Perencanaan:
    `using-superpowers`, `brainstorming`, `grill-me`, `writing-plans`, `find-skills`.
 2. Fase Frontend & Visual UI:
-   `ui-ux-pro-max`, `impeccable`, `frontend-design`, `antislop`, `antislop-ui`, `antislop-copywriting`, `antislop-human`, `antislop-layoutmobile`, `antislop-code`.
+   `ui-ux-pro-max`, `impeccable`, `frontend-design`, `antislop`, `antislop-ui`, `antislop-copywriting`, `antislop-human`, `antislop-layoutmobile`, `antislop-code`, `genjutsu` (motion/polish UI kreatif + audit tells), `motion-design` (prinsip timing, easing, koreografi animasi), `design-dna` (ekstrak/terapkan design system dari screenshot/referensi), `gsap-core`, `gsap-timeline`, `gsap-scrolltrigger`, `gsap-plugins`, `gsap-utils`, `gsap-performance` (wajib saat animasi GSAP/scroll-driven), `threejs-fundamentals`, `threejs-geometry`, `threejs-materials`, `threejs-lighting`, `threejs-textures`, `threejs-animation`, `threejs-loaders`, `threejs-shaders`, `threejs-postprocessing`, `threejs-interaction` (wajib saat pekerjaan Three.js/3D), `gsap-react`, `gsap-frameworks` (hanya bila menyentuh kode React/Vue/Svelte).
 3. Fase Eksekusi & Backend (KISS Principle):
    `ponytail`, `codebase-design`, `test-driven-development`, `executing-plans`, `using-git-worktrees`, `subagent-driven-development`, `dispatching-parallel-agents`.
 4. Fase Debugging & Validasi:

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Leadership;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\ValidationException;
 
 class AdminAboutController extends Controller
 {
@@ -40,10 +41,13 @@ class AdminAboutController extends Controller
             Cache::forget('admin.about');
 
             return response()->json(['success' => true, 'message' => 'Media About Us berhasil diperbarui']);
+        } catch (ValidationException $e) {
+            throw $e; // 422 dengan pesan validasi ke user
         } catch (\Exception $e) {
             \Log::error('About media update error: ' . $e->getMessage());
 
-            return response()->json(['success' => false, 'message' => 'Gagal memperbarui media: ' . $e->getMessage()], 500);
+            // Detail exception hanya ke log — dilarang bocor ke klien (SQL/debug)
+            return response()->json(['success' => false, 'message' => 'Gagal memperbarui media: terjadi kesalahan pada server.'], 500);
         }
     }
 
@@ -53,6 +57,7 @@ class AdminAboutController extends Controller
     public function storeLeader(Request $request)
     {
         try {
+            $request->validate(['photo_path' => 'required|string']);
             $data = $this->validatedLeader($request);
 
             $leader = Leadership::create($data);
@@ -69,10 +74,12 @@ class AdminAboutController extends Controller
             Cache::forget('admin.about');
 
             return response()->json(['success' => true, 'message' => 'Leadership berhasil ditambahkan']);
+        } catch (ValidationException $e) {
+            throw $e; // 422 dengan pesan validasi ke user
         } catch (\Exception $e) {
             \Log::error('Leadership store error: ' . $e->getMessage());
 
-            return response()->json(['success' => false, 'message' => 'Gagal menyimpan: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Gagal menyimpan: terjadi kesalahan pada server.'], 500);
         }
     }
 
@@ -96,10 +103,12 @@ class AdminAboutController extends Controller
             Cache::forget('admin.about');
 
             return response()->json(['success' => true, 'message' => 'Leadership berhasil diperbarui']);
+        } catch (ValidationException $e) {
+            throw $e; // 422 dengan pesan validasi ke user
         } catch (\Exception $e) {
             \Log::error('Leadership update error: ' . $e->getMessage());
 
-            return response()->json(['success' => false, 'message' => 'Gagal memperbarui: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Gagal memperbarui: terjadi kesalahan pada server.'], 500);
         }
     }
 
@@ -130,12 +139,19 @@ class AdminAboutController extends Controller
             'role' => 'required|string',
         ]);
 
-        return [
+        $data = [
             'name' => $request->name,
             'role' => $request->role,
             'role_en' => $request->role_en ?: null,
-            'photo_path' => $request->photo_path,
             'sort_order' => (int) $request->sort_order ?: 0,
         ];
+
+        // Sertakan foto hanya bila ada upload baru; kosongkan = pertahankan foto lama
+        // (kolom photo_path NOT NULL — menimpa null memicu integrity violation)
+        if ($request->filled('photo_path')) {
+            $data['photo_path'] = $request->photo_path;
+        }
+
+        return $data;
     }
 }

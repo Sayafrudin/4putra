@@ -40,7 +40,6 @@ class StorageController extends Controller
         // Domain produksi yang diizinkan
         $productionDomains = [
             '4putra.vercel.app',
-            'admin4putra.vercel.app',
         ];
         $allowedDomains = array_unique(array_merge($allowedDomains, $productionDomains));
 

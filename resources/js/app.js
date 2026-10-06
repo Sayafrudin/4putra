@@ -35,3 +35,12 @@ const resetTransientUI = () => {
 };
 document.addEventListener('turbo:before-render', resetTransientUI);
 document.addEventListener('turbo:before-cache', resetTransientUI);
+
+// Chat admin lazy-load: chunk Firebase (±190KB gzip) di-download SETELAH event
+// load supaya first paint admin tidak menunggu — widget tetap muncul otomatis.
+const chatEl = document.getElementById('chat-widget');
+if (chatEl && window.__chatUser) {
+    window.addEventListener('load', () => {
+        import('./chat.js');
+    });
+}

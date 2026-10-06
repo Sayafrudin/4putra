@@ -97,6 +97,51 @@ class AboutManagementTest extends TestCase
         $admin->delete();
     }
 
+    public function test_leader_update_tanpa_foto_baru_mempertahankan_foto_lama(): void
+    {
+        $admin = $this->adminUser();
+
+        $leader = Leadership::create([
+            'name' => 'Uji Foto Tetap',
+            'role' => 'Role Uji',
+            'photo_path' => 'https://res.cloudinary.com/demo/image/upload/sample.jpg',
+            'sort_order' => 99,
+        ]);
+
+        // Edit tanpa upload foto baru (payload TANPA photo_path) —
+        // regresi bug: Integrity violation 1048 Column 'photo_path' cannot be null
+        $this->actingAs($admin)
+            ->putJson(route('admin.about.leadership.update', $leader->id), [
+                'name' => 'Uji Foto Tetap Revisi',
+                'role' => 'Role Baru',
+                'sort_order' => 1,
+            ])->assertJson(['success' => true]);
+
+        $fresh = $leader->fresh();
+        $this->assertSame('Role Baru', $fresh->role);
+        $this->assertSame('https://res.cloudinary.com/demo/image/upload/sample.jpg', $fresh->photo_path);
+        $this->assertSame(1, (int) $fresh->sort_order);
+
+        $leader->delete();
+        Cache::forget('about.leaderships');
+        $admin->delete();
+    }
+
+    public function test_leader_store_wajib_foto(): void
+    {
+        $admin = $this->adminUser();
+
+        $this->actingAs($admin)
+            ->postJson(route('admin.about.leadership.store'), [
+                'name' => 'Tanpa Foto Uji',
+                'role' => 'Role',
+            ])->assertStatus(422);
+
+        $this->assertNull(Leadership::where('name', 'Tanpa Foto Uji')->first());
+
+        $admin->delete();
+    }
+
     public function test_media_update_end_to_end(): void
     {
         $admin = $this->adminUser();

@@ -1,5 +1,6 @@
 /.phpunit.cache
 /node_modules
+/.php
 # /public/build
 /public/hot
 /public/storage
@@ -24,4 +25,5 @@ node_modules/
 vendor/
 storage/app/chatbot-auth/
 storage/app/chatbot.env
+storage/app/apriori-rekomendasi.json
 public/chatbot/node_modules/

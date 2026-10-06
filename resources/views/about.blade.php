@@ -1,4 +1,4 @@
-<x-site.layout :title="app()->getLocale() === 'en' ? 'About Us — PT 4Putra Vertex Aviary' : 'Tentang Kami — PT 4Putra Vertex Aviary'" :description="app()->getLocale() === 'en' ? 'The journey of PT 4Putra Vertex Aviary since 2019 in West Surabaya: from lovebirds breeding to premium macaws.' : 'Perjalanan PT 4Putra Vertex Aviary sejak 2019 di Surabaya Barat: dari penangkaran lovebirds hingga macaw premium.'">
+<x-site.layout :title="app()->getLocale() === 'en' ? 'About Us - PT 4Putra Vertex Aviary' : 'Tentang Kami - PT 4Putra Vertex Aviary'" :description="app()->getLocale() === 'en' ? 'The journey of PT 4Putra Vertex Aviary since 2019 in West Surabaya: from lovebirds breeding to premium macaws.' : 'Perjalanan PT 4Putra Vertex Aviary sejak 2019 di Surabaya Barat: dari penangkaran lovebirds hingga macaw premium.'">
     @php
         $isVideo = $aboutPage->media_type === 'video';
         $isEmbed = $aboutPage->media_type === 'embed';

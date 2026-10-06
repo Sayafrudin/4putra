@@ -191,10 +191,10 @@
                 </div>
             </div>
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Induk Koleksi <span class="normal-case text-gray-400">(opsional — kosongkan untuk kategori utama)</span></label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Induk Koleksi <span class="normal-case text-gray-400">(opsional - kosongkan untuk kategori utama)</span></label>
                 <select name="parent_id" id="create-col-parent"
                     class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37]">
-                    <option value="">— Kategori Utama —</option>
+                    <option value="">- Kategori Utama -</option>
                     @foreach ($parents as $parentOption)
                         <option value="{{ $parentOption->id }}">{{ $parentOption->name }}</option>
                     @endforeach
@@ -208,7 +208,7 @@
                 <p class="text-xs text-gray-500 mt-1">Angka lebih kecil = tampil lebih dulu. Default: 0</p>
             </div>
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Foto Burung <span class="normal-case text-gray-400">(bisa banyak — foto pertama jadi cover card)</span></label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Foto Burung <span class="normal-case text-gray-400">(bisa banyak - foto pertama jadi cover card)</span></label>
                 <div id="dz-collection-create"
                     class="dropzone !bg-white dark:!bg-[#151a22] border-2 border-dashed border-gray-300 dark:border-gray-700 rounded p-6 text-center cursor-pointer hover:border-[#E62C37] transition-colors min-h-[140px]">
                     <div class="dz-message text-sm text-gray-500 dark:text-gray-400">Tarik beberapa file foto ke sini atau klik untuk memilih</div>
@@ -268,10 +268,10 @@
                 </div>
             </div>
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Induk Koleksi <span class="normal-case text-gray-400">(opsional — kosongkan untuk kategori utama)</span></label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Induk Koleksi <span class="normal-case text-gray-400">(opsional - kosongkan untuk kategori utama)</span></label>
                 <select name="parent_id" id="edit-col-parent"
                     class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500">
-                    <option value="">— Kategori Utama —</option>
+                    <option value="">- Kategori Utama -</option>
                     @foreach ($parents as $parentOption)
                         <option value="{{ $parentOption->id }}">{{ $parentOption->name }}</option>
                     @endforeach

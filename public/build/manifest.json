@@ -13,7 +13,7 @@
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-jgffSTql.js",
+    "file": "assets/app-BoiHfzAD.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -21,10 +21,8 @@
       "_alpine-A8h-QRCZ.js"
     ],
     "dynamicImports": [
-      "resources/js/chat.js"
-    ],
-    "css": [
-      "assets/app-CIgf0F6L.css"
+      "resources/js/chat.js",
+      "resources/js/dropzone.js"
     ]
   },
   "resources/js/chat.js": {
@@ -34,6 +32,15 @@
     "isDynamicEntry": true,
     "imports": [
       "_firebase-BqLH3y0R.js"
+    ]
+  },
+  "resources/js/dropzone.js": {
+    "file": "assets/dropzone-C3oUy_7k.js",
+    "name": "dropzone",
+    "src": "resources/js/dropzone.js",
+    "isDynamicEntry": true,
+    "css": [
+      "assets/dropzone-CIgf0F6L.css"
     ]
   }
 }

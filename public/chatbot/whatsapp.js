@@ -1059,6 +1059,31 @@ async function hubungkanKeWhatsApp() {
                 }
                 if (!konteks || typeof konteks !== 'object') konteks = null;
 
+                // Fase pilih item dari daftar (masuk dari menu 5): metadata masih berisi items
+                if (konteks?.items && !konteks.item && /^\d+$/.test(teksMasuk)) {
+                    const items = konteks.items || [];
+                    const pilihan = parseInt(teksMasuk) - 1;
+
+                    if (pilihan >= 0 && pilihan < items.length) {
+                        const item = items[pilihan];
+                        const faseLabel = item.fase === 'anakan' ? 'Baby' : 'Dewasa';
+                        const hargaFormatted = Number(item.harga).toLocaleString('id-ID');
+
+                        await update('UPDATE pelanggan SET metadata_sesi = ? WHERE id = ?',
+                            [JSON.stringify({
+                                item: { id: item.id, nama: item.nama, fase: item.fase, harga: Number(item.harga) }
+                            }), pelanggan.id]);
+
+                        const balasan = `Kakak pilih *${item.nama}* (${faseLabel}) — Rp ${hargaFormatted}/ekor. Mau beli berapa ekor? Ketik jumlahnya ya, Kak (contoh: 1, 2, 3)`;
+
+                        await sockInstance.sendMessage(remoteJid, { text: balasan });
+                        await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'menu');
+                    } else {
+                        await sockInstance.sendMessage(remoteJid, { text: 'Pilihan tidak valid. Silakan ketik nomor yang tersedia ya, Kak.' });
+                    }
+                    return;
+                }
+
                 if (konteks?.item && /^\d+$/.test(teksMasuk)) {
                     const quantity = parseInt(teksMasuk);
 

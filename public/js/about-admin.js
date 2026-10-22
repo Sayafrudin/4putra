@@ -59,6 +59,7 @@
 
     function initDropzones() {
         var Dropzone = window.Dropzone;
+        if (!Dropzone && window.__dropzoneReady) { window.__dropzoneReady.then(initDropzones); return; }
         if (!Dropzone) { console.warn('[INFO] Dropzone tidak ter-load.'); return; }
         Dropzone.autoDiscover = false;
 

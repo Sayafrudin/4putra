@@ -461,6 +461,7 @@ results.forEach(function (r) {
         if (dzCreateInitialized) return;
         try {
             var Dropzone = window.Dropzone;
+            if (!Dropzone && window.__dropzoneReady) { window.__dropzoneReady.then(initDzCreate); return; }
             if (!Dropzone || !els.formCreate) { console.warn('[INFO] Dropzone tidak ter-load.'); return; }
             Dropzone.autoDiscover = false;
 
@@ -486,6 +487,7 @@ results.forEach(function (r) {
         if (dzEditInitialized) return;
         try {
             var Dropzone = window.Dropzone;
+            if (!Dropzone && window.__dropzoneReady) { window.__dropzoneReady.then(initDzEdit); return; }
             if (!Dropzone) return;
             Dropzone.autoDiscover = false;
 

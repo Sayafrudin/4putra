@@ -52,7 +52,7 @@
         <span class="lang-label mr-3 text-sm font-bold text-[#E62C37] transition-colors duration-300">ID</span>
 
         <label class="relative flex items-center cursor-pointer">
-            <input type="checkbox" id="lang-toggle" class="sr-only peer"
+            <input type="checkbox" id="lang-toggle" class="sr-only peer" aria-label="Ganti bahasa / Switch language"
                 :checked="lang === 'en'"
                 @change="lang = $el.checked ? 'en' : 'id'; window.Turbo && window.Turbo.cache.clear(); window.location.href = '/lang/' + lang">
 
@@ -70,12 +70,12 @@
 
         {{-- Dark Mode Toggle --}}
         <div class="ml-4 flex items-center">
-            <button type="button" class="hs-dark-mode-active:hidden block hs-dark-mode text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 transition-colors" data-hs-theme-click-value="dark">
+            <button type="button" class="hs-dark-mode-active:hidden block hs-dark-mode text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 transition-colors" data-hs-theme-click-value="dark" aria-label="Aktifkan mode gelap">
                 <span class="group inline-flex shrink-0 justify-center items-center size-9">
                     <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
                 </span>
             </button>
-            <button type="button" class="hs-dark-mode-active:block hidden hs-dark-mode text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 transition-colors" data-hs-theme-click-value="light">
+            <button type="button" class="hs-dark-mode-active:block hidden hs-dark-mode text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 transition-colors" data-hs-theme-click-value="light" aria-label="Aktifkan mode terang">
                 <span class="group inline-flex shrink-0 justify-center items-center size-9">
                     <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
                 </span>
@@ -85,7 +85,7 @@
 
     <button id="hamburger-btn"
         class="group inline-flex w-12 h-12 lg:hidden text-[#E62C37] text-center items-center justify-center focus:outline-none transition-colors duration-300"
-        aria-pressed="false">
+        aria-pressed="false" aria-label="Buka menu navigasi">
 
         <svg class="w-6 h-6 fill-current pointer-events-none" viewBox="0 0 16 16">
             <rect
@@ -198,12 +198,12 @@
                 <span class="text-gray-300">|</span>
 
                 {{-- Dark Mode Toggle Mobile --}}
-                <button type="button" class="mobile-dark-toggle hs-dark-mode-active:hidden block hs-dark-mode text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none transition-colors" data-hs-theme-click-value="dark">
+                <button type="button" class="mobile-dark-toggle hs-dark-mode-active:hidden block hs-dark-mode text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none transition-colors" data-hs-theme-click-value="dark" aria-label="Aktifkan mode gelap">
                     <span class="group inline-flex shrink-0 justify-center items-center size-9">
                         <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
                     </span>
                 </button>
-                <button type="button" class="mobile-dark-toggle hs-dark-mode-active:block hidden hs-dark-mode text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none transition-colors" data-hs-theme-click-value="light">
+                <button type="button" class="mobile-dark-toggle hs-dark-mode-active:block hidden hs-dark-mode text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none transition-colors" data-hs-theme-click-value="light" aria-label="Aktifkan mode terang">
                     <span class="group inline-flex shrink-0 justify-center items-center size-9">
                         <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
                     </span>

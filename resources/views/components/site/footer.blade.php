@@ -147,24 +147,21 @@
                 <div class="w-full h-auto flex items-center justify-center gap-4 flex-wrap">
                     <div class="w-full h-auto flex items-center justify-center gap-4 flex-wrap">
 
-                        <button
-                            class="bg-blue-50 cursor-pointer rounded-md shadow-md shadow-transparent transition-all duration-300 hover:shadow-indigo-200">
-                            <a href="https://www.facebook.com/profile.php?id=100086123436506" target="_blank"
-                                rel="noopener noreferrer">
-                                <svg class="" xmlns="http://www.w3.org/2000/svg" width="48" height="48"
-                                    viewBox="0 0 92 92" fill="none">
-                                    <rect x="0.138672" width="" height="" rx="15" fill="#EDF4FF" />
-                                    <path
-                                        d="M56.4927 48.6403L57.7973 40.3588H49.7611V34.9759C49.7611 32.7114 50.883 30.4987 54.4706 30.4987H58.1756V23.4465C56.018 23.1028 53.8378 22.9168 51.6527 22.8901C45.0385 22.8901 40.7204 26.8626 40.7204 34.0442V40.3588H33.3887V48.6403H40.7204V68.671H49.7611V48.6403H56.4927Z"
-                                        fill="#337FFF" />
-                                </svg>
-                            </a>
-                        </button>
+                        <a href="https://www.facebook.com/profile.php?id=100086123436506" target="_blank"
+                            rel="noopener noreferrer" aria-label="Facebook 4Putra"
+                            class="inline-flex items-center justify-center bg-blue-50 cursor-pointer rounded-md shadow-md shadow-transparent transition-all duration-300 hover:shadow-indigo-200">
+                            <svg class="" xmlns="http://www.w3.org/2000/svg" width="48" height="48"
+                                viewBox="0 0 92 92" fill="none">
+                                <rect x="0.138672" width="" height="" rx="15" fill="#EDF4FF" />
+                                <path
+                                    d="M56.4927 48.6403L57.7973 40.3588H49.7611V34.9759C49.7611 32.7114 50.883 30.4987 54.4706 30.4987H58.1756V23.4465C56.018 23.1028 53.8378 22.9168 51.6527 22.8901C45.0385 22.8901 40.7204 26.8626 40.7204 34.0442V40.3588H33.3887V48.6403H40.7204V68.671H49.7611V48.6403H56.4927Z"
+                                    fill="#337FFF" />
+                            </svg>
+                        </a>
 
-                        <button
+                        <a href="https://www.instagram.com/4_putra_parrot_surabaya/" target="_blank"
+                            rel="noopener noreferrer" aria-label="Instagram 4Putra"
                             class="w-12 h-12 flex items-center justify-center bg-gradient-to-tr from-red-50 to-pink-50 cursor-pointer rounded-md shadow-md shadow-transparent transition-all duration-300 hover:shadow-red-200">
-                            <a href="https://www.instagram.com/4_putra_parrot_surabaya/" target="_blank"
-                                rel="noopener noreferrer">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"
                                     viewBox="0 0 51 51" fill="none">
                                     <path
@@ -189,11 +186,10 @@
                                     </defs>
                                 </svg>
                             </a>
-                        </button>
 
-                        <button
+                        <a href="https://www.tiktok.com/@4_putra_parrot" target="_blank" rel="noopener noreferrer"
+                            aria-label="TikTok 4Putra"
                             class="w-12 h-12 flex items-center justify-center bg-gray-100 cursor-pointer rounded-md shadow-md shadow-transparent transition-all duration-300 hover:shadow-indigo-200">
-                            <a href="https://www.tiktok.com/@4_putra_parrot" target="_blank">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="28"
                                     viewBox="0 0 42 47" fill="none">
                                     <path fill-rule="evenodd" clip-rule="evenodd"
@@ -206,8 +202,7 @@
                                         d="M38.9736 13.0161V11.4129C37.0005 11.4213 35.0655 10.8696 33.3934 9.82211C34.8695 11.4493 36.8229 12.5674 38.9736 13.0161ZM28.5838 2.71335C28.5838 2.42751 28.4968 2.12924 28.4596 1.8434V0.874023H20.8785V30.9744C20.872 32.6598 20.197 34.2738 19.0017 35.4621C17.8064 36.6504 16.1885 37.3159 14.503 37.3126C13.5106 37.3176 12.5311 37.0876 11.6446 36.6415C12.4519 37.7007 13.5707 38.4805 14.8438 38.8715C16.1169 39.2624 17.4805 39.2448 18.7432 38.8212C20.0058 38.3976 21.1041 37.5892 21.8838 36.5095C22.6636 35.4298 23.0856 34.1331 23.0907 32.8013V2.71335H28.5838ZM16.4418 18.8696V17.167C13.3222 16.7432 10.1511 17.3885 7.44529 18.9977C4.73944 20.6069 2.65839 23.0851 1.54131 26.0284C0.424223 28.9718 0.336969 32.2067 1.29377 35.206C2.25057 38.2053 4.195 40.792 6.81017 42.5448C4.92871 40.5995 3.65455 38.1484 3.14333 35.4908C2.63212 32.8333 2.906 30.0844 3.9315 27.5799C4.957 25.0755 6.68974 22.924 8.91801 21.3882C11.1463 19.8524 13.7736 18.9988 16.4791 18.9318L16.4418 18.8696Z"
                                         fill="#69C9D0" />
                                 </svg>
-                            </a>
-                        </button>
+                        </a>
 
                     </div>
                 </div>

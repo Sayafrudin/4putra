@@ -87,6 +87,7 @@
     function initDzCreate() {
         if (dzCreateInitialized) return;
         var Dropzone = window.Dropzone;
+        if (!Dropzone && window.__dropzoneReady) { window.__dropzoneReady.then(initDzCreate); return; }
         if (!Dropzone) { console.warn('[INFO] Dropzone tidak ter-load.'); return; }
         Dropzone.autoDiscover = false;
 
@@ -107,6 +108,7 @@
     function initDzEdit() {
         if (dzEditInitialized) return;
         var Dropzone = window.Dropzone;
+        if (!Dropzone && window.__dropzoneReady) { window.__dropzoneReady.then(initDzEdit); return; }
         if (!Dropzone) return;
         Dropzone.autoDiscover = false;
 

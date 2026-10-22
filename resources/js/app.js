@@ -45,8 +45,12 @@ if (chatEl && window.__chatUser) {
 // Dropzone hanya dipakai form upload admin — muat malas agar bundle publik ramping.
 // turbo:load wajib: Turbo Drive mengganti body tanpa re-eval app.js, jadi cek ulang
 // tiap navigasi (admin bisa mulai di halaman tanpa .dropzone lalu pindah ke halaman upload).
+// Promise diekspos agar initDz*() script admin bisa menunggu bila modal dibuka lebih dulu.
 const muatDropzone = () => {
-    if (document.querySelector('.dropzone')) import('./dropzone.js');
+    if (document.querySelector('.dropzone') && !window.__dropzoneReady) {
+        window.__dropzoneReady = import('./dropzone.js');
+        window.__dropzoneReady.catch(() => {});
+    }
 };
 muatDropzone();
 document.addEventListener('turbo:load', muatDropzone);

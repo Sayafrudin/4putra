@@ -1,29 +1,37 @@
-import { dirname, join } from 'path';
-import { fileURLToPath } from 'url';
-import { config } from 'dotenv';
-import fs from 'fs';
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
+import { config } from "dotenv";
+import fs from "fs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-config({ path: join(__dirname, '../../.env') });
+config({ path: join(__dirname, "../../.env") });
 // Rahasia di luar folder publik — php artisan serve menyajikan file mentah di bawah public/
-config({ path: join(__dirname, '../../storage/app/chatbot.env'), override: true });
-import { makeWASocket, useMultiFileAuthState, DisconnectReason, downloadMediaMessage } from '@whiskeysockets/baileys';
-import pino from 'pino';
-import { Groq } from 'groq-sdk';
-import express from 'express';
-import { eksekusiAprioriLengkap } from './apriori.js';
-import { query, queryOne, insert, update } from './db.js';
-import { createTransaction, getTransactionStatus } from './midtrans.js';
-import { kirimHandoffKeFirebase, hapusHandoffFirebase } from './firebase.js';
+config({
+    path: join(__dirname, "../../storage/app/chatbot.env"),
+    override: true,
+});
+import {
+    makeWASocket,
+    useMultiFileAuthState,
+    DisconnectReason,
+    downloadMediaMessage,
+} from "@whiskeysockets/baileys";
+import pino from "pino";
+import { Groq } from "groq-sdk";
+import express from "express";
+import { eksekusiAprioriLengkap } from "./apriori.js";
+import { query, queryOne, insert, update } from "./db.js";
+import { createTransaction, getTransactionStatus } from "./midtrans.js";
+import { kirimHandoffKeFirebase, hapusHandoffFirebase } from "./firebase.js";
 
 // ============================================================
 // KONFIGURASI
 // ============================================================
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 // Model default mengikuti katalog Groq aktif; ganti via GROQ_MODEL di .env
-const GROQ_MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-20b';
+const GROQ_MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-20b";
 const groq = new Groq({ apiKey: GROQ_API_KEY });
-const logger = pino({ level: 'silent' });
+const logger = pino({ level: "silent" });
 const RATE_LIMIT_MS = 2000;
 // Idle reset dihitung SQL-side (TIMESTAMPDIFF ke NOW()) — jam DB bisa beda
 // beberapa jam dengan jam Node; komparasi di JS memicu reset palsu tiap pesan
@@ -96,19 +104,43 @@ Untuk memudahkan layanan, silakan pilih menu di bawah ini dengan mengetikkan ang
 Atau langsung ketik pertanyaan Kakak di sini, nanti asisten AI kami yang akan menjawab! 🦜`;
 
 // Daftar keyword yang dianggap sebagai sapaan/pembuka menu
-const KEYWORD_SAPAAN = ['menu', 'halo', 'hai', 'hi', 'hey', 'helo', 'selamat pagi', 'selamat siang', 'selamat sore', 'selamat malam', 'pagi', 'siang', 'sore', 'malam', 'mulai', 'start', 'help', 'bantuan'];
+const KEYWORD_SAPAAN = [
+    "menu",
+    "halo",
+    "hai",
+    "hi",
+    "hey",
+    "helo",
+    "selamat pagi",
+    "selamat siang",
+    "selamat sore",
+    "selamat malam",
+    "pagi",
+    "siang",
+    "sore",
+    "malam",
+    "mulai",
+    "start",
+    "help",
+    "bantuan",
+];
 
 // ============================================================
 // FUNGSI HELPER: Sapaan berdasarkan waktu Indonesia (WIB)
 // ============================================================
 function dapatkanSapaanWaktu() {
     const sekarang = new Date();
-    const jamWIB = new Date(sekarang.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' })).getHours();
+    const jamWIB = new Date(
+        sekarang.toLocaleString("en-US", { timeZone: "Asia/Jakarta" }),
+    ).getHours();
 
-    if (jamWIB >= 4 && jamWIB < 11) return { sapaan: 'Selamat Pagi', emoji: '🌅', period: 'pagi' };
-    if (jamWIB >= 11 && jamWIB < 15) return { sapaan: 'Selamat Siang', emoji: '☀️', period: 'siang' };
-    if (jamWIB >= 15 && jamWIB < 18) return { sapaan: 'Selamat Sore', emoji: '🌇', period: 'sore' };
-    return { sapaan: 'Selamat Malam', emoji: '🌙', period: 'malam' };
+    if (jamWIB >= 4 && jamWIB < 11)
+        return { sapaan: "Selamat Pagi", emoji: "🌅", period: "pagi" };
+    if (jamWIB >= 11 && jamWIB < 15)
+        return { sapaan: "Selamat Siang", emoji: "☀️", period: "siang" };
+    if (jamWIB >= 15 && jamWIB < 18)
+        return { sapaan: "Selamat Sore", emoji: "🌇", period: "sore" };
+    return { sapaan: "Selamat Malam", emoji: "🌙", period: "malam" };
 }
 
 // ============================================================
@@ -116,7 +148,7 @@ function dapatkanSapaanWaktu() {
 // ============================================================
 async function buatSapaanHybrid(namaPelanggan) {
     const waktu = dapatkanSapaanWaktu();
-    const namaDepan = namaPelanggan.split(' ')[0];
+    const namaDepan = namaPelanggan.split(" ")[0];
 
     const systemPrompt = `Anda adalah asisten virtual untuk PT 4Putra Vertex Aviary. Tugas Anda HANYA membuat satu paragraf sapaan pembuka (maksimal 2 kalimat).
 Aturan wajib:
@@ -129,20 +161,23 @@ Aturan wajib:
     try {
         const respon = await groq.chat.completions.create({
             messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: 'sapa saya' },
+                { role: "system", content: systemPrompt },
+                { role: "user", content: "sapa saya" },
             ],
             model: GROQ_MODEL,
             temperature: 0.7,
-            reasoning_effort: 'low',
+            reasoning_effort: "low",
             max_completion_tokens: 800,
         });
         const sapaanAI = respon.choices[0].message.content.trim();
         // Gabungkan sapaan AI + menu statis
-        return sapaanAI + '\n\n' + MENU_STATIS;
+        return sapaanAI + "\n\n" + MENU_STATIS;
     } catch (e) {
         // Fallback jika Groq gagal
-        return `${waktu.sapaan}, Kak ${namaDepan}! 👋 Senang dapat terhubung dengan Kakak hari ini.\n\n` + MENU_STATIS;
+        return (
+            `${waktu.sapaan}, Kak ${namaDepan}! 👋 Senang dapat terhubung dengan Kakak hari ini.\n\n` +
+            MENU_STATIS
+        );
     }
 }
 
@@ -150,56 +185,67 @@ Aturan wajib:
 // FUNGSI BANTUAN
 // ============================================================
 
-async function dapatkanPelanggan(remoteJid, pushName = '') {
+async function dapatkanPelanggan(remoteJid, pushName = "") {
     // Ekstrak nomor dari JID
-    let nomorWa = '';
-    let jidType = '';
+    let nomorWa = "";
+    let jidType = "";
 
-    if (remoteJid.endsWith('@s.whatsapp.net')) {
-        nomorWa = remoteJid.replace('@s.whatsapp.net', '');
-        jidType = 'phone';
-    } else if (remoteJid.endsWith('@lid')) {
-        nomorWa = remoteJid.replace('@lid', '');
-        jidType = 'lid';
+    if (remoteJid.endsWith("@s.whatsapp.net")) {
+        nomorWa = remoteJid.replace("@s.whatsapp.net", "");
+        jidType = "phone";
+    } else if (remoteJid.endsWith("@lid")) {
+        nomorWa = remoteJid.replace("@lid", "");
+        jidType = "lid";
     } else {
         nomorWa = remoteJid;
-        jidType = 'unknown';
+        jidType = "unknown";
     }
 
     // Cari pelanggan berdasarkan full JID (idle_detik dihitung sisi SQL agar bebas clock skew)
-    let pelanggan = await queryOne('SELECT id, nomor_wa, nama, sesi_aktif, riwayat_konteks, metadata_sesi, pesan_terakhir, TIMESTAMPDIFF(SECOND, pesan_terakhir, NOW()) AS idle_detik FROM pelanggan WHERE nomor_wa = ?', [remoteJid]);
+    let pelanggan = await queryOne(
+        "SELECT id, nomor_wa, nama, sesi_aktif, riwayat_konteks, metadata_sesi, pesan_terakhir, TIMESTAMPDIFF(SECOND, pesan_terakhir, NOW()) AS idle_detik FROM pelanggan WHERE nomor_wa = ?",
+        [remoteJid],
+    );
 
     // Jika tidak ada, coba cari berdasarkan nomor saja (untuk migrasi dari format lama)
     if (!pelanggan) {
-        pelanggan = await queryOne('SELECT id, nomor_wa, nama, sesi_aktif, riwayat_konteks, metadata_sesi, pesan_terakhir, TIMESTAMPDIFF(SECOND, pesan_terakhir, NOW()) AS idle_detik FROM pelanggan WHERE nomor_wa = ? OR nomor_wa LIKE ?',
-            [nomorWa, nomorWa + '@%']);
+        pelanggan = await queryOne(
+            "SELECT id, nomor_wa, nama, sesi_aktif, riwayat_konteks, metadata_sesi, pesan_terakhir, TIMESTAMPDIFF(SECOND, pesan_terakhir, NOW()) AS idle_detik FROM pelanggan WHERE nomor_wa = ? OR nomor_wa LIKE ?",
+            [nomorWa, nomorWa + "@%"],
+        );
     }
 
     const isNew = !pelanggan;
 
     if (!pelanggan) {
         const id = await insert(
-            'INSERT INTO pelanggan (nomor_wa, nama, sesi_aktif, pesan_terakhir) VALUES (?, ?, ?, NOW())',
-            [remoteJid, pushName || null, 'menu']
+            "INSERT INTO pelanggan (nomor_wa, nama, sesi_aktif, pesan_terakhir) VALUES (?, ?, ?, NOW())",
+            [remoteJid, pushName || null, "menu"],
         );
         pelanggan = {
             id,
             nomor_wa: remoteJid,
             nama: pushName || null,
-            sesi_aktif: 'menu',
+            sesi_aktif: "menu",
             riwayat_konteks: null,
             metadata_sesi: null,
-            pesan_terakhir: new Date()
+            pesan_terakhir: new Date(),
         };
     } else {
         // Update JID jika berubah
         if (pelanggan.nomor_wa !== remoteJid) {
-            await update('UPDATE pelanggan SET nomor_wa = ? WHERE id = ?', [remoteJid, pelanggan.id]);
+            await update("UPDATE pelanggan SET nomor_wa = ? WHERE id = ?", [
+                remoteJid,
+                pelanggan.id,
+            ]);
             pelanggan.nomor_wa = remoteJid;
         }
         // Update nama jika kosong atau pushName tersedia (update terus agar nama selalu fresh)
         if (pushName && pushName !== pelanggan.nama) {
-            await update('UPDATE pelanggan SET nama = ? WHERE id = ?', [pushName, pelanggan.id]);
+            await update("UPDATE pelanggan SET nama = ? WHERE id = ?", [
+                pushName,
+                pelanggan.id,
+            ]);
             pelanggan.nama = pushName;
         }
     }
@@ -209,28 +255,58 @@ async function dapatkanPelanggan(remoteJid, pushName = '') {
 
 async function cekRateLimit(pelangganId) {
     // Selisih pesan dihitung di sisi SQL — komparasi Date JS meleset karena jam DB beda zona dengan jam Node
-    const r = await queryOne('SELECT TIMESTAMPDIFF(SECOND, pesan_terakhir, NOW()) AS idle FROM pelanggan WHERE id = ?', [pelangganId]);
-    return r && r.idle !== null && (r.idle * 1000) < RATE_LIMIT_MS;
+    const r = await queryOne(
+        "SELECT TIMESTAMPDIFF(SECOND, pesan_terakhir, NOW()) AS idle FROM pelanggan WHERE id = ?",
+        [pelangganId],
+    );
+    return r && r.idle !== null && r.idle * 1000 < RATE_LIMIT_MS;
 }
 
-async function simpanPercakapan(pelangganId, pesanPengirim, pesanBalasan, sumber, extra = {}) {
-    const { replyToId = null, mediaUrl = null, mediaType = null, isForwarded = false, waMessageId = null } = extra;
+async function simpanPercakapan(
+    pelangganId,
+    pesanPengirim,
+    pesanBalasan,
+    sumber,
+    extra = {},
+) {
+    const {
+        replyToId = null,
+        mediaUrl = null,
+        mediaType = null,
+        isForwarded = false,
+        waMessageId = null,
+    } = extra;
     await insert(
-        'INSERT INTO percakapan (pelanggan_id, wa_message_id, pesan_pengirim, pesan_balasan, sumber_balasan, reply_to_id, media_url, media_type, is_forwarded, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())',
-        [pelangganId, waMessageId, pesanPengirim, pesanBalasan, sumber, replyToId, mediaUrl, mediaType, isForwarded]
+        "INSERT INTO percakapan (pelanggan_id, wa_message_id, pesan_pengirim, pesan_balasan, sumber_balasan, reply_to_id, media_url, media_type, is_forwarded, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())",
+        [
+            pelangganId,
+            waMessageId,
+            pesanPengirim,
+            pesanBalasan,
+            sumber,
+            replyToId,
+            mediaUrl,
+            mediaType,
+            isForwarded,
+        ],
     );
 }
 
-async function dapatkanRiwayatPercakapan(pelangganId, limit = JUMLAH_PERCAKAPAN_KONTEKS) {
+async function dapatkanRiwayatPercakapan(
+    pelangganId,
+    limit = JUMLAH_PERCAKAPAN_KONTEKS,
+) {
     // LIMIT wajib inline (parseInt) — prepared statement mengirim LIMIT ? sebagai string, ditolak TiDB
     return await query(
         `SELECT pesan_pengirim, pesan_balasan FROM percakapan WHERE pelanggan_id = ? ORDER BY created_at DESC LIMIT ${parseInt(limit) || 10}`,
-        [pelangganId]
+        [pelangganId],
     );
 }
 
 async function dapatkanInventaris() {
-    return await query('SELECT id, nama_spesies, fase, harga, stok, deskripsi FROM inventaris_burung WHERE aktif = 1 AND stok > 0 ORDER BY nama_spesies, fase');
+    return await query(
+        "SELECT id, nama_spesies, fase, harga, stok, deskripsi FROM inventaris_burung WHERE aktif = 1 AND stok > 0 ORDER BY nama_spesies, fase",
+    );
 }
 
 // Ambil riwayat transaksi pelanggan
@@ -242,7 +318,7 @@ async function dapatkanRiwayatTransaksi(pelangganId) {
          WHERE t.pelanggan_id = ?
          ORDER BY t.created_at DESC
          LIMIT 10`,
-        [pelangganId]
+        [pelangganId],
     );
 }
 
@@ -252,8 +328,10 @@ async function dapatkanRiwayatTransaksi(pelangganId) {
 let offsetDbDetik = null;
 async function dapatkanOffsetDb() {
     if (offsetDbDetik === null) {
-        const r = await queryOne('SELECT CAST(NOW() AS CHAR) AS db_now');
-        offsetDbDetik = Math.round((Date.now() - Date.parse(r.db_now.replace(' ', 'T') + 'Z')) / 1000);
+        const r = await queryOne("SELECT CAST(NOW() AS CHAR) AS db_now");
+        offsetDbDetik = Math.round(
+            (Date.now() - Date.parse(r.db_now.replace(" ", "T") + "Z")) / 1000,
+        );
     }
     return offsetDbDetik;
 }
@@ -266,7 +344,7 @@ async function dapatkanRekomendasiBerdasarkanPembelian(pelangganId) {
          FROM transaksi_chatbot t
          JOIN inventaris_burung i ON t.inventaris_id = i.id
          WHERE t.pelanggan_id = ? AND t.status = 'paid'`,
-        [pelangganId]
+        [pelangganId],
     );
 
     if (pembelian.length === 0) return null;
@@ -275,8 +353,10 @@ async function dapatkanRekomendasiBerdasarkanPembelian(pelangganId) {
     const rekomendasi = [];
 
     for (const item of pembelian) {
-        const aturanCocok = hasilApriori.aturanKuatFinal.find(rule =>
-            rule.antecedents.toLowerCase().includes(item.nama_spesies.toLowerCase())
+        const aturanCocok = hasilApriori.aturanKuatFinal.find((rule) =>
+            rule.antecedents
+                .toLowerCase()
+                .includes(item.nama_spesies.toLowerCase()),
         );
 
         if (aturanCocok) {
@@ -298,18 +378,25 @@ async function buatRekomendasiAprioriGroq(pelangganId, namaPelanggan) {
          FROM transaksi_chatbot t
          JOIN inventaris_burung i ON t.inventaris_id = i.id
          WHERE t.pelanggan_id = ? AND t.status = 'paid'`,
-        [pelangganId]
+        [pelangganId],
     );
     if (pembelian.length === 0) return null;
 
-    const aturan = dapatkanHasilApriori().aturanKuatFinal.filter(rule =>
-        pembelian.some(p => rule.antecedents.toLowerCase().includes(p.nama_spesies.toLowerCase()))
+    const aturan = dapatkanHasilApriori().aturanKuatFinal.filter((rule) =>
+        pembelian.some((p) =>
+            rule.antecedents
+                .toLowerCase()
+                .includes(p.nama_spesies.toLowerCase()),
+        ),
     );
     if (aturan.length === 0) return null;
 
     const daftarAturan = aturan
-        .map(r => `- ${r.antecedents} -> ${r.consequents} (confidence ${r.confidence})`)
-        .join('\n');
+        .map(
+            (r) =>
+                `- ${r.antecedents} -> ${r.consequents} (confidence ${r.confidence})`,
+        )
+        .join("\n");
 
     const systemPrompt = `Anda asisten virtual penangkaran PT 4Putra Vertex Aviary (burung paruh bengkok premium). Pelanggan bernama ${namaPelanggan}.
 
@@ -323,17 +410,17 @@ Gaya: panggil pelanggan 'Kak', maksimal 4 kalimat, hangat dan persuasif. Akhiri 
     try {
         const respon = await groq.chat.completions.create({
             messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: 'Buat rekomendasi pembeliannya' },
+                { role: "system", content: systemPrompt },
+                { role: "user", content: "Buat rekomendasi pembeliannya" },
             ],
             model: GROQ_MODEL,
             temperature: 0.7,
-            reasoning_effort: 'low',
+            reasoning_effort: "low",
             max_completion_tokens: 800,
         });
         return respon.choices[0].message.content.trim();
     } catch (e) {
-        console.error('[APRIORI-GROQ] Gagal generate rekomendasi:', e.message);
+        console.error("[APRIORI-GROQ] Gagal generate rekomendasi:", e.message);
         return null;
     }
 }
@@ -341,22 +428,36 @@ Gaya: panggil pelanggan 'Kak', maksimal 4 kalimat, hangat dan persuasif. Akhiri 
 // Format riwayat transaksi untuk WhatsApp
 async function formatRiwayatTransaksi(daftar) {
     if (!daftar || daftar.length === 0) {
-        return '📦 *Riwayat Transaksi*\n\nBelum ada transaksi, Kak. Yuk mulai koleksi burung impian! 🦜';
+        return "📦 *Riwayat Transaksi*\n\nBelum ada transaksi, Kak. Yuk mulai koleksi burung impian! 🦜";
     }
 
     // tanggal_str = wall time DB; koreksi offset jam DB + 7 jam (WIB), diformat sebagai UTC agar tanggal WIB stabil
     const offset = await dapatkanOffsetDb();
 
-    let teks = '📦 *Riwayat Transaksi Kakak*\n\n';
+    let teks = "📦 *Riwayat Transaksi Kakak*\n\n";
 
     for (const trx of daftar) {
-        const harga = Number(trx.total_harga || trx.harga).toLocaleString('id-ID');
-        const status = trx.status === 'paid' ? '✅ Lunas' : (trx.status === 'pending' ? '⏳ Pending' : '❌ ' + trx.status);
-        const fase = trx.fase === 'anakan' ? 'Baby' : 'Dewasa';
-        const tanggal = new Date(Date.parse(trx.tanggal_str.replace(' ', 'T') + 'Z') + (offset + 7 * 3600) * 1000)
-            .toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+        const harga = Number(trx.total_harga || trx.harga).toLocaleString(
+            "id-ID",
+        );
+        const status =
+            trx.status === "paid"
+                ? "✅ Lunas"
+                : trx.status === "pending"
+                  ? "⏳ Pending"
+                  : "❌ " + trx.status;
+        const fase = trx.fase === "anakan" ? "Baby" : "Dewasa";
+        const tanggal = new Date(
+            Date.parse(trx.tanggal_str.replace(" ", "T") + "Z") +
+                (offset + 7 * 3600) * 1000,
+        ).toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+            timeZone: "UTC",
+        });
 
-        teks += `*${trx.nama_spesies || 'Produk'}* (${fase})\n`;
+        teks += `*${trx.nama_spesies || "Produk"}* (${fase})\n`;
         teks += `   Tanggal: ${tanggal}\n`;
         teks += `   Nominal: Rp ${harga}\n`;
         teks += `   Status: ${status}\n\n`;
@@ -368,30 +469,33 @@ async function formatRiwayatTransaksi(daftar) {
 // Buat rekomendasi berdasarkan Apriori dengan elaborasi natural
 function buatRekomendasiNatural(aturan, burungDibeli) {
     const deskripsi = {
-        'african grey': {
-            sifat: 'terkenal sangat pintar, bisa meniru banyak kata-kata, dan suka berinteraksi',
-            cocok: 'teman ngobrol di rumah',
+        "african grey": {
+            sifat: "terkenal sangat pintar, bisa meniru banyak kata-kata, dan suka berinteraksi",
+            cocok: "teman ngobrol di rumah",
         },
-        'bng macaw': {
-            sifat: 'sangat cantik dengan warna mencolok, energik, dan setia pada pemiliknya',
-            cocok: 'pajangan hidup yang memukau',
+        "bng macaw": {
+            sifat: "sangat cantik dengan warna mencolok, energik, dan setia pada pemiliknya",
+            cocok: "pajangan hidup yang memukau",
         },
-        'sun conure': {
-            sifat: 'sangat aktif, ceria, dan suka bermain. Warna kuning-oranye yang memikat',
-            cocok: 'teman bermain yang menghibur',
+        "sun conure": {
+            sifat: "sangat aktif, ceria, dan suka bermain. Warna kuning-oranye yang memikat",
+            cocok: "teman bermain yang menghibur",
         },
-        'monk parakeet': {
-            sifat: 'jinak, suka bersosial, dan bisa diajak main. Mudah beradaptasi',
-            cocok: 'teman di rumah yang ramah',
+        "monk parakeet": {
+            sifat: "jinak, suka bersosial, dan bisa diajak main. Mudah beradaptasi",
+            cocok: "teman di rumah yang ramah",
         },
-        'indian ring neck': {
-            sifat: 'pandai bicara, aktif, dan punya bulu hijau yang elegan',
-            cocok: 'teman ngobrol yang seru',
+        "indian ring neck": {
+            sifat: "pandai bicara, aktif, dan punya bulu hijau yang elegan",
+            cocok: "teman ngobrol yang seru",
         },
     };
 
     const namaBurung = aturan.consequents.toLowerCase();
-    const info = deskripsi[namaBurung] || { sifat: 'sangat istimewa', cocok: 'koleksi premium' };
+    const info = deskripsi[namaBurung] || {
+        sifat: "sangat istimewa",
+        cocok: "koleksi premium",
+    };
 
     const saran = `Kak, berdasarkan data pembelian kami, pelanggan yang suka *${burungDibeli}* biasanya juga tertarik dengan *${aturan.consequents}*! 
 
@@ -406,14 +510,14 @@ Mau lihat detail harga atau stoknya? Ketik *2* ya!`;
 
 async function buatNotifikasi(tipe, judul, isi, pelangganId = null) {
     await insert(
-        'INSERT INTO notifikasi_admins (tipe, judul, isi, pelanggan_id, dibaca, created_at, updated_at) VALUES (?, ?, ?, ?, 0, NOW(), NOW())',
-        [tipe, judul, isi, pelangganId]
+        "INSERT INTO notifikasi_admins (tipe, judul, isi, pelanggan_id, dibaca, created_at, updated_at) VALUES (?, ?, ?, ?, 0, NOW(), NOW())",
+        [tipe, judul, isi, pelangganId],
     );
 }
 
 function dapatkanHasilApriori() {
     const sekarang = Date.now();
-    if (!cacheApriori || (sekarang - cacheAprioriWaktu) > CACHE_APRIORI_TTL) {
+    if (!cacheApriori || sekarang - cacheAprioriWaktu > CACHE_APRIORI_TTL) {
         cacheApriori = eksekusiAprioriLengkap();
         cacheAprioriWaktu = sekarang;
     }
@@ -422,35 +526,35 @@ function dapatkanHasilApriori() {
 
 function formatInventaris(daftar) {
     if (!daftar || daftar.length === 0) {
-        return 'Maaf Kak, saat ini stok burung sedang kosong. Silakan cek kembali nanti ya.';
+        return "Maaf Kak, saat ini stok burung sedang kosong. Silakan cek kembali nanti ya.";
     }
 
-    let teks = '*📋 DAFTAR BURUNG TERSEDIA — PT 4Putra Vertex Aviary*\n\n';
+    let teks = "*📋 DAFTAR BURUNG TERSEDIA — PT 4Putra Vertex Aviary*\n\n";
 
     daftar.forEach((item, idx) => {
-        const harga = Number(item.harga).toLocaleString('id-ID');
-        const fase = item.fase === 'anakan' ? 'Baby' : 'Dewasa';
+        const harga = Number(item.harga).toLocaleString("id-ID");
+        const fase = item.fase === "anakan" ? "Baby" : "Dewasa";
         teks += `${idx + 1}. *${item.nama_spesies}* (${fase}) — Rp ${harga} (Stok: ${item.stok})\n`;
     });
 
-    teks += '\nKetik *nomor* burung untuk lanjut ke pembayaran, atau ketik *menu* untuk kembali ya, Kak! 🦜';
+    teks += "\nKetik *menu* untuk kembali ya, Kak! 🦜";
     return teks;
 }
 
 // Ekstrak nomor dari JID untuk display
 function getNomorDisplay(remoteJid) {
-    if (!remoteJid) return '';
-    return remoteJid.replace('@s.whatsapp.net', '').replace('@lid', '');
+    if (!remoteJid) return "";
+    return remoteJid.replace("@s.whatsapp.net", "").replace("@lid", "");
 }
 
 // Format nomor HP untuk display
 function formatNomorHp(nomor) {
-    if (!nomor) return '';
+    if (!nomor) return "";
     // Hapus suffix jika ada
-    let clean = nomor.replace('@s.whatsapp.net', '').replace('@lid', '');
+    let clean = nomor.replace("@s.whatsapp.net", "").replace("@lid", "");
     // Format: 628xxx -> +62 8xxx
-    if (clean.startsWith('62') && clean.length > 10) {
-        return '+' + clean.substring(0, 2) + ' ' + clean.substring(2);
+    if (clean.startsWith("62") && clean.length > 10) {
+        return "+" + clean.substring(0, 2) + " " + clean.substring(2);
     }
     return clean;
 }
@@ -458,52 +562,78 @@ function formatNomorHp(nomor) {
 // ============================================================
 // FUNGSI PEMBAYARAN MIDTRANS QRIS
 // ============================================================
-async function buatPembayaranQRIS(pelangganId, inventarisId, namaSpesies, fase, harga, remoteJid, quantity = 1) {
+async function buatPembayaranQRIS(
+    pelangganId,
+    inventarisId,
+    namaSpesies,
+    fase,
+    harga,
+    remoteJid,
+    quantity = 1,
+) {
     try {
         // Buat order ID unik
         const orderId = `4PUTRA-${Date.now()}-${pelangganId}`;
         const totalHarga = harga * quantity;
-        console.log(`[QRIS] Membuat pembayaran via Snap API: OrderID=${orderId}, Produk=${namaSpesies}, Qty=${quantity}, Total=${totalHarga}`);
+        console.log(
+            `[QRIS] Membuat pembayaran via Snap API: OrderID=${orderId}, Produk=${namaSpesies}, Qty=${quantity}, Total=${totalHarga}`,
+        );
 
         // Simpan transaksi ke database dengan inventaris_id dan quantity
         const transaksiId = await insert(
             `INSERT INTO transaksi_chatbot (pelanggan_id, inventaris_id, nominal_dp, total_harga, quantity, status, midtrans_order_id, created_at, updated_at)
              VALUES (?, ?, ?, ?, ?, 'pending', ?, NOW(), NOW())`,
-            [pelangganId, inventarisId, totalHarga, totalHarga, quantity, orderId]
+            [
+                pelangganId,
+                inventarisId,
+                totalHarga,
+                totalHarga,
+                quantity,
+                orderId,
+            ],
         );
         console.log(`[QRIS] Transaksi tersimpan: ID=${transaksiId}`);
 
         // Buat transaksi Midtrans Snap (QRIS-only)
-        const pelanggan = await queryOne('SELECT id, nomor_wa, nama FROM pelanggan WHERE id = ?', [pelangganId]);
-        const namaDisplay = pelanggan?.nama || 'Pelanggan';
-        const nomorDisplay = getNomorDisplay(pelanggan?.nomor_wa || '');
-        const faseLabel = fase === 'anakan' ? 'Baby' : 'Dewasa';
+        const pelanggan = await queryOne(
+            "SELECT id, nomor_wa, nama FROM pelanggan WHERE id = ?",
+            [pelangganId],
+        );
+        const namaDisplay = pelanggan?.nama || "Pelanggan";
+        const nomorDisplay = getNomorDisplay(pelanggan?.nomor_wa || "");
+        const faseLabel = fase === "anakan" ? "Baby" : "Dewasa";
 
-        const snap = await createTransaction(orderId, totalHarga, {
-            nama: namaDisplay,
-            nomor: nomorDisplay,
-            nama_produk: `${namaSpesies} ${faseLabel} x${quantity}`,
-        }, [
+        const snap = await createTransaction(
+            orderId,
+            totalHarga,
             {
-                id: orderId,
-                price: Math.round(harga),
-                quantity: quantity,
-                name: `${namaSpesies} ${faseLabel}`,
+                nama: namaDisplay,
+                nomor: nomorDisplay,
+                nama_produk: `${namaSpesies} ${faseLabel} x${quantity}`,
             },
-        ]);
-
-        const linkPembayaran = snap.redirect_url || null;
-        await update(
-            'UPDATE transaksi_chatbot SET qr_url = ? WHERE id = ?',
-            [linkPembayaran, transaksiId]
+            [
+                {
+                    id: orderId,
+                    price: Math.round(harga),
+                    quantity: quantity,
+                    name: `${namaSpesies} ${faseLabel}`,
+                },
+            ],
         );
 
-        const caption = `✅ *Pesanan Berhasil Dibuat!*\n\n` +
+        const linkPembayaran = snap.redirect_url || null;
+        await update("UPDATE transaksi_chatbot SET qr_url = ? WHERE id = ?", [
+            linkPembayaran,
+            transaksiId,
+        ]);
+
+        const caption =
+            `✅ *Pesanan Berhasil Dibuat!*\n\n` +
             `📦 *Detail Pesanan:*\n` +
             `• Produk: ${namaSpesies} (${faseLabel})\n` +
             `• Jumlah: ${quantity} ekor\n` +
-            `• Harga satuan: Rp ${Number(harga).toLocaleString('id-ID')}\n` +
-            `• Total: Rp ${Number(totalHarga).toLocaleString('id-ID')}\n` +
+            `• Harga satuan: Rp ${Number(harga).toLocaleString("id-ID")}\n` +
+            `• Total: Rp ${Number(totalHarga).toLocaleString("id-ID")}\n` +
             `• Order ID: ${orderId}\n\n` +
             `💳 *Cara Pembayaran:*\n` +
             `Klik link di bawah untuk membayar dengan QRIS:\n` +
@@ -515,12 +645,15 @@ async function buatPembayaranQRIS(pelangganId, inventarisId, namaSpesies, fase, 
 
         return { success: true, orderId, transaksiId };
     } catch (error) {
-        console.error('[QRIS] Gagal membuat pembayaran:', error.message);
+        console.error("[QRIS] Gagal membuat pembayaran:", error.message);
         if (error.response) {
-            console.error('[QRIS] Response error:', JSON.stringify(error.response.data));
+            console.error(
+                "[QRIS] Response error:",
+                JSON.stringify(error.response.data),
+            );
         }
         await sockInstance.sendMessage(remoteJid, {
-            text: 'Maaf Kak, terjadi kesalahan saat membuat pembayaran. Silakan coba lagi atau hubungi admin dengan ketik *3*.'
+            text: "Maaf Kak, terjadi kesalahan saat membuat pembayaran. Silakan coba lagi atau hubungi admin dengan ketik *3*.",
         });
         return { success: false, error: error.message };
     }
@@ -530,54 +663,66 @@ async function buatPembayaranQRIS(pelangganId, inventarisId, namaSpesies, fase, 
 // DAFTAR INVENTARIS & CHECKOUT (state inventory / checkout)
 // ============================================================
 function simpanKonteksDaftar(pelanggan, tujuanState) {
-    return dapatkanInventaris().then(inventaris => {
+    return dapatkanInventaris().then((inventaris) => {
         if (!inventaris || inventaris.length === 0) return null;
         return update(
-            'UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = ? WHERE id = ?',
-            [tujuanState, JSON.stringify({
-                items: inventaris.map(i => ({ id: i.id, nama: i.nama_spesies, fase: i.fase, harga: Number(i.harga) }))
-            }), pelanggan.id]
+            "UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = ? WHERE id = ?",
+            [
+                tujuanState,
+                JSON.stringify({
+                    items: inventaris.map((i) => ({
+                        id: i.id,
+                        nama: i.nama_spesies,
+                        fase: i.fase,
+                        harga: Number(i.harga),
+                    })),
+                }),
+                pelanggan.id,
+            ],
         ).then(() => inventaris);
     });
 }
 
-// Menu 2: daftar stok bernomor (state: inventory)
+// Menu 2: daftar stok lihat-saja (pembelian hanya lewat menu 5)
 async function kirimDaftarInventaris(pelanggan, remoteJid, teksMasuk) {
-    const inventaris = await simpanKonteksDaftar(pelanggan, 'inventory_select');
-    pelanggan.sesi_aktif = 'inventory_select';
+    const inventaris = await dapatkanInventaris();
 
     let balasan;
     if (!inventaris) {
-        balasan = 'Maaf Kak, saat ini stok burung sedang kosong. Silakan cek kembali nanti ya.';
+        balasan =
+            "Maaf Kak, saat ini stok burung sedang kosong. Silakan cek kembali nanti ya.";
     } else {
         balasan = formatInventaris(inventaris);
-        balasan += '\n\n🛒 Ingin langsung membeli? Ketik *5* untuk menu pembayaran, atau ketik *3* untuk terhubung dengan admin.';
+        balasan +=
+            "\n\n🛒 Ingin langsung membeli? Ketik *5* untuk menu pembayaran, atau ketik *3* untuk terhubung dengan admin.";
     }
 
     await sockInstance.sendMessage(remoteJid, { text: balasan });
-    await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'menu');
+    await simpanPercakapan(pelanggan.id, teksMasuk, balasan, "menu");
 }
 
 // Menu 5: daftar pembayaran QRIS bernomor (state: checkout)
 async function kirimDaftarCheckout(pelanggan, remoteJid, teksMasuk) {
-    const inventaris = await simpanKonteksDaftar(pelanggan, 'checkout_qty');
-    pelanggan.sesi_aktif = 'checkout_qty';
+    const inventaris = await simpanKonteksDaftar(pelanggan, "checkout_qty");
+    pelanggan.sesi_aktif = "checkout_qty";
 
     let balasan;
     if (!inventaris) {
-        balasan = 'Maaf Kak, saat ini belum ada burung yang tersedia. Silakan cek kembali nanti ya.';
+        balasan =
+            "Maaf Kak, saat ini belum ada burung yang tersedia. Silakan cek kembali nanti ya.";
     } else {
-        balasan = '💳 *Pembayaran QRIS — PT 4Putra Vertex Aviary*\n\nSilakan pilih burung yang ingin Kakak beli:\n\n';
+        balasan =
+            "💳 *Pembayaran QRIS — PT 4Putra Vertex Aviary*\n\nSilakan pilih burung yang ingin Kakak beli:\n\n";
         inventaris.forEach((item, idx) => {
-            const harga = Number(item.harga).toLocaleString('id-ID');
-            const fase = item.fase === 'anakan' ? 'Baby' : 'Dewasa';
+            const harga = Number(item.harga).toLocaleString("id-ID");
+            const fase = item.fase === "anakan" ? "Baby" : "Dewasa";
             balasan += `${idx + 1}. *${item.nama_spesies}* (${fase}) — Rp ${harga}\n`;
         });
-        balasan += '\nKetik *nomor* burung yang ingin dibeli (contoh: 1)';
+        balasan += "\nKetik *nomor* burung yang ingin dibeli (contoh: 1)";
     }
 
     await sockInstance.sendMessage(remoteJid, { text: balasan });
-    await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'menu');
+    await simpanPercakapan(pelanggan.id, teksMasuk, balasan, "menu");
 }
 
 // ============================================================
@@ -585,13 +730,13 @@ async function kirimDaftarCheckout(pelanggan, remoteJid, teksMasuk) {
 // ============================================================
 export async function kirimPesanKePelanggan(nomorWa, pesan) {
     if (!sockInstance) {
-        throw new Error('Bot WhatsApp belum terhubung');
+        throw new Error("Bot WhatsApp belum terhubung");
     }
 
     // Pastikan JID lengkap
     let jid = nomorWa;
-    if (!jid.includes('@')) {
-        jid = nomorWa + '@s.whatsapp.net';
+    if (!jid.includes("@")) {
+        jid = nomorWa + "@s.whatsapp.net";
     }
 
     await sockInstance.sendMessage(jid, { text: pesan });
@@ -613,16 +758,21 @@ function antrePesan(remoteJid, tugas) {
     const prev = antreanChat.get(remoteJid) || Promise.resolve();
     const berikut = prev.catch(() => {}).then(tugas);
     antreanChat.set(remoteJid, berikut);
-    berikut.catch(() => {}).finally(() => {
-        if (antreanChat.get(remoteJid) === berikut) antreanChat.delete(remoteJid);
-    });
+    berikut
+        .catch(() => {})
+        .finally(() => {
+            if (antreanChat.get(remoteJid) === berikut)
+                antreanChat.delete(remoteJid);
+        });
 }
 
 // ============================================================
 // FUNGSI UTAMA BOT
 // ============================================================
 async function hubungkanKeWhatsApp() {
-    const { state, saveCreds } = await useMultiFileAuthState(join(__dirname, '../../storage/app/chatbot-auth'));
+    const { state, saveCreds } = await useMultiFileAuthState(
+        join(__dirname, "../../storage/app/chatbot-auth"),
+    );
 
     const sock = makeWASocket({
         logger,
@@ -632,47 +782,58 @@ async function hubungkanKeWhatsApp() {
 
     sockInstance = sock;
 
-    sock.ev.on('connection.update', (update) => {
+    sock.ev.on("connection.update", (update) => {
         const { connection, lastDisconnect, qr } = update;
 
         if (qr) {
             lastQrCode = qr;
             const host = `localhost:${process.env.PORT || 3001}`;
-            console.log('==================================================');
-            console.log('SCAN QR CODE DI BROWSER:');
+            console.log("==================================================");
+            console.log("SCAN QR CODE DI BROWSER:");
             console.log(`http://${host}/qr`);
-            console.log('==================================================');
+            console.log("==================================================");
         }
 
-        if (connection === 'close') {
+        if (connection === "close") {
             isConnected = false;
-            const harusKonekUlang = (lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut);
-            console.log('Koneksi terputus:', lastDisconnect?.error || 'Unknown', '. Konek ulang:', harusKonekUlang);
+            const harusKonekUlang =
+                lastDisconnect?.error?.output?.statusCode !==
+                DisconnectReason.loggedOut;
+            console.log(
+                "Koneksi terputus:",
+                lastDisconnect?.error || "Unknown",
+                ". Konek ulang:",
+                harusKonekUlang,
+            );
             if (harusKonekUlang) {
                 jumlahReconnect++;
                 if (jumlahReconnect > MAX_RECONNECT) {
-                    console.log(`[!] Gagal konek setelah ${MAX_RECONNECT} percobaan. Bot berhenti. Jalankan ulang: node whatsapp.js`);
+                    console.log(
+                        `[!] Gagal konek setelah ${MAX_RECONNECT} percobaan. Bot berhenti. Jalankan ulang: node whatsapp.js`,
+                    );
                     process.exit(1);
                 }
-                console.log(`[i] Konek ulang ${jumlahReconnect}/${MAX_RECONNECT} dalam ${DELAY_RECONNECT/1000} detik...`);
+                console.log(
+                    `[i] Konek ulang ${jumlahReconnect}/${MAX_RECONNECT} dalam ${DELAY_RECONNECT / 1000} detik...`,
+                );
                 setTimeout(() => hubungkanKeWhatsApp(), DELAY_RECONNECT);
             }
-        } else if (connection === 'open') {
+        } else if (connection === "open") {
             isConnected = true;
             jumlahReconnect = 0;
             lastQrCode = null;
-            console.log('==================================================');
-            console.log('BOT WHATSAPP 4PUTRA VERTEX AVIARY AKTIF!');
-            console.log('==================================================');
+            console.log("==================================================");
+            console.log("BOT WHATSAPP 4PUTRA VERTEX AVIARY AKTIF!");
+            console.log("==================================================");
         }
     });
 
-    sock.ev.on('creds.update', saveCreds);
+    sock.ev.on("creds.update", saveCreds);
 
     // ============================================================
     // EVENT HAPUS PESAN DARI PELANGGAN (delete for everyone)
     // ============================================================
-    sock.ev.on('messages.delete', async (deletion) => {
+    sock.ev.on("messages.delete", async (deletion) => {
         try {
             // deletion bisa berupa { keys: [...] } atau { jid, ... }
             const keys = deletion.keys || [];
@@ -683,37 +844,48 @@ async function hubungkanKeWhatsApp() {
 
                 // Cari pesan di database
                 const chat = await queryOne(
-                    'SELECT id, pelanggan_id, pesan_pengirim, media_url FROM percakapan WHERE wa_message_id = ? LIMIT 1',
-                    [waMsgId]
+                    "SELECT id, pelanggan_id, pesan_pengirim, media_url FROM percakapan WHERE wa_message_id = ? LIMIT 1",
+                    [waMsgId],
                 );
                 if (!chat) continue;
 
                 // Update pesan jadi "telah dihapus"
                 await update(
-                    'UPDATE percakapan SET pesan_pengirim = ?, media_url = NULL, media_type = NULL, deleted_for_pelanggan = true WHERE id = ?',
-                    ['🚫 Pesan ini telah dihapus oleh pengirim', chat.id]
+                    "UPDATE percakapan SET pesan_pengirim = ?, media_url = NULL, media_type = NULL, deleted_for_pelanggan = true WHERE id = ?",
+                    ["🚫 Pesan ini telah dihapus oleh pengirim", chat.id],
                 );
 
                 // Hapus media file jika ada
                 if (chat.media_url) {
-                    const relativePath = chat.media_url.replace('/storage/', '');
-                    const fullPath = join(__dirname, '../storage/app/public/', relativePath);
+                    const relativePath = chat.media_url.replace(
+                        "/storage/",
+                        "",
+                    );
+                    const fullPath = join(
+                        __dirname,
+                        "../storage/app/public/",
+                        relativePath,
+                    );
                     if (fs.existsSync(fullPath)) {
-                        try { fs.unlinkSync(fullPath); } catch (e) {}
+                        try {
+                            fs.unlinkSync(fullPath);
+                        } catch (e) {}
                     }
                 }
 
-                console.log(`[DELETE] Pesan ${waMsgId} dari ${remoteJid} dihapus untuk semua`);
+                console.log(
+                    `[DELETE] Pesan ${waMsgId} dari ${remoteJid} dihapus untuk semua`,
+                );
             }
         } catch (err) {
-            console.error('Gagal handle message delete:', err.message);
+            console.error("Gagal handle message delete:", err.message);
         }
     });
 
     // ============================================================
     // EVENT PENERIMAAN PESAN MASUK
     // ============================================================
-    sock.ev.on('messages.upsert', (m) => {
+    sock.ev.on("messages.upsert", (m) => {
         // Proses semua pesan dalam batch (bukan hanya messages[0]) secara
         // berurutan per-chat via antrean agar tidak ada pesan terlewat
         for (const msg of m.messages) {
@@ -727,10 +899,11 @@ async function hubungkanKeWhatsApp() {
             const remoteJid = msg.key.remoteJid;
 
             // Skip grup dan broadcast
-            if (remoteJid.includes('@g.us') || remoteJid === 'status@broadcast') return;
+            if (remoteJid.includes("@g.us") || remoteJid === "status@broadcast")
+                return;
 
             // Ambil nama dari pushName (nama WhatsApp user)
-            const pushName = msg.pushName || '';
+            const pushName = msg.pushName || "";
 
             // Simpan wa_message_id dari pesan masuk
             const incomingWaId = msg.key.id || null;
@@ -742,12 +915,15 @@ async function hubungkanKeWhatsApp() {
             // Reply juga punya contextInfo (quotedMessage) — forwardingScore di dalamnya milik pesan
             // yang dikutip, bukan pesan ini → jangan dianggap forwarded.
             let isForwarded = false;
-            const msgContextInfo = msg.message.extendedTextMessage?.contextInfo ||
+            const msgContextInfo =
+                msg.message.extendedTextMessage?.contextInfo ||
                 msg.message.imageMessage?.contextInfo ||
                 msg.message.videoMessage?.contextInfo ||
                 msg.message.documentMessage?.contextInfo ||
                 msg.message.audioMessage?.contextInfo;
-            const isReplyPesan = !!(msgContextInfo?.stanzaId && msgContextInfo?.quotedMessage);
+            const isReplyPesan = !!(
+                msgContextInfo?.stanzaId && msgContextInfo?.quotedMessage
+            );
             if (!isReplyPesan) {
                 if (msgContextInfo?.forwardingScore > 0) isForwarded = true;
                 if (msgContextInfo?.isForwarded) isForwarded = true;
@@ -757,35 +933,41 @@ async function hubungkanKeWhatsApp() {
             let replyToId = null;
             if (msgContextInfo?.stanzaId) {
                 // Cari pesan asli berdasarkan wa_message_id
-                const originalMsg = await queryOne('SELECT id FROM percakapan WHERE wa_message_id = ? LIMIT 1', [msgContextInfo.stanzaId]);
+                const originalMsg = await queryOne(
+                    "SELECT id FROM percakapan WHERE wa_message_id = ? LIMIT 1",
+                    [msgContextInfo.stanzaId],
+                );
                 if (originalMsg) replyToId = originalMsg.id;
             }
 
             // Ekstrak teks pesan dan media
-            let teksMasuk = '';
+            let teksMasuk = "";
             let mediaUrl = null;
             let mediaType = null;
 
-            if (tipePesan === 'conversation') {
+            if (tipePesan === "conversation") {
                 teksMasuk = msg.message.conversation;
-            } else if (tipePesan === 'extendedTextMessage') {
+            } else if (tipePesan === "extendedTextMessage") {
                 teksMasuk = msg.message.extendedTextMessage.text;
-            } else if (tipePesan === 'imageMessage') {
-                teksMasuk = msg.message.imageMessage.caption || '[Image]';
-                mediaType = 'image';
-            } else if (tipePesan === 'videoMessage') {
-                teksMasuk = msg.message.videoMessage.caption || '[Video]';
-                mediaType = 'video';
-            } else if (tipePesan === 'documentMessage') {
-                teksMasuk = msg.message.documentMessage.fileName || '[Document]';
-                mediaType = 'document';
-            } else if (tipePesan === 'audioMessage') {
-                teksMasuk = '[Audio]';
-                mediaType = 'audio';
-            } else if (tipePesan === 'buttonsResponseMessage') {
+            } else if (tipePesan === "imageMessage") {
+                teksMasuk = msg.message.imageMessage.caption || "[Image]";
+                mediaType = "image";
+            } else if (tipePesan === "videoMessage") {
+                teksMasuk = msg.message.videoMessage.caption || "[Video]";
+                mediaType = "video";
+            } else if (tipePesan === "documentMessage") {
+                teksMasuk =
+                    msg.message.documentMessage.fileName || "[Document]";
+                mediaType = "document";
+            } else if (tipePesan === "audioMessage") {
+                teksMasuk = "[Audio]";
+                mediaType = "audio";
+            } else if (tipePesan === "buttonsResponseMessage") {
                 teksMasuk = msg.message.buttonsResponseMessage.selectedButtonId;
-            } else if (tipePesan === 'listResponseMessage') {
-                teksMasuk = msg.message.listResponseMessage.singleSelectReply.selectedRowId;
+            } else if (tipePesan === "listResponseMessage") {
+                teksMasuk =
+                    msg.message.listResponseMessage.singleSelectReply
+                        .selectedRowId;
             }
 
             // Download media jika ada
@@ -793,18 +975,37 @@ async function hubungkanKeWhatsApp() {
             // import langsung dari modul (sock.downloadMediaMessage → undefined)
             if (mediaType && sockInstance) {
                 try {
-                    const buffer = await downloadMediaMessage(msg, 'buffer', {}, {
-                        logger,
-                        reuploadRequest: sockInstance.updateMediaMessage,
-                    });
-                    const ext = mediaType === 'image' ? 'jpg' : (mediaType === 'video' ? 'mp4' : (mediaType === 'audio' ? 'mp3' : 'bin'));
+                    const buffer = await downloadMediaMessage(
+                        msg,
+                        "buffer",
+                        {},
+                        {
+                            logger,
+                            reuploadRequest: sockInstance.updateMediaMessage,
+                        },
+                    );
+                    const ext =
+                        mediaType === "image"
+                            ? "jpg"
+                            : mediaType === "video"
+                              ? "mp4"
+                              : mediaType === "audio"
+                                ? "mp3"
+                                : "bin";
                     const filename = `wa_${Date.now()}_${Math.random().toString(36).substr(2, 6)}.${ext}`;
-                    const filepath = join(__dirname, '../storage/app/public/chat-media', filename);
-                    fs.mkdirSync(join(__dirname, '../storage/app/public/chat-media'), { recursive: true });
+                    const filepath = join(
+                        __dirname,
+                        "../storage/app/public/chat-media",
+                        filename,
+                    );
+                    fs.mkdirSync(
+                        join(__dirname, "../storage/app/public/chat-media"),
+                        { recursive: true },
+                    );
                     fs.writeFileSync(filepath, buffer);
                     mediaUrl = `/storage/chat-media/${filename}`;
                 } catch (dlErr) {
-                    console.error('Gagal download media:', dlErr.message);
+                    console.error("Gagal download media:", dlErr.message);
                 }
             }
 
@@ -816,59 +1017,99 @@ async function hubungkanKeWhatsApp() {
             // ============================================================
             // LANGKAH 1: Ambil data pelanggan
             // ============================================================
-            const { pelanggan, isNew, nomorWa, jidType } = await dapatkanPelanggan(remoteJid, pushName);
+            const { pelanggan, isNew, nomorWa, jidType } =
+                await dapatkanPelanggan(remoteJid, pushName);
 
             // ============================================================
             // LANGKAH 2: Untuk user baru → set session awal
             // ============================================================
             if (isNew) {
-                await update('UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?', ['menu', pelanggan.id]);
-                pelanggan.sesi_aktif = 'menu';
+                await update(
+                    "UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?",
+                    ["menu", pelanggan.id],
+                );
+                pelanggan.sesi_aktif = "menu";
             }
 
             // Normalisasi state lama → baru (fallback untuk data di DB)
-            const STATE_MAP = { 'inventory': 'inventory_select', 'checkout': 'checkout_qty' };
+            const STATE_MAP = {
+                inventory: "menu",
+                inventory_select: "menu",
+                checkout: "checkout_qty",
+            };
             if (STATE_MAP[pelanggan.sesi_aktif]) {
                 const newState = STATE_MAP[pelanggan.sesi_aktif];
-                await update('UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?', [newState, pelanggan.id]);
+                await update(
+                    "UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?",
+                    [newState, pelanggan.id],
+                );
                 pelanggan.sesi_aktif = newState;
             }
 
             // ============================================================
             // LANGKAH 3: Cek rate limit (skip untuk tombol/keyword penting)
             // ============================================================
-            const isImportantKeyword = [...KEYWORD_SAPAAN, 'menu_ai', 'menu_inventaris', 'menu_admin', 'menu_transaksi', 'menu_bayar', '1', '2', '3', '4', '5', 'admin', 'transaksi', 'riwayat', 'bayar', 'qris'].includes(teksMasukLower);
+            const isImportantKeyword = [
+                ...KEYWORD_SAPAAN,
+                "menu_ai",
+                "menu_inventaris",
+                "menu_admin",
+                "menu_transaksi",
+                "menu_bayar",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "admin",
+                "transaksi",
+                "riwayat",
+                "bayar",
+                "qris",
+            ].includes(teksMasukLower);
 
-            if (!isImportantKeyword && await cekRateLimit(pelanggan.id)) {
+            if (!isImportantKeyword && (await cekRateLimit(pelanggan.id))) {
                 return;
             }
 
             // Update pesan terakhir
-            await update('UPDATE pelanggan SET pesan_terakhir = NOW() WHERE id = ?', [pelanggan.id]);
+            await update(
+                "UPDATE pelanggan SET pesan_terakhir = NOW() WHERE id = ?",
+                [pelanggan.id],
+            );
 
             // Sesi bot menganggur > 6 jam → sambut ulang dengan menu
             // idle_detik diukur SQL-side (TIMESTAMPDIFF ke NOW()) — diambil sebelum pesan_terakhir di-update
             // Mode AI sengaja dikecualikan: pelanggan ditahan di sesi AI sampai mengetik "menu"
-            if (['inventory_select', 'checkout_qty'].includes(pelanggan.sesi_aktif) && pelanggan.idle_detik != null && pelanggan.idle_detik > IDLE_RESET_DETIK) {
-                await update('UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = NULL WHERE id = ?', ['menu', pelanggan.id]);
-                pelanggan.sesi_aktif = 'menu';
-                console.log(`[SESI] Sesi pelanggan ${pelanggan.id} idle ${Math.round(pelanggan.idle_detik / 3600)} jam → reset ke menu`);
+            if (
+                ["checkout_qty"].includes(pelanggan.sesi_aktif) &&
+                pelanggan.idle_detik != null &&
+                pelanggan.idle_detik > IDLE_RESET_DETIK
+            ) {
+                await update(
+                    "UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = NULL WHERE id = ?",
+                    ["menu", pelanggan.id],
+                );
+                pelanggan.sesi_aktif = "menu";
+                console.log(
+                    `[SESI] Sesi pelanggan ${pelanggan.id} idle ${Math.round(pelanggan.idle_detik / 3600)} jam → reset ke menu`,
+                );
             }
 
             // ============================================================
             // LANGKAH 4: Deteksi keyword Apriori & Niat Pembelian
             // ============================================================
             const varietasBurung = {
-                'baby afgrey': 'Baby Afgrey',
-                'baby sun conure': 'Baby Sun conure',
-                'baby monk': 'Baby Monk',
-                'baby bng macaw': 'Baby BNG Macaw',
-                'baby indian ring neck': 'Baby Indian Ring Neck',
-                'afgrey': 'Afgrey',
-                'sun conure': 'Sun Conure',
-                'monk': 'Monk',
-                'bng macaw': 'BNG Macaw',
-                'indian ring neck': 'Indian Ring Neck',
+                "baby afgrey": "Baby Afgrey",
+                "baby sun conure": "Baby Sun conure",
+                "baby monk": "Baby Monk",
+                "baby bng macaw": "Baby BNG Macaw",
+                "baby indian ring neck": "Baby Indian Ring Neck",
+                afgrey: "Afgrey",
+                "sun conure": "Sun Conure",
+                monk: "Monk",
+                "bng macaw": "BNG Macaw",
+                "indian ring neck": "Indian Ring Neck",
             };
 
             let burungTerdeteksi = null;
@@ -880,13 +1121,18 @@ async function hubungkanKeWhatsApp() {
             }
 
             // TAMBAHAN: Deteksi intensi eksplisit untuk transaksi
-            const niatBeli = ['beli', 'pesan', 'order', 'mau ambil', 'bayar'].some(kata => teksMasukLower.includes(kata));
+            const niatBeli = [
+                "beli",
+                "pesan",
+                "order",
+                "mau ambil",
+                "bayar",
+            ].some((kata) => teksMasukLower.includes(kata));
 
             // Evaluasi ketat berdasarkan urutan sesi_aktif: deteksi burung/Apriori hanya
             // berlaku di state menu. Di state lain (ai/inventory/checkout) pesan diproses
             // oleh handler state masing-masing agar tidak membajak alur.
-            if (burungTerdeteksi && pelanggan.sesi_aktif === 'menu') {
-
+            if (burungTerdeteksi && pelanggan.sesi_aktif === "menu") {
                 if (niatBeli) {
                     // BYPASS APRIORI: Pelanggan menyatakan ingin beli → langsung daftar pembayaran (state checkout)
                     await kirimDaftarCheckout(pelanggan, remoteJid, teksMasuk);
@@ -895,24 +1141,41 @@ async function hubungkanKeWhatsApp() {
                     // TAMPILKAN REKOMENDASI: Jika hanya menyebut nama burung (misal: "Afgrey")
                     const hasilApriori = dapatkanHasilApriori();
 
-                    const aturanCocok = hasilApriori.aturanKuatFinal.find(rule =>
-                        rule.antecedents.toLowerCase().includes(burungTerdeteksi.toLowerCase())
+                    const aturanCocok = hasilApriori.aturanKuatFinal.find(
+                        (rule) =>
+                            rule.antecedents
+                                .toLowerCase()
+                                .includes(burungTerdeteksi.toLowerCase()),
                     );
 
-                    let balasan = '';
+                    let balasan = "";
                     if (aturanCocok) {
                         // Elaborasi natural dan modifikasi Call-to-Action
-                        balasan = buatRekomendasiNatural(aturanCocok, burungTerdeteksi);
-                        balasan = balasan.replace('Ketik *2* ya!', 'Ketik *2* untuk cek stok, atau ketik *5* jika ingin langsung membeli ya! 🛒');
+                        balasan = buatRekomendasiNatural(
+                            aturanCocok,
+                            burungTerdeteksi,
+                        );
+                        balasan = balasan.replace(
+                            "Ketik *2* ya!",
+                            "Ketik *2* untuk cek stok, atau ketik *5* jika ingin langsung membeli ya! 🛒",
+                        );
                     } else {
-                        balasan = `Halo Kak! Terima kasih sudah tertarik dengan *${burungTerdeteksi}*.\n\n` +
-                                  `Untuk info harga silakan ketik *2*, atau jika ingin langsung membeli ketik *5* ya!`;
+                        balasan =
+                            `Halo Kak! Terima kasih sudah tertarik dengan *${burungTerdeteksi}*.\n\n` +
+                            `Untuk info harga silakan ketik *2*, atau jika ingin langsung membeli ketik *5* ya!`;
                     }
 
-                    await sock.sendPresenceUpdate('composing', remoteJid);
-                    await sockInstance.sendMessage(remoteJid, { text: balasan });
+                    await sock.sendPresenceUpdate("composing", remoteJid);
+                    await sockInstance.sendMessage(remoteJid, {
+                        text: balasan,
+                    });
 
-                    await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'apriori');
+                    await simpanPercakapan(
+                        pelanggan.id,
+                        teksMasuk,
+                        balasan,
+                        "apriori",
+                    );
                     return; // Hentikan alur di sini agar tidak memicu menu lain
                 }
             }
@@ -920,18 +1183,31 @@ async function hubungkanKeWhatsApp() {
             // ============================================================
             // LANGKAH 5: Global keywords — reset ke menu apapun state
             // ============================================================
-            const isSapaan = KEYWORD_SAPAAN.filter(k => k !== 'menu').includes(teksMasukLower);
-            const isGlobalReset = teksMasukLower === 'menu' || teksMasukLower === 'batal';
+            const isSapaan = KEYWORD_SAPAAN.filter(
+                (k) => k !== "menu",
+            ).includes(teksMasukLower);
+            const isGlobalReset =
+                teksMasukLower === "menu" || teksMasukLower === "batal";
 
-            if (isGlobalReset || (isSapaan && pelanggan.sesi_aktif !== 'ai')) {
-                if (pelanggan.sesi_aktif === 'human') {
+            if (isGlobalReset || (isSapaan && pelanggan.sesi_aktif !== "ai")) {
+                if (pelanggan.sesi_aktif === "human") {
                     await hapusHandoffFirebase(pelanggan.id);
                 }
-                await update('UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = NULL WHERE id = ?', ['menu', pelanggan.id]);
-                pelanggan.sesi_aktif = 'menu';
-                const pesanUtuh = await buatSapaanHybrid(pelanggan.nama || 'Kak');
+                await update(
+                    "UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = NULL WHERE id = ?",
+                    ["menu", pelanggan.id],
+                );
+                pelanggan.sesi_aktif = "menu";
+                const pesanUtuh = await buatSapaanHybrid(
+                    pelanggan.nama || "Kak",
+                );
                 await sockInstance.sendMessage(remoteJid, { text: pesanUtuh });
-                await simpanPercakapan(pelanggan.id, teksMasuk, pesanUtuh, 'menu');
+                await simpanPercakapan(
+                    pelanggan.id,
+                    teksMasuk,
+                    pesanUtuh,
+                    "menu",
+                );
                 return;
             }
 
@@ -940,146 +1216,194 @@ async function hubungkanKeWhatsApp() {
             // ============================================================
 
             // --- MODE MENU ---
-            if (pelanggan.sesi_aktif === 'menu') {
-
+            if (pelanggan.sesi_aktif === "menu") {
                 // Handle button response
-                if (teksMasuk === 'menu_ai' || teksMasuk === '1') {
-                    await update('UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?', ['ai', pelanggan.id]);
-                    const balasan = 'Baik Kak! Mode konsultasi AI sudah aktif. Silakan tanyakan seputar perawatan burung, nutrisi, atau info lainnya tentang 5 spesies unggulan kami.\n\nKetik *menu* untuk kembali ke menu utama.';
+                if (teksMasuk === "menu_ai" || teksMasuk === "1") {
+                    await update(
+                        "UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?",
+                        ["ai", pelanggan.id],
+                    );
+                    const balasan =
+                        "Baik Kak! Mode konsultasi AI sudah aktif. Silakan tanyakan seputar perawatan burung, nutrisi, atau info lainnya tentang 5 spesies unggulan kami.\n\nKetik *menu* untuk kembali ke menu utama.";
                     await sock.sendMessage(remoteJid, { text: balasan });
-                    await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'menu');
+                    await simpanPercakapan(
+                        pelanggan.id,
+                        teksMasuk,
+                        balasan,
+                        "menu",
+                    );
                     return;
                 }
 
-                if (teksMasuk === 'menu_inventaris' || teksMasuk === '2') {
-                    await kirimDaftarInventaris(pelanggan, remoteJid, teksMasuk);
+                if (teksMasuk === "menu_inventaris" || teksMasuk === "2") {
+                    await kirimDaftarInventaris(
+                        pelanggan,
+                        remoteJid,
+                        teksMasuk,
+                    );
                     return;
                 }
 
-                if (teksMasuk === 'menu_admin' || teksMasuk === '3' || teksMasukLower === 'admin') {
-                    await update('UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?', ['human', pelanggan.id]);
-                    const balasan = 'Baik Kak! Admin kami akan segera merespons. Mohon tunggu sebentar ya. Pesan Kakak sudah kami teruskan ke admin.\n\nKetik *menu* untuk kembali ke menu otomatis.';
+                if (
+                    teksMasuk === "menu_admin" ||
+                    teksMasuk === "3" ||
+                    teksMasukLower === "admin"
+                ) {
+                    await update(
+                        "UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?",
+                        ["human", pelanggan.id],
+                    );
+                    const balasan =
+                        "Baik Kak! Admin kami akan segera merespons. Mohon tunggu sebentar ya. Pesan Kakak sudah kami teruskan ke admin.\n\nKetik *menu* untuk kembali ke menu otomatis.";
                     await sock.sendMessage(remoteJid, { text: balasan });
 
                     // Notifikasi realtime ke Admin Dashboard via Firebase
-                    await kirimHandoffKeFirebase(pelanggan.id, { nama: pelanggan.nama, nomor: nomorWa });
+                    await kirimHandoffKeFirebase(pelanggan.id, {
+                        nama: pelanggan.nama,
+                        nomor: nomorWa,
+                    });
 
                     await buatNotifikasi(
-                        'permintaan_manual',
-                        'Pelanggan minta bicara dengan admin',
+                        "permintaan_manual",
+                        "Pelanggan minta bicara dengan admin",
                         `Pelanggan ${pelanggan.nama || nomorWa} (${nomorWa}) meminta untuk bicara dengan admin.`,
-                        pelanggan.id
+                        pelanggan.id,
                     );
 
-                    await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'menu');
+                    await simpanPercakapan(
+                        pelanggan.id,
+                        teksMasuk,
+                        balasan,
+                        "menu",
+                    );
                     return;
                 }
 
-                if (teksMasuk === 'menu_transaksi' || teksMasuk === '4' || teksMasukLower === 'transaksi' || teksMasukLower === 'riwayat') {
-                    const transaksi = await dapatkanRiwayatTransaksi(pelanggan.id);
+                if (
+                    teksMasuk === "menu_transaksi" ||
+                    teksMasuk === "4" ||
+                    teksMasukLower === "transaksi" ||
+                    teksMasukLower === "riwayat"
+                ) {
+                    const transaksi = await dapatkanRiwayatTransaksi(
+                        pelanggan.id,
+                    );
                     let balasan = await formatRiwayatTransaksi(transaksi);
 
                     // Rekomendasi Apriori diterjemahkan Groq AI (fallback: template statis)
-                    const namaPelanggan = pelanggan.nama || 'Kak';
-                    const rekomAi = await buatRekomendasiAprioriGroq(pelanggan.id, namaPelanggan);
+                    const namaPelanggan = pelanggan.nama || "Kak";
+                    const rekomAi = await buatRekomendasiAprioriGroq(
+                        pelanggan.id,
+                        namaPelanggan,
+                    );
                     if (rekomAi) {
                         balasan += `\n\n💡 *Rekomendasi untuk Kakak:*\n${rekomAi}`;
                     } else {
-                        const rekomendasi = await dapatkanRekomendasiBerdasarkanPembelian(pelanggan.id);
+                        const rekomendasi =
+                            await dapatkanRekomendasiBerdasarkanPembelian(
+                                pelanggan.id,
+                            );
                         if (rekomendasi) {
-                            balasan += '\n\n💡 *Rekomendasi untuk Kakak:*\n';
+                            balasan += "\n\n💡 *Rekomendasi untuk Kakak:*\n";
                             for (const rec of rekomendasi) {
                                 balasan += `\nBerdasarkan pembelian *${rec.dibeli}*, kami sarankan juga melirik *${rec.rekomendasi}* (Keyakinan: ${rec.confidence})`;
                             }
                         }
                     }
 
-                    balasan += '\n\nKetik *menu* untuk kembali ke menu utama.';
+                    balasan += "\n\nKetik *menu* untuk kembali ke menu utama.";
                     await sock.sendMessage(remoteJid, { text: balasan });
-                    await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'apriori');
+                    await simpanPercakapan(
+                        pelanggan.id,
+                        teksMasuk,
+                        balasan,
+                        "apriori",
+                    );
                     return;
                 }
 
-                if (teksMasuk === 'menu_bayar' || teksMasuk === '5' || teksMasukLower === 'bayar' || teksMasukLower === 'qris') {
+                if (
+                    teksMasuk === "menu_bayar" ||
+                    teksMasuk === "5" ||
+                    teksMasukLower === "bayar" ||
+                    teksMasukLower === "qris"
+                ) {
                     await kirimDaftarCheckout(pelanggan, remoteJid, teksMasuk);
                     return;
                 }
 
                 // Input tidak dikenali → tampilkan menu lagi
-                const namaPelanggan = pelanggan.nama || 'Kak';
+                const namaPelanggan = pelanggan.nama || "Kak";
                 const pesanUtuh = await buatSapaanHybrid(namaPelanggan);
                 await sockInstance.sendMessage(remoteJid, { text: pesanUtuh });
-                await simpanPercakapan(pelanggan.id, teksMasuk, pesanUtuh, 'menu');
-                return;
-            }
-
-            // --- MODE INVENTORY SELECT: pilih nomor burung ---
-            if (pelanggan.sesi_aktif === 'inventory_select') {
-                // mysql2 auto-parse kolom JSON; tetap defensif bila datang sebagai string
-                let konteks = pelanggan.metadata_sesi;
-                if (typeof konteks === 'string') {
-                    try { konteks = JSON.parse(konteks); } catch (e) { konteks = null; }
-                }
-                if (!konteks || typeof konteks !== 'object') konteks = null;
-
-                if (konteks?.items && /^\d+$/.test(teksMasuk)) {
-                    const pilihan = parseInt(teksMasuk) - 1;
-                    const items = konteks.items || [];
-
-                    if (pilihan >= 0 && pilihan < items.length) {
-                        const item = items[pilihan];
-                        const faseLabel = item.fase === 'anakan' ? 'Baby' : 'Dewasa';
-                        const hargaFormatted = Number(item.harga).toLocaleString('id-ID');
-
-                        await update('UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = ? WHERE id = ?',
-                            ['checkout_qty', JSON.stringify({
-                                item: { id: item.id, nama: item.nama, fase: item.fase, harga: Number(item.harga) }
-                            }), pelanggan.id]);
-
-                        const balasan = `Kakak pilih *${item.nama}* (${faseLabel}) — Rp ${hargaFormatted}/ekor. Mau beli berapa ekor? Ketik jumlahnya ya, Kak (contoh: 1, 2, 3)`;
-
-                        await sockInstance.sendMessage(remoteJid, { text: balasan });
-                        await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'menu');
-                    } else {
-                        await sockInstance.sendMessage(remoteJid, { text: 'Pilihan tidak valid. Silakan ketik nomor yang tersedia ya, Kak.' });
-                    }
-                    return;
-                }
-
-                // Input tidak dikenal → ulangi daftar inventaris
-                await kirimDaftarInventaris(pelanggan, remoteJid, teksMasuk);
+                await simpanPercakapan(
+                    pelanggan.id,
+                    teksMasuk,
+                    pesanUtuh,
+                    "menu",
+                );
                 return;
             }
 
             // --- MODE CHECKOUT QTY: input jumlah beli → buat QRIS ---
-            if (pelanggan.sesi_aktif === 'checkout_qty') {
+            if (pelanggan.sesi_aktif === "checkout_qty") {
                 let konteks = pelanggan.metadata_sesi;
-                if (typeof konteks === 'string') {
-                    try { konteks = JSON.parse(konteks); } catch (e) { konteks = null; }
+                if (typeof konteks === "string") {
+                    try {
+                        konteks = JSON.parse(konteks);
+                    } catch (e) {
+                        konteks = null;
+                    }
                 }
-                if (!konteks || typeof konteks !== 'object') konteks = null;
+                if (!konteks || typeof konteks !== "object") konteks = null;
 
                 // Fase pilih item dari daftar (masuk dari menu 5): metadata masih berisi items
-                if (konteks?.items && !konteks.item && /^\d+$/.test(teksMasuk)) {
+                if (
+                    konteks?.items &&
+                    !konteks.item &&
+                    /^\d+$/.test(teksMasuk)
+                ) {
                     const items = konteks.items || [];
                     const pilihan = parseInt(teksMasuk) - 1;
 
                     if (pilihan >= 0 && pilihan < items.length) {
                         const item = items[pilihan];
-                        const faseLabel = item.fase === 'anakan' ? 'Baby' : 'Dewasa';
-                        const hargaFormatted = Number(item.harga).toLocaleString('id-ID');
+                        const faseLabel =
+                            item.fase === "anakan" ? "Baby" : "Dewasa";
+                        const hargaFormatted = Number(
+                            item.harga,
+                        ).toLocaleString("id-ID");
 
-                        await update('UPDATE pelanggan SET metadata_sesi = ? WHERE id = ?',
-                            [JSON.stringify({
-                                item: { id: item.id, nama: item.nama, fase: item.fase, harga: Number(item.harga) }
-                            }), pelanggan.id]);
+                        await update(
+                            "UPDATE pelanggan SET metadata_sesi = ? WHERE id = ?",
+                            [
+                                JSON.stringify({
+                                    item: {
+                                        id: item.id,
+                                        nama: item.nama,
+                                        fase: item.fase,
+                                        harga: Number(item.harga),
+                                    },
+                                }),
+                                pelanggan.id,
+                            ],
+                        );
 
                         const balasan = `Kakak pilih *${item.nama}* (${faseLabel}) — Rp ${hargaFormatted}/ekor. Mau beli berapa ekor? Ketik jumlahnya ya, Kak (contoh: 1, 2, 3)`;
 
-                        await sockInstance.sendMessage(remoteJid, { text: balasan });
-                        await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'menu');
+                        await sockInstance.sendMessage(remoteJid, {
+                            text: balasan,
+                        });
+                        await simpanPercakapan(
+                            pelanggan.id,
+                            teksMasuk,
+                            balasan,
+                            "menu",
+                        );
                     } else {
-                        await sockInstance.sendMessage(remoteJid, { text: 'Pilihan tidak valid. Silakan ketik nomor yang tersedia ya, Kak.' });
+                        await sockInstance.sendMessage(remoteJid, {
+                            text: "Pilihan tidak valid. Silakan ketik nomor yang tersedia ya, Kak.",
+                        });
                     }
                     return;
                 }
@@ -1088,16 +1412,21 @@ async function hubungkanKeWhatsApp() {
                     const quantity = parseInt(teksMasuk);
 
                     if (quantity < 1 || quantity > 100) {
-                        await sockInstance.sendMessage(remoteJid, { text: 'Jumlah tidak valid. Silakan ketik angka antara 1 sampai 100 ya, Kak.' });
+                        await sockInstance.sendMessage(remoteJid, {
+                            text: "Jumlah tidak valid. Silakan ketik angka antara 1 sampai 100 ya, Kak.",
+                        });
                         return;
                     }
 
                     const item = konteks.item;
 
-                    const stokItem = await queryOne('SELECT stok FROM inventaris_burung WHERE id = ?', [item.id]);
+                    const stokItem = await queryOne(
+                        "SELECT stok FROM inventaris_burung WHERE id = ?",
+                        [item.id],
+                    );
                     if (stokItem && quantity > Number(stokItem.stok)) {
                         await sockInstance.sendMessage(remoteJid, {
-                            text: `Maaf Kak, stok *${item.nama}* (${item.fase === 'anakan' ? 'Baby' : 'Dewasa'}) hanya tersisa ${stokItem.stok} ekor. Silakan kurangi jumlahnya ya.`
+                            text: `Maaf Kak, stok *${item.nama}* (${item.fase === "anakan" ? "Baby" : "Dewasa"}) hanya tersisa ${stokItem.stok} ekor. Silakan kurangi jumlahnya ya.`,
                         });
                         return;
                     }
@@ -1109,22 +1438,33 @@ async function hubungkanKeWhatsApp() {
                         item.fase,
                         item.harga,
                         remoteJid,
-                        quantity
+                        quantity,
                     );
 
                     // Transaksi dibuat → kembali ke menu
-                    await update('UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = NULL WHERE id = ?', ['menu', pelanggan.id]);
-                    await simpanPercakapan(pelanggan.id, teksMasuk, '[QRIS dikirim]', 'menu');
+                    await update(
+                        "UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = NULL WHERE id = ?",
+                        ["menu", pelanggan.id],
+                    );
+                    await simpanPercakapan(
+                        pelanggan.id,
+                        teksMasuk,
+                        "[QRIS dikirim]",
+                        "menu",
+                    );
                     return;
                 }
 
                 // Input bukan angka → ulangi prompt quantity
                 if (konteks?.item) {
                     const item = konteks.item;
-                    const faseLabel = item.fase === 'anakan' ? 'Baby' : 'Dewasa';
-                    const hargaFormatted = Number(item.harga).toLocaleString('id-ID');
+                    const faseLabel =
+                        item.fase === "anakan" ? "Baby" : "Dewasa";
+                    const hargaFormatted = Number(item.harga).toLocaleString(
+                        "id-ID",
+                    );
                     await sockInstance.sendMessage(remoteJid, {
-                        text: `Kakak pilih *${item.nama}* (${faseLabel}) — Rp ${hargaFormatted}/ekor. Ketik jumlah yang ingin dibeli ya, Kak (contoh: 1, 2, 3)`
+                        text: `Kakak pilih *${item.nama}* (${faseLabel}) — Rp ${hargaFormatted}/ekor. Ketik jumlah yang ingin dibeli ya, Kak (contoh: 1, 2, 3)`,
                     });
                 } else {
                     // metadata hilang → kembali ke inventaris
@@ -1134,83 +1474,165 @@ async function hubungkanKeWhatsApp() {
             }
 
             // --- MODE HUMAN (admin takeover) ---
-            if (pelanggan.sesi_aktif === 'human') {
+            if (pelanggan.sesi_aktif === "human") {
                 // Simpan pesan saja, bot tidak membalas
-                await simpanPercakapan(pelanggan.id, teksMasuk, null, 'human', { replyToId, mediaUrl, mediaType, isForwarded, waMessageId: incomingWaId });
+                await simpanPercakapan(pelanggan.id, teksMasuk, null, "human", {
+                    replyToId,
+                    mediaUrl,
+                    mediaType,
+                    isForwarded,
+                    waMessageId: incomingWaId,
+                });
                 await buatNotifikasi(
-                    'pesan_masuk',
-                    'Pesan dari pelanggan (admin takeover)',
+                    "pesan_masuk",
+                    "Pesan dari pelanggan (admin takeover)",
                     `${pelanggan.nama || nomorWa}: ${teksMasuk}`,
-                    pelanggan.id
+                    pelanggan.id,
                 );
                 return;
             }
 
             // --- MODE AI (sticky: pelanggan ditahan di sini sampai mengetik "menu") ---
-            if (pelanggan.sesi_aktif === 'ai') {
+            if (pelanggan.sesi_aktif === "ai") {
                 // "menu" dan "batal" sudah ditangkap global keyword check di atas
 
                 // Angka 1-5 → keluar dari AI, eksekusi menu langsung
-                if (['1', '2', '3', '4', '5'].includes(teksMasuk)) {
-                    await update('UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = NULL WHERE id = ?', ['menu', pelanggan.id]);
-                    pelanggan.sesi_aktif = 'menu';
+                if (["1", "2", "3", "4", "5"].includes(teksMasuk)) {
+                    await update(
+                        "UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = NULL WHERE id = ?",
+                        ["menu", pelanggan.id],
+                    );
+                    pelanggan.sesi_aktif = "menu";
 
-                    if (teksMasuk === '1') {
-                        await update('UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?', ['ai', pelanggan.id]);
-                        const balasan = 'Baik Kak! Mode konsultasi AI sudah aktif. Silakan tanyakan seputar perawatan burung, nutrisi, atau info lainnya tentang 5 spesies unggulan kami.\n\nKetik *menu* untuk kembali ke menu utama.';
-                        await sockInstance.sendMessage(remoteJid, { text: balasan });
-                        await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'menu');
-                    } else if (teksMasuk === '2') {
-                        await kirimDaftarInventaris(pelanggan, remoteJid, teksMasuk);
-                    } else if (teksMasuk === '3') {
-                        await update('UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?', ['human', pelanggan.id]);
-                        const balasan = 'Baik Kak! Admin kami akan segera merespons. Mohon tunggu sebentar ya. Pesan Kakak sudah kami teruskan ke admin.\n\nKetik *menu* untuk kembali ke menu otomatis.';
-                        await sockInstance.sendMessage(remoteJid, { text: balasan });
-                        await kirimHandoffKeFirebase(pelanggan.id, { nama: pelanggan.nama, nomor: getNomorDisplay(remoteJid) });
-                        await buatNotifikasi('permintaan_manual', 'Pelanggan minta bicara dengan admin', `Pelanggan ${pelanggan.nama || getNomorDisplay(remoteJid)} meminta untuk bicara dengan admin.`, pelanggan.id);
-                        await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'menu');
-                    } else if (teksMasuk === '4') {
-                        const transaksi = await dapatkanRiwayatTransaksi(pelanggan.id);
+                    if (teksMasuk === "1") {
+                        await update(
+                            "UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?",
+                            ["ai", pelanggan.id],
+                        );
+                        const balasan =
+                            "Baik Kak! Mode konsultasi AI sudah aktif. Silakan tanyakan seputar perawatan burung, nutrisi, atau info lainnya tentang 5 spesies unggulan kami.\n\nKetik *menu* untuk kembali ke menu utama.";
+                        await sockInstance.sendMessage(remoteJid, {
+                            text: balasan,
+                        });
+                        await simpanPercakapan(
+                            pelanggan.id,
+                            teksMasuk,
+                            balasan,
+                            "menu",
+                        );
+                    } else if (teksMasuk === "2") {
+                        await kirimDaftarInventaris(
+                            pelanggan,
+                            remoteJid,
+                            teksMasuk,
+                        );
+                    } else if (teksMasuk === "3") {
+                        await update(
+                            "UPDATE pelanggan SET sesi_aktif = ? WHERE id = ?",
+                            ["human", pelanggan.id],
+                        );
+                        const balasan =
+                            "Baik Kak! Admin kami akan segera merespons. Mohon tunggu sebentar ya. Pesan Kakak sudah kami teruskan ke admin.\n\nKetik *menu* untuk kembali ke menu otomatis.";
+                        await sockInstance.sendMessage(remoteJid, {
+                            text: balasan,
+                        });
+                        await kirimHandoffKeFirebase(pelanggan.id, {
+                            nama: pelanggan.nama,
+                            nomor: getNomorDisplay(remoteJid),
+                        });
+                        await buatNotifikasi(
+                            "permintaan_manual",
+                            "Pelanggan minta bicara dengan admin",
+                            `Pelanggan ${pelanggan.nama || getNomorDisplay(remoteJid)} meminta untuk bicara dengan admin.`,
+                            pelanggan.id,
+                        );
+                        await simpanPercakapan(
+                            pelanggan.id,
+                            teksMasuk,
+                            balasan,
+                            "menu",
+                        );
+                    } else if (teksMasuk === "4") {
+                        const transaksi = await dapatkanRiwayatTransaksi(
+                            pelanggan.id,
+                        );
                         let balasan = await formatRiwayatTransaksi(transaksi);
-                        balasan += '\n\nKetik *menu* untuk kembali ke menu utama.';
-                        await sockInstance.sendMessage(remoteJid, { text: balasan });
-                        await simpanPercakapan(pelanggan.id, teksMasuk, balasan, 'menu');
-                    } else if (teksMasuk === '5') {
-                        await kirimDaftarCheckout(pelanggan, remoteJid, teksMasuk);
+                        balasan +=
+                            "\n\nKetik *menu* untuk kembali ke menu utama.";
+                        await sockInstance.sendMessage(remoteJid, {
+                            text: balasan,
+                        });
+                        await simpanPercakapan(
+                            pelanggan.id,
+                            teksMasuk,
+                            balasan,
+                            "menu",
+                        );
+                    } else if (teksMasuk === "5") {
+                        await kirimDaftarCheckout(
+                            pelanggan,
+                            remoteJid,
+                            teksMasuk,
+                        );
                     }
                     return;
                 }
 
                 // Sapaan / permintaan menu di mode AI → tampilkan menu utama langsung,
                 // tanpa basa-basi "Ada yang bisa saya bantu hari ini?" (kembali ke state menu)
-                if (KEYWORD_SAPAAN.includes(teksMasukLower) || teksMasukLower.includes('menu')) {
-                    await update('UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = NULL WHERE id = ?', ['menu', pelanggan.id]);
-                    pelanggan.sesi_aktif = 'menu';
-                    const pesanUtuh = await buatSapaanHybrid(pelanggan.nama || 'Kak');
-                    await sockInstance.sendMessage(remoteJid, { text: pesanUtuh });
-                    await simpanPercakapan(pelanggan.id, teksMasuk, pesanUtuh, 'menu');
+                if (
+                    KEYWORD_SAPAAN.includes(teksMasukLower) ||
+                    teksMasukLower.includes("menu")
+                ) {
+                    await update(
+                        "UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = NULL WHERE id = ?",
+                        ["menu", pelanggan.id],
+                    );
+                    pelanggan.sesi_aktif = "menu";
+                    const pesanUtuh = await buatSapaanHybrid(
+                        pelanggan.nama || "Kak",
+                    );
+                    await sockInstance.sendMessage(remoteJid, {
+                        text: pesanUtuh,
+                    });
+                    await simpanPercakapan(
+                        pelanggan.id,
+                        teksMasuk,
+                        pesanUtuh,
+                        "menu",
+                    );
                     return;
                 }
 
                 const riwayat = await dapatkanRiwayatPercakapan(pelanggan.id);
 
                 // Buat system prompt dinamis dengan nama pelanggan
-                const namaPelanggan = pelanggan.nama || 'Kak';
-                const namaDepan = namaPelanggan.split(' ')[0];
-                const systemPromptDinamis = SYSTEM_PROMPT + `\n\nINFORMASI PELANGGAN:\n- Nama pelanggan: ${namaPelanggan}\n- Selalu panggil dengan "Kak ${namaDepan}" atau "${namaDepan}"\n- Jika pelanggan menyapa (misal: "selamat pagi", "halo", "hai"), balas sapaan tersebut dengan ramah dan sebutkan nama mereka\n- Contoh: "Selamat malam, Kak ${namaDepan}! Ada yang bisa saya bantu hari ini?"`;
+                const namaPelanggan = pelanggan.nama || "Kak";
+                const namaDepan = namaPelanggan.split(" ")[0];
+                const systemPromptDinamis =
+                    SYSTEM_PROMPT +
+                    `\n\nINFORMASI PELANGGAN:\n- Nama pelanggan: ${namaPelanggan}\n- Selalu panggil dengan "Kak ${namaDepan}" atau "${namaDepan}"\n- Jika pelanggan menyapa (misal: "selamat pagi", "halo", "hai"), balas sapaan tersebut dengan ramah dan sebutkan nama mereka\n- Contoh: "Selamat malam, Kak ${namaDepan}! Ada yang bisa saya bantu hari ini?"`;
 
-                const messages = [{ role: 'system', content: systemPromptDinamis }];
+                const messages = [
+                    { role: "system", content: systemPromptDinamis },
+                ];
 
                 for (const perc of riwayat.reverse()) {
                     if (perc.pesan_pengirim) {
-                        messages.push({ role: 'user', content: perc.pesan_pengirim });
+                        messages.push({
+                            role: "user",
+                            content: perc.pesan_pengirim,
+                        });
                     }
                     if (perc.pesan_balasan) {
-                        messages.push({ role: 'assistant', content: perc.pesan_balasan });
+                        messages.push({
+                            role: "assistant",
+                            content: perc.pesan_balasan,
+                        });
                     }
                 }
 
-                messages.push({ role: 'user', content: teksMasuk });
+                messages.push({ role: "user", content: teksMasuk });
 
                 let balasanGroq;
                 try {
@@ -1218,29 +1640,39 @@ async function hubungkanKeWhatsApp() {
                         messages,
                         model: GROQ_MODEL,
                         temperature: 0.7,
-                        reasoning_effort: 'low',
+                        reasoning_effort: "low",
                         max_completion_tokens: 1000,
                     });
                     balasanGroq = responGroq.choices[0].message.content;
                 } catch (e) {
-                    console.error('[AI] Groq gagal:', e.message);
-                    balasanGroq = 'Maaf Kak, asisten AI sedang mengalami gangguan sebentar. Silakan coba kirim ulang pertanyaannya ya, atau ketik *menu* untuk kembali ke menu utama.';
+                    console.error("[AI] Groq gagal:", e.message);
+                    balasanGroq =
+                        "Maaf Kak, asisten AI sedang mengalami gangguan sebentar. Silakan coba kirim ulang pertanyaannya ya, atau ketik *menu* untuk kembali ke menu utama.";
                 }
 
-                await sock.sendPresenceUpdate('composing', remoteJid);
-                await sockInstance.sendMessage(remoteJid, { text: balasanGroq });
+                await sock.sendPresenceUpdate("composing", remoteJid);
+                await sockInstance.sendMessage(remoteJid, {
+                    text: balasanGroq,
+                });
 
-                await simpanPercakapan(pelanggan.id, teksMasuk, balasanGroq, 'groq_ai');
+                await simpanPercakapan(
+                    pelanggan.id,
+                    teksMasuk,
+                    balasanGroq,
+                    "groq_ai",
+                );
                 return;
             }
 
             // Fallback: state tidak dikenal → kembali ke menu
-            await update('UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = NULL WHERE id = ?', ['menu', pelanggan.id]);
-            const pesanMenu = await buatSapaanHybrid(pelanggan.nama || 'Kak');
+            await update(
+                "UPDATE pelanggan SET sesi_aktif = ?, metadata_sesi = NULL WHERE id = ?",
+                ["menu", pelanggan.id],
+            );
+            const pesanMenu = await buatSapaanHybrid(pelanggan.nama || "Kak");
             await sockInstance.sendMessage(remoteJid, { text: pesanMenu });
-
         } catch (error) {
-            console.error('Gagal memproses pesan:', error.message);
+            console.error("Gagal memproses pesan:", error.message);
         }
     }
 }
@@ -1258,43 +1690,64 @@ async function prosesStatusPending() {
         const daftar = await query(
             `SELECT id, pelanggan_id, status, midtrans_order_id, total_harga FROM transaksi_chatbot
              WHERE status = 'pending' AND midtrans_order_id LIKE '4PUTRA-%'
-             ORDER BY created_at DESC LIMIT 20`
+             ORDER BY created_at DESC LIMIT 20`,
         );
 
         for (const trx of daftar) {
             try {
                 const st = await getTransactionStatus(trx.midtrans_order_id);
                 const s = st.transaction_status;
-                if (!s || s === 'pending') continue;
+                if (!s || s === "pending") continue;
 
-                let statusBaru = 'pending';
-                if (s === 'settlement' || s === 'capture') statusBaru = 'paid';
-                else if (s === 'expire') statusBaru = 'expired';
-                else if (s === 'cancel' || s === 'deny') statusBaru = 'cancelled';
-                if (statusBaru === 'pending' || statusBaru === trx.status) continue;
+                let statusBaru = "pending";
+                if (s === "settlement" || s === "capture") statusBaru = "paid";
+                else if (s === "expire") statusBaru = "expired";
+                else if (s === "cancel" || s === "deny")
+                    statusBaru = "cancelled";
+                if (statusBaru === "pending" || statusBaru === trx.status)
+                    continue;
 
                 // Idempotensi: guard status lama agar transisi tunggal
-                const berubah = await update('UPDATE transaksi_chatbot SET status = ?, updated_at = NOW() WHERE id = ? AND status = ?', [statusBaru, trx.id, trx.status]);
+                const berubah = await update(
+                    "UPDATE transaksi_chatbot SET status = ?, updated_at = NOW() WHERE id = ? AND status = ?",
+                    [statusBaru, trx.id, trx.status],
+                );
                 if (!berubah) continue;
 
                 await insert(
-                    'INSERT INTO pembayarans (transaksi_id, midtrans_txn_id, metode, nominal, status, raw_webhook, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())',
-                    [trx.id, st.transaction_id || '-', st.payment_type || 'qris', st.gross_amount || trx.total_harga, s, JSON.stringify({ source: 'poller', data: st })]
+                    "INSERT INTO pembayarans (transaksi_id, midtrans_txn_id, metode, nominal, status, raw_webhook, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())",
+                    [
+                        trx.id,
+                        st.transaction_id || "-",
+                        st.payment_type || "qris",
+                        st.gross_amount || trx.total_harga,
+                        s,
+                        JSON.stringify({ source: "poller", data: st }),
+                    ],
                 );
 
                 if (sockInstance && isConnected) {
-                    const pelanggan = await queryOne('SELECT id, nomor_wa, nama FROM pelanggan WHERE id = ?', [trx.pelanggan_id]);
-                    if (statusBaru === 'paid') {
+                    const pelanggan = await queryOne(
+                        "SELECT id, nomor_wa, nama FROM pelanggan WHERE id = ?",
+                        [trx.pelanggan_id],
+                    );
+                    if (statusBaru === "paid") {
                         await insert(
-                            'INSERT INTO notifikasi_admins (tipe, judul, isi, pelanggan_id, dibaca, created_at, updated_at) VALUES (?, ?, ?, ?, 0, NOW(), NOW())',
-                            ['pembayaran', 'Pembayaran Diterima!', `Pembayaran dari ${pelanggan?.nama || pelanggan?.nomor_wa} sebesar Rp ${Number(st.gross_amount || trx.total_harga).toLocaleString('id-ID')} telah berhasil.`, trx.pelanggan_id]
+                            "INSERT INTO notifikasi_admins (tipe, judul, isi, pelanggan_id, dibaca, created_at, updated_at) VALUES (?, ?, ?, ?, 0, NOW(), NOW())",
+                            [
+                                "pembayaran",
+                                "Pembayaran Diterima!",
+                                `Pembayaran dari ${pelanggan?.nama || pelanggan?.nomor_wa} sebesar Rp ${Number(st.gross_amount || trx.total_harga).toLocaleString("id-ID")} telah berhasil.`,
+                                trx.pelanggan_id,
+                            ],
                         );
                         await sockInstance.sendMessage(pelanggan.nomor_wa, {
-                            text: `✅ *Pembayaran Berhasil!*\n\n` +
-                                  `Order ID: ${trx.midtrans_order_id}\n` +
-                                  `Nominal: Rp ${Number(st.gross_amount || trx.total_harga).toLocaleString('id-ID')}\n` +
-                                  `Metode: ${st.payment_type || 'QRIS'}\n\n` +
-                                  `Terima kasih telah berbelanja di PT 4Putra Vertex Aviary! Admin kami akan segera menghubungi Kakak untuk pengiriman.`,
+                            text:
+                                `✅ *Pembayaran Berhasil!*\n\n` +
+                                `Order ID: ${trx.midtrans_order_id}\n` +
+                                `Nominal: Rp ${Number(st.gross_amount || trx.total_harga).toLocaleString("id-ID")}\n` +
+                                `Metode: ${st.payment_type || "QRIS"}\n\n` +
+                                `Terima kasih telah berbelanja di PT 4Putra Vertex Aviary! Admin kami akan segera menghubungi Kakak untuk pengiriman.`,
                         });
                     } else {
                         await sockInstance.sendMessage(pelanggan.nomor_wa, {
@@ -1302,13 +1755,15 @@ async function prosesStatusPending() {
                         });
                     }
                 }
-                console.log(`[MIDTRANS-POLL] Order ${trx.midtrans_order_id} → ${statusBaru}`);
+                console.log(
+                    `[MIDTRANS-POLL] Order ${trx.midtrans_order_id} → ${statusBaru}`,
+                );
             } catch (e) {
                 // Order belum ter-registrasi di Midtrans (baru dibuat / gagal Snap) → skip, cek lagi nanti
             }
         }
     } catch (e) {
-        console.error('[MIDTRANS-POLL] Gagal polling:', e.message);
+        console.error("[MIDTRANS-POLL] Gagal polling:", e.message);
     }
 }
 
@@ -1322,21 +1777,23 @@ const apiApp = express();
 apiApp.use(express.json());
 
 // Endpoint untuk kirim pesan dari admin dashboard
-apiApp.post('/send', async (req, res) => {
+apiApp.post("/send", async (req, res) => {
     try {
         const { jid, pesan, quoted_wa_id } = req.body;
 
         if (!jid || !pesan) {
-            return res.status(400).json({ error: 'jid dan pesan wajib diisi' });
+            return res.status(400).json({ error: "jid dan pesan wajib diisi" });
         }
 
         if (!sockInstance || !isConnected) {
-            return res.status(503).json({ error: 'Bot WhatsApp belum terhubung' });
+            return res
+                .status(503)
+                .json({ error: "Bot WhatsApp belum terhubung" });
         }
 
         let fullJid = jid;
-        if (!fullJid.includes('@')) {
-            fullJid = jid + '@s.whatsapp.net';
+        if (!fullJid.includes("@")) {
+            fullJid = jid + "@s.whatsapp.net";
         }
 
         const msgOptions = { text: pesan };
@@ -1345,15 +1802,22 @@ apiApp.post('/send', async (req, res) => {
         if (quoted_wa_id) {
             try {
                 // Cari pesan asli dari store
-                const msgs = await sockInstance.store?.loadMessages?.(fullJid, 100);
-                const quotedMsg = msgs?.find(m => m.key.id === quoted_wa_id);
+                const msgs = await sockInstance.store?.loadMessages?.(
+                    fullJid,
+                    100,
+                );
+                const quotedMsg = msgs?.find((m) => m.key.id === quoted_wa_id);
                 if (quotedMsg) {
                     msgOptions.quoted = quotedMsg;
                 }
             } catch (e) {
                 // Fallback: buat quoted message manual
                 msgOptions.quoted = {
-                    key: { id: quoted_wa_id, remoteJid: fullJid, fromMe: false },
+                    key: {
+                        id: quoted_wa_id,
+                        remoteJid: fullJid,
+                        fromMe: false,
+                    },
                     message: { conversation: pesan },
                 };
             }
@@ -1362,58 +1826,81 @@ apiApp.post('/send', async (req, res) => {
         const result = await sockInstance.sendMessage(fullJid, msgOptions);
         const waMessageId = result?.key?.id || null;
 
-        res.json({ status: 'OK', sent_to: fullJid, wa_message_id: waMessageId });
+        res.json({
+            status: "OK",
+            sent_to: fullJid,
+            wa_message_id: waMessageId,
+        });
     } catch (error) {
-        console.error('Gagal kirim pesan via Baileys:', error.message);
+        console.error("Gagal kirim pesan via Baileys:", error.message);
         res.status(500).json({ error: error.message });
     }
 });
 
 // Endpoint untuk kirim media dari admin dashboard
-import multer from 'multer';
-const upload = multer({ dest: '/tmp/chat-upload/' });
+import multer from "multer";
+const upload = multer({ dest: "/tmp/chat-upload/" });
 
-apiApp.post('/send-media', upload.single('file'), async (req, res) => {
+apiApp.post("/send-media", upload.single("file"), async (req, res) => {
     try {
         const { jid, caption, media_type, quoted_wa_id } = req.body;
 
         if (!jid || !req.file) {
-            return res.status(400).json({ error: 'jid dan file wajib diisi' });
+            return res.status(400).json({ error: "jid dan file wajib diisi" });
         }
 
         if (!sockInstance || !isConnected) {
-            return res.status(503).json({ error: 'Bot WhatsApp belum terhubung' });
+            return res
+                .status(503)
+                .json({ error: "Bot WhatsApp belum terhubung" });
         }
 
         let fullJid = jid;
-        if (!fullJid.includes('@')) {
-            fullJid = jid + '@s.whatsapp.net';
+        if (!fullJid.includes("@")) {
+            fullJid = jid + "@s.whatsapp.net";
         }
 
         const fileBuffer = fs.readFileSync(req.file.path);
-        const captionText = caption && caption !== '[Image]' && caption !== '[Video]' && caption !== '[Document]' ? caption : '';
+        const captionText =
+            caption &&
+            caption !== "[Image]" &&
+            caption !== "[Video]" &&
+            caption !== "[Document]"
+                ? caption
+                : "";
 
         let msgOptions;
-        if (media_type === 'image') {
+        if (media_type === "image") {
             msgOptions = { image: fileBuffer, caption: captionText };
-        } else if (media_type === 'video') {
+        } else if (media_type === "video") {
             msgOptions = { video: fileBuffer, caption: captionText };
-        } else if (media_type === 'audio') {
-            msgOptions = { audio: fileBuffer, mimetype: 'audio/mpeg' };
+        } else if (media_type === "audio") {
+            msgOptions = { audio: fileBuffer, mimetype: "audio/mpeg" };
         } else {
-            msgOptions = { document: fileBuffer, mimetype: req.file.mimetype, fileName: req.file.originalname };
+            msgOptions = {
+                document: fileBuffer,
+                mimetype: req.file.mimetype,
+                fileName: req.file.originalname,
+            };
         }
 
         // Tambah quoted message jika ada
         if (quoted_wa_id) {
             try {
-                const msgs = await sockInstance.store?.loadMessages?.(fullJid, 100);
-                const quotedMsg = msgs?.find(m => m.key.id === quoted_wa_id);
+                const msgs = await sockInstance.store?.loadMessages?.(
+                    fullJid,
+                    100,
+                );
+                const quotedMsg = msgs?.find((m) => m.key.id === quoted_wa_id);
                 if (quotedMsg) msgOptions.quoted = quotedMsg;
             } catch (e) {
                 msgOptions.quoted = {
-                    key: { id: quoted_wa_id, remoteJid: fullJid, fromMe: false },
-                    message: { conversation: caption || '' },
+                    key: {
+                        id: quoted_wa_id,
+                        remoteJid: fullJid,
+                        fromMe: false,
+                    },
+                    message: { conversation: caption || "" },
                 };
             }
         }
@@ -1424,29 +1911,37 @@ apiApp.post('/send-media', upload.single('file'), async (req, res) => {
         // Hapus file temporary
         fs.unlinkSync(req.file.path);
 
-        res.json({ status: 'OK', sent_to: fullJid, wa_message_id: waMessageId });
+        res.json({
+            status: "OK",
+            sent_to: fullJid,
+            wa_message_id: waMessageId,
+        });
     } catch (error) {
-        console.error('Gagal kirim media via Baileys:', error.message);
+        console.error("Gagal kirim media via Baileys:", error.message);
         res.status(500).json({ error: error.message });
     }
 });
 
 // Endpoint untuk hapus pesan (delete for everyone)
-apiApp.post('/delete', async (req, res) => {
+apiApp.post("/delete", async (req, res) => {
     try {
         const { jid, wa_message_id } = req.body;
 
         if (!jid || !wa_message_id) {
-            return res.status(400).json({ error: 'jid dan wa_message_id wajib diisi' });
+            return res
+                .status(400)
+                .json({ error: "jid dan wa_message_id wajib diisi" });
         }
 
         if (!sockInstance || !isConnected) {
-            return res.status(503).json({ error: 'Bot WhatsApp belum terhubung' });
+            return res
+                .status(503)
+                .json({ error: "Bot WhatsApp belum terhubung" });
         }
 
         let fullJid = jid;
-        if (!fullJid.includes('@')) {
-            fullJid = jid + '@s.whatsapp.net';
+        if (!fullJid.includes("@")) {
+            fullJid = jid + "@s.whatsapp.net";
         }
 
         await sockInstance.sendMessage(fullJid, {
@@ -1454,25 +1949,25 @@ apiApp.post('/delete', async (req, res) => {
                 id: wa_message_id,
                 remoteJid: fullJid,
                 fromMe: true,
-            }
+            },
         });
 
-        res.json({ status: 'OK' });
+        res.json({ status: "OK" });
     } catch (error) {
-        console.error('Gagal hapus pesan via Baileys:', error.message);
+        console.error("Gagal hapus pesan via Baileys:", error.message);
         res.status(500).json({ error: error.message });
     }
 });
 
-apiApp.get('/health', (req, res) => {
+apiApp.get("/health", (req, res) => {
     res.json({
-        status: 'OK',
+        status: "OK",
         bot_connected: isConnected,
     });
 });
 
 // Halaman QR code untuk scan WhatsApp
-apiApp.get('/qr', (req, res) => {
+apiApp.get("/qr", (req, res) => {
     // Bot sudah terhubung
     if (isConnected && !lastQrCode) {
         return res.send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>QR WhatsApp</title>
@@ -1514,7 +2009,7 @@ const API_PORT = process.env.PORT || 3001;
 
 // Reset auth_info untuk generate QR baru
 async function resetAuth() {
-    const authPath = join(__dirname, '../../storage/app/chatbot-auth');
+    const authPath = join(__dirname, "../../storage/app/chatbot-auth");
     if (!fs.existsSync(authPath)) {
         return { success: true };
     }
@@ -1526,14 +2021,14 @@ async function resetAuth() {
             if (sockInstance.ws) sockInstance.ws.close();
             sockInstance.end();
         } catch (e) {
-            console.log('Warning saat tutup socket:', e.message);
+            console.log("Warning saat tutup socket:", e.message);
         }
         sockInstance = null;
         isConnected = false;
     }
 
     // Tunggu socket benar-benar tertutup supaya file handle lepas
-    await new Promise(r => setTimeout(r, 5000));
+    await new Promise((r) => setTimeout(r, 5000));
 
     // Hapus isi auth_info satu per satu (bukan rmdir, untuk hindari EBUSY)
     const maxAttempts = 3;
@@ -1546,37 +2041,45 @@ async function resetAuth() {
                     fs.unlinkSync(filePath);
                 } catch (e) {
                     // Jika unlink gagal (EBUSY), overwrite dengan data kosong
-                    try { fs.writeFileSync(filePath, '', 'utf-8'); } catch (_) {}
+                    try {
+                        fs.writeFileSync(filePath, "", "utf-8");
+                    } catch (_) {}
                 }
             }
             // Coba hapus directory kosong
-            try { fs.rmSync(authPath, { recursive: true, force: true }); } catch (_) {}
+            try {
+                fs.rmSync(authPath, { recursive: true, force: true });
+            } catch (_) {}
             console.log(`auth_info berhasil di-reset (percobaan ${attempt})`);
             return { success: true };
         } catch (e) {
             console.log(`Percobaan ${attempt} gagal:`, e.message);
-            if (attempt < maxAttempts) await new Promise(r => setTimeout(r, 3000));
+            if (attempt < maxAttempts)
+                await new Promise((r) => setTimeout(r, 3000));
         }
     }
 
-    return { success: false, error: 'Gagal reset auth_info setelah 3 percobaan' };
+    return {
+        success: false,
+        error: "Gagal reset auth_info setelah 3 percobaan",
+    };
 }
 
-apiApp.post('/reset', async (req, res) => {
+apiApp.post("/reset", async (req, res) => {
     const result = await resetAuth();
     if (result.success) {
-        res.json({ status: 'OK', message: 'Auth dihapus. Bot akan restart.' });
+        res.json({ status: "OK", message: "Auth dihapus. Bot akan restart." });
         setTimeout(() => process.exit(0), 1000);
     } else {
         res.status(500).json({ error: result.error });
     }
 });
 
-apiApp.get('/reset', async (req, res) => {
-    const authPath = join(__dirname, '../../storage/app/chatbot-auth');
+apiApp.get("/reset", async (req, res) => {
+    const authPath = join(__dirname, "../../storage/app/chatbot-auth");
     const hasAuth = fs.existsSync(authPath);
 
-    if (req.query.confirm === '1') {
+    if (req.query.confirm === "1") {
         const result = await resetAuth();
         if (result.success) {
             res.send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reset Berhasil</title>
@@ -1587,7 +2090,8 @@ apiApp.get('/reset', async (req, res) => {
 <script>setTimeout(()=>window.location.href='/qr',8000)</script></div></body></html>`);
             setTimeout(() => process.exit(0), 1000);
         } else {
-            res.status(500).send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Error</title>
+            res.status(500)
+                .send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Error</title>
 <style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#1a1a2e;color:#fff;}
 .box{text-align:center;padding:40px;background:#16213e;border-radius:16px;max-width:400px;}</style></head><body>
 <div class="box"><h2 style="color:#ef4444">Error</h2><p>${result.error}</p>
@@ -1610,10 +2114,12 @@ a.btn:hover{background:#dc2626;}
 });
 
 // Status detail bot
-apiApp.get('/status', (req, res) => {
-    const authExists = fs.existsSync(join(__dirname, '../../storage/app/chatbot-auth'));
+apiApp.get("/status", (req, res) => {
+    const authExists = fs.existsSync(
+        join(__dirname, "../../storage/app/chatbot-auth"),
+    );
     res.json({
-        status: 'OK',
+        status: "OK",
         bot_connected: isConnected,
         has_auth: authExists,
         has_qr: !!lastQrCode,
@@ -1621,23 +2127,28 @@ apiApp.get('/status', (req, res) => {
     });
 });
 
-apiApp.listen(API_PORT, '127.0.0.1', () => {
+apiApp.listen(API_PORT, "127.0.0.1", () => {
     console.log(`Baileys API berjalan di port ${API_PORT}`);
 
     // Mulai koneksi WhatsApp SETELAH Express server aktif
     // Jika gagal, Express tetap jalan sehingga /qr dan /status bisa diakses
-    hubungkanKeWhatsApp().catch(err => {
-        console.error('Gagal koneksi WhatsApp, retry dalam 15 detik:', err.message);
+    hubungkanKeWhatsApp().catch((err) => {
+        console.error(
+            "Gagal koneksi WhatsApp, retry dalam 15 detik:",
+            err.message,
+        );
         setTimeout(() => {
-            hubungkanKeWhatsApp().catch(e => console.error('Retry gagal:', e.message));
+            hubungkanKeWhatsApp().catch((e) =>
+                console.error("Retry gagal:", e.message),
+            );
         }, 15000);
     });
 });
 
 // Global error handler agar process tidak crash
-process.on('uncaughtException', (err) => {
-    console.error('Uncaught Exception:', err.message);
+process.on("uncaughtException", (err) => {
+    console.error("Uncaught Exception:", err.message);
 });
-process.on('unhandledRejection', (err) => {
-    console.error('Unhandled Rejection:', err?.message || err);
+process.on("unhandledRejection", (err) => {
+    console.error("Unhandled Rejection:", err?.message || err);
 });

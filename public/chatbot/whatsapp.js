@@ -718,7 +718,8 @@ async function kirimDaftarCheckout(pelanggan, remoteJid, teksMasuk) {
             const fase = item.fase === "anakan" ? "Baby" : "Dewasa";
             balasan += `${idx + 1}. *${item.nama_spesies}* (${fase}) — Rp ${harga}\n`;
         });
-        balasan += "\nKetik *nomor* burung yang ingin dibeli (contoh: 1)";
+        balasan +=
+            "\nKetik *nomor* burung yang ingin dibeli (contoh: 1), atau ketik *menu* untuk kembali ya, Kak! 🦜";
     }
 
     await sockInstance.sendMessage(remoteJid, { text: balasan });
@@ -1389,7 +1390,7 @@ async function hubungkanKeWhatsApp() {
                             ],
                         );
 
-                        const balasan = `Kakak pilih *${item.nama}* (${faseLabel}) — Rp ${hargaFormatted}/ekor. Mau beli berapa ekor? Ketik jumlahnya ya, Kak (contoh: 1, 2, 3)`;
+                        const balasan = `Kakak pilih *${item.nama}* (${faseLabel}) — Rp ${hargaFormatted}/ekor. Mau beli berapa ekor? Ketik jumlahnya ya, Kak (contoh: 1, 2, 3), atau ketik *menu* untuk kembali ya, Kak! 🦜`;
 
                         await sockInstance.sendMessage(remoteJid, {
                             text: balasan,
@@ -1402,7 +1403,7 @@ async function hubungkanKeWhatsApp() {
                         );
                     } else {
                         await sockInstance.sendMessage(remoteJid, {
-                            text: "Pilihan tidak valid. Silakan ketik nomor yang tersedia ya, Kak.",
+                            text: "Pilihan tidak valid. Silakan ketik nomor yang tersedia, atau ketik *menu* untuk kembali ya, Kak.",
                         });
                     }
                     return;
@@ -1464,7 +1465,7 @@ async function hubungkanKeWhatsApp() {
                         "id-ID",
                     );
                     await sockInstance.sendMessage(remoteJid, {
-                        text: `Kakak pilih *${item.nama}* (${faseLabel}) — Rp ${hargaFormatted}/ekor. Ketik jumlah yang ingin dibeli ya, Kak (contoh: 1, 2, 3)`,
+                        text: `Kakak pilih *${item.nama}* (${faseLabel}) — Rp ${hargaFormatted}/ekor. Ketik jumlah yang ingin dibeli ya, Kak (contoh: 1, 2, 3), atau ketik *menu* untuk kembali ya, Kak! 🦜`,
                     });
                 } else {
                     // metadata hilang → kembali ke inventaris

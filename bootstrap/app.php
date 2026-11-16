@@ -38,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.auth' => \App\Http\Middleware\AdminAuth::class,
             'admin.only' => \App\Http\Middleware\AdminOnly::class,
             'admin.domain' => \App\Http\Middleware\AdminDomain::class,
+            'local.only' => \App\Http\Middleware\LocalOnly::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

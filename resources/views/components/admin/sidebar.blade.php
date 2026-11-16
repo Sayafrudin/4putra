@@ -212,7 +212,8 @@
                     </li>
                 @endif
 
-                {{-- Menu Chatbot WhatsApp (semua user) --}}
+                {{-- Menu Chatbot WhatsApp: fitur skripsi → local-only, tidak dirender di produksi --}}
+                @if (! app()->environment('production'))
                 <li class="relative px-6 py-3" x-data="{ openChatbot: {{ request()->routeIs('admin.chatbot.*') ? 'true' : 'false' }} }">
                     @if (request()->routeIs('admin.chatbot.*'))
                         <span class="absolute inset-y-0 left-0 w-1 bg-[#E62C37] rounded-tr-lg rounded-br-lg"
@@ -279,6 +280,7 @@
                         </a>
                     </div>
                 </li>
+                @endif
             </ul>
         </div>
 

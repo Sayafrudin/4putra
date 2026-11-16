@@ -213,8 +213,8 @@ Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'admin.only'])
         Route::post('/activity/{activity}/comment', [AdminUserController::class, 'commentActivity'])->name('admin.activity.comment');
     });
 
-    // Chatbot WhatsApp (hanya admin)
-    Route::middleware('admin.only')->prefix('chatbot')->group(function () {
+    // Chatbot WhatsApp (hanya admin; fitur skripsi → local-only, 404 di produksi)
+    Route::middleware(['local.only', 'admin.only'])->prefix('chatbot')->group(function () {
         Route::get('/', [ChatbotController::class, 'index'])->name('admin.chatbot.index');
         Route::get('/inventaris', [ChatbotController::class, 'inventaris'])->name('admin.chatbot.inventaris');
         Route::post('/inventaris', [ChatbotController::class, 'inventarisStore'])->name('admin.chatbot.inventaris.store');

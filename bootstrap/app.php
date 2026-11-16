@@ -28,7 +28,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         // --- DAFTARKAN DISINI ---
+        // Paling awal di grup web: host admin khusus redirect ke /admin sebelum
+        // middleware lain mengerjakan halaman publik yang tak relevan di host itu.
         $middleware->web(append: [
+            \App\Http\Middleware\AdminHostRedirect::class,
             Localization::class,
             \App\Http\Middleware\TrackActivity::class,
             \App\Http\Middleware\SecurityHeaders::class,

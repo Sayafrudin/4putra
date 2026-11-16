@@ -6,7 +6,15 @@
             <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">Keuangan Farm</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Pemasukan, pengeluaran, gaji bulanan, dan budget pembangunan</p>
         </div>
-        <div class="flex gap-3">
+        <div class="flex gap-3 flex-wrap">
+            <button onclick="eksporExcel(this, { namaFile: 'laporan_keuangan_{{ now()->toDateString() }}.xlsx', judul: 'Laporan Keuangan', headers: ['Tanggal', 'Tipe', 'Kategori', 'Jumlah (Rp)', 'Keterangan'], rows: DATA_EKSPOR })"
+                class="px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors">
+                Export Excel
+            </button>
+            <a href="{{ route('admin.keuangan.export-pdf', array_filter(['tipe' => $tipeAktif, 'kategori' => $kategoriAktif])) }}"
+                class="px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                Export PDF
+            </a>
             <button onclick="bukaModalTambah('masuk')"
                 class="px-4 py-2.5 text-sm font-semibold text-white bg-green-600 hover:bg-green-700 rounded-xl transition-colors">
                 + Uang Masuk
@@ -192,8 +200,23 @@
         </div>
     </div>
 
+    @php
+        // Data ekspor Excel: SELURUH baris sesuai filter aktif (bukan hanya halaman paginasi)
+        $dataEkspor = $semuaTransaksi->map(fn ($trx) => [
+            $trx->tanggal->translatedFormat('d M Y'),
+            ucfirst($trx->tipe),
+            $trx->kategori,
+            (float) $trx->jumlah,
+            $trx->keterangan ?? '',
+        ])->concat([
+            ['', '', 'TOTAL MASUK', (float) $ringkasan['masuk'], ''],
+            ['', '', 'TOTAL KELUAR', (float) $ringkasan['keluar'], ''],
+            ['', '', 'SALDO', (float) $ringkasan['saldo'], ''],
+        ])->values()->all();
+    @endphp
     <script>
         const CSRF = document.querySelector('meta[name="csrf-token"]').content;
+        const DATA_EKSPOR = @json($dataEkspor);
         let sedangBusy = false;
         let hapusTargetId = null;
 

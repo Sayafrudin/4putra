@@ -6,7 +6,15 @@
             <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">Telur & Incubator</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Sesi bertelur, perebut, usia harian, sampai siap dilepas (±3 bulan)</p>
         </div>
-        <div class="flex gap-3">
+        <div class="flex gap-3 flex-wrap">
+            <button onclick="eksporExcel(this, { namaFile: 'laporan_telur_incubator_{{ now()->toDateString() }}.xlsx', judul: 'Laporan Telur', headers: ['Induk (Pasangan)', 'Sesi', 'Jumlah Butir', 'Diambil', 'Diambil Oleh', 'Usia/Keterangan', 'Kondisi', 'Status'], rows: DATA_EKSPOR })"
+                class="px-4 py-2.5 text-sm font-semibold text-white bg-green-600 hover:bg-green-700 rounded-xl transition-colors">
+                Export Excel
+            </button>
+            <a href="{{ route('admin.telur.export-pdf') }}"
+                class="px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                Export PDF
+            </a>
             <button onclick="bukaModalTambah()"
                 class="px-4 py-2.5 text-sm font-semibold text-white bg-[#E62C37] hover:bg-[#c5242d] rounded-xl transition-colors">
                 + Catat Telur
@@ -46,7 +54,9 @@
             </div>
             <div class="p-4 space-y-3">
                 @foreach ($perInduk as $grup)
-                    @php($telurPertama = $grup->sortBy('tanggal_diambil')->first())
+                    @php
+                        $telurPertama = $grup->sortBy('tanggal_diambil')->first();
+                    @endphp
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-gray-50 dark:bg-[#151a22] rounded-xl">
                         <div class="min-w-0">
                             <p class="text-sm font-bold text-gray-900 dark:text-white">{{ $telurPertama->induk_label }} <span class="text-xs font-semibold text-gray-500">· {{ $grup->sum('jumlah') }} butir ({{ $grup->count() }} sesi)</span></p>
@@ -293,11 +303,27 @@
         </div>
     </div>
 
+    @php
+        // Daftar kandang pasangan (server-side): [{label, burung: [{id,nama,spesies} × 2]}]
+        // Data ekspor Excel (seluruh catatan telur, server-side)
+        $dataEkspor = $telurs->map(fn ($t) => [
+            $t->induk_label,
+            (int) $t->sesi,
+            (int) $t->jumlah,
+            $t->tanggal_diambil->translatedFormat('d M Y'),
+            $t->diambil_oleh,
+            $t->status === 'menetas' && $t->tanggal_menetas
+                ? $t->usia_menetas_hari.' hari'.($t->siap_dilepas ? ' (siap dilepas)' : '')
+                : $t->usia_hari.' hari',
+            $t->kondisi,
+            ucfirst($t->status),
+        ])->values()->all();
+    @endphp
     <script>
         const CSRF = document.querySelector('meta[name="csrf-token"]').content;
         const ORDINAL = { 1: 'pertama', 2: 'kedua', 3: 'ketiga', 4: 'keempat', 5: 'kelima' };
-        // Daftar kandang pasangan (server-side): [{label, burung: [{id,nama,spesies} × 2]}]
         const PASANGAN = @json($kandangPasangan);
+        const DATA_EKSPOR = @json($dataEkspor);
         let sedangBusy = false;
         let editTargetId = null;
         let hapusTargetId = null;

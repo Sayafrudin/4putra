@@ -38,6 +38,24 @@ class TelurController extends Controller
         return view('admin.telur.index', compact('telurs', 'kandangPasangan'));
     }
 
+    public function exportPdf(Request $request)
+    {
+        try {
+            $telurs = Telur::with(['burung', 'pasangan'])->orderByDesc('tanggal_diambil')->orderByDesc('id')->get();
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.telur.pdf', compact('telurs'))
+                ->setPaper('a4', 'portrait');
+
+            $this->logActivity($request, 'ekspor_telur_pdf', 'Mengekspor laporan telur & incubator PDF ('.$telurs->count().' catatan)');
+
+            return $pdf->download('laporan_telur_incubator_'.date('Y-m-d').'.pdf');
+        } catch (\Throwable $e) {
+            Log::error('Gagal ekspor PDF telur', ['error' => $e->getMessage()]);
+
+            return redirect()->route('admin.telur.index')->with('error', 'Gagal membuat PDF. Coba lagi.');
+        }
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([

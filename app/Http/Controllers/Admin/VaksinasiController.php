@@ -28,6 +28,24 @@ class VaksinasiController extends Controller
         return view('admin.vaksinasi.index', compact('terakhir', 'jatuhTempo', 'riwayat', 'burungList'));
     }
 
+    public function exportPdf(Request $request)
+    {
+        try {
+            $riwayat = Vaksinasi::with('burung.kandang:id,blok,nomor')->orderByDesc('tanggal_vaksin')->orderByDesc('id')->get();
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.vaksinasi.pdf', compact('riwayat'))
+                ->setPaper('a4', 'portrait');
+
+            $this->logActivity($request, 'ekspor_vaksinasi_pdf', 'Mengekspor laporan vaksinasi PDF ('.$riwayat->count().' catatan)');
+
+            return $pdf->download('laporan_vaksinasi_'.date('Y-m-d').'.pdf');
+        } catch (\Throwable $e) {
+            Log::error('Gagal ekspor PDF vaksinasi', ['error' => $e->getMessage()]);
+
+            return redirect()->route('admin.vaksinasi.index')->with('error', 'Gagal membuat PDF. Coba lagi.');
+        }
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([

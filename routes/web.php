@@ -254,6 +254,7 @@ Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'admin.only'])
     // Vaksinasi burung + deteksi booster bulanan (hanya admin)
     Route::middleware('admin.only')->group(function () {
         Route::get('/vaksinasi', [VaksinasiController::class, 'index'])->name('admin.vaksinasi.index');
+        Route::get('/vaksinasi/export/pdf', [VaksinasiController::class, 'exportPdf'])->name('admin.vaksinasi.export-pdf');
         Route::post('/vaksinasi', [VaksinasiController::class, 'store'])->name('admin.vaksinasi.store');
         Route::delete('/vaksinasi/{vaksinasi}', [VaksinasiController::class, 'destroy'])->name('admin.vaksinasi.destroy');
     });
@@ -261,6 +262,7 @@ Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'admin.only'])
     // Telur & incubator (hanya admin)
     Route::middleware('admin.only')->group(function () {
         Route::get('/telur', [TelurController::class, 'index'])->name('admin.telur.index');
+        Route::get('/telur/export/pdf', [TelurController::class, 'exportPdf'])->name('admin.telur.export-pdf');
         Route::post('/telur', [TelurController::class, 'store'])->name('admin.telur.store');
         Route::put('/telur/{telur}', [TelurController::class, 'update'])->name('admin.telur.update');
         Route::delete('/telur/{telur}', [TelurController::class, 'destroy'])->name('admin.telur.destroy');
@@ -269,6 +271,7 @@ Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'admin.only'])
     // Keuangan farm (hanya admin)
     Route::middleware('admin.only')->group(function () {
         Route::get('/keuangan', [KeuanganController::class, 'index'])->name('admin.keuangan.index');
+        Route::get('/keuangan/export/pdf', [KeuanganController::class, 'exportPdf'])->name('admin.keuangan.export-pdf');
         Route::post('/keuangan', [KeuanganController::class, 'store'])->name('admin.keuangan.store');
         Route::delete('/keuangan/{keuangan}', [KeuanganController::class, 'destroy'])->name('admin.keuangan.destroy');
     });

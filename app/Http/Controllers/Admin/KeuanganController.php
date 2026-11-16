@@ -32,14 +32,49 @@ class KeuanganController extends Controller
         $ringkasan['saldo'] = $ringkasan['masuk'] - $ringkasan['keluar'];
 
         $transaksis = (clone $dasar)->orderByDesc('tanggal')->orderByDesc('id')->paginate(20)->withQueryString();
+        // Seluruh baris sesuai filter — sumber ekspor Excel sisi browser (farm-scale, ratusan baris)
+        $semuaTransaksi = (clone $dasar)->orderByDesc('tanggal')->orderByDesc('id')->get();
 
         return view('admin.keuangan.index', [
             'transaksis' => $transaksis,
+            'semuaTransaksi' => $semuaTransaksi,
             'ringkasan' => $ringkasan,
             'kategoriList' => Keuangan::KATEGORI,
             'tipeAktif' => $tipe,
             'kategoriAktif' => $kategori,
         ]);
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $tipe = in_array($request->query('tipe'), ['masuk', 'keluar']) ? $request->query('tipe') : null;
+        $kategori = in_array($request->query('kategori'), Keuangan::KATEGORI) ? $request->query('kategori') : null;
+
+        try {
+            $query = Keuangan::query()
+                ->when($tipe, fn ($q) => $q->where('tipe', $tipe))
+                ->when($kategori, fn ($q) => $q->where('kategori', $kategori));
+
+            $transaksis = (clone $query)->orderByDesc('tanggal')->orderByDesc('id')->get();
+            $ringkasan = [
+                'masuk' => (clone $query)->where('tipe', 'masuk')->sum('jumlah'),
+                'keluar' => (clone $query)->where('tipe', 'keluar')->sum('jumlah'),
+            ];
+            $ringkasan['saldo'] = $ringkasan['masuk'] - $ringkasan['keluar'];
+            $tipeAktif = $tipe;
+            $kategoriAktif = $kategori;
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.keuangan.pdf', compact('transaksis', 'ringkasan', 'tipeAktif', 'kategoriAktif'))
+                ->setPaper('a4', 'portrait');
+
+            $this->logActivity($request, 'ekspor_keuangan_pdf', 'Mengekspor laporan keuangan PDF ('.$transaksis->count().' transaksi'.($tipe ? ', tipe '.$tipe : '').($kategori ? ', kategori '.$kategori : '').')');
+
+            return $pdf->download('laporan_keuangan_'.date('Y-m-d').'.pdf');
+        } catch (\Throwable $e) {
+            Log::error('Gagal ekspor PDF keuangan', ['error' => $e->getMessage()]);
+
+            return redirect()->route('admin.keuangan.index')->with('error', 'Gagal membuat PDF. Coba lagi.');
+        }
     }
 
     public function store(Request $request)

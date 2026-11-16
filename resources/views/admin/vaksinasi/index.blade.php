@@ -6,7 +6,15 @@
             <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">Vaksinasi Burung</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Catat vaksin dan pantau booster bulanan tiap burung</p>
         </div>
-        <div class="flex gap-3">
+        <div class="flex gap-3 flex-wrap">
+            <button onclick="eksporExcel(this, { namaFile: 'laporan_vaksinasi_{{ now()->toDateString() }}.xlsx', judul: 'Laporan Vaksinasi', headers: ['Burung', 'Spesies', 'Jenis Vaksin', 'Tanggal', 'Status Booster'], rows: DATA_EKSPOR })"
+                class="px-4 py-2.5 text-sm font-semibold text-white bg-green-600 hover:bg-green-700 rounded-xl transition-colors">
+                Export Excel
+            </button>
+            <a href="{{ route('admin.vaksinasi.export-pdf') }}"
+                class="px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                Export PDF
+            </a>
             <button onclick="bukaModalTambah()"
                 class="px-4 py-2.5 text-sm font-semibold text-white bg-[#E62C37] hover:bg-[#c5242d] rounded-xl transition-colors">
                 + Catat Vaksin
@@ -97,7 +105,9 @@
                     <select name="burung_id" id="tambah_burung"
                         class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                         <option value="">— Pilih burung —</option>
-                        @php($tertempatkan = $burungList->filter(fn ($b) => $b->kandang)->groupBy(fn ($b) => $b->kandang->label)->sortKeysUsing('strnatcasecmp'))
+                        @php
+                            $tertempatkan = $burungList->filter(fn ($b) => $b->kandang)->groupBy(fn ($b) => $b->kandang->label)->sortKeysUsing('strnatcasecmp');
+                        @endphp
                         @foreach ($tertempatkan as $label => $grup)
                             <optgroup label="Kandang {{ $label }}">
                                 @foreach ($grup as $b)
@@ -174,8 +184,19 @@
         </div>
     </div>
 
+    @php
+        // Data ekspor Excel (seluruh riwayat, server-side — tanpa N+1)
+        $dataEkspor = $riwayat->map(fn ($v) => [
+            $v->burung->nama,
+            $v->burung->spesies,
+            $v->jenis,
+            $v->tanggal_vaksin->translatedFormat('d M Y'),
+            $v->sudah_jatuh_tempo ? 'Perlu vaksin ulang' : 'Masih terlindungi',
+        ])->values()->all();
+    @endphp
     <script>
         const CSRF = document.querySelector('meta[name="csrf-token"]').content;
+        const DATA_EKSPOR = @json($dataEkspor);
         let sedangBusy = false;
         let hapusTargetId = null;
 

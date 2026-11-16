@@ -118,16 +118,29 @@
 
     @if (session('success'))
         <script>
-            var tampilToastSukses = function () { showToast('success', 'Berhasil', '{{ session('success') }}'); };
-            document.addEventListener('DOMContentLoaded', tampilToastSukses);
-            document.addEventListener('turbo:load', tampilToastSukses);
+            // Toast flash hanya sekali: load awal tunggu DOMContentLoaded (toast.js defer),
+            // render Turbo langsung tampil. Tanpa listener yang menempel di document
+            // agar tidak bocor ke navigasi Turbo berikutnya (tidak dobel & tidak mengulang).
+            (function () {
+                var tampil = function () { showToast('success', 'Berhasil', '{{ session('success') }}'); };
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', tampil, { once: true });
+                } else {
+                    tampil();
+                }
+            })();
         </script>
     @endif
     @if (session('error'))
         <script>
-            var tampilToastGagal = function () { showToast('error', 'Gagal', '{{ session('error') }}'); };
-            document.addEventListener('DOMContentLoaded', tampilToastGagal);
-            document.addEventListener('turbo:load', tampilToastGagal);
+            (function () {
+                var tampil = function () { showToast('error', 'Gagal', '{{ session('error') }}'); };
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', tampil, { once: true });
+                } else {
+                    tampil();
+                }
+            })();
         </script>
     @endif
 

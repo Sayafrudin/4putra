@@ -37,6 +37,11 @@ class ChatbotLocalOnlyTest extends TestCase
         $this->actingAs($this->admin)
             ->post('/admin/chatbot/chat/send', [], ['X-CSRF-TOKEN' => csrf_token()])
             ->assertStatus(404);
+
+        // Tamu tak-login: grup induk admin.auth lebih dulu → redirect login
+        // (perilaku sama dengan route /admin lain; setelah login, local.only membalas 404)
+        $this->app->make('auth')->forgetGuards();
+        $this->get('/admin/chatbot')->assertRedirect(route('login'));
     }
 
     public function test_menu_chatbot_tidak_dirender_di_produksi(): void

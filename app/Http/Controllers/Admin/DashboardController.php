@@ -9,7 +9,11 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        return view('admin.index');
+        // Widget monitoring farm: burung yang perlu vaksin ulang (booster bulanan)
+        $vaksinJatuhTempo = \App\Models\Vaksinasi::vaksinTerakhirPerBurung()
+            ->filter(fn ($v) => $v->sudah_jatuh_tempo);
+
+        return view('admin.index', compact('vaksinJatuhTempo'));
     }
 
     public function ping(Request $request)

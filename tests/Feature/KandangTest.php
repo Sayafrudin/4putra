@@ -155,6 +155,27 @@ class KandangTest extends TestCase
         $burung->delete();
     }
 
+    public function test_update_data_burung_dengan_dna(): void
+    {
+        $burung = $this->burungUji();
+
+        $this->actingAs($this->admin)
+            ->putJson("/admin/burung/{$burung->id}", [
+                'nama' => 'uji-kandang-ternama',
+                'spesies' => 'African Grey',
+                'fase' => 'dewasa',
+                'gender' => 'betina',
+                'nomor_dna' => 'DNA-UJI-001',
+            ])->assertOk();
+
+        $this->assertDatabaseHas('burungs', [
+            'id' => $burung->id,
+            'nama' => 'uji-kandang-ternama',
+            'gender' => 'betina',
+            'nomor_dna' => 'DNA-UJI-001',
+        ]);
+    }
+
     public function test_hapus_burung(): void
     {
         $burung = $this->burungUji();

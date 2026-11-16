@@ -158,11 +158,82 @@
         </div>
     </div>
 
+    {{-- ==================== MODAL EDIT BURUNG (DNA/gender dll) ==================== --}}
+    <div id="modalEdit" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Edit Data Burung</h3>
+                <button onclick="tutupModal('modalEdit')" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form id="formEdit" onsubmit="submitEdit(event)" class="space-y-4" novalidate>
+                @csrf
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Nama / Panggilan</label>
+                        <input type="text" name="nama" id="edit_nama"
+                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                        <p class="text-xs text-red-400 mt-1 hidden" id="err_edit_nama"></p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Spesies</label>
+                        <input type="text" name="spesies" id="edit_spesies"
+                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                        <p class="text-xs text-red-400 mt-1 hidden" id="err_edit_spesies"></p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Fase</label>
+                        <select name="fase" id="edit_fase"
+                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                            <option value="anakan">Baby</option>
+                            <option value="dewasa">Dewasa</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Gender</label>
+                        <select name="gender" id="edit_gender"
+                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                            <option value="">Belum ada data DNA</option>
+                            <option value="jantan">Jantan</option>
+                            <option value="betina">Betina</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">No. DNA</label>
+                        <input type="text" name="nomor_dna" id="edit_dna" placeholder="Nomor sertifikat DNA"
+                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Catatan (opsional)</label>
+                    <textarea name="catatan" id="edit_catatan" rows="2"
+                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none"></textarea>
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="tutupModal('modalEdit')"
+                        class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" id="btnEdit"
+                        class="px-4 py-2.5 text-sm font-semibold text-white bg-[#E62C37] hover:bg-[#c5242d] rounded-xl transition-colors">
+                        Perbarui
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         const CSRF = document.querySelector('meta[name="csrf-token"]').content;
         let sedangBusy = false;
         let burungDitarik = null; // { id, chip, dariParent }
         let hapusTargetId = null;
+        let editTargetId = null;
 
         function setBusy(on) {
             sedangBusy = on;
@@ -358,6 +429,58 @@
                     zona.classList.add('border-gray-200', 'dark:border-gray-700');
                     zona.removeAttribute('data-penuh');
                 }
+            }
+        }
+
+        // ---- Edit burung (nama, spesies, fase, gender DNA, catatan) ----
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.edit-burung');
+            if (!btn || sedangBusy) return;
+            editTargetId = btn.dataset.id;
+            document.getElementById('edit_nama').value = btn.dataset.nama;
+            document.getElementById('edit_spesies').value = btn.dataset.spesies;
+            document.getElementById('edit_fase').value = btn.dataset.fase;
+            document.getElementById('edit_gender').value = btn.dataset.gender || '';
+            document.getElementById('edit_dna').value = btn.dataset.nomorDna || '';
+            document.getElementById('edit_catatan').value = btn.dataset.catatan || '';
+            bukaModal('modalEdit');
+        });
+
+        async function submitEdit(e) {
+            e.preventDefault();
+            const form = document.getElementById('formEdit');
+            bersihkanError(form);
+            let valid = true;
+            if (!form.nama.value.trim()) { tandaiError('edit_nama', 'err_edit_nama', 'Nama wajib diisi.'); valid = false; }
+            if (!form.spesies.value.trim()) { tandaiError('edit_spesies', 'err_edit_spesies', 'Spesies wajib diisi.'); valid = false; }
+            if (!valid) return;
+
+            setBusy(true);
+            try {
+                const res = await fetch('{{ route('admin.burung.update', ':id') }}'.replace(':id', editTargetId), {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        nama: form.nama.value.trim(),
+                        spesies: form.spesies.value.trim(),
+                        fase: form.fase.value,
+                        gender: form.gender.value || null,
+                        nomor_dna: form.nomor_dna.value.trim() || null,
+                        catatan: form.catatan.value.trim() || null,
+                    })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    showToast('error', 'Gagal', data.message || 'Gagal memperbarui data burung.');
+                    return;
+                }
+                showToast('success', 'Berhasil', data.message);
+                tutupModal('modalEdit');
+                window.location.reload();
+            } catch (err) {
+                showToast('error', 'Gagal', 'Tidak dapat terhubung ke server.');
+            } finally {
+                setBusy(false);
             }
         }
 

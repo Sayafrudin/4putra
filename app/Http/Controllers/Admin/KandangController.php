@@ -133,4 +133,27 @@ class KandangController extends Controller
             return response()->json(['ok' => false, 'message' => 'Gagal mengeluarkan burung. Coba lagi.'], 500);
         }
     }
+
+    public function updateBurung(Request $request, Burung $burung)
+    {
+        $data = $request->validate([
+            'nama' => ['required', 'string', 'max:100'],
+            'spesies' => ['required', 'string', 'max:100'],
+            'fase' => ['required', 'in:anakan,dewasa'],
+            'gender' => ['nullable', 'in:jantan,betina'],
+            'nomor_dna' => ['nullable', 'string', 'max:50'],
+            'catatan' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        try {
+            $burung->update($data);
+            $this->logActivity($request, 'update_burung', 'Memperbarui data burung '.$burung->nama);
+
+            return response()->json(['ok' => true, 'message' => 'Data burung "'.$burung->nama.'" diperbarui.']);
+        } catch (\Throwable $e) {
+            Log::error('Gagal update burung', ['id' => $burung->id, 'error' => $e->getMessage()]);
+
+            return response()->json(['ok' => false, 'message' => 'Gagal memperbarui data burung. Coba lagi.'], 500);
+        }
+    }
 }

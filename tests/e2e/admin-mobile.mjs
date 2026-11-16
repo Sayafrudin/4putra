@@ -25,6 +25,10 @@ const PAGES = [
     ['/admin/chatbot/transaksi', 'Chatbot transaksi'],
     ['/admin/chatbot/chat', 'Chatbot WA chat'],
     ['/admin/kandang', 'Kandang'],
+    ['/admin/vaksinasi', 'Vaksinasi'],
+    ['/admin/telur', 'Telur & Incubator'],
+    ['/admin/keuangan', 'Keuangan'],
+    ['/admin/stok-makanan', 'Stok Makanan'],
 ];
 
 let failures = 0;

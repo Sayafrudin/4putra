@@ -107,13 +107,13 @@
 
                 {{-- Menu Manajemen Farm (data burung, bukan urusan chatbot) --}}
                 <li class="relative px-6 py-3"
-                    x-data="{ openFarm: {{ request()->routeIs('admin.kandang*') ? 'true' : 'false' }} }">
-                    @if (request()->routeIs('admin.kandang*'))
+                    x-data="{ openFarm: {{ request()->routeIs('admin.kandang*') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.stok*') ? 'true' : 'false' }} }">
+                    @if (request()->routeIs('admin.kandang*') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.stok*'))
                         <span class="absolute inset-y-0 left-0 w-1 bg-[#E62C37] rounded-tr-lg rounded-br-lg"
                             aria-hidden="true"></span>
                     @endif
                     <button @click="openFarm = !openFarm"
-                        class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.kandang*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
+                        class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.kandang*') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.stok*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
                         <span class="inline-flex items-center">
                             <svg class="w-5 h-5" fill="none" stroke-linecap="round" stroke-linejoin="round"
                                 stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -144,7 +144,51 @@
                             </svg>
                             Kandang
                         </a>
+                        <a href="{{ route('admin.vaksinasi.index') }}" @click="sidebarOpen = false"
+                            class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.vaksinasi*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V15a2.25 2.25 0 00.73-1.677L21 6.75A2.25 2.25 0 0018.75 4.5H5.25A2.25 2.25 0 003 6.75l.02 6.573A2.25 2.25 0 003.75 15v3.75A2.25 2.25 0 006 21h6.75" />
+                            </svg>
+                            Vaksinasi
+                        </a>
+                        <a href="{{ route('admin.telur.index') }}" @click="sidebarOpen = false"
+                            class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.telur*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M12 2.25c-2.9 0-5.25 2.7-5.25 6 0 2.4 1.2 4.5 2.625 5.625.45.36.75.9.75 1.463v.412c0 .621.504 1.125 1.125 1.125h1.5c.621 0 1.125-.504 1.125-1.125v-.412c0-.563.3-1.103.75-1.463C15.05 12.75 16.25 10.65 16.25 8.25c0-3.3-2.35-6-4.25-6z" />
+                            </svg>
+                            Telur & Incubator
+                        </a>
+                        <a href="{{ route('admin.stok.index') }}" @click="sidebarOpen = false"
+                            class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.stok*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026M21 9.776c-1.68 0-3.044 1.364-3.044 3.044v1.125c0 1.68 1.364 3.044 3.044 3.044M3 9.776c1.68 0 3.044 1.364 3.044 3.044v1.125c0 1.68-1.364 3.044-3.044 3.044M10.5 8.25h3a1.5 1.5 0 011.5 1.5v4.5a1.5 1.5 0 01-1.5 1.5h-3a1.5 1.5 0 01-1.5-1.5v-4.5a1.5 1.5 0 011.5-1.5z" />
+                            </svg>
+                            Stok Makanan
+                        </a>
                     </div>
+                </li>
+
+                {{-- Menu Keuangan (uang krusial farm) --}}
+                <li class="relative px-6 py-3">
+                    @if (request()->routeIs('admin.keuangan*'))
+                        <span class="absolute inset-y-0 left-0 w-1 bg-[#E62C37] rounded-tr-lg rounded-br-lg"
+                            aria-hidden="true"></span>
+                    @endif
+                    <a href="{{ route('admin.keuangan.index') }}" @click="sidebarOpen = false"
+                        class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.keuangan*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
+                        <svg class="w-5 h-5" fill="none" stroke-linecap="round" stroke-linejoin="round"
+                            stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0M5.25 6.75h13.5a2.25 2.25 0 012.25 2.25v9.75A2.25 2.25 0 0118.75 21H5.25A2.25 2.25 0 013 18.75V9a2.25 2.25 0 012.25-2.25z" />
+                        </svg>
+                        <span class="ml-4">Keuangan</span>
+                    </a>
                 </li>
 
                 {{-- Menu Manajemen User (hanya admin) --}}

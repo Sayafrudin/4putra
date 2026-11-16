@@ -11,7 +11,11 @@ use App\Http\Controllers\Admin\ChatbotController;
 use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\KandangController;
+use App\Http\Controllers\Admin\KeuanganController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\StokMakananController;
+use App\Http\Controllers\Admin\TelurController;
+use App\Http\Controllers\Admin\VaksinasiController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
@@ -243,6 +247,37 @@ Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'admin.only'])
         Route::post('/burung', [KandangController::class, 'storeBurung'])->name('admin.burung.store');
         Route::post('/burung/{burung}/letakkan', [KandangController::class, 'letakkan'])->name('admin.burung.letakkan');
         Route::post('/burung/{burung}/kosongkan', [KandangController::class, 'kosongkan'])->name('admin.burung.kosongkan');
+        Route::put('/burung/{burung}', [KandangController::class, 'updateBurung'])->name('admin.burung.update');
         Route::delete('/burung/{burung}', [KandangController::class, 'destroyBurung'])->name('admin.burung.destroy');
+    });
+
+    // Vaksinasi burung + deteksi booster bulanan (hanya admin)
+    Route::middleware('admin.only')->group(function () {
+        Route::get('/vaksinasi', [VaksinasiController::class, 'index'])->name('admin.vaksinasi.index');
+        Route::post('/vaksinasi', [VaksinasiController::class, 'store'])->name('admin.vaksinasi.store');
+        Route::delete('/vaksinasi/{vaksinasi}', [VaksinasiController::class, 'destroy'])->name('admin.vaksinasi.destroy');
+    });
+
+    // Telur & incubator (hanya admin)
+    Route::middleware('admin.only')->group(function () {
+        Route::get('/telur', [TelurController::class, 'index'])->name('admin.telur.index');
+        Route::post('/telur', [TelurController::class, 'store'])->name('admin.telur.store');
+        Route::put('/telur/{telur}', [TelurController::class, 'update'])->name('admin.telur.update');
+        Route::delete('/telur/{telur}', [TelurController::class, 'destroy'])->name('admin.telur.destroy');
+    });
+
+    // Keuangan farm (hanya admin)
+    Route::middleware('admin.only')->group(function () {
+        Route::get('/keuangan', [KeuanganController::class, 'index'])->name('admin.keuangan.index');
+        Route::post('/keuangan', [KeuanganController::class, 'store'])->name('admin.keuangan.store');
+        Route::delete('/keuangan/{keuangan}', [KeuanganController::class, 'destroy'])->name('admin.keuangan.destroy');
+    });
+
+    // Stok makanan burung (hanya admin)
+    Route::middleware('admin.only')->group(function () {
+        Route::get('/stok-makanan', [StokMakananController::class, 'index'])->name('admin.stok.index');
+        Route::post('/stok-makanan', [StokMakananController::class, 'store'])->name('admin.stok.store');
+        Route::put('/stok-makanan/{stokMakanan}', [StokMakananController::class, 'update'])->name('admin.stok.update');
+        Route::delete('/stok-makanan/{stokMakanan}', [StokMakananController::class, 'destroy'])->name('admin.stok.destroy');
     });
 });

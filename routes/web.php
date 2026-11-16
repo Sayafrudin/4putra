@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\ChatbotController;
 use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\KandangController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\LoginController;
@@ -234,5 +235,14 @@ Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'admin.only'])
         Route::post('/chat/toggle', [ChatbotController::class, 'chatToggle'])->name('admin.chatbot.chat.toggle');
         Route::delete('/chat/{pelanggan}/clear', [ChatbotController::class, 'chatClear'])->name('admin.chatbot.chat.clear');
         Route::post('/chat/{pelanggan}/delete', [ChatbotController::class, 'chatDelete'])->name('admin.chatbot.chat.delete');
+    });
+
+    // Kandang & penempatan burung individu (hanya admin)
+    Route::middleware('admin.only')->group(function () {
+        Route::get('/kandang', [KandangController::class, 'index'])->name('admin.kandang.index');
+        Route::post('/burung', [KandangController::class, 'storeBurung'])->name('admin.burung.store');
+        Route::post('/burung/{burung}/letakkan', [KandangController::class, 'letakkan'])->name('admin.burung.letakkan');
+        Route::post('/burung/{burung}/kosongkan', [KandangController::class, 'kosongkan'])->name('admin.burung.kosongkan');
+        Route::delete('/burung/{burung}', [KandangController::class, 'destroyBurung'])->name('admin.burung.destroy');
     });
 });

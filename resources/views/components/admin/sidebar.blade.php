@@ -107,13 +107,13 @@
 
                 {{-- Menu Manajemen Farm (data burung, bukan urusan chatbot) --}}
                 <li class="relative px-6 py-3"
-                    x-data="{ openFarm: {{ request()->routeIs('admin.chatbot.inventaris*') ? 'true' : 'false' }} }">
-                    @if (request()->routeIs('admin.chatbot.inventaris*'))
+                    x-data="{ openFarm: {{ request()->routeIs('admin.chatbot.inventaris*') || request()->routeIs('admin.kandang*') ? 'true' : 'false' }} }">
+                    @if (request()->routeIs('admin.chatbot.inventaris*') || request()->routeIs('admin.kandang*'))
                         <span class="absolute inset-y-0 left-0 w-1 bg-[#E62C37] rounded-tr-lg rounded-br-lg"
                             aria-hidden="true"></span>
                     @endif
                     <button @click="openFarm = !openFarm"
-                        class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.chatbot.inventaris*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
+                        class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.chatbot.inventaris*') || request()->routeIs('admin.kandang*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
                         <span class="inline-flex items-center">
                             <svg class="w-5 h-5" fill="none" stroke-linecap="round" stroke-linejoin="round"
                                 stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -143,6 +143,15 @@
                                     d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
                             </svg>
                             Inventaris Burung
+                        </a>
+                        <a href="{{ route('admin.kandang.index') }}" @click="sidebarOpen = false"
+                            class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.kandang*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M13.5 21v-7.785a.75.75 0 00-.263-.57l-4.5-3.998a.75.75 0 00-1.036.06L4.202 12.28a.75.75 0 00.055 1.03L9 17.5V21m4.5-11.34V5.25a1.5 1.5 0 011.5-1.5h2.25a1.5 1.5 0 011.5 1.5v8.01M21 21H3m0-9l9-7.5L21 12" />
+                            </svg>
+                            Kandang
                         </a>
                     </div>
                 </li>

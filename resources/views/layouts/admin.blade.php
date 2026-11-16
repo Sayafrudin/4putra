@@ -17,6 +17,16 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    {{-- Layout admin tidak pernah scroll di level body (scroll terjadi di dalam <main>).
+         Inline agar berlaku SEBELUM CSS Vite selesai dimuat — mencegah scrollbar sekilas
+         saat pindah halaman. --}}
+    <style>
+        html,
+        body {
+            overflow: hidden;
+        }
+    </style>
+
     {{-- FOUC prevention: cek localStorage sebelum render --}}
     <script>
         (function() {
@@ -43,7 +53,7 @@
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
     <div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: false }">
         {{-- Overlay mobile --}}
-        <div x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300"
+        <div x-cloak x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300"
             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
             x-transition:leave="transition-opacity ease-linear duration-300"
             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"

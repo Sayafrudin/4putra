@@ -9,6 +9,26 @@
     display: none !important;
 }
 
+/* Sidebar admin mobile: tersembunyi sampai Alpine menandai .sidebar-open (!important agar
+   tidak bergantung urutan util Tailwind). Hanya berlaku di bawah lg — desktop tidak
+   punya aturan apa pun sehingga sidebar selalu tampil tanpa perebutan specificity. */
+@media (max-width: 63.99rem) {
+    aside[data-admin-sidebar]:not(.sidebar-open) {
+        translate: -100% 0 !important;
+    }
+}
+
+/* Dark mode: control native browser (popup <select>, date picker, spinner angka,
+   scrollbar) ikut tema gelap — memperbaiki icon kalender hitam di input tanggal */
+.dark {
+    color-scheme: dark;
+}
+
+/* Icon kalender bawaan tidak mewarisi warna teks; invert agar terlihat di dark mode */
+.dark input[type='date']::-webkit-calendar-picker-indicator {
+    filter: invert(1) opacity(0.9);
+}
+
 html {
     font-family: 'Inter', sans-serif;
     scroll-behavior: smooth;

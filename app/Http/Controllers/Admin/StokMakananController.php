@@ -28,7 +28,7 @@ class StokMakananController extends Controller
         $data = $request->validate([
             'nama' => ['required', 'string', 'max:100'],
             'jumlah_stok' => ['required', 'numeric', 'min:0', 'max:999999.99'],
-            'satuan' => ['required', 'string', 'max:20'],
+            'satuan' => ['required', 'in:kg,gr,ons,sak'],
             'konsumsi_per_hari' => ['required', 'numeric', 'min:0.01', 'max:99999.99'],
             'catatan' => ['nullable', 'string', 'max:500'],
         ]);
@@ -50,7 +50,7 @@ class StokMakananController extends Controller
         $data = $request->validate([
             'jumlah_stok' => ['required', 'numeric', 'min:0', 'max:999999.99'],
             'konsumsi_per_hari' => ['required', 'numeric', 'min:0.01', 'max:99999.99'],
-            'satuan' => ['required', 'string', 'max:20'],
+            'satuan' => ['required', 'in:kg,gr,ons,sak'],
             'catatan' => ['nullable', 'string', 'max:500'],
         ]);
 

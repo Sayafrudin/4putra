@@ -23,7 +23,7 @@ class VaksinasiController extends Controller
         $terakhir = Vaksinasi::vaksinTerakhirPerBurung();
         $jatuhTempo = $terakhir->filter(fn ($v) => $v->sudah_jatuh_tempo)->sortBy('tanggal_vaksin');
         $riwayat = Vaksinasi::with('burung')->orderByDesc('tanggal_vaksin')->orderByDesc('id')->get();
-        $burungList = Burung::orderBy('nama')->get(['id', 'nama', 'spesies', 'fase']);
+        $burungList = Burung::with('kandang:id,blok,nomor')->orderBy('nama')->get(['id', 'nama', 'spesies', 'fase', 'kandang_id']);
 
         return view('admin.vaksinasi.index', compact('terakhir', 'jatuhTempo', 'riwayat', 'burungList'));
     }

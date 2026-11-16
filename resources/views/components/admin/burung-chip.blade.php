@@ -4,6 +4,7 @@
 <div class="burung-chip group relative flex items-center gap-2 bg-gray-50 dark:bg-[#1e2530] border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-2 cursor-grab active:cursor-grabbing select-none w-full sm:w-auto"
     draggable="true"
     data-burung-id="{{ $burung->id }}"
+    data-nama="{{ $burung->nama }}"
     data-kandang-id="{{ $burung->kandang_id }}"
     title="{{ $burung->nama }} — {{ $burung->spesies }} ({{ $burung->fase_label }}){{ $burung->gender_label ? ' · '.$burung->gender_label : '' }}">
     <span class="w-2 h-2 rounded-full bg-[#E62C37] shrink-0"></span>

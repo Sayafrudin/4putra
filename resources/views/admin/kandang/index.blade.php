@@ -4,7 +4,7 @@
     <div class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-5">
         <div>
             <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">Kandang & Penempatan Burung</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Geser kartu burung ke kandang kosong ({{ $terpasang }}/{{ $total }} burung terpasang)</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Geser atau klik kartu burung untuk menempatkannya ({{ $terpasang }}/{{ $total }} burung terpasang)</p>
         </div>
         <div class="flex gap-3">
             <button onclick="bukaModalTambah()"
@@ -56,7 +56,7 @@
                                 @endforeach
                             </div>
                             @if ($k->burungs->isEmpty())
-                                <span class="kosong-hint text-[10px] text-gray-300 dark:text-gray-600 text-center py-1.5 border border-dashed border-gray-200 dark:border-gray-700 rounded-lg">Kosong — tarik burung ke sini</span>
+                                <span class="kosong-hint text-[10px] text-gray-300 dark:text-gray-600 text-center py-1.5 border border-dashed border-gray-200 dark:border-gray-700 rounded-lg">Kosong — geser/tap burung lalu pilih kandang</span>
                             @endif
                         </div>
                     @empty
@@ -65,6 +65,44 @@
                 </div>
             </section>
         @endforeach
+    </div>
+
+    {{-- ==================== MODAL PINDAH KANDANG (tap/klik chip, alternatif drag di HP) ==================== --}}
+    <div id="modalPindah" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Pindahkan <span id="pindah_nama" class="text-[#E62C37]"></span></h3>
+                <button onclick="tutupModal('modalPindah')" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Pilih kandang tujuan (maksimal 2 burung per kandang).</p>
+            <div id="pindahCageList" class="grid grid-cols-2 gap-2 max-h-72 overflow-y-auto">
+                @foreach ($kandangs as $kandangBlok)
+                    @foreach ($kandangBlok as $k)
+                        @php($isiKandang = $k->burungs->count())
+                        <button type="button" class="pindah-ke flex items-center justify-between gap-2 px-3 py-2.5 text-sm font-semibold rounded-xl border transition-colors {{ $isiKandang >= 2 ? 'border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:border-[#E62C37] hover:bg-[#E62C37]/10' }}"
+                            data-id="{{ $k->id }}" data-label="{{ $k->label }}" @if ($isiKandang >= 2) disabled @endif>
+                            <span>{{ $k->label }}</span>
+                            <span class="text-[10px] font-bold uppercase {{ $isiKandang === 0 ? 'text-gray-400 dark:text-gray-500' : ($isiKandang >= 2 ? 'text-[#E62C37]' : 'text-green-600') }}">
+                                {{ $isiKandang === 0 ? 'Kosong' : $isiKandang.'/2'.($isiKandang >= 2 ? ' Penuh' : '') }}
+                            </span>
+                        </button>
+                    @endforeach
+                @endforeach
+            </div>
+            <button type="button" id="btnKeluarkan" class="hidden w-full mt-4 px-4 py-2.5 text-sm font-semibold text-[#E62C37] border border-[#E62C37]/40 bg-[#E62C37]/10 rounded-xl hover:bg-[#E62C37]/20 transition-colors">
+                Keluarkan dari kandang
+            </button>
+            <div class="flex justify-end pt-4">
+                <button type="button" onclick="tutupModal('modalPindah')"
+                    class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                    Batal
+                </button>
+            </div>
+        </div>
     </div>
 
     {{-- ==================== MODAL TAMBAH BURUNG ==================== --}}
@@ -407,7 +445,7 @@
                 if (!hint) {
                     const span = document.createElement('span');
                     span.className = 'kosong-hint text-[10px] text-gray-300 dark:text-gray-600 text-center py-1.5 border border-dashed border-gray-200 dark:border-gray-700 rounded-lg';
-                    span.textContent = 'Kosong — tarik burung ke sini';
+                    span.textContent = 'Kosong — geser/tap burung lalu pilih kandang';
                     zona.querySelector('.kandang-isi').after(span);
                 } else {
                     hint.classList.remove('hidden');
@@ -431,6 +469,74 @@
                 }
             }
         }
+
+        // ---- Tap/klik chip: pindah via modal (HTML5 DnD tidak jalan di layar sentuh) ----
+        let pindahTarget = null; // { id, diKandang: bool }
+
+        document.addEventListener('click', function (e) {
+            const chip = e.target.closest('.burung-chip');
+            if (!chip || sedangBusy) return;
+            if (e.target.closest('button')) return; // tombol edit/hapus di dalam chip tetap prioritas
+
+            pindahTarget = { id: chip.dataset.burungId, diKandang: !!chip.closest('.kandang-drop') };
+            document.getElementById('pindah_nama').textContent = chip.dataset.nama;
+            const btnKeluarkan = document.getElementById('btnKeluarkan');
+            btnKeluarkan.classList.toggle('hidden', !pindahTarget.diKandang);
+            bukaModal('modalPindah');
+        });
+
+        document.getElementById('pindahCageList').addEventListener('click', async function (e) {
+            const btn = e.target.closest('.pindah-ke');
+            if (!btn || btn.disabled || !pindahTarget || sedangBusy) return;
+
+            setBusy(true);
+            try {
+                const url = '{{ route('admin.burung.letakkan', ':id') }}'.replace(':id', pindahTarget.id);
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                    body: JSON.stringify({ kandang_id: Number(btn.dataset.id) })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    showToast('error', 'Gagal', data.message || 'Gagal memindahkan burung.');
+                    return;
+                }
+                showToast('success', 'Berhasil', data.message);
+                tutupModal('modalPindah');
+                window.location.reload(); // status kandang dirender server-side
+            } catch (err) {
+                showToast('error', 'Gagal', 'Tidak dapat terhubung ke server.');
+            } finally {
+                setBusy(false);
+            }
+        });
+
+        document.getElementById('btnKeluarkan').addEventListener('click', async function () {
+            if (!pindahTarget || !pindahTarget.diKandang || sedangBusy) return;
+
+            setBusy(true);
+            try {
+                const url = '{{ route('admin.burung.kosongkan', ':id') }}'.replace(':id', pindahTarget.id);
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                    body: JSON.stringify({})
+                });
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    showToast('error', 'Gagal', data.message || 'Gagal mengeluarkan burung.');
+                    return;
+                }
+                showToast('success', 'Berhasil', data.message);
+                tutupModal('modalPindah');
+                window.location.reload();
+            } catch (err) {
+                showToast('error', 'Gagal', 'Tidak dapat terhubung ke server.');
+            } finally {
+                setBusy(false);
+            }
+        });
 
         // ---- Edit burung (nama, spesies, fase, gender DNA, catatan) ----
         document.addEventListener('click', function (e) {

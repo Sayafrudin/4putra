@@ -1,7 +1,9 @@
 @props(['activeRoute' => ''])
 
-<aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-    class="z-40 fixed inset-y-0 left-0 w-64 overflow-y-auto bg-white dark:bg-gray-800 border-r border-gray-100 dark:border-gray-700 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-20 flex-shrink-0">
+{{-- data-admin-sidebar + app.css: sidebar mobile tersembunyi SEBELUM Alpine siap
+    (mencegah kilatan sidebar di setiap full page load); Alpine cukup toggle class --}}
+<aside data-admin-sidebar :class="sidebarOpen ? 'sidebar-open' : ''"
+    class="z-40 fixed inset-y-0 left-0 w-64 overflow-y-auto bg-white dark:bg-gray-800 border-r border-gray-100 dark:border-gray-700 transition-transform duration-300 ease-in-out lg:static lg:z-20 flex-shrink-0">
     <div class="flex flex-col h-full py-4 text-gray-500 dark:text-gray-400">
         <div>
             {{-- Close button mobile --}}

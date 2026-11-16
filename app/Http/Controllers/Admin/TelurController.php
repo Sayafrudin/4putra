@@ -19,7 +19,7 @@ class TelurController extends Controller
     public function index()
     {
         $telurs = Telur::with('burung')->orderByDesc('tanggal_diambil')->orderByDesc('id')->get();
-        $burungList = Burung::where('fase', 'dewasa')->orderBy('nama')->get(['id', 'nama', 'spesies']);
+        $burungList = Burung::with('kandang:id,blok,nomor')->where('fase', 'dewasa')->orderBy('nama')->get(['id', 'nama', 'spesies', 'kandang_id']);
 
         return view('admin.telur.index', compact('telurs', 'burungList'));
     }

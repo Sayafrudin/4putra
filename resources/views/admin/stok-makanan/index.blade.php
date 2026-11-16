@@ -115,19 +115,30 @@
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Jumlah Stok</label>
-                        <input type="number" name="jumlah_stok" id="tambah_stok" min="0" step="0.01" placeholder="0"
-                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm tabular-nums text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                        <div class="relative">
+                            <input type="number" name="jumlah_stok" id="tambah_stok" min="0" step="0.01" placeholder="0"
+                                class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 pr-14 text-sm tabular-nums text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                            <span class="satuan-badge-tambah pointer-events-none absolute inset-y-0 right-4 flex items-center text-xs font-bold text-gray-500 dark:text-gray-400">kg</span>
+                        </div>
                         <p class="text-xs text-red-400 mt-1 hidden" id="err_tambah_stok"></p>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Satuan</label>
-                        <input type="text" name="satuan" id="tambah_satuan" value="kg"
+                        <select name="satuan" id="tambah_satuan" onchange="sinkronSatuan('tambah')"
                             class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                            <option value="kg">kg</option>
+                            <option value="gr">gr</option>
+                            <option value="ons">ons</option>
+                            <option value="sak">sak</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Konsumsi / Hari</label>
-                        <input type="number" name="konsumsi_per_hari" id="tambah_konsumsi" min="0.01" step="0.01" placeholder="0.5"
-                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm tabular-nums text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                        <div class="relative">
+                            <input type="number" name="konsumsi_per_hari" id="tambah_konsumsi" min="0.01" step="0.01" placeholder="0.5"
+                                class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 pr-14 text-sm tabular-nums text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                            <span class="satuan-badge-tambah pointer-events-none absolute inset-y-0 right-4 flex items-center text-xs font-bold text-gray-500 dark:text-gray-400">kg</span>
+                        </div>
                         <p class="text-xs text-red-400 mt-1 hidden" id="err_tambah_konsumsi"></p>
                     </div>
                 </div>
@@ -162,19 +173,30 @@
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Stok Sekarang</label>
-                        <input type="number" name="jumlah_stok" id="update_stok" min="0" step="0.01"
-                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm tabular-nums text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                        <div class="relative">
+                            <input type="number" name="jumlah_stok" id="update_stok" min="0" step="0.01"
+                                class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 pr-14 text-sm tabular-nums text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                            <span class="satuan-badge-update pointer-events-none absolute inset-y-0 right-4 flex items-center text-xs font-bold text-gray-500 dark:text-gray-400">kg</span>
+                        </div>
                         <p class="text-xs text-red-400 mt-1 hidden" id="err_update_stok"></p>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Satuan</label>
-                        <input type="text" name="satuan" id="update_satuan"
+                        <select name="satuan" id="update_satuan" onchange="sinkronSatuan('update')"
                             class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                            <option value="kg">kg</option>
+                            <option value="gr">gr</option>
+                            <option value="ons">ons</option>
+                            <option value="sak">sak</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Konsumsi / Hari</label>
-                        <input type="number" name="konsumsi_per_hari" id="update_konsumsi" min="0.01" step="0.01"
-                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm tabular-nums text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                        <div class="relative">
+                            <input type="number" name="konsumsi_per_hari" id="update_konsumsi" min="0.01" step="0.01"
+                                class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 pr-14 text-sm tabular-nums text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                            <span class="satuan-badge-update pointer-events-none absolute inset-y-0 right-4 flex items-center text-xs font-bold text-gray-500 dark:text-gray-400">kg</span>
+                        </div>
                         <p class="text-xs text-red-400 mt-1 hidden" id="err_update_konsumsi"></p>
                     </div>
                 </div>
@@ -262,7 +284,14 @@
 
         function bukaModalTambah() {
             bersihkanError(document.getElementById('formTambah'));
+            sinkronSatuan('tambah');
             bukaModal('modalTambah');
+        }
+
+        // Badge satuan di input stok & konsumsi ikut nilai dropdown
+        function sinkronSatuan(scope) {
+            const val = document.getElementById(scope + '_satuan').value;
+            document.querySelectorAll('.satuan-badge-' + scope).forEach(el => el.textContent = val);
         }
 
         function bukaModalUpdate(data) {
@@ -270,8 +299,12 @@
             formActionUpdate = '{{ route('admin.stok.update', ':id') }}'.replace(':id', data.id);
             document.getElementById('update_nama_label').textContent = data.nama;
             document.getElementById('update_stok').value = data.jumlah_stok;
-            document.getElementById('update_satuan').value = data.satuan;
+            const sel = document.getElementById('update_satuan');
+            // Satuan lama di luar daftar (data sebelum ada dropdown) tetap bisa tampil & tersimpan
+            if (![...sel.options].some(o => o.value === data.satuan)) sel.add(new Option(data.satuan, data.satuan));
+            sel.value = data.satuan;
             document.getElementById('update_konsumsi').value = data.konsumsi_per_hari;
+            sinkronSatuan('update');
             bersihkanError(document.getElementById('formUpdate'));
             bukaModal('modalUpdate');
         }

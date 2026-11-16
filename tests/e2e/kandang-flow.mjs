@@ -6,6 +6,8 @@
  *      menunjukkan burung benar-benar di A-1 (bukan gimmick DOM saja)
  *  K4  Drag kandang → pool → server mengosongkan kandang
  *  K5  Hapus burung via modal konfirmasi → server kehilangan baris
+ *  K9  Tap/klik chip (touch asli) → modal pindah kandang → server memindahkan
+ *  K10 Tanpa JS (Alpine diblokir): sidebar mobile tetap tersembunyi, body tanpa scrollbar
  *
  * Jalankan: node tests/e2e/kandang-flow.mjs
  */
@@ -111,7 +113,7 @@ try {
     await chip.waitFor({ state: 'visible', timeout: 15000 });
     assert((await chip.count()) === 1, 'K2 burung baru muncul di pool (server-reload)');
 
-    // ---------- K3: drag pool → kandang A-1 ----------
+    // ---------- K3: drag pool → kandang kosong pertama (A-1 bisa saja penuh data asli) ----------
     async function dragDenganRespons(chipText, targetSel, urlPart, payload) {
         const respPromise = page
             .waitForResponse((r) => r.url().includes(urlPart) && r.request().method() === 'POST', { timeout: 30000 })
@@ -130,15 +132,27 @@ try {
         return resp;
     }
 
-    const respK3 = await dragDenganRespons(BURUNG, '[data-kandang-label="A-1"]', '/letakkan');
+    // Kandang kosong dicari dinamis — DB pengembangan bisa punya burung asli di kandang mana pun
+    async function kandangKosongLabel() {
+        return await page.evaluate(() => {
+            const zona = [...document.querySelectorAll('.kandang-drop')].find(
+                (z) => z.querySelector('.kandang-status')?.textContent.trim() === 'Kosong',
+            );
+            return zona ? zona.dataset.kandangLabel : null;
+        });
+    }
+
+    const labelK3 = await kandangKosongLabel();
+    assert(!!labelK3, `K3-pre ada kandang kosong [aktual: ${labelK3 ?? 'tidak ada'}]`);
+    const respK3 = await dragDenganRespons(BURUNG, `[data-kandang-label="${labelK3}"]`, '/letakkan');
     assert(!!respK3 && respK3.ok(), `K3a fetch letakkan merespons ${respK3 ? respK3.status() : 'null (guard client)'}`);
 
-    // BUKTI SERVER: reload → burung benar di A-1, pool berkurang
+    // BUKTI SERVER: reload → burung benar di kandang tujuan, pool berkurang
     await page.goto(`${BASE}/admin/kandang`, { waitUntil: 'load' });
-    assert((await page.locator('[data-kandang-label="A-1"] .burung-chip:has-text("E2E Kandang")').count()) === 1,
-        'K3b setelah reload, burung ada di A-1 (state server)');
-    assert((await page.locator('[data-kandang-label="A-1"] .kandang-status:has-text("1/2")').count()) === 1,
-        `K3c status kandang A-1 = 1/2 [aktual: ${await page.locator('[data-kandang-label="A-1"] .kandang-status').first().textContent().catch(() => 'n/a')}]`);
+    assert((await page.locator(`[data-kandang-label="${labelK3}"] .burung-chip:has-text("E2E Kandang")`).count()) === 1,
+        `K3b setelah reload, burung ada di ${labelK3} (state server)`);
+    assert((await page.locator(`[data-kandang-label="${labelK3}"] .kandang-status:has-text("1/2")`).count()) === 1,
+        `K3c status kandang ${labelK3} = 1/2 [aktual: ${await page.locator(`[data-kandang-label="${labelK3}"] .kandang-status`).first().textContent().catch(() => 'n/a')}]`);
 
     // ---------- K4: drag kandang → pool ----------
     const respK4 = await dragDenganRespons(BURUNG, '[data-drop-pool]', '/kosongkan');
@@ -203,19 +217,21 @@ try {
     await buatBurung('E2E Kandang Tiga', null);
     await buatBurung('E2E Kandang Empat', null);
 
-    const respDua = await drag('E2E Kandang Dua', '[data-kandang-label="A-1"]');
+    const labelK7 = await kandangKosongLabel();
+    assert(!!labelK7, `K7-pre ada kandang kosong untuk uji kapasitas [aktual: ${labelK7 ?? 'tidak ada'}]`);
+    const respDua = await drag('E2E Kandang Dua', `[data-kandang-label="${labelK7}"]`);
     assert(!!respDua && respDua.ok(), `K7a fetch letakkan Dua merespons ${respDua ? respDua.status() : 'null'}`);
     await page.goto(`${BASE}/admin/kandang`, { waitUntil: 'load' });
-    assert((await page.locator('[data-kandang-label="A-1"] .kandang-status:has-text("1/2")').count()) === 1,
-        'K7b status A-1 = 1/2 setelah burung pertama (server)');
+    assert((await page.locator(`[data-kandang-label="${labelK7}"] .kandang-status:has-text("1/2")`).count()) === 1,
+        `K7b status ${labelK7} = 1/2 setelah burung pertama (server)`);
 
-    const respTiga = await drag('E2E Kandang Tiga', '[data-kandang-label="A-1"]');
+    const respTiga = await drag('E2E Kandang Tiga', `[data-kandang-label="${labelK7}"]`);
     assert(!!respTiga && respTiga.ok(), `K7c fetch letakkan Tiga merespons ${respTiga ? respTiga.status() : 'null'}`);
     await page.goto(`${BASE}/admin/kandang`, { waitUntil: 'load' });
-    assert((await page.locator('[data-kandang-label="A-1"] .kandang-status:has-text("2/2 Penuh")').count()) === 1,
-        'K7d status A-1 = 2/2 Penuh setelah burung kedua (server)');
+    assert((await page.locator(`[data-kandang-label="${labelK7}"] .kandang-status:has-text("2/2 Penuh")`).count()) === 1,
+        `K7d status ${labelK7} = 2/2 Penuh setelah burung kedua (server)`);
 
-    await drag('E2E Kandang Empat', '[data-kandang-label="A-1"]', false);
+    await drag('E2E Kandang Empat', `[data-kandang-label="${labelK7}"]`, false);
     assert((await page.getByText(/maksimal/).count()) > 0,
         'K7e burung ketiga DITOLAK dengan toast penuh (guard client)');
 
@@ -252,6 +268,88 @@ try {
     assert(!!chipInfo && chipInfo.genderTerlihat, 'K8b gender (Jantan) terlihat di chip mobile');
     assert(!!chipInfo && chipInfo.lebar >= 280, `K8c chip lebar besar di HP (lebar: ${chipInfo ? chipInfo.lebar : 0}px)`);
     await mobCtx.close();
+
+    // ---------- K9: tap/klik chip → modal pindah kandang (alternatif DnD di HP) ----------
+    await buatBurung('E2E Kandang Lima', null);
+
+    const touchCtx = await browser.newContext({ viewport: { width: 375, height: 812 }, hasTouch: true });
+    const touch = await touchCtx.newPage();
+    await touch.goto(`${BASE}/login`, { waitUntil: 'load' });
+    await touch.click('#email');
+    await touch.fill('#email', ADMIN.email);
+    await touch.click('#password');
+    await touch.fill('#password', ADMIN.password);
+    await touch.click('button[type=submit]');
+    await touch.waitForURL(`${BASE}/admin`, { timeout: 15000 });
+    await touch.goto(`${BASE}/admin/kandang`, { waitUntil: 'load' });
+
+    // K9a tap chip di pool → modal pindah terbuka (sentuhan asli, bukan klik mouse)
+    await touch.tap(`#poolList .burung-chip:has-text("E2E Kandang Lima")`);
+    await touch.locator('#modalPindah').waitFor({ state: 'visible', timeout: 5000 });
+    assert((await touch.locator('#pindah_nama').textContent()) === 'E2E Kandang Lima',
+        'K9a tap chip (touch) membuka modal pindah dengan nama burung');
+    assert((await touch.locator('#btnKeluarkan').isVisible()) === false,
+        'K9a2 tombol keluarkan disembunyikan untuk burung di pool');
+
+    // K9b kandang penuh (hasil K7 = 2/2) disabled di daftar
+    const labelPenuh = await touch.evaluate(() => document.querySelector('.kandang-drop[data-penuh]')?.dataset.kandangLabel ?? null);
+    assert(!!labelPenuh && (await touch.locator(`#pindahCageList .pindah-ke[data-label="${labelPenuh}"]`).isDisabled()),
+        `K9b kandang penuh (${labelPenuh ?? 'tidak ada'}) disabled di daftar pilihan`);
+
+    // K9c pilih kandang kosong pertama → fetch letakkan → server memindahkan
+    const tujuan = await touch.evaluate(() => {
+        const btn = [...document.querySelectorAll('#pindahCageList .pindah-ke')].find((b) => !b.disabled);
+        return btn ? { label: btn.dataset.label } : null;
+    });
+    assert(!!tujuan, `K9c ada kandang kosong tersedia [aktual: ${tujuan ? tujuan.label : 'tidak ada'}]`);
+    const respK9 = touch.waitForResponse((r) => r.url().includes('/letakkan') && r.request().method() === 'POST', { timeout: 30000 }).catch(() => null);
+    await touch.tap('#pindahCageList .pindah-ke:not([disabled])');
+    const r9 = await respK9;
+    assert(!!r9 && r9.ok(), `K9c2 fetch letakkan merespons ${r9 ? r9.status() : 'null'}`);
+    await touch.waitForNavigation({ waitUntil: 'load' }).catch(() => {});
+    if (tujuan) {
+        assert((await touch.locator(`[data-kandang-label="${tujuan.label}"] .burung-chip:has-text("E2E Kandang Lima")`).count()) === 1,
+            `K9c3 setelah reload, burung ada di kandang ${tujuan.label} (state server)`);
+    }
+
+    // K9d tap chip yang sudah di kandang → keluarkan → kembali ke pool (server)
+    if (tujuan) {
+        await touch.tap(`[data-kandang-label="${tujuan.label}"] .burung-chip:has-text("E2E Kandang Lima")`);
+        await touch.locator('#btnKeluarkan').waitFor({ state: 'visible', timeout: 5000 });
+        const respK9d = touch.waitForResponse((r) => r.url().includes('/kosongkan') && r.request().method() === 'POST', { timeout: 30000 }).catch(() => null);
+        await touch.tap('#btnKeluarkan');
+        const r9d = await respK9d;
+        assert(!!r9d && r9d.ok(), `K9d fetch kosongkan merespons ${r9d ? r9d.status() : 'null'}`);
+        await touch.waitForNavigation({ waitUntil: 'load' }).catch(() => {});
+        assert((await touch.locator(`#poolList .burung-chip:has-text("E2E Kandang Lima")`).count()) === 1,
+            'K9d2 setelah reload, burung kembali di pool (server)');
+    }
+    await touchCtx.close();
+
+    // ---------- K10: tanpa JS (Alpine diblokir) sidebar mobile tetap tersembunyi ----------
+    const noJsCtx = await browser.newContext({ viewport: { width: 375, height: 812 } });
+    await noJsCtx.addCookies(await context.cookies());
+    await noJsCtx.route(/\/build\/assets\/.+\.js/, (route) => route.abort());
+    const noJs = await noJsCtx.newPage();
+    await noJs.goto(`${BASE}/admin/kandang`, { waitUntil: 'load' });
+    const posisiMobile = await noJs.evaluate(() => document.querySelector('aside').getBoundingClientRect());
+    assert(posisiMobile.right <= 0,
+        `K10a sidebar mobile tersembunyi sebelum Alpine siap (right: ${Math.round(posisiMobile.right)}px)`);
+    const overflowBody = await noJs.evaluate(() => getComputedStyle(document.body).overflow);
+    assert(overflowBody === 'hidden',
+        `K10c body tanpa scrollbar (overflow: ${overflowBody}) — kilatan scrollbar di desktop hilang`);
+    await noJsCtx.close();
+
+    // Desktop (1280px): tanpa aturan sembunyi apa pun, sidebar harus tampil
+    const noJsDeskCtx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    await noJsDeskCtx.addCookies(await context.cookies());
+    await noJsDeskCtx.route(/\/build\/assets\/.+\.js/, (route) => route.abort());
+    const noJsDesk = await noJsDeskCtx.newPage();
+    await noJsDesk.goto(`${BASE}/admin/kandang`, { waitUntil: 'load' });
+    const posisiDesktop = await noJsDesk.evaluate(() => document.querySelector('aside').getBoundingClientRect());
+    assert(posisiDesktop.left === 0,
+        `K10b sidebar desktop tetap tampil (left: ${Math.round(posisiDesktop.left)}px)`);
+    await noJsDeskCtx.close();
 
     console.log('==================================================');
     if (failures > 0) { console.log(`GAGAL: ${failures} pemeriksaan`); process.exitCode = 1; }

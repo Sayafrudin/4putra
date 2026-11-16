@@ -80,7 +80,10 @@
     }
 
     function createModal() {
-        if (modalEl) return modalEl;
+        // Turbo menukar body saat navigasi sidebar: modal yang menempel di body lama
+        // lepas dari DOM — bangun ulang, jangan pakai referensi basi (popup tak terlihat)
+        if (modalEl && modalEl.isConnected) return modalEl;
+        modalEl = null;
 
         modalEl = document.createElement('div');
         modalEl.id = 'session-timeout-modal';
@@ -369,6 +372,14 @@
         if (document.visibilityState === 'visible') {
             validateOnWake();
         }
+    });
+
+    // Popup bisa tertelan body-swap Turbo (navigasi sidebar) — tutup rapi + reset
+    // timer idle: navigasi = tindakan nyata user; popup akan muncul lagi bila idle lagi.
+    document.addEventListener('turbo:before-render', function () {
+        if (!warningShown) return;
+        hideWarning(); // hentikan countdown auto-logout tersembunyi + tutup popup (walau node lepas)
+        resetTimer();
     });
 
     // Mulai periodic ping untuk keep-alive session (setiap 10 menit)

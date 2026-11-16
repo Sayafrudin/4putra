@@ -105,6 +105,48 @@
                     </div>
                 </li>
 
+                {{-- Menu Manajemen Farm (data burung, bukan urusan chatbot) --}}
+                <li class="relative px-6 py-3"
+                    x-data="{ openFarm: {{ request()->routeIs('admin.chatbot.inventaris*') ? 'true' : 'false' }} }">
+                    @if (request()->routeIs('admin.chatbot.inventaris*'))
+                        <span class="absolute inset-y-0 left-0 w-1 bg-[#E62C37] rounded-tr-lg rounded-br-lg"
+                            aria-hidden="true"></span>
+                    @endif
+                    <button @click="openFarm = !openFarm"
+                        class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.chatbot.inventaris*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
+                        <span class="inline-flex items-center">
+                            <svg class="w-5 h-5" fill="none" stroke-linecap="round" stroke-linejoin="round"
+                                stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h7.5c.621 0 1.125-.504 1.125-1.125a1.125 1.125 0 011.125 1.125c0 .621.504 1.125 1.125 1.125m5.25-3.75h7.5c.621 0 1.125-.504 1.125-1.125m-17.25 0a1.125 1.125 0 011.125 1.125M3.375 16.875V4.125C3.375 3.504 3.879 3 4.5 3h15c.621 0 1.125.504 1.125 1.125v12.75m0 0a1.125 1.125 0 01-1.125 1.125M21 8.25h-4.5a1.125 1.125 0 00-1.125 1.125v3.75c0 .621.504 1.125 1.125 1.125H21M5.25 8.25h6.75a1.125 1.125 0 001.125-1.125v-1.5a1.125 1.125 0 00-1.125-1.125H5.25a1.125 1.125 0 00-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                            </svg>
+                            <span class="ml-4">Manajemen Farm</span>
+                        </span>
+                        <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': openFarm }"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div x-show="openFarm" x-transition:enter="transition ease-out duration-100"
+                        x-transition:enter-start="opacity-0 -translate-y-1"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-75"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 -translate-y-1" class="mt-2 ml-4 space-y-1">
+                        <a href="{{ route('admin.chatbot.inventaris') }}" @click="sidebarOpen = false"
+                            class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.chatbot.inventaris*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                            </svg>
+                            Inventaris Burung
+                        </a>
+                    </div>
+                </li>
+
                 {{-- Menu Manajemen User (hanya admin) --}}
                 @if (Auth::user()->isAdmin())
                     <li class="relative px-6 py-3">
@@ -125,13 +167,13 @@
                 @endif
 
                 {{-- Menu Chatbot WhatsApp (semua user) --}}
-                <li class="relative px-6 py-3" x-data="{ openChatbot: {{ request()->routeIs('admin.chatbot.*') ? 'true' : 'false' }} }">
-                    @if (request()->routeIs('admin.chatbot.*'))
+                <li class="relative px-6 py-3" x-data="{ openChatbot: {{ request()->routeIs('admin.chatbot.*') && !request()->routeIs('admin.chatbot.inventaris*') ? 'true' : 'false' }} }">
+                    @if (request()->routeIs('admin.chatbot.*') && !request()->routeIs('admin.chatbot.inventaris*'))
                         <span class="absolute inset-y-0 left-0 w-1 bg-[#E62C37] rounded-tr-lg rounded-br-lg"
                             aria-hidden="true"></span>
                     @endif
                     <button @click="openChatbot = !openChatbot"
-                        class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.chatbot.*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
+                        class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.chatbot.*') && !request()->routeIs('admin.chatbot.inventaris*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
                         <span class="inline-flex items-center">
                             <svg class="w-5 h-5" fill="none" stroke-linecap="round" stroke-linejoin="round"
                                 stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -160,7 +202,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
                             </svg>
-                            Dashboard
+                            Ringkasan
                         </a>
                         <a href="{{ route('admin.chatbot.chat') }}" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.chatbot.chat') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
@@ -170,15 +212,6 @@
                                     d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" />
                             </svg>
                             WhatsApp Chat
-                        </a>
-                        <a href="{{ route('admin.chatbot.inventaris') }}" @click="sidebarOpen = false"
-                            class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.chatbot.inventaris*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-                            </svg>
-                            Inventaris
                         </a>
                         <a href="{{ route('admin.chatbot.transaksi') }}" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.chatbot.transaksi*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">

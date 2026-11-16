@@ -14,9 +14,9 @@ class KandangSeeder extends Seeder
     public function run(): void
     {
         $kandang = [
-            'A' => ['jumlah' => 15, 'tipe' => 'kecil'],
-            'B' => ['jumlah' => 14, 'tipe' => 'kecil'],
-            'C' => ['jumlah' => 13, 'tipe' => 'kecil'],
+            'A' => ['jumlah' => 15, 'tipe' => 'macaw'],
+            'B' => ['jumlah' => 14, 'tipe' => 'macaw'],
+            'C' => ['jumlah' => 13, 'tipe' => 'macaw'],
             'D' => ['jumlah' => 20, 'tipe' => 'medium'],
             'E' => ['jumlah' => 20, 'tipe' => 'medium'],
         ];

@@ -112,44 +112,47 @@ try {
     assert((await chip.count()) === 1, 'K2 burung baru muncul di pool (server-reload)');
 
     // ---------- K3: drag pool → kandang A-1 ----------
-    await page.evaluate(() => {
-        const chipEl = document.querySelector('#poolList .burung-chip');
-        const cage = document.querySelector('[data-kandang-label="A-1"]');
-        const dt = new DataTransfer();
-        chipEl.dispatchEvent(new DragEvent('dragstart', { bubbles: true, cancelable: true, dataTransfer: dt }));
-        cage.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer: dt }));
-        cage.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt }));
-        chipEl.dispatchEvent(new DragEvent('dragend', { bubbles: true, dataTransfer: dt }));
-    });
-    await sleep(2500); // tunggu fetch POST selesai
-    assert((await page.getByText(/ditempatkan di kandang A-1/).count()) > 0, 'K3a toast sukses penempatan');
+    async function dragDenganRespons(chipText, targetSel, urlPart, payload) {
+        const respPromise = page
+            .waitForResponse((r) => r.url().includes(urlPart) && r.request().method() === 'POST', { timeout: 30000 })
+            .catch(() => null); // null = tanpa fetch (guard kapasitas client-side)
+        await page.evaluate(({ t, sel }) => {
+            const chipEl = [...document.querySelectorAll('.burung-chip')].find((c) => c.textContent.includes(t));
+            const zona = document.querySelector(sel);
+            const dt = new DataTransfer();
+            chipEl.dispatchEvent(new DragEvent('dragstart', { bubbles: true, cancelable: true, dataTransfer: dt }));
+            zona.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer: dt }));
+            zona.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt }));
+            chipEl.dispatchEvent(new DragEvent('dragend', { bubbles: true, dataTransfer: dt }));
+        }, { t: chipText, sel: targetSel });
+        const resp = await respPromise;
+        await sleep(300);
+        return resp;
+    }
+
+    const respK3 = await dragDenganRespons(BURUNG, '[data-kandang-label="A-1"]', '/letakkan');
+    assert(!!respK3 && respK3.ok(), `K3a fetch letakkan merespons ${respK3 ? respK3.status() : 'null (guard client)'}`);
 
     // BUKTI SERVER: reload → burung benar di A-1, pool berkurang
     await page.goto(`${BASE}/admin/kandang`, { waitUntil: 'load' });
     assert((await page.locator('[data-kandang-label="A-1"] .burung-chip:has-text("E2E Kandang")').count()) === 1,
         'K3b setelah reload, burung ada di A-1 (state server)');
-    assert((await page.locator('[data-kandang-label="A-1"] .kandang-status:has-text("1 burung")').count()) === 1,
-        'K3c status kandang A-1 = 1 burung');
+    assert((await page.locator('[data-kandang-label="A-1"] .kandang-status:has-text("1/2")').count()) === 1,
+        `K3c status kandang A-1 = 1/2 [aktual: ${await page.locator('[data-kandang-label="A-1"] .kandang-status').first().textContent().catch(() => 'n/a')}]`);
 
     // ---------- K4: drag kandang → pool ----------
-    await page.evaluate(() => {
-        const chipEl = document.querySelector('[data-kandang-label="A-1"] .burung-chip');
-        const pool = document.querySelector('#poolList');
-        const dt = new DataTransfer();
-        chipEl.dispatchEvent(new DragEvent('dragstart', { bubbles: true, cancelable: true, dataTransfer: dt }));
-        pool.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer: dt }));
-        pool.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt }));
-        chipEl.dispatchEvent(new DragEvent('dragend', { bubbles: true, dataTransfer: dt }));
-    });
-    await sleep(2500);
+    const respK4 = await dragDenganRespons(BURUNG, '[data-drop-pool]', '/kosongkan');
+    assert(!!respK4 && respK4.ok(), `K4a fetch kosongkan merespons ${respK4 ? respK4.status() : 'null'}`);
     await page.goto(`${BASE}/admin/kandang`, { waitUntil: 'load' });
     assert((await page.locator(`#poolList .burung-chip:has-text("${BURUNG}")`).count()) === 1,
-        'K4 setelah reload, burung kembali di pool (kandang dikosongkan server-side)');
+        'K4b setelah reload, burung kembali di pool (kandang dikosongkan server-side)');
 
     // ---------- K5: hapus via modal konfirmasi ----------
     await page.click(`#poolList .burung-chip:has-text("${BURUNG}") .hapus-burung`);
+    const respK5 = page.waitForResponse((r) => r.url().includes('/burung/') && r.request().method() === 'DELETE', { timeout: 30000 }).catch(() => null);
     await page.click('#btnHapus');
-    await sleep(2500);
+    await respK5;
+    await sleep(300);
     await page.goto(`${BASE}/admin/kandang`, { waitUntil: 'load' });
     assert((await page.locator(`.burung-chip:has-text("${BURUNG}")`).count()) === 0,
         'K5 burung terhapus dari server (tidak ada di papan)');
@@ -159,6 +162,96 @@ try {
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(`${BASE}/admin/kandang`, { waitUntil: 'load' });
     assert(errors.length === 0, 'K6 tanpa error konsol di papan kandang');
+
+    // ---------- K7: kapasitas maksimal 2 burung per kandang ----------
+    async function buatBurung(nama, gender) {
+        await page.click('text=+ Tambah Burung');
+        await page.fill('#tambah_nama', nama);
+        await page.fill('#tambah_spesies', 'African Grey');
+        await page.selectOption('#tambah_fase', 'anakan');
+        if (gender) await page.selectOption('#tambah_gender', gender);
+        await Promise.all([
+            page.waitForNavigation({ waitUntil: 'load' }).catch(() => {}),
+            page.click('#btnTambah'),
+        ]);
+        await page.locator(`#poolList .burung-chip:has-text("${nama}")`).waitFor({ state: 'visible', timeout: 15000 });
+    }
+
+    async function drag(chipText, targetSelector, expectFetch = true) {
+        let respPromise = null;
+        if (expectFetch) {
+            respPromise = page
+                .waitForResponse((r) => (r.url().includes('/letakkan') || r.url().includes('/kosongkan')) && r.request().method() === 'POST', { timeout: 30000 })
+                .catch(() => null);
+        }
+        await page.evaluate(({ t, sel }) => {
+            const chipEl = [...document.querySelectorAll('.burung-chip')].find((c) => c.textContent.includes(t));
+            const zona = document.querySelector(sel);
+            const dt = new DataTransfer();
+            chipEl.dispatchEvent(new DragEvent('dragstart', { bubbles: true, cancelable: true, dataTransfer: dt }));
+            zona.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer: dt }));
+            zona.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt }));
+            chipEl.dispatchEvent(new DragEvent('dragend', { bubbles: true, dataTransfer: dt }));
+        }, { t: chipText, sel: targetSelector });
+        const resp = expectFetch ? await respPromise : null;
+        if (!expectFetch) await sleep(800); // guard client menampilkan toast sinkron
+        else await sleep(300);
+        return resp;
+    }
+
+    await buatBurung('E2E Kandang Dua', 'jantan');
+    await buatBurung('E2E Kandang Tiga', null);
+    await buatBurung('E2E Kandang Empat', null);
+
+    const respDua = await drag('E2E Kandang Dua', '[data-kandang-label="A-1"]');
+    assert(!!respDua && respDua.ok(), `K7a fetch letakkan Dua merespons ${respDua ? respDua.status() : 'null'}`);
+    await page.goto(`${BASE}/admin/kandang`, { waitUntil: 'load' });
+    assert((await page.locator('[data-kandang-label="A-1"] .kandang-status:has-text("1/2")').count()) === 1,
+        'K7b status A-1 = 1/2 setelah burung pertama (server)');
+
+    const respTiga = await drag('E2E Kandang Tiga', '[data-kandang-label="A-1"]');
+    assert(!!respTiga && respTiga.ok(), `K7c fetch letakkan Tiga merespons ${respTiga ? respTiga.status() : 'null'}`);
+    await page.goto(`${BASE}/admin/kandang`, { waitUntil: 'load' });
+    assert((await page.locator('[data-kandang-label="A-1"] .kandang-status:has-text("2/2 Penuh")').count()) === 1,
+        'K7d status A-1 = 2/2 Penuh setelah burung kedua (server)');
+
+    await drag('E2E Kandang Empat', '[data-kandang-label="A-1"]', false);
+    assert((await page.getByText(/maksimal/).count()) > 0,
+        'K7e burung ketiga DITOLAK dengan toast penuh (guard client)');
+
+    // BUKTI SERVER: burung ketiga tetap di pool
+    await page.goto(`${BASE}/admin/kandang`, { waitUntil: 'load' });
+    assert((await page.locator('#poolList .burung-chip:has-text("E2E Kandang Empat")').count()) === 1,
+        'K7d setelah reload, burung ketiga tetap di pool (server menolak kapasitas)');
+
+    // ---------- K8: tampilan mobile (viewport HP 375x812) ----------
+    const mobCtx = await browser.newContext({ viewport: { width: 375, height: 812 } });
+    const mobile = await mobCtx.newPage();
+    await mobile.goto(`${BASE}/login`, { waitUntil: 'load' });
+    await mobile.click('#email');
+    await mobile.fill('#email', ADMIN.email);
+    await mobile.click('#password');
+    await mobile.fill('#password', ADMIN.password);
+    await mobile.click('button[type=submit]');
+    await mobile.waitForURL(`${BASE}/admin`, { timeout: 15000 });
+    await mobile.goto(`${BASE}/admin/kandang`, { waitUntil: 'load' });
+
+    const overflow = await mobile.evaluate(() => document.scrollingElement.scrollWidth - window.innerWidth);
+    assert(overflow <= 1, `K8a tanpa scroll horizontal di HP (overflow: ${overflow}px)`);
+
+    const chipInfo = await mobile.evaluate(() => {
+        const chip = [...document.querySelectorAll('.burung-chip')].find((c) => c.textContent.includes('E2E Kandang Dua'));
+        if (!chip) return null;
+        const r = chip.getBoundingClientRect();
+        return {
+            lebar: Math.round(r.width),
+            genderTerlihat: chip.textContent.includes('Jantan'),
+            namaUtuh: chip.textContent.includes('E2E Kandang Dua'),
+        };
+    });
+    assert(!!chipInfo && chipInfo.genderTerlihat, 'K8b gender (Jantan) terlihat di chip mobile');
+    assert(!!chipInfo && chipInfo.lebar >= 280, `K8c chip lebar besar di HP (lebar: ${chipInfo ? chipInfo.lebar : 0}px)`);
+    await mobCtx.close();
 
     console.log('==================================================');
     if (failures > 0) { console.log(`GAGAL: ${failures} pemeriksaan`); process.exitCode = 1; }

@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Burung;
 use App\Models\Kandang;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -90,11 +91,28 @@ class KandangController extends Controller
         ]);
 
         try {
-            $burung->update(['kandang_id' => $data['kandang_id']]);
-            $kandang = Kandang::find($data['kandang_id']);
-            $this->logActivity($request, 'letakkan_burung', 'Menempatkan '.$burung->nama.' ke '.$kandang->label);
+            // Kapasitas kandang = 2 burung; lockForUpdate mencegah dua admin
+            // menempatkan burung ke kandang terakhir slotnya secara serentak.
+            $hasil = DB::transaction(function () use ($request, $burung, $data) {
+                $kandang = Kandang::lockForUpdate()->findOrFail($data['kandang_id']);
+                $isi = $kandang->burungs()->where('id', '!=', $burung->id)->count();
 
-            return response()->json(['ok' => true, 'message' => $burung->nama.' ditempatkan di kandang '.$kandang->label]);
+                if ($isi >= 2) {
+                    return response()->json([
+                        'ok' => false,
+                        'message' => 'Kandang '.$kandang->label.' sudah penuh (maksimal 2 burung).',
+                    ], 422);
+                }
+
+                $burung->update(['kandang_id' => $kandang->id]);
+                $this->logActivity($request, 'letakkan_burung', 'Menempatkan '.$burung->nama.' ke '.$kandang->label);
+
+                return response()->json(['ok' => true, 'message' => $burung->nama.' ditempatkan di kandang '.$kandang->label]);
+            });
+
+            return $hasil;
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+            return response()->json(['ok' => false, 'message' => 'Kandang tidak ditemukan.'], 422);
         } catch (\Throwable $e) {
             Log::error('Gagal letakkan burung', ['id' => $burung->id, 'error' => $e->getMessage()]);
 

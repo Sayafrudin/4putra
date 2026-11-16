@@ -118,6 +118,30 @@ class KandangTest extends TestCase
         $burung->delete();
     }
 
+    public function test_kapasitas_kandang_maksimal_dua_burung(): void
+    {
+        $kandang = $this->kandangUji();
+        $a = $this->burungUji();
+        $b = $this->burungUji();
+        $c = $this->burungUji();
+
+        $this->actingAs($this->admin)
+            ->postJson("/admin/burung/{$a->id}/letakkan", ['kandang_id' => $kandang->id])->assertOk();
+        $this->actingAs($this->admin)
+            ->postJson("/admin/burung/{$b->id}/letakkan", ['kandang_id' => $kandang->id])->assertOk();
+
+        // Burung ke-3 ditolak dengan pesan jelas
+        $res = $this->actingAs($this->admin)
+            ->postJson("/admin/burung/{$c->id}/letakkan", ['kandang_id' => $kandang->id]);
+        $res->assertStatus(422);
+        $res->assertJsonFragment(['ok' => false]);
+        $this->assertStringContainsString('penuh', (string) $res->json('message'));
+
+        $this->assertDatabaseHas('burungs', ['id' => $c->id, 'kandang_id' => null]);
+
+        Burung::whereIn('id', [$a->id, $b->id, $c->id])->delete();
+    }
+
     public function test_letakkan_ke_kandang_tidak_dikenal_ditolak(): void
     {
         $burung = $this->burungUji();

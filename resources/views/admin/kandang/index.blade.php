@@ -39,14 +39,16 @@
                     <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2.5 py-1 rounded-full">{{ ucfirst($kandangBlok->first()->tipe) }}</span>
                     <span class="text-xs text-gray-400 dark:text-gray-500">{{ $kandangBlok->count() }} kandang</span>
                 </div>
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                     @forelse ($kandangBlok ?? collect() as $k)
-                        <div class="kandang-drop relative bg-white dark:bg-[#151a22] border border-gray-200 dark:border-gray-700 rounded-xl p-2.5 min-h-24 flex flex-col"
+                        @php($isi = $k->burungs->count())
+                        <div class="kandang-drop relative bg-white dark:bg-[#151a22] border {{ $isi >= 2 ? 'border-[#E62C37]/40' : 'border-gray-200 dark:border-gray-700' }} rounded-xl p-2.5 min-h-24 flex flex-col"
                             data-kandang-id="{{ $k->id }}"
-                            data-kandang-label="{{ $k->label }}">
+                            data-kandang-label="{{ $k->label }}"
+                            @if ($isi >= 2) data-penuh="1" @endif>
                             <div class="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider mb-1.5">
                                 <span class="text-gray-600 dark:text-gray-300">{{ $k->label }}</span>
-                                <span class="kandang-status {{ $k->burungs->isEmpty() ? 'text-gray-400 dark:text-gray-500' : 'text-[#E62C37]' }}">{{ $k->burungs->isEmpty() ? 'Kosong' : $k->burungs->count().' burung' }}</span>
+                                <span class="kandang-status {{ $isi === 0 ? 'text-gray-400 dark:text-gray-500' : ($isi >= 2 ? 'text-[#E62C37] font-bold' : 'text-[#E62C37]') }}">{{ $isi === 0 ? 'Kosong' : $isi.'/2'.($isi >= 2 ? ' Penuh' : '') }}</span>
                             </div>
                             <div class="kandang-isi flex flex-col gap-1.5 grow">
                                 @foreach ($k->burungs as $b)
@@ -277,6 +279,12 @@
             if (kePool && !asalCage) return; // sudah di pool
             if (!kePool && asalCage === zona) return; // kandang sama
 
+            // Guard kapasitas: kandang maksimal 2 burung (server juga memvalidasi)
+            if (!kePool && zona.querySelectorAll('.kandang-isi .burung-chip').length >= 2) {
+                showToast('error', 'Kandang Penuh', 'Kandang ' + zona.dataset.kandangLabel + ' sudah berisi 2 burung (maksimal).');
+                return;
+            }
+
             // Optimistic: pindahkan chip, revert jika server menolak
             const isi = kePool ? zona : zona.querySelector('.kandang-isi');
             const kosongHint = zona.querySelector('.kosong-hint');
@@ -333,11 +341,23 @@
                 } else {
                     hint.classList.remove('hidden');
                 }
+                zona.classList.remove('border-[#E62C37]/40');
+                zona.classList.add('border-gray-200', 'dark:border-gray-700');
+                zona.removeAttribute('data-penuh');
             } else {
-                status.textContent = isi + ' burung';
+                status.textContent = isi + '/2' + (isi >= 2 ? ' Penuh' : '');
                 status.classList.add('text-[#E62C37]');
                 status.classList.remove('text-gray-400', 'dark:text-gray-500');
                 if (hint) hint.classList.add('hidden');
+                if (isi >= 2) {
+                    zona.classList.add('border-[#E62C37]/40');
+                    zona.classList.remove('border-gray-200', 'dark:border-gray-700');
+                    zona.setAttribute('data-penuh', '1');
+                } else {
+                    zona.classList.remove('border-[#E62C37]/40');
+                    zona.classList.add('border-gray-200', 'dark:border-gray-700');
+                    zona.removeAttribute('data-penuh');
+                }
             }
         }
 

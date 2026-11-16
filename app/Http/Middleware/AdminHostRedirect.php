@@ -18,8 +18,12 @@ class AdminHostRedirect
     {
         $adminHost = config('app.admin_host');
 
+        // Pengecualian: jalur infrastruktur login & aset di host admin tidak dialihkan,
+        // karena auth middleware mengarahkan guest /admin -> /login (rute publik bersama).
+        // Tanpa ini terjadi loop /admin <-> /login (ERR_TOO_MANY_REDIRECTS).
         if ($adminHost !== null && strcasecmp($request->getHost(), $adminHost) === 0
-            && ! preg_match('#^/admin(/|$)#', $request->getPathInfo())) {
+            && ! preg_match('#^/admin(/|$)#', $request->getPathInfo())
+            && ! preg_match('#^/(login(/|$)|auth/|storage/|up(/|$))#', $request->getPathInfo())) {
             return redirect()->to('/admin')
                 ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
         }

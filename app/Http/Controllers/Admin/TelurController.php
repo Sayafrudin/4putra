@@ -18,16 +18,31 @@ class TelurController extends Controller
 
     public function index()
     {
-        $telurs = Telur::with('burung')->orderByDesc('tanggal_diambil')->orderByDesc('id')->get();
-        $burungList = Burung::with('kandang:id,blok,nomor')->where('fase', 'dewasa')->orderBy('nama')->get(['id', 'nama', 'spesies', 'kandang_id']);
+        $telurs = Telur::with(['burung', 'pasangan'])->orderByDesc('tanggal_diambil')->orderByDesc('id')->get();
 
-        return view('admin.telur.index', compact('telurs', 'burungList'));
+        // Dropdown = kandang berisi TEPAT 2 induk dewasa (pasangan). Satu query + operasi koleksi, tanpa N+1.
+        $kandangPasangan = Burung::with('kandang:id,blok,nomor')
+            ->where('fase', 'dewasa')
+            ->whereNotNull('kandang_id')
+            ->orderBy('nama')
+            ->get(['id', 'nama', 'spesies', 'kandang_id'])
+            ->groupBy('kandang_id')
+            ->filter(fn ($grup) => $grup->count() === 2)
+            ->map(fn ($grup) => [
+                'label' => $grup->first()->kandang->label,
+                'burung' => $grup->map(fn ($b) => ['id' => $b->id, 'nama' => $b->nama, 'spesies' => $b->spesies])->values()->all(),
+            ])
+            ->sortBy('label', SORT_NATURAL | SORT_FLAG_CASE)
+            ->values();
+
+        return view('admin.telur.index', compact('telurs', 'kandangPasangan'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
             'burung_id' => ['required', 'integer', 'exists:burungs,id'],
+            'burung_pasangan_id' => ['required', 'integer', 'exists:burungs,id', 'different:burung_id'],
             'sesi' => ['required', 'integer', 'min:1', 'max:20'],
             'jumlah' => ['required', 'integer', 'min:1', 'max:20'],
             'tanggal_diambil' => ['required', 'date', 'before_or_equal:today'],
@@ -36,9 +51,19 @@ class TelurController extends Controller
             'catatan' => ['nullable', 'string', 'max:500'],
         ]);
 
+        // Anti-manipulasi payload: pasangan wajib 2 burung dewasa dalam SATU kandang
+        // (komparasi ID pakai loose != karena PDO stringify fetches TiDB).
+        $induk = Burung::whereIn('id', [$data['burung_id'], $data['burung_pasangan_id']])->get(['id', 'fase', 'kandang_id']);
+        if ($induk->count() < 2
+            || $induk->contains(fn ($b) => $b->fase !== 'dewasa')
+            || $induk[0]->kandang_id === null
+            || $induk[0]->kandang_id != $induk[1]->kandang_id) {
+            return response()->json(['ok' => false, 'message' => 'Pasangan induk harus 2 burung dewasa dalam satu kandang.'], 422);
+        }
+
         try {
             $telur = Telur::create($data);
-            $this->logActivity($request, 'tambah_telur', 'Mencatat telur '.$data['jumlah'].' butir dari burung #'.$data['burung_id'].' (sesi '.$data['sesi'].', diambil oleh '.$data['diambil_oleh'].')');
+            $this->logActivity($request, 'tambah_telur', 'Mencatat telur '.$data['jumlah'].' butir dari pasangan #'.$data['burung_id'].' × #'.$data['burung_pasangan_id'].' (sesi '.$data['sesi'].', diambil oleh '.$data['diambil_oleh'].')');
 
             return response()->json(['ok' => true, 'message' => 'Telur sesi '.$data['sesi'].' dicatat.']);
         } catch (\Throwable $e) {

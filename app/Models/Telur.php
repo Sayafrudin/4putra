@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Telur extends Model
 {
     protected $fillable = [
-        'burung_id', 'sesi', 'jumlah', 'tanggal_diambil', 'diambil_oleh',
+        'burung_id', 'burung_pasangan_id', 'sesi', 'jumlah', 'tanggal_diambil', 'diambil_oleh',
         'kondisi', 'status', 'tanggal_menetas', 'catatan',
     ];
 
@@ -17,6 +17,18 @@ class Telur extends Model
     public function burung(): BelongsTo
     {
         return $this->belongsTo(Burung::class);
+    }
+
+    /** Induk kedua dari pasangan (null pada catatan lama satu induk). */
+    public function pasangan(): BelongsTo
+    {
+        return $this->belongsTo(Burung::class, 'burung_pasangan_id');
+    }
+
+    /** Label induk: "BNG × Military" untuk pasangan, satu nama untuk catatan lama. */
+    public function getIndukLabelAttribute(): string
+    {
+        return $this->pasangan ? $this->burung->nama.' × '.$this->pasangan->nama : $this->burung->nama;
     }
 
     /** Usia telur dihitung sejak tanggal diambil (sesuai alur laporan farm). */

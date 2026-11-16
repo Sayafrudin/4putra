@@ -18,7 +18,8 @@
         $diinkubasi = $telurs->where('status', 'diinkubasi');
         $menetas = $telurs->where('status', 'menetas');
         $siapDilepas = $menetas->filter(fn ($t) => $t->siap_dilepas);
-        $perInduk = $diinkubasi->groupBy('burung_id');
+        // Laporan WA dikelompokkan per PASANGAN induk; catatan lama satu induk tetap digroup sendiri.
+        $perInduk = $diinkubasi->groupBy(fn ($t) => $t->pasangan ? 'p-'.$t->burung_id.'-'.$t->burung_pasangan_id : 's-'.$t->burung_id);
     @endphp
 
     {{-- Ringkasan --}}
@@ -44,11 +45,11 @@
                 <h3 class="text-sm font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Laporan Perkembangan Telur (siap salin ke WA group)</h3>
             </div>
             <div class="p-4 space-y-3">
-                @foreach ($perInduk as $burungId => $grup)
+                @foreach ($perInduk as $grup)
                     @php($telurPertama = $grup->sortBy('tanggal_diambil')->first())
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-gray-50 dark:bg-[#151a22] rounded-xl">
                         <div class="min-w-0">
-                            <p class="text-sm font-bold text-gray-900 dark:text-white">{{ $telurPertama->burung->nama }} <span class="text-xs font-semibold text-gray-500">· {{ $grup->sum('jumlah') }} butir ({{ $grup->count() }} sesi)</span></p>
+                            <p class="text-sm font-bold text-gray-900 dark:text-white">{{ $telurPertama->induk_label }} <span class="text-xs font-semibold text-gray-500">· {{ $grup->sum('jumlah') }} butir ({{ $grup->count() }} sesi)</span></p>
                             <p class="text-xs text-gray-500 dark:text-gray-400">
                                 @foreach ($grup->sortBy('tanggal_diambil') as $t)
                                     Sesi {{ $t->sesi }}: {{ $t->usia_hari }} hari ({{ $t->kondisi }})@if (! $loop->last) · @endif
@@ -56,7 +57,7 @@
                             </p>
                         </div>
                         <button type="button" onclick='salinLaporan(this)'
-                            data-nama='{{ $telurPertama->burung->nama }}'
+                            data-nama='{{ $telurPertama->induk_label }}'
                             data-rows='{{ json_encode($grup->sortBy("tanggal_diambil")->map(fn ($t) => ["sesi" => $t->sesi, "kondisi" => $t->kondisi, "usia" => $t->usia_hari])->values()) }}'
                             class="self-start px-3 py-2 text-xs font-semibold text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg hover:bg-blue-500/20 hover:border-blue-500/40 transition-colors">
                             Salin laporan WA
@@ -86,7 +87,7 @@
                 <tbody data-admin-list class="divide-y divide-gray-200 dark:divide-gray-800">
                     @forelse ($telurs as $t)
                         <tr class="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#262d3a] transition-colors">
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{{ $t->burung->nama }}</td>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{{ $t->induk_label }}</td>
                             <td class="px-6 py-4 text-sm tabular-nums">{{ $t->sesi }}</td>
                             <td class="px-6 py-4 text-sm tabular-nums">{{ $t->jumlah }}</td>
                             <td class="px-6 py-4 text-sm">
@@ -113,7 +114,7 @@
                                 <div class="flex items-center justify-end gap-2">
                                     <button onclick='bukaModalEdit({{ json_encode([
                                         "id" => $t->id,
-                                        "induk" => $t->burung->nama,
+                                        "induk" => $t->induk_label,
                                         "sesi" => $t->sesi,
                                         "kondisi" => $t->kondisi,
                                         "status" => $t->status,
@@ -122,7 +123,7 @@
                                         class="px-3 py-1.5 text-xs font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg hover:bg-blue-500/20 hover:border-blue-500/40 transition-colors">
                                         Update
                                     </button>
-                                    <button onclick='bukaModalHapus({{ $t->id }}, "{{ addslashes($t->burung->nama) }}")'
+                                    <button onclick='bukaModalHapus({{ $t->id }}, "{{ addslashes($t->induk_label) }}")'
                                         class="px-3 py-1.5 text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg hover:bg-red-500/20 hover:border-red-500/40 transition-colors">
                                         Hapus
                                     </button>
@@ -153,27 +154,19 @@
             <form id="formTambah" onsubmit="submitTambah(event)" class="space-y-4" novalidate>
                 @csrf
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Induk (burung yang bertelur)</label>
-                    <select name="burung_id" id="tambah_burung"
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Kandang (pasangan induk — 2 burung otomatis tercatat)</label>
+                    <select name="kandang_pasangan" id="tambah_kandang" onchange="tampilkanPasangan()"
                         class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
-                        <option value="">— Pilih induk —</option>
-                        @php($tertempatkan = $burungList->filter(fn ($b) => $b->kandang)->groupBy(fn ($b) => $b->kandang->label)->sortKeysUsing('strnatcasecmp'))
-                        @foreach ($tertempatkan as $label => $grup)
-                            <optgroup label="Kandang {{ $label }}">
-                                @foreach ($grup as $b)
-                                    <option value="{{ $b->id }}">{{ $b->nama }} — {{ $b->spesies }}</option>
-                                @endforeach
-                            </optgroup>
+                        <option value="">— Pilih kandang —</option>
+                        @foreach ($kandangPasangan as $i => $kp)
+                            <option value="{{ $i }}">Kandang {{ $kp['label'] }}</option>
                         @endforeach
-                        @if (($belumDitempatkan = $burungList->filter(fn ($b) => ! $b->kandang))->isNotEmpty())
-                            <optgroup label="Belum ditempatkan">
-                                @foreach ($belumDitempatkan as $b)
-                                    <option value="{{ $b->id }}">{{ $b->nama }} — {{ $b->spesies }}</option>
-                                @endforeach
-                            </optgroup>
-                        @endif
                     </select>
                     <p class="text-xs text-red-400 mt-1 hidden" id="err_tambah_burung"></p>
+                    <div id="info_pasangan" class="hidden mt-2 px-3 py-2 text-sm rounded-xl bg-blue-500/10 border border-blue-500/20 text-gray-900 dark:text-white">
+                        <span class="text-xs font-bold uppercase tracking-wider text-blue-500 mr-2">Pasangan</span>
+                        <span id="pasangan_label" class="font-semibold"></span>
+                    </div>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
@@ -303,6 +296,8 @@
     <script>
         const CSRF = document.querySelector('meta[name="csrf-token"]').content;
         const ORDINAL = { 1: 'pertama', 2: 'kedua', 3: 'ketiga', 4: 'keempat', 5: 'kelima' };
+        // Daftar kandang pasangan (server-side): [{label, burung: [{id,nama,spesies} × 2]}]
+        const PASANGAN = @json($kandangPasangan);
         let sedangBusy = false;
         let editTargetId = null;
         let hapusTargetId = null;
@@ -342,7 +337,19 @@
 
         function bukaModalTambah() {
             bersihkanError(document.getElementById('formTambah'));
+            document.getElementById('tambah_kandang').value = '';
+            document.getElementById('info_pasangan').classList.add('hidden');
             bukaModal('modalTambah');
+        }
+
+        // Pilih kandang → 2 induk di dalamnya otomatis tampil (keduanya langsung tercatat saat simpan)
+        function tampilkanPasangan() {
+            const idx = document.getElementById('tambah_kandang').value;
+            const info = document.getElementById('info_pasangan');
+            const kp = PASANGAN[idx];
+            if (!kp) { info.classList.add('hidden'); return; }
+            document.getElementById('pasangan_label').textContent = kp.burung[0].nama + ' (' + kp.burung[0].spesies + ') × ' + kp.burung[1].nama + ' (' + kp.burung[1].spesies + ')';
+            info.classList.remove('hidden');
         }
 
         // Salin laporan perkembangan telur — format WA group petinggi 4PUTRA
@@ -369,7 +376,8 @@
             const form = document.getElementById('formTambah');
             bersihkanError(form);
             let valid = true;
-            if (!form.burung_id.value) { tandaiError('tambah_burung', 'err_tambah_burung', 'Pilih induk terlebih dahulu.'); valid = false; }
+            const kp = PASANGAN[form.kandang_pasangan.value];
+            if (!kp) { tandaiError('tambah_kandang', 'err_tambah_burung', 'Pilih kandang pasangan terlebih dahulu.'); valid = false; }
             if (!form.sesi.value || Number(form.sesi.value) < 1) { tandaiError('tambah_sesi', 'err_tambah_sesi', 'Sesi minimal 1.'); valid = false; }
             if (!form.jumlah.value || Number(form.jumlah.value) < 1) { tandaiError('tambah_jumlah', 'err_tambah_jumlah', 'Jumlah butir minimal 1.'); valid = false; }
             if (!form.tanggal_diambil.value) { tandaiError('tambah_tanggal', 'err_tambah_tanggal', 'Tanggal diambil wajib diisi.'); valid = false; }
@@ -383,7 +391,8 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
                     body: JSON.stringify({
-                        burung_id: Number(form.burung_id.value),
+                        burung_id: kp.burung[0].id,
+                        burung_pasangan_id: kp.burung[1].id,
                         sesi: Number(form.sesi.value),
                         jumlah: Number(form.jumlah.value),
                         tanggal_diambil: form.tanggal_diambil.value,

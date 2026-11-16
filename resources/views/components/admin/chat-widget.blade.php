@@ -34,7 +34,9 @@
     }
 @endphp
 
-<div id="chat-widget"></div>
+{{-- data-turbo-permanent: elemen diawetkan Turbo saat navigasi sidebar SPA —
+     binding chat.js (lazy-load sekali di event load) tetap hidup tanpa re-init --}}
+<div id="chat-widget" data-turbo-permanent></div>
 <script id="chat-admin-notifications" type="application/json">{!! json_encode($chatNotifications, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!}</script>
 
 <script>

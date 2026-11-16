@@ -8,18 +8,21 @@
  * referensi lama menjadi yatim sehingga search mati (bug lama v2).
  */
 (function () {
-    'use strict';
+    "use strict";
 
     function findWrapper(inputEl) {
         var el = inputEl;
         while (el && el !== document.body) {
             var sibling = el.nextElementSibling;
             while (sibling) {
-                if (sibling.classList && sibling.classList.contains('table-search-wrapper')) {
+                if (
+                    sibling.classList &&
+                    sibling.classList.contains("table-search-wrapper")
+                ) {
                     return sibling;
                 }
                 // Cek juga di dalam sibling (nested)
-                var nested = sibling.querySelector('.table-search-wrapper');
+                var nested = sibling.querySelector(".table-search-wrapper");
                 if (nested) {
                     return nested;
                 }
@@ -30,45 +33,58 @@
         return null;
     }
 
-    document.querySelectorAll('.table-search-input').forEach(function (input) {
-        input.addEventListener('input', function () {
+    // Delegasi di document: tabel hasil render Turbo (navigasi sidebar tanpa reload)
+    // maupun tbody hasil refreshAdminList tetap terbaca — tidak ada listener per-input.
+    document.addEventListener("input", function (e) {
+        var input = e.target;
+        if (
+            !input ||
+            !input.classList ||
+            !input.classList.contains("table-search-input")
+        )
+            return;
+        {
             var tableWrapper = findWrapper(input);
             if (!tableWrapper) return;
-            var tbody = tableWrapper.querySelector('tbody');
+            var tbody = tableWrapper.querySelector("tbody");
             if (!tbody) return;
 
             var query = input.value.toLowerCase().trim();
             var visibleCount = 0;
             var emptyRow = null;
 
-            tbody.querySelectorAll('tr').forEach(function (row) {
-                if (row.querySelector('td[colspan]')) {
+            tbody.querySelectorAll("tr").forEach(function (row) {
+                if (row.querySelector("td[colspan]")) {
                     emptyRow = row;
                     return;
                 }
                 var text = row.textContent.toLowerCase();
                 if (!query || text.indexOf(query) !== -1) {
-                    row.style.display = '';
+                    row.style.display = "";
                     visibleCount++;
                 } else {
-                    row.style.display = 'none';
+                    row.style.display = "none";
                 }
             });
 
             if (!emptyRow) return;
-            var td = emptyRow.querySelector('td');
+            var td = emptyRow.querySelector("td");
             if (!td) return;
             // Simpan teks asli sekali; dataset ikut hilang saat tbody diganti (aman)
-            if (!td.dataset.originalText) td.dataset.originalText = td.textContent;
+            if (!td.dataset.originalText)
+                td.dataset.originalText = td.textContent;
             if (visibleCount === 0 && query) {
-                emptyRow.style.display = '';
-                td.textContent = 'Tidak ditemukan data yang cocok dengan "' + input.value.trim() + '".';
+                emptyRow.style.display = "";
+                td.textContent =
+                    'Tidak ditemukan data yang cocok dengan "' +
+                    input.value.trim() +
+                    '".';
             } else if (visibleCount === 0) {
-                emptyRow.style.display = '';
+                emptyRow.style.display = "";
                 td.textContent = td.dataset.originalText;
             } else {
-                emptyRow.style.display = 'none';
+                emptyRow.style.display = "none";
             }
-        });
+        }
     });
 })();

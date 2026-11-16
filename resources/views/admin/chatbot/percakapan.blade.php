@@ -142,10 +142,10 @@
     </div>
 
     <script>
-        const PELANGGAN_ID = {{ $pelanggan->id }};
-        const CHAT_TOGGLE_URL = '{{ route("admin.chatbot.chat.toggle") }}';
-        const CSRF_TOKEN = '{{ csrf_token() }}';
-        let currentMode = '{{ $pelanggan->sesi_aktif }}';
+        var PELANGGAN_ID = {{ $pelanggan->id }};
+        var CHAT_TOGGLE_URL = '{{ route("admin.chatbot.chat.toggle") }}';
+        var CSRF_TOKEN = '{{ csrf_token() }}';
+        var currentMode = '{{ $pelanggan->sesi_aktif }}';
 
         async function toggleModePercakapan() {
             const newMode = currentMode === 'human' ? 'ai' : 'human';

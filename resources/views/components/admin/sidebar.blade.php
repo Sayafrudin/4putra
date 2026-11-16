@@ -1,13 +1,15 @@
 @props(['activeRoute' => ''])
 
-<aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-    class="z-40 fixed inset-y-0 left-0 w-64 overflow-y-auto bg-white dark:bg-gray-800 border-r border-gray-100 dark:border-gray-700 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-20 flex-shrink-0">
+{{-- data-admin-sidebar + app.css: sidebar mobile tersembunyi SEBELUM Alpine siap
+    (mencegah kilatan sidebar di setiap full page load); Alpine cukup toggle class --}}
+<aside data-admin-sidebar :class="sidebarOpen ? 'sidebar-open' : ''"
+    class="z-40 fixed inset-y-0 left-0 w-64 overflow-y-auto bg-white dark:bg-gray-800 border-r border-gray-100 dark:border-gray-700 transition-transform duration-300 ease-in-out lg:static lg:z-20 flex-shrink-0">
     <div class="flex flex-col h-full py-4 text-gray-500 dark:text-gray-400">
         <div>
             {{-- Close button mobile --}}
             <div class="flex items-center justify-between px-6 mb-4 lg:mb-0">
                 <a class="text-xl font-extrabold tracking-wider text-gray-900 dark:text-white"
-                    href="{{ route('admin.dashboard') }}">
+                    href="{{ route('admin.dashboard') }}" data-turbo="true">
                     4PUTRA<span class="text-[#E62C37]">.</span>
                 </a>
                 <button @click="sidebarOpen = false"
@@ -25,7 +27,7 @@
                             aria-hidden="true"></span>
                     @endif
                     <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.dashboard') ? 'text-gray-900 dark:text-white font-bold' : '' }}"
-                        href="{{ route('admin.dashboard') }}" @click="sidebarOpen = false">
+                        href="{{ route('admin.dashboard') }}" data-turbo="true" @click="sidebarOpen = false">
                         <svg class="w-5 h-5" fill="none" stroke-linecap="round" stroke-linejoin="round"
                             stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
                             <path
@@ -66,7 +68,7 @@
                         x-transition:leave="transition ease-in duration-75"
                         x-transition:leave-start="opacity-100 translate-y-0"
                         x-transition:leave-end="opacity-0 -translate-y-1" class="mt-2 ml-4 space-y-1">
-                        <a href="{{ route('admin.collections.index') }}" @click="sidebarOpen = false"
+                        <a href="{{ route('admin.collections.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.collections.*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
@@ -75,6 +77,7 @@
                             </svg>
                             Koleksi (Collections)
                         </a>
+                        {{-- Full-reload: script halaman = ES module (tak dieksekusi ulang Turbo, module map cache) --}}
                         <a href="{{ route('admin.facilities.index') }}" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.facilities.*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
@@ -84,6 +87,7 @@
                             </svg>
                             Fasilitas (Facilities)
                         </a>
+                        {{-- Full-reload: script halaman = ES module (tak dieksekusi ulang Turbo, module map cache) --}}
                         <a href="{{ route('admin.daily-activities.index') }}" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.daily-activities.*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
@@ -93,6 +97,7 @@
                             </svg>
                             Aktivitas Harian (Daily Activities)
                         </a>
+                        {{-- Full-reload: script halaman = ES module (achievements+about) tak dieksekusi ulang Turbo --}}
                         <a href="{{ route('admin.achievements.index') }}" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.achievements.*') || request()->routeIs('admin.about.*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
@@ -105,6 +110,92 @@
                     </div>
                 </li>
 
+                {{-- Menu Manajemen Farm (data burung, bukan urusan chatbot) --}}
+                <li class="relative px-6 py-3"
+                    x-data="{ openFarm: {{ request()->routeIs('admin.kandang*') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.stok*') ? 'true' : 'false' }} }">
+                    @if (request()->routeIs('admin.kandang*') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.stok*'))
+                        <span class="absolute inset-y-0 left-0 w-1 bg-[#E62C37] rounded-tr-lg rounded-br-lg"
+                            aria-hidden="true"></span>
+                    @endif
+                    <button @click="openFarm = !openFarm"
+                        class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.kandang*') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.stok*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
+                        <span class="inline-flex items-center">
+                            <svg class="w-5 h-5" fill="none" stroke-linecap="round" stroke-linejoin="round"
+                                stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h7.5c.621 0 1.125-.504 1.125-1.125a1.125 1.125 0 011.125 1.125c0 .621.504 1.125 1.125 1.125m5.25-3.75h7.5c.621 0 1.125-.504 1.125-1.125m-17.25 0a1.125 1.125 0 011.125 1.125M3.375 16.875V4.125C3.375 3.504 3.879 3 4.5 3h15c.621 0 1.125.504 1.125 1.125v12.75m0 0a1.125 1.125 0 01-1.125 1.125M21 8.25h-4.5a1.125 1.125 0 00-1.125 1.125v3.75c0 .621.504 1.125 1.125 1.125H21M5.25 8.25h6.75a1.125 1.125 0 001.125-1.125v-1.5a1.125 1.125 0 00-1.125-1.125H5.25a1.125 1.125 0 00-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                            </svg>
+                            <span class="ml-4">Manajemen Farm</span>
+                        </span>
+                        <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': openFarm }"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div x-show="openFarm" x-transition:enter="transition ease-out duration-100"
+                        x-transition:enter-start="opacity-0 -translate-y-1"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-75"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 -translate-y-1" class="mt-2 ml-4 space-y-1">
+                        <a href="{{ route('admin.kandang.index') }}" data-turbo="true" @click="sidebarOpen = false"
+                            class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.kandang*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M13.5 21v-7.785a.75.75 0 00-.263-.57l-4.5-3.998a.75.75 0 00-1.036.06L4.202 12.28a.75.75 0 00.055 1.03L9 17.5V21m4.5-11.34V5.25a1.5 1.5 0 011.5-1.5h2.25a1.5 1.5 0 011.5 1.5v8.01M21 21H3m0-9l9-7.5L21 12" />
+                            </svg>
+                            Kandang
+                        </a>
+                        <a href="{{ route('admin.vaksinasi.index') }}" data-turbo="true" @click="sidebarOpen = false"
+                            class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.vaksinasi*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V15a2.25 2.25 0 00.73-1.677L21 6.75A2.25 2.25 0 0018.75 4.5H5.25A2.25 2.25 0 003 6.75l.02 6.573A2.25 2.25 0 003.75 15v3.75A2.25 2.25 0 006 21h6.75" />
+                            </svg>
+                            Vaksinasi
+                        </a>
+                        <a href="{{ route('admin.telur.index') }}" data-turbo="true" @click="sidebarOpen = false"
+                            class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.telur*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M12 2.25c-2.9 0-5.25 2.7-5.25 6 0 2.4 1.2 4.5 2.625 5.625.45.36.75.9.75 1.463v.412c0 .621.504 1.125 1.125 1.125h1.5c.621 0 1.125-.504 1.125-1.125v-.412c0-.563.3-1.103.75-1.463C15.05 12.75 16.25 10.65 16.25 8.25c0-3.3-2.35-6-4.25-6z" />
+                            </svg>
+                            Telur & Incubator
+                        </a>
+                        <a href="{{ route('admin.stok.index') }}" data-turbo="true" @click="sidebarOpen = false"
+                            class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.stok*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026M21 9.776c-1.68 0-3.044 1.364-3.044 3.044v1.125c0 1.68 1.364 3.044 3.044 3.044M3 9.776c1.68 0 3.044 1.364 3.044 3.044v1.125c0 1.68-1.364 3.044-3.044 3.044M10.5 8.25h3a1.5 1.5 0 011.5 1.5v4.5a1.5 1.5 0 01-1.5 1.5h-3a1.5 1.5 0 01-1.5-1.5v-4.5a1.5 1.5 0 011.5-1.5z" />
+                            </svg>
+                            Stok Makanan
+                        </a>
+                    </div>
+                </li>
+
+                {{-- Menu Keuangan (uang krusial farm) --}}
+                <li class="relative px-6 py-3">
+                    @if (request()->routeIs('admin.keuangan*'))
+                        <span class="absolute inset-y-0 left-0 w-1 bg-[#E62C37] rounded-tr-lg rounded-br-lg"
+                            aria-hidden="true"></span>
+                    @endif
+                    <a href="{{ route('admin.keuangan.index') }}" data-turbo="true" @click="sidebarOpen = false"
+                        class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.keuangan*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
+                        <svg class="w-5 h-5" fill="none" stroke-linecap="round" stroke-linejoin="round"
+                            stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0M5.25 6.75h13.5a2.25 2.25 0 012.25 2.25v9.75A2.25 2.25 0 0118.75 21H5.25A2.25 2.25 0 013 18.75V9a2.25 2.25 0 012.25-2.25z" />
+                        </svg>
+                        <span class="ml-4">Keuangan</span>
+                    </a>
+                </li>
+
                 {{-- Menu Manajemen User (hanya admin) --}}
                 @if (Auth::user()->isAdmin())
                     <li class="relative px-6 py-3">
@@ -113,6 +204,7 @@
                                 aria-hidden="true"></span>
                         @endif
                         <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.users.*') ? 'text-gray-900 dark:text-white font-bold' : '' }}"
+                            {{-- Full-reload: presence users pakai inline module (RTDB) tak dieksekusi ulang Turbo --}}
                             href="{{ route('admin.users.index') }}" @click="sidebarOpen = false">
                             <svg class="w-5 h-5" fill="none" stroke-linecap="round" stroke-linejoin="round"
                                 stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -124,7 +216,8 @@
                     </li>
                 @endif
 
-                {{-- Menu Chatbot WhatsApp (semua user) --}}
+                {{-- Menu Chatbot WhatsApp: fitur skripsi → local-only, tidak dirender di produksi --}}
+                @if (! app()->environment('production'))
                 <li class="relative px-6 py-3" x-data="{ openChatbot: {{ request()->routeIs('admin.chatbot.*') ? 'true' : 'false' }} }">
                     @if (request()->routeIs('admin.chatbot.*'))
                         <span class="absolute inset-y-0 left-0 w-1 bg-[#E62C37] rounded-tr-lg rounded-br-lg"
@@ -153,16 +246,25 @@
                         x-transition:leave="transition ease-in duration-75"
                         x-transition:leave-start="opacity-100 translate-y-0"
                         x-transition:leave-end="opacity-0 -translate-y-1" class="mt-2 ml-4 space-y-1">
-                        <a href="{{ route('admin.chatbot.index') }}" @click="sidebarOpen = false"
+                        <a href="{{ route('admin.chatbot.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.chatbot.index') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
                             </svg>
-                            Dashboard
+                            Ringkasan
                         </a>
-                        <a href="{{ route('admin.chatbot.chat') }}" @click="sidebarOpen = false"
+                        <a href="{{ route('admin.chatbot.inventaris') }}" data-turbo="true" @click="sidebarOpen = false"
+                            class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.chatbot.inventaris*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                            </svg>
+                            Inventaris Burung
+                        </a>
+                        <a href="{{ route('admin.chatbot.chat') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.chatbot.chat') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
@@ -171,16 +273,7 @@
                             </svg>
                             WhatsApp Chat
                         </a>
-                        <a href="{{ route('admin.chatbot.inventaris') }}" @click="sidebarOpen = false"
-                            class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.chatbot.inventaris*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-                            </svg>
-                            Inventaris
-                        </a>
-                        <a href="{{ route('admin.chatbot.transaksi') }}" @click="sidebarOpen = false"
+                        <a href="{{ route('admin.chatbot.transaksi') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.chatbot.transaksi*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
@@ -191,13 +284,14 @@
                         </a>
                     </div>
                 </li>
+                @endif
             </ul>
         </div>
 
         {{-- Bagian bawah sidebar: Profil & Logout --}}
         <div class="mt-auto border-t border-gray-200 dark:border-gray-700 pt-4 px-6 space-y-2">
             {{-- Profil --}}
-            <a href="{{ route('admin.profile.edit') }}" @click="sidebarOpen = false"
+            <a href="{{ route('admin.profile.edit') }}" data-turbo="true" @click="sidebarOpen = false"
                 class="flex items-center text-sm font-medium transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.profile.*') ? 'text-[#E62C37]' : '' }}">
                 <div class="w-8 h-8 rounded-full bg-[#E62C37]/10 flex items-center justify-center mr-3">
                     <svg class="w-4 h-4 text-[#E62C37]" fill="none" stroke="currentColor" stroke-width="2"

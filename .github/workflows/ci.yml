@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [development, main]
+  pull_request:
+    branches: [development, main]
+
+jobs:
+  php:
+    name: PHP — lint & dependensi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Composer validate
+        run: composer validate --strict
+
+      - name: Install dependensi
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Lint seluruh file PHP (php -l)
+        run: |
+          find app routes database/seeders database/migrations tests -type f -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
+
+  node:
+    name: Frontend — build produksi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependensi
+        run: npm ci
+
+      - name: Build produksi (tanpa source map)
+        run: npm run build
+
+# Catatan: PHPUnit sengaja tidak dijalankan di CI. Suite test proyek ini
+# memakai koneksi database riil (TiDB) dan sebagian migrasi memuat SQL
+# khusus TiDB, sehingga tidak bisa dijalankan pada MySQL bawaan GitHub
+# Actions. Jangan aktifkan php artisan test di CI sampai suite dipindah
+# ke database test terisolasi — demi keamanan skripsi.

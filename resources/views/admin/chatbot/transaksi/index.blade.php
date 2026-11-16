@@ -196,9 +196,9 @@
     </div>
 
     <script>
-        const STATUS_POLLING_URL = '{{ route("admin.chatbot.transaksi.status") }}';
-        const UPDATE_STATUS_URL = '{{ url("admin/chatbot/transaksi") }}';
-        const CSRF = '{{ csrf_token() }}';
+        var STATUS_POLLING_URL = '{{ route("admin.chatbot.transaksi.status") }}';
+        var UPDATE_STATUS_URL = '{{ url("admin/chatbot/transaksi") }}';
+        var CSRF = '{{ csrf_token() }}';
 
         // Modal helpers
         function bukaModal(id) {
@@ -284,7 +284,9 @@
         }
 
         // Auto-refresh setiap 30 detik
-        let autoRefreshInterval = setInterval(async () => {
+        // Turbo re-exec: bersihkan interval kunjungan sebelumnya (beforeunload tak fire saat SPA)
+        if (window.__transaksiAutoRefresh) clearInterval(window.__transaksiAutoRefresh);
+        var autoRefreshInterval = window.__transaksiAutoRefresh = setInterval(async () => {
             try {
                 const res = await fetch(STATUS_POLLING_URL, {
                     method: 'POST',

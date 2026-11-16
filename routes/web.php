@@ -1,8 +1,8 @@
 <?php
 
 use App\Http\Controllers\AchievementController;
-use App\Http\Controllers\Admin\AdminAchievementController;
 use App\Http\Controllers\Admin\AdminAboutController;
+use App\Http\Controllers\Admin\AdminAchievementController;
 use App\Http\Controllers\Admin\AdminCollectionController;
 use App\Http\Controllers\Admin\AdminDailyActivityController;
 use App\Http\Controllers\Admin\AdminFacilityController;
@@ -10,7 +10,12 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\ChatbotController;
 use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\KandangController;
+use App\Http\Controllers\Admin\KeuanganController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\StokMakananController;
+use App\Http\Controllers\Admin\TelurController;
+use App\Http\Controllers\Admin\VaksinasiController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
@@ -92,7 +97,7 @@ Route::get('lang/{locale}', function ($locale) {
     // Cache-buster ?v=: pastikan target redirect tidak dilayani cache HTTP/edge/
     // prefetch berbahasa lama. Cookie 'locale' mengaktifkan Vary: Cookie di CachePublic.
     $target = trim(preg_replace('/([?&])v=\d+/', '$1', url()->previous() ?: url('/')), '?&');
-    if (!str_contains($target, url('/')) || str_contains($target, '/lang/') || str_contains($target, '/midtrans')) {
+    if (! str_contains($target, url('/')) || str_contains($target, '/lang/') || str_contains($target, '/midtrans')) {
         $target = url('/');
     }
     $sep = str_contains($target, '?') ? '&' : '?';
@@ -121,7 +126,7 @@ Route::middleware('auth')->group(function () {
 Route::post('/midtrans/callback-laravel', [ChatbotController::class, 'midtransCallback'])->name('midtrans.callback.laravel');
 
 // Grup Rute Dashboard Admin PT 4Putra Vertex Aviary
-// admin.domain PALING DEPAN: host non-local langsung 404 (admin local-only),
+// admin.domain PALING DEPAN: host selain local & ADMIN_HOST langsung 404 (admin hanya di subdomain khusus),
 // sebelum auth check memunculkan redirect /login di host produksi.
 // admin.only: role admin diverifikasi SERVER-SIDE untuk SELURUH grup (bukan hanya login)
 Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'admin.only'])->group(function () {
@@ -208,8 +213,8 @@ Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'admin.only'])
         Route::post('/activity/{activity}/comment', [AdminUserController::class, 'commentActivity'])->name('admin.activity.comment');
     });
 
-    // Chatbot WhatsApp (hanya admin)
-    Route::middleware('admin.only')->prefix('chatbot')->group(function () {
+    // Chatbot WhatsApp (hanya admin; fitur skripsi → local-only, 404 di produksi lewat middleware local.only)
+    Route::middleware(['local.only', 'admin.only'])->prefix('chatbot')->group(function () {
         Route::get('/', [ChatbotController::class, 'index'])->name('admin.chatbot.index');
         Route::get('/inventaris', [ChatbotController::class, 'inventaris'])->name('admin.chatbot.inventaris');
         Route::post('/inventaris', [ChatbotController::class, 'inventarisStore'])->name('admin.chatbot.inventaris.store');
@@ -234,5 +239,48 @@ Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'admin.only'])
         Route::post('/chat/toggle', [ChatbotController::class, 'chatToggle'])->name('admin.chatbot.chat.toggle');
         Route::delete('/chat/{pelanggan}/clear', [ChatbotController::class, 'chatClear'])->name('admin.chatbot.chat.clear');
         Route::post('/chat/{pelanggan}/delete', [ChatbotController::class, 'chatDelete'])->name('admin.chatbot.chat.delete');
+    });
+
+    // Kandang & penempatan burung individu (hanya admin)
+    Route::middleware('admin.only')->group(function () {
+        Route::get('/kandang', [KandangController::class, 'index'])->name('admin.kandang.index');
+        Route::post('/burung', [KandangController::class, 'storeBurung'])->name('admin.burung.store');
+        Route::post('/burung/{burung}/letakkan', [KandangController::class, 'letakkan'])->name('admin.burung.letakkan');
+        Route::post('/burung/{burung}/kosongkan', [KandangController::class, 'kosongkan'])->name('admin.burung.kosongkan');
+        Route::put('/burung/{burung}', [KandangController::class, 'updateBurung'])->name('admin.burung.update');
+        Route::delete('/burung/{burung}', [KandangController::class, 'destroyBurung'])->name('admin.burung.destroy');
+    });
+
+    // Vaksinasi burung + deteksi booster bulanan (hanya admin)
+    Route::middleware('admin.only')->group(function () {
+        Route::get('/vaksinasi', [VaksinasiController::class, 'index'])->name('admin.vaksinasi.index');
+        Route::get('/vaksinasi/export/pdf', [VaksinasiController::class, 'exportPdf'])->name('admin.vaksinasi.export-pdf');
+        Route::post('/vaksinasi', [VaksinasiController::class, 'store'])->name('admin.vaksinasi.store');
+        Route::delete('/vaksinasi/{vaksinasi}', [VaksinasiController::class, 'destroy'])->name('admin.vaksinasi.destroy');
+    });
+
+    // Telur & incubator (hanya admin)
+    Route::middleware('admin.only')->group(function () {
+        Route::get('/telur', [TelurController::class, 'index'])->name('admin.telur.index');
+        Route::get('/telur/export/pdf', [TelurController::class, 'exportPdf'])->name('admin.telur.export-pdf');
+        Route::post('/telur', [TelurController::class, 'store'])->name('admin.telur.store');
+        Route::put('/telur/{telur}', [TelurController::class, 'update'])->name('admin.telur.update');
+        Route::delete('/telur/{telur}', [TelurController::class, 'destroy'])->name('admin.telur.destroy');
+    });
+
+    // Keuangan farm (hanya admin)
+    Route::middleware('admin.only')->group(function () {
+        Route::get('/keuangan', [KeuanganController::class, 'index'])->name('admin.keuangan.index');
+        Route::get('/keuangan/export/pdf', [KeuanganController::class, 'exportPdf'])->name('admin.keuangan.export-pdf');
+        Route::post('/keuangan', [KeuanganController::class, 'store'])->name('admin.keuangan.store');
+        Route::delete('/keuangan/{keuangan}', [KeuanganController::class, 'destroy'])->name('admin.keuangan.destroy');
+    });
+
+    // Stok makanan burung (hanya admin)
+    Route::middleware('admin.only')->group(function () {
+        Route::get('/stok-makanan', [StokMakananController::class, 'index'])->name('admin.stok.index');
+        Route::post('/stok-makanan', [StokMakananController::class, 'store'])->name('admin.stok.store');
+        Route::put('/stok-makanan/{stokMakanan}', [StokMakananController::class, 'update'])->name('admin.stok.update');
+        Route::delete('/stok-makanan/{stokMakanan}', [StokMakananController::class, 'destroy'])->name('admin.stok.destroy');
     });
 });

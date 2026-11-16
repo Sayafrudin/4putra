@@ -305,9 +305,9 @@
     </div>
 
     <script>
-        const STORE_URL = '{{ route("admin.users.store") }}';
-        const CSRF = '{{ csrf_token() }}';
-        const BASE_URL = '{{ url("/admin/users") }}';
+        var STORE_URL = '{{ route("admin.users.store") }}';
+        var CSRF = '{{ csrf_token() }}';
+        var BASE_URL = '{{ url("/admin/users") }}';
 
         // Modal helpers
         function bukaModal(id) {
@@ -500,19 +500,19 @@
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js';
         import { getDatabase, ref as rtdbRef, onValue } from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js';
 
-        const firebaseConfig = {
+        var firebaseConfig = {
             apiKey: "AIzaSyBKRGNiPcZ-twcR-BxwCyREyATJiQ2VTos",
             authDomain: "putra-project-502403.firebaseapp.com",
             databaseURL: "https://putra-project-502403-default-rtdb.asia-southeast1.firebasedatabase.app",
             projectId: "putra-project-502403",
         };
 
-        const app = initializeApp(firebaseConfig);
-        const rtdb = getDatabase(app);
+        var app = initializeApp(firebaseConfig);
+        var rtdb = getDatabase(app);
 
-        const userIds = [@foreach($users as $u){{ $u->id }}, @endforeach];
-        let onlineCount = 0;
-        let previousStatus = {};
+        var userIds = [@foreach($users as $u){{ $u->id }}, @endforeach];
+        var onlineCount = 0;
+        var previousStatus = {};
 
         function updateStatus(userId, isOnline) {
             const avatarDot = document.getElementById('avatar-status-' + userId);

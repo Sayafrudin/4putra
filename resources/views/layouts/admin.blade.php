@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="session-lifetime-minutes" content="{{ (int) config('session.lifetime') }}">
+    {{-- Dashboard internal: dilarang terindeks mesin pencari maupun crawler AI --}}
+    <meta name="robots" content="noindex, nofollow">
+    {{-- Turbo (navigasi sidebar SPA): tanpa snapshot cache — restore cache tidak
+         mengeksekusi ulang script inline, jadi tombol bisa mati. Refetch = selalu segar. --}}
+    <meta name="turbo-cache-control" content="no-cache">
     <title>Dashboard Admin - PT 4Putra Vertex Aviary</title>
     <link rel="icon" href="{{ asset('img/4Putraico.png') }}" type="image/png">
 
@@ -15,7 +20,17 @@
     <link rel="preconnect" href="https://res.cloudinary.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/admin-export.js'])
+
+    {{-- Layout admin tidak pernah scroll di level body (scroll terjadi di dalam <main>).
+         Inline agar berlaku SEBELUM CSS Vite selesai dimuat — mencegah scrollbar sekilas
+         saat pindah halaman. --}}
+    <style>
+        html,
+        body {
+            overflow: hidden;
+        }
+    </style>
 
     {{-- FOUC prevention: cek localStorage sebelum render --}}
     <script>
@@ -43,7 +58,7 @@
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
     <div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: false }">
         {{-- Overlay mobile --}}
-        <div x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300"
+        <div x-cloak x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300"
             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
             x-transition:leave="transition-opacity ease-linear duration-300"
             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
@@ -64,7 +79,7 @@
                     </button>
 
                     {{-- Logo mobile (tampil di header saat sidebar hidden) --}}
-                    <a href="{{ route('admin.dashboard') }}" class="lg:hidden font-extrabold text-lg tracking-wider text-gray-900 dark:text-white">
+                    <a href="{{ route('admin.dashboard') }}" data-turbo="true" class="lg:hidden font-extrabold text-lg tracking-wider text-gray-900 dark:text-white">
                         4PUTRA<span class="text-[#E62C37]">.</span>
                     </a>
 
@@ -103,22 +118,23 @@
 
     @if (session('success'))
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                showToast('success', 'Berhasil', '{{ session('success') }}');
-            });
+            var tampilToastSukses = function () { showToast('success', 'Berhasil', '{{ session('success') }}'); };
+            document.addEventListener('DOMContentLoaded', tampilToastSukses);
+            document.addEventListener('turbo:load', tampilToastSukses);
         </script>
     @endif
     @if (session('error'))
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                showToast('error', 'Gagal', '{{ session('error') }}');
-            });
+            var tampilToastGagal = function () { showToast('error', 'Gagal', '{{ session('error') }}'); };
+            document.addEventListener('DOMContentLoaded', tampilToastGagal);
+            document.addEventListener('turbo:load', tampilToastGagal);
         </script>
     @endif
 
-    {{-- Dark Mode Toggle Handler (Preline-style, pure JS) --}}
+    {{-- Dark Mode Toggle Handler (Preline-style, pure JS) — dijalankan langsung
+         (script di akhir body): tetap ter-eksekusi ulang tiap render Turbo --}}
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        (function() {
             var html = document.documentElement;
             var darkModeBtns = document.querySelectorAll('.hs-dark-mode');
 
@@ -153,7 +169,7 @@
             });
 
             updateDarkModeBtns();
-        });
+        })();
     </script>
 </body>
 

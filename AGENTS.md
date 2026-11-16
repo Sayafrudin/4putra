@@ -18,7 +18,7 @@ Prinsip Kerja Utama:
 
 Situs Laravel 11 untuk PT 4Putra Vertex Aviary. Bilingual (ID/EN), admin CRUD untuk achievements dan daily activities, di-deploy ke Vercel.
 
-- **Admin dashboard hanya LOCAL** (`php artisan serve`). Middleware `AdminDomain` membalas 404 untuk `/admin/*` di host non-local (produksi tidak punya admin). Domain `admin4putra.vercel.app` SUDAH DIHAPUS — jangan dibuat lagi.
+- **Admin dashboard: LOCAL + subdomain admin produksi**. Local (`php artisan serve`) selalu boleh. Produksi: `/admin/*` HANYA hidup di subdomain admin khusus `management4putra-m4p.vercel.app` (env `ADMIN_HOST`, ter-set di Vercel — untuk petinggi 4PUTRA). Host lain — termasuk host publik `4putra.vercel.app` — WAJIB membalas 404 (`AdminDomain` cek `config('app.admin_host')`, jangan hardcode host). Layout admin memuat `noindex` dan `robots.txt` memuat `Disallow: /admin`. Tanggal aktivasi: 2026-11-17 (keputusan baru pengganti aturan lama "admin local-only"; domain lama `admin4putra.vercel.app` tidak dipakai lagi).
 - **Rekomendasi Apriori di halaman Collections** (card burung + badge % keyakinan): fitur LOCAL-ONLY (`@if(app()->environment('local'))` di view + guard di `CollectionController`). Sumber: `public/chatbot/export-apriori.js` → `storage/app/apriori-rekomendasi.json` (di-gitignore). Jangan tampilkan di produksi.
 
 Chatbot WhatsApp independen di `public/chatbot/`:
@@ -104,14 +104,15 @@ Setiap fitur yang dirubah/diperbaiki/ditambahkan wajib lulus SEMUA lapisan ini s
 4. **E2E Sesi/Auth dengan Server Berjalan**: uji dengan cookie asli + lifetime diperpendek via env (mis. `SESSION_LIFETIME=1`), bukan simulasi cache. Skenario wajib: login → expire → perilaku pemulihan → redirect balik ke halaman asal (intended URL).
 5. **Audit Performa**: tidak menambah N+1 (eager `with()`), cache tetap hit, ukur waktu load halaman utama saat E2E (< 3 detik lokal). Script E2E mencatat NavigationTiming.
 6. **Kebersihan Data Uji**: semua user/entri CRUD/foto dummy yang dibuat saat testing wajib dihapus dari database.
-7. **Pasca-Deploy**: setelah merge ke `main`, cek status deploy Vercel dan uji ulang alur inti (login, halaman admin, switch bahasa) di URL produksi.
+7. **Pasca-Deploy**: setelah merge ke `main`, cek status deploy Vercel dan uji ulang alur inti (login, halaman admin, switch bahasa) di URL produksi — admin di host `ADMIN_HOST` (subdomain khusus), dan pastikan `/admin/*` di host publik masih 404 serta menu chatbot tidak tampil.
 
 ## Aturan Chatbot WhatsApp (Baileys) — Wajib
 
 1. **Clock skew TiDB**: Jam DB TiDB TERTINGGAL beberapa jam dari jam Node (`NOW()` ≈ jam nyata − 7 jam, terukur 2026-09-21). DILARANG membandingkan timestamp DB dengan jam Node di JS (`Date.now() - new Date(kolom_db)` salah selalu). Komparasi durasi (rate limit, idle reset) WAJIB dihitung SQL-side: `TIMESTAMPDIFF(SECOND, kolom, NOW())`. Untuk TAMPILAN tanggal di WhatsApp, gunakan offset terukur (`dapatkanOffsetDb` di `whatsapp.js`) + format `timeZone: 'UTC'` setelah koreksi +7 jam WIB.
 2. **Tombol WA floating hanya localhost**: Komponen `components/site/whatsapp.blade.php` wajib dibungkus `@if(app()->environment('local')) ... @endif` — tombol TIDAK BOLEH muncul di produksi/Vercel (tugas akhir hanya memakai localhost). Jangan hapus guard ini saat refactor; merge ke main harus tetap menyembunyikannya.
-3. **Rahasia di luar folder publik**: `chatbot.env` wajib berada di `storage/app/` (BUKAN `public/chatbot/.env`) dan sesi Baileys `auth_info` wajib di `storage/app/chatbot-auth/`. `php artisan serve` menyajikan file mentah di bawah `public/` — apa pun di `public/` dapat diunduh. `vercel.json` wajib memblok `/public/chatbot/(.*)` → 404.
-4. **Perubahan state machine**: state `sesi_aktif` (menu/ai/human/inventory_select/checkout_qty) hanya boleh diubah di handler state masing-masing; input angka jangan dibajak lintas state. Setiap pesan masuk diproses serial per-chat via `antrePesan`.
+3. **Menu & route Chatbot WhatsApp = fitur skripsi, local-only**: menu sidebar dibungkus `@if(! app()->environment('production'))` dan seluruh grup route `/admin/chatbot/*` memakai middleware `local.only` (404 di produksi — bukan sekadar disembunyikan). Chatbot dihapus begitu skripsi selesai; widget chat Firebase antar petinggi TIDAK ikut disembunyikan.
+4. **Rahasia di luar folder publik**: `chatbot.env` wajib berada di `storage/app/` (BUKAN `public/chatbot/.env`) dan sesi Baileys `auth_info` wajib di `storage/app/chatbot-auth/`. `php artisan serve` menyajikan file mentah di bawah `public/` — apa pun di `public/` dapat diunduh. `vercel.json` wajib memblok `/public/chatbot/(.*)` → 404.
+5. **Perubahan state machine**: state `sesi_aktif` (menu/ai/human/inventory_select/checkout_qty) hanya boleh diubah di handler state masing-masing; input angka jangan dibajak lintas state. Setiap pesan masuk diproses serial per-chat via `antrePesan`.
 
 ## Aturan Keamanan Wajib (Auth, Session, Database)
 
@@ -178,7 +179,7 @@ Semua poin wajib tetap terpenuhi; saat refactor, jangan menonaktifkan kontrol di
 | 37-38 | Uptime monitoring, error logging | `/up` Laravel + `/health` chatbot; `Log::error/warning` aktif, `LOG_CHANNEL=stderr` di Vercel |
 | 39-40 | Uji user simultan, uji restore backup | Prosedur manual sebelum demo (2-3 user); backup TiDB diuji restore, catat hasil |
 | 41-47 | Kredensial DB, .env publik, secret, log, authz, cross-user, DB perms, cloud misconfig | Tertutup poin 1-15; Cloudinary unsigned preset dibatasi via dashboard (folder + format + ukuran) |
-| 48 | Admin route terproteksi | `/admin/*` = 3 middleware; produksi → 404 (`AdminDomain`, admin local-only) |
+| 48 | Admin route terproteksi | `/admin/*` = 3 middleware + `local.only` (chatbot); host publik produksi → 404 (`AdminDomain` + env `ADMIN_HOST`, subdomain admin `management4putra-m4p.vercel.app`) |
 | 49-50 | SQL injection, NoSQL injection | Binding penuh (Laravel + mysql2); Laravel tidak pakai NoSQL |
 | 51-52 | Verbose error, auth lemah | Pesan generik + log detail; password min 8 + throttle login + log gagal |
 | 53-54 | Secret di git, secret di JS | Bersih (`git ls-files`); bundle client tidak memuat key (Midtrans/GROQ server-side saja) |

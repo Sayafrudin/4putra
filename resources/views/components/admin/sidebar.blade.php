@@ -9,7 +9,7 @@
             {{-- Close button mobile --}}
             <div class="flex items-center justify-between px-6 mb-4 lg:mb-0">
                 <a class="text-xl font-extrabold tracking-wider text-gray-900 dark:text-white"
-                    href="{{ route('admin.dashboard') }}">
+                    href="{{ route('admin.dashboard') }}" data-turbo="true">
                     4PUTRA<span class="text-[#E62C37]">.</span>
                 </a>
                 <button @click="sidebarOpen = false"
@@ -27,7 +27,7 @@
                             aria-hidden="true"></span>
                     @endif
                     <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.dashboard') ? 'text-gray-900 dark:text-white font-bold' : '' }}"
-                        href="{{ route('admin.dashboard') }}" @click="sidebarOpen = false">
+                        href="{{ route('admin.dashboard') }}" data-turbo="true" @click="sidebarOpen = false">
                         <svg class="w-5 h-5" fill="none" stroke-linecap="round" stroke-linejoin="round"
                             stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
                             <path
@@ -68,7 +68,7 @@
                         x-transition:leave="transition ease-in duration-75"
                         x-transition:leave-start="opacity-100 translate-y-0"
                         x-transition:leave-end="opacity-0 -translate-y-1" class="mt-2 ml-4 space-y-1">
-                        <a href="{{ route('admin.collections.index') }}" @click="sidebarOpen = false"
+                        <a href="{{ route('admin.collections.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.collections.*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
@@ -77,7 +77,7 @@
                             </svg>
                             Koleksi (Collections)
                         </a>
-                        <a href="{{ route('admin.facilities.index') }}" @click="sidebarOpen = false"
+                        <a href="{{ route('admin.facilities.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.facilities.*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
@@ -86,7 +86,7 @@
                             </svg>
                             Fasilitas (Facilities)
                         </a>
-                        <a href="{{ route('admin.daily-activities.index') }}" @click="sidebarOpen = false"
+                        <a href="{{ route('admin.daily-activities.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.daily-activities.*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
@@ -95,7 +95,7 @@
                             </svg>
                             Aktivitas Harian (Daily Activities)
                         </a>
-                        <a href="{{ route('admin.achievements.index') }}" @click="sidebarOpen = false"
+                        <a href="{{ route('admin.achievements.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.achievements.*') || request()->routeIs('admin.about.*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
@@ -137,7 +137,7 @@
                         x-transition:leave="transition ease-in duration-75"
                         x-transition:leave-start="opacity-100 translate-y-0"
                         x-transition:leave-end="opacity-0 -translate-y-1" class="mt-2 ml-4 space-y-1">
-                        <a href="{{ route('admin.kandang.index') }}" @click="sidebarOpen = false"
+                        <a href="{{ route('admin.kandang.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.kandang*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
@@ -146,7 +146,7 @@
                             </svg>
                             Kandang
                         </a>
-                        <a href="{{ route('admin.vaksinasi.index') }}" @click="sidebarOpen = false"
+                        <a href="{{ route('admin.vaksinasi.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.vaksinasi*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
@@ -155,7 +155,7 @@
                             </svg>
                             Vaksinasi
                         </a>
-                        <a href="{{ route('admin.telur.index') }}" @click="sidebarOpen = false"
+                        <a href="{{ route('admin.telur.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.telur*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
@@ -164,7 +164,7 @@
                             </svg>
                             Telur & Incubator
                         </a>
-                        <a href="{{ route('admin.stok.index') }}" @click="sidebarOpen = false"
+                        <a href="{{ route('admin.stok.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.stok*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
@@ -182,7 +182,7 @@
                         <span class="absolute inset-y-0 left-0 w-1 bg-[#E62C37] rounded-tr-lg rounded-br-lg"
                             aria-hidden="true"></span>
                     @endif
-                    <a href="{{ route('admin.keuangan.index') }}" @click="sidebarOpen = false"
+                    <a href="{{ route('admin.keuangan.index') }}" data-turbo="true" @click="sidebarOpen = false"
                         class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.keuangan*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
                         <svg class="w-5 h-5" fill="none" stroke-linecap="round" stroke-linejoin="round"
                             stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -201,7 +201,7 @@
                                 aria-hidden="true"></span>
                         @endif
                         <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.users.*') ? 'text-gray-900 dark:text-white font-bold' : '' }}"
-                            href="{{ route('admin.users.index') }}" @click="sidebarOpen = false">
+                            href="{{ route('admin.users.index') }}" data-turbo="true" @click="sidebarOpen = false">
                             <svg class="w-5 h-5" fill="none" stroke-linecap="round" stroke-linejoin="round"
                                 stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
                                 <path
@@ -242,7 +242,7 @@
                         x-transition:leave="transition ease-in duration-75"
                         x-transition:leave-start="opacity-100 translate-y-0"
                         x-transition:leave-end="opacity-0 -translate-y-1" class="mt-2 ml-4 space-y-1">
-                        <a href="{{ route('admin.chatbot.index') }}" @click="sidebarOpen = false"
+                        <a href="{{ route('admin.chatbot.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.chatbot.index') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
@@ -251,7 +251,7 @@
                             </svg>
                             Ringkasan
                         </a>
-                        <a href="{{ route('admin.chatbot.inventaris') }}" @click="sidebarOpen = false"
+                        <a href="{{ route('admin.chatbot.inventaris') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.chatbot.inventaris*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
@@ -260,7 +260,7 @@
                             </svg>
                             Inventaris Burung
                         </a>
-                        <a href="{{ route('admin.chatbot.chat') }}" @click="sidebarOpen = false"
+                        <a href="{{ route('admin.chatbot.chat') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.chatbot.chat') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
@@ -269,7 +269,7 @@
                             </svg>
                             WhatsApp Chat
                         </a>
-                        <a href="{{ route('admin.chatbot.transaksi') }}" @click="sidebarOpen = false"
+                        <a href="{{ route('admin.chatbot.transaksi') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.chatbot.transaksi*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
@@ -287,7 +287,7 @@
         {{-- Bagian bawah sidebar: Profil & Logout --}}
         <div class="mt-auto border-t border-gray-200 dark:border-gray-700 pt-4 px-6 space-y-2">
             {{-- Profil --}}
-            <a href="{{ route('admin.profile.edit') }}" @click="sidebarOpen = false"
+            <a href="{{ route('admin.profile.edit') }}" data-turbo="true" @click="sidebarOpen = false"
                 class="flex items-center text-sm font-medium transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.profile.*') ? 'text-[#E62C37]' : '' }}">
                 <div class="w-8 h-8 rounded-full bg-[#E62C37]/10 flex items-center justify-center mr-3">
                     <svg class="w-4 h-4 text-[#E62C37]" fill="none" stroke="currentColor" stroke-width="2"

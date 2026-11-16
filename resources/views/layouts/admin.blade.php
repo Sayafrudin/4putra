@@ -8,6 +8,9 @@
     <meta name="session-lifetime-minutes" content="{{ (int) config('session.lifetime') }}">
     {{-- Dashboard internal: dilarang terindeks mesin pencari maupun crawler AI --}}
     <meta name="robots" content="noindex, nofollow">
+    {{-- Turbo (navigasi sidebar SPA): tanpa snapshot cache — restore cache tidak
+         mengeksekusi ulang script inline, jadi tombol bisa mati. Refetch = selalu segar. --}}
+    <meta name="turbo-cache-control" content="no-cache">
     <title>Dashboard Admin - PT 4Putra Vertex Aviary</title>
     <link rel="icon" href="{{ asset('img/4Putraico.png') }}" type="image/png">
 
@@ -76,7 +79,7 @@
                     </button>
 
                     {{-- Logo mobile (tampil di header saat sidebar hidden) --}}
-                    <a href="{{ route('admin.dashboard') }}" class="lg:hidden font-extrabold text-lg tracking-wider text-gray-900 dark:text-white">
+                    <a href="{{ route('admin.dashboard') }}" data-turbo="true" class="lg:hidden font-extrabold text-lg tracking-wider text-gray-900 dark:text-white">
                         4PUTRA<span class="text-[#E62C37]">.</span>
                     </a>
 
@@ -128,9 +131,10 @@
         </script>
     @endif
 
-    {{-- Dark Mode Toggle Handler (Preline-style, pure JS) --}}
+    {{-- Dark Mode Toggle Handler (Preline-style, pure JS) — dijalankan langsung
+         (script di akhir body): tetap ter-eksekusi ulang tiap render Turbo --}}
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        (function() {
             var html = document.documentElement;
             var darkModeBtns = document.querySelectorAll('.hs-dark-mode');
 
@@ -165,7 +169,7 @@
             });
 
             updateDarkModeBtns();
-        });
+        })();
     </script>
 </body>
 

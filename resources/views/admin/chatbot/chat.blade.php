@@ -1209,8 +1209,9 @@
             }
         }
 
-        // Inisialisasi
-        document.addEventListener('DOMContentLoaded', function() {
+        // Inisialisasi — dijalankan langsung (script di akhir body): tetap hidup saat
+        // halaman dirender Turbo (navigasi sidebar tanpa reload, DOMContentLoaded tak fire lagi)
+        (function() {
             scrollToBottom();
             updateInputArea();
 
@@ -1240,7 +1241,7 @@
             // Polling unread badge setiap 5 detik
             pollingUnread();
             setInterval(pollingUnread, 5000);
-        });
+        })();
 
         // Hentikan polling saat pindah halaman
         window.addEventListener('beforeunload', function() {

@@ -30,8 +30,12 @@
         return null;
     }
 
-    document.querySelectorAll('.table-search-input').forEach(function (input) {
-        input.addEventListener('input', function () {
+    // Delegasi di document: tabel hasil render Turbo (navigasi sidebar tanpa reload)
+    // maupun tbody hasil refreshAdminList tetap terbaca — tidak ada listener per-input.
+    document.addEventListener('input', function (e) {
+        var input = e.target;
+        if (!input || !input.classList || !input.classList.contains('table-search-input')) return;
+        {
             var tableWrapper = findWrapper(input);
             if (!tableWrapper) return;
             var tbody = tableWrapper.querySelector('tbody');
@@ -69,6 +73,6 @@
             } else {
                 emptyRow.style.display = 'none';
             }
-        });
+        }
     });
 })();

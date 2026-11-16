@@ -17,6 +17,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Host Admin Dashboard (Produksi)
+    |--------------------------------------------------------------------------
+    | /admin/* hanya hidup di host local dan host ini. Host publik (situs
+    | 4PUTRA) tetap membalas 404 agar jalur admin tidak terungkap. Tidak
+    | di-hardcode: nilai di-set via env ADMIN_HOST (Vercel Environment).
+    */
+
+    'admin_host' => env('ADMIN_HOST'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

@@ -28,6 +28,11 @@ jobs:
           node-version: "22"
           cache: npm
 
+      - name: Siapkan .env + bootstrap/cache (package:discover butuh keduanya)
+        run: |
+          cp .env.example .env
+          mkdir -p bootstrap/cache
+
       - name: composer install
         run: composer install --no-interaction --prefer-dist --no-progress
 
@@ -54,15 +59,19 @@ jobs:
           php-version: "8.2"
           extensions: mbstring, dom, fileinfo, gd, intl, pdo_mysql
 
+      - name: Siapkan .env + bootstrap/cache
+        if: steps.cek.outputs.ada == 'true'
+        run: |
+          cp .env.example .env
+          mkdir -p bootstrap/cache
+
       - name: composer install
         if: steps.cek.outputs.ada == 'true'
         run: composer install --no-interaction --prefer-dist --no-progress
 
-      - name: Siapkan .env
+      - name: Generate APP_KEY
         if: steps.cek.outputs.ada == 'true'
-        run: |
-          cp .env.example .env
-          php artisan key:generate --force
+        run: php artisan key:generate --force
 
       - name: php artisan test (full suite)
         if: steps.cek.outputs.ada == 'true'

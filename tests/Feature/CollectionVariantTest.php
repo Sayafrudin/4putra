@@ -12,6 +12,7 @@ class CollectionVariantTest extends TestCase
     protected function tearDown(): void
     {
         Collection::where('category', 'uji-varian')->delete();
+        User::where('email', 'admin-variant-test@4putra.test')->delete();
         parent::tearDown();
     }
 

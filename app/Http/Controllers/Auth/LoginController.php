@@ -39,6 +39,12 @@ class LoginController extends Controller
             $userId = Auth::id();
             User::where('id', $userId)->update(['last_login_at' => now()]);
 
+            // Non-admin tidak boleh ke /admin (jebakan 403 tanpa pintu keluar);
+            // url.intended bisa berisi URL admin, jadi abaikan intended untuk non-admin.
+            if (! Auth::user()->isAdmin()) {
+                return redirect('/');
+            }
+
             return redirect()->intended(route('admin.dashboard'))->with('success', 'Selamat datang kembali, '.Auth::user()->name.'!');
         }
 

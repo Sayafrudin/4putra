@@ -55,6 +55,11 @@ class GoogleController extends Controller
         // Update last_login_at langsung ke database
         User::where('id', $user->id)->update(['last_login_at' => now()]);
 
+        // Non-admin diarahkan ke beranda, bukan /admin (jebakan 403 tanpa pintu keluar).
+        if (! $user->isAdmin()) {
+            return redirect('/');
+        }
+
         return redirect()->intended(route('admin.dashboard'))->with('success', 'Selamat datang kembali, '.$user->name.'!');
     }
 }

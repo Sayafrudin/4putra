@@ -243,11 +243,11 @@
     </div>
 
     <script>
-        const CSRF = document.querySelector('meta[name="csrf-token"]').content;
-        let sedangBusy = false;
-        let updateTargetId = null;
-        let hapusTargetId = null;
-        let formActionUpdate = '';
+        var CSRF = document.querySelector('meta[name="csrf-token"]').content;
+        var sedangBusy = false;
+        var updateTargetId = null;
+        var hapusTargetId = null;
+        var formActionUpdate = '';
 
         function setBusy(on) {
             sedangBusy = on;

@@ -320,13 +320,14 @@
         ])->values()->all();
     @endphp
     <script>
-        const CSRF = document.querySelector('meta[name="csrf-token"]').content;
-        const ORDINAL = { 1: 'pertama', 2: 'kedua', 3: 'ketiga', 4: 'keempat', 5: 'kelima' };
-        const PASANGAN = @json($kandangPasangan);
-        const DATA_EKSPOR = @json($dataEkspor);
-        let sedangBusy = false;
-        let editTargetId = null;
-        let hapusTargetId = null;
+        var CSRF = document.querySelector('meta[name="csrf-token"]').content;
+        var ORDINAL = { 1: 'pertama', 2: 'kedua', 3: 'ketiga', 4: 'keempat', 5: 'kelima' };
+        var PASANGAN = @json($kandangPasangan);
+        {{-- Hex-escape: input admin (kondisi/keterangan) tak boleh bisa memutus konteks <script> --}}
+        var DATA_EKSPOR = @json($dataEkspor, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+        var sedangBusy = false;
+        var editTargetId = null;
+        var hapusTargetId = null;
 
         function setBusy(on) {
             sedangBusy = on;

@@ -1,8 +1,8 @@
 <?php
 
 use App\Http\Controllers\AchievementController;
-use App\Http\Controllers\Admin\AdminAchievementController;
 use App\Http\Controllers\Admin\AdminAboutController;
+use App\Http\Controllers\Admin\AdminAchievementController;
 use App\Http\Controllers\Admin\AdminCollectionController;
 use App\Http\Controllers\Admin\AdminDailyActivityController;
 use App\Http\Controllers\Admin\AdminFacilityController;
@@ -97,7 +97,7 @@ Route::get('lang/{locale}', function ($locale) {
     // Cache-buster ?v=: pastikan target redirect tidak dilayani cache HTTP/edge/
     // prefetch berbahasa lama. Cookie 'locale' mengaktifkan Vary: Cookie di CachePublic.
     $target = trim(preg_replace('/([?&])v=\d+/', '$1', url()->previous() ?: url('/')), '?&');
-    if (!str_contains($target, url('/')) || str_contains($target, '/lang/') || str_contains($target, '/midtrans')) {
+    if (! str_contains($target, url('/')) || str_contains($target, '/lang/') || str_contains($target, '/midtrans')) {
         $target = url('/');
     }
     $sep = str_contains($target, '?') ? '&' : '?';
@@ -126,7 +126,7 @@ Route::middleware('auth')->group(function () {
 Route::post('/midtrans/callback-laravel', [ChatbotController::class, 'midtransCallback'])->name('midtrans.callback.laravel');
 
 // Grup Rute Dashboard Admin PT 4Putra Vertex Aviary
-// admin.domain PALING DEPAN: host non-local langsung 404 (admin local-only),
+// admin.domain PALING DEPAN: host selain local & ADMIN_HOST langsung 404 (admin hanya di subdomain khusus),
 // sebelum auth check memunculkan redirect /login di host produksi.
 // admin.only: role admin diverifikasi SERVER-SIDE untuk SELURUH grup (bukan hanya login)
 Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'admin.only'])->group(function () {
@@ -213,7 +213,7 @@ Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'admin.only'])
         Route::post('/activity/{activity}/comment', [AdminUserController::class, 'commentActivity'])->name('admin.activity.comment');
     });
 
-    // Chatbot WhatsApp (hanya admin; fitur skripsi → local-only, 404 di produksi)
+    // Chatbot WhatsApp (hanya admin; fitur skripsi → local-only, 404 di produksi lewat middleware local.only)
     Route::middleware(['local.only', 'admin.only'])->prefix('chatbot')->group(function () {
         Route::get('/', [ChatbotController::class, 'index'])->name('admin.chatbot.index');
         Route::get('/inventaris', [ChatbotController::class, 'inventaris'])->name('admin.chatbot.inventaris');

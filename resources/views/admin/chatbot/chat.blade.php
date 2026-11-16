@@ -546,27 +546,27 @@
 
     {{-- Data untuk JavaScript --}}
     <script>
-        const SELECTED_PELANGGAN_ID = {{ optional($selectedPelanggan)->id ?? 'null' }};
-        const CHAT_SEND_URL = '{{ route('admin.chatbot.chat.send') }}';
-        const CHAT_TOGGLE_URL = '{{ route('admin.chatbot.chat.toggle') }}';
-        const CHAT_CLEAR_URL = '{{ route('admin.chatbot.chat.clear', ['pelanggan' => '__ID__']) }}';
-        const CHAT_DELETE_URL = '{{ route('admin.chatbot.chat.delete', ['pelanggan' => '__ID__']) }}';
-        const CHAT_MESSAGES_URL = '{{ route('admin.chatbot.chat.messages', ['pelanggan' => '__ID__']) }}';
-        const CHAT_MARK_READ_URL = '{{ route('admin.chatbot.chat.mark-read', ['pelanggan' => '__ID__']) }}';
-        const CHAT_UNREAD_URL = '{{ route('admin.chatbot.chat.unread') }}';
-        const CSRF_TOKEN = '{{ csrf_token() }}';
-        let currentMode = '{{ optional($selectedPelanggan)->sesi_aktif ?? 'ai' }}';
-        let lastMessageId = 0;
-        let pollingInterval = null;
+        var SELECTED_PELANGGAN_ID = {{ optional($selectedPelanggan)->id ?? 'null' }};
+        var CHAT_SEND_URL = '{{ route('admin.chatbot.chat.send') }}';
+        var CHAT_TOGGLE_URL = '{{ route('admin.chatbot.chat.toggle') }}';
+        var CHAT_CLEAR_URL = '{{ route('admin.chatbot.chat.clear', ['pelanggan' => '__ID__']) }}';
+        var CHAT_DELETE_URL = '{{ route('admin.chatbot.chat.delete', ['pelanggan' => '__ID__']) }}';
+        var CHAT_MESSAGES_URL = '{{ route('admin.chatbot.chat.messages', ['pelanggan' => '__ID__']) }}';
+        var CHAT_MARK_READ_URL = '{{ route('admin.chatbot.chat.mark-read', ['pelanggan' => '__ID__']) }}';
+        var CHAT_UNREAD_URL = '{{ route('admin.chatbot.chat.unread') }}';
+        var CSRF_TOKEN = '{{ csrf_token() }}';
+        var currentMode = '{{ optional($selectedPelanggan)->sesi_aktif ?? 'ai' }}';
+        var lastMessageId = 0;
+        var pollingInterval = null;
 
         // Reply state
-        let replyToId = null;
+        var replyToId = null;
 
         // Media state
-        let selectedMedia = null;
+        var selectedMedia = null;
 
         // Delete state
-        let deleteMsgId = null;
+        var deleteMsgId = null;
 
         // Scroll ke bawah
         function scrollToBottom() {
@@ -741,7 +741,7 @@
         }
 
         // Drag & drop (debounced to prevent flickering)
-        let dragTimer = null;
+        var dragTimer = null;
 
         function handleDragOver(e) {
             e.preventDefault();
@@ -1233,14 +1233,19 @@
                 if (id > lastMessageId) lastMessageId = id;
             });
 
+            // Turbo re-exec: bersihkan interval kunjungan sebelumnya
+            // (beforeunload tidak fire saat navigasi SPA — interval lama jadi zombie)
+            if (window.__chatPollingInterval) clearInterval(window.__chatPollingInterval);
+            if (window.__chatUnreadInterval) clearInterval(window.__chatUnreadInterval);
+
             // Mulai polling pesan setiap 2 detik
             if (SELECTED_PELANGGAN_ID) {
-                pollingInterval = setInterval(pollingPesan, 2000);
+                pollingInterval = window.__chatPollingInterval = setInterval(pollingPesan, 2000);
             }
 
             // Polling unread badge setiap 5 detik
             pollingUnread();
-            setInterval(pollingUnread, 5000);
+            window.__chatUnreadInterval = setInterval(pollingUnread, 5000);
         })();
 
         // Hentikan polling saat pindah halaman

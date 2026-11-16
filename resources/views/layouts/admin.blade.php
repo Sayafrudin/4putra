@@ -118,16 +118,16 @@
 
     @if (session('success'))
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                showToast('success', 'Berhasil', '{{ session('success') }}');
-            });
+            var tampilToastSukses = function () { showToast('success', 'Berhasil', '{{ session('success') }}'); };
+            document.addEventListener('DOMContentLoaded', tampilToastSukses);
+            document.addEventListener('turbo:load', tampilToastSukses);
         </script>
     @endif
     @if (session('error'))
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                showToast('error', 'Gagal', '{{ session('error') }}');
-            });
+            var tampilToastGagal = function () { showToast('error', 'Gagal', '{{ session('error') }}'); };
+            document.addEventListener('DOMContentLoaded', tampilToastGagal);
+            document.addEventListener('turbo:load', tampilToastGagal);
         </script>
     @endif
 

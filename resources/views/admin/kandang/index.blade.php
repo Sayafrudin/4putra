@@ -267,11 +267,11 @@
     </div>
 
     <script>
-        const CSRF = document.querySelector('meta[name="csrf-token"]').content;
-        let sedangBusy = false;
-        let burungDitarik = null; // { id, chip, dariParent }
-        let hapusTargetId = null;
-        let editTargetId = null;
+        var CSRF = document.querySelector('meta[name="csrf-token"]').content;
+        var sedangBusy = false;
+        var burungDitarik = null; // { id, chip, dariParent }
+        var hapusTargetId = null;
+        var editTargetId = null;
 
         function setBusy(on) {
             sedangBusy = on;
@@ -471,7 +471,7 @@
         }
 
         // ---- Tap/klik chip: pindah via modal (HTML5 DnD tidak jalan di layar sentuh) ----
-        let pindahTarget = null; // { id, diKandang: bool }
+        var pindahTarget = null; // { id, diKandang: bool }
 
         document.addEventListener('click', function (e) {
             const chip = e.target.closest('.burung-chip');

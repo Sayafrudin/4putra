@@ -215,10 +215,11 @@
         ])->values()->all();
     @endphp
     <script>
-        const CSRF = document.querySelector('meta[name="csrf-token"]').content;
-        const DATA_EKSPOR = @json($dataEkspor);
-        let sedangBusy = false;
-        let hapusTargetId = null;
+        var CSRF = document.querySelector('meta[name="csrf-token"]').content;
+        {{-- Hex-escape: keterangan input admin tak boleh bisa memutus konteks <script> --}}
+        var DATA_EKSPOR = @json($dataEkspor, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+        var sedangBusy = false;
+        var hapusTargetId = null;
 
         function setBusy(on) {
             sedangBusy = on;

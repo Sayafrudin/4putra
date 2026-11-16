@@ -109,10 +109,11 @@ try {
     assert(optVaksin.some((l) => l.startsWith('Kandang ')),
         `S3 dropdown vaksinasi tergrup kandang [${optVaksin.join(', ')}]`);
     await page.goto(`${BASE}/admin/telur`, { waitUntil: 'load' });
-    const optTelur = await page.evaluate(() => [...document.querySelectorAll('#tambah_burung optgroup')].map((g) => g.label));
+    // Telur kini berbasis KANDANG (pasangan 2 induk otomatis) — bukan dropdown induk per optgroup
+    const optTelur = await page.evaluate(() => [...document.querySelectorAll('#tambah_kandang option')].map((o) => o.textContent));
     assert(optTelur.some((l) => l.startsWith('Kandang ')),
-        `S4 dropdown telur tergrup kandang [${optTelur.join(', ')}]`);
-    assert(optTelur.every((l) => l !== ''), 'S5 tidak ada optgroup tanpa label');
+        `S4 dropdown telur = daftar kandang pasangan [${optTelur.join(', ')}]`);
+    assert(optTelur.every((l) => l !== ''), 'S5 tidak ada option tanpa label');
 
     // ---------- Stok makanan: satuan dropdown + badge ----------
     await page.goto(`${BASE}/admin/stok-makanan`, { waitUntil: 'load' });

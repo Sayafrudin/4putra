@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
@@ -51,7 +50,7 @@ class AdminExportTest extends TestCase
             ->assertHeader('Content-Type', 'application/pdf');
 
         // Export keuangan mengikuti filter aktif (tipe/kategori)
-        $this->actingAs($this->admin)->get('/admin/keuangan/export/pdf?tipe=keluar&kategori=Gaji Bulanan')
+        $this->actingAs($this->admin)->get('/admin/keuangan/export/pdf?tipe=keluar&kategori=Gaji')
             ->assertOk()
             ->assertHeader('Content-Type', 'application/pdf');
     }

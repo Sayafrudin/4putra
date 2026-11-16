@@ -20,8 +20,8 @@ class AdminDomain
     {
         $host = $request->getHost();
 
-        // Local development: localhost, 127.0.0.1, *.test, *.local → boleh
-        if (in_array($host, ['localhost', '127.0.0.1']) || str_ends_with($host, '.test') || str_ends_with($host, '.local')) {
+        // Local development: localhost, 127.0.0.1, ::1 (IPv6), *.test, *.local → boleh
+        if (in_array($host, ['localhost', '127.0.0.1', '[::1]', '::1']) || str_ends_with($host, '.test') || str_ends_with($host, '.local')) {
             return $next($request);
         }
 

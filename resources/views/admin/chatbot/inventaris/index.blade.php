@@ -260,8 +260,8 @@
     </div>
 
     <script>
-        const STORE_URL = '{{ route("admin.chatbot.inventaris.store") }}';
-        const CSRF = '{{ csrf_token() }}';
+        var STORE_URL = '{{ route("admin.chatbot.inventaris.store") }}';
+        var CSRF = '{{ csrf_token() }}';
 
         // ==================== MODAL HELPERS ====================
         function bukaModal(id) {

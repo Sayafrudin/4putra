@@ -8,7 +8,7 @@ class AdminDomainTest extends TestCase
 {
     public function test_admin_404_di_host_produksi(): void
     {
-        // Admin dashboard local-only: host produksi wajib 404 (sebelum auth redirect).
+        // Host publik produksi wajib 404 (admin hanya di subdomain ADMIN_HOST).
         // Full URL wajib: get() membangun URL dari APP_URL (localhost), yang menimpa HTTP_HOST.
         $this->get('http://4putra.vercel.app/admin')->assertStatus(404);
     }

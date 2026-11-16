@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Admin\LogsActivity;
 use App\Http\Controllers\Controller;
 use App\Models\Keuangan;
 use Illuminate\Http\Request;

@@ -77,7 +77,8 @@
                             </svg>
                             Koleksi (Collections)
                         </a>
-                        <a href="{{ route('admin.facilities.index') }}" data-turbo="true" @click="sidebarOpen = false"
+                        {{-- Full-reload: script halaman = ES module (tak dieksekusi ulang Turbo, module map cache) --}}
+                        <a href="{{ route('admin.facilities.index') }}" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.facilities.*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
@@ -86,7 +87,8 @@
                             </svg>
                             Fasilitas (Facilities)
                         </a>
-                        <a href="{{ route('admin.daily-activities.index') }}" data-turbo="true" @click="sidebarOpen = false"
+                        {{-- Full-reload: script halaman = ES module (tak dieksekusi ulang Turbo, module map cache) --}}
+                        <a href="{{ route('admin.daily-activities.index') }}" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.daily-activities.*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
@@ -95,7 +97,8 @@
                             </svg>
                             Aktivitas Harian (Daily Activities)
                         </a>
-                        <a href="{{ route('admin.achievements.index') }}" data-turbo="true" @click="sidebarOpen = false"
+                        {{-- Full-reload: script halaman = ES module (achievements+about) tak dieksekusi ulang Turbo --}}
+                        <a href="{{ route('admin.achievements.index') }}" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.achievements.*') || request()->routeIs('admin.about.*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
@@ -201,7 +204,8 @@
                                 aria-hidden="true"></span>
                         @endif
                         <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.users.*') ? 'text-gray-900 dark:text-white font-bold' : '' }}"
-                            href="{{ route('admin.users.index') }}" data-turbo="true" @click="sidebarOpen = false">
+                            {{-- Full-reload: presence users pakai inline module (RTDB) tak dieksekusi ulang Turbo --}}
+                            href="{{ route('admin.users.index') }}" @click="sidebarOpen = false">
                             <svg class="w-5 h-5" fill="none" stroke-linecap="round" stroke-linejoin="round"
                                 stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
                                 <path

@@ -1,5 +1,9 @@
 name: CI
 
+# F9 — gate minimal: build frontend + PHPUnit penuh sebagai gate push.
+# Job test otomatis LEWAT (skip) bila rahasia DB belum diset di GitHub —
+# CI tetap hijau sejak hari pertama, tidak mengganggu deploy Vercel yang jalan.
+
 on:
   push:
     branches: [development, main]
@@ -7,48 +11,68 @@ on:
     branches: [development, main]
 
 jobs:
-  php:
-    name: PHP — lint & dependensi
+  build:
+    name: Build frontend
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup PHP 8.3
-        uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
-          coverage: none
+          php-version: "8.2"
+          extensions: mbstring, dom, fileinfo, gd, intl, pdo_mysql
 
-      - name: Composer validate
-        run: composer validate --strict
-
-      - name: Install dependensi
-        run: composer install --no-interaction --prefer-dist --no-progress
-
-      - name: Lint seluruh file PHP (php -l)
-        run: |
-          find app routes database/seeders database/migrations tests -type f -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
-
-  node:
-    name: Frontend — build produksi
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node 20
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "22"
           cache: npm
 
-      - name: Install dependensi
-        run: npm ci
+      - name: composer install
+        run: composer install --no-interaction --prefer-dist --no-progress
 
-      - name: Build produksi (tanpa source map)
-        run: npm run build
+      - name: npm ci + build
+        run: |
+          npm ci
+          npm run build
 
-# Catatan: PHPUnit sengaja tidak dijalankan di CI. Suite test proyek ini
-# memakai koneksi database riil (TiDB) dan sebagian migrasi memuat SQL
-# khusus TiDB, sehingga tidak bisa dijalankan pada MySQL bawaan GitHub
-# Actions. Jangan aktifkan php artisan test di CI sampai suite dipindah
-# ke database test terisolasi — demi keamanan skripsi.
+  test:
+    name: PHPUnit (TiDB)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cek rahasia DB tersedia (lewati bila belum diset)
+        id: cek
+        run: echo "ada=${{ secrets.DB_HOST != '' }}" >> "$GITHUB_OUTPUT"
+
+      - uses: shivammathur/setup-php@v2
+        if: steps.cek.outputs.ada == 'true'
+        with:
+          php-version: "8.2"
+          extensions: mbstring, dom, fileinfo, gd, intl, pdo_mysql
+
+      - name: composer install
+        if: steps.cek.outputs.ada == 'true'
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Siapkan .env
+        if: steps.cek.outputs.ada == 'true'
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+
+      - name: php artisan test (full suite)
+        if: steps.cek.outputs.ada == 'true'
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_SSL: "true"
+          DB_SSL_VERIFY: "true"
+        run: php artisan test

@@ -134,142 +134,6 @@
         </div>
     </div>
 
-    {{-- ==================== AKSES GOOGLE (WHITELIST) ==================== --}}
-    <div class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-5">
-        <div>
-            <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">Akses Google</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Gmail yang diizinkan login dengan Google. Gmail di luar daftar ini ditolak otomatis.</p>
-        </div>
-        <button onclick="bukaModalTambahGoogle()"
-            class="px-5 py-2.5 text-sm font-bold uppercase tracking-wider text-white bg-[#E62C37] hover:bg-[#c5242d] transition-colors duration-200 shadow-md rounded-lg">
-            + Tambah Gmail
-        </button>
-    </div>
-
-    <div class="w-full overflow-hidden bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 shadow-sm mb-10">
-        <div class="w-full overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-white dark:bg-[#151a22] border-b border-gray-200 dark:border-gray-800">
-                        <th class="px-6 py-4">Email</th>
-                        <th class="px-6 py-4">Nama</th>
-                        <th class="px-6 py-4 w-28">Role</th>
-                        <th class="px-6 py-4 w-40 text-right">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
-                    @forelse($googleWhitelist as $g)
-                        <tr class="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#262d3a] transition-colors duration-150">
-                            <td class="px-6 py-4 text-sm">
-                                <div class="flex items-center gap-2">
-                                    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
-                                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                                    </svg>
-                                    <span>{{ $g->email }}</span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 text-sm">{{ $g->nama }}</td>
-                            <td class="px-6 py-4 text-sm">
-                                <span class="px-2 py-1 rounded-full text-xs font-semibold {{ $g->role === 'admin' ? 'bg-[#E62C37]/20 text-[#E62C37]' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200' }}">
-                                    {{ $g->role === 'admin' ? 'Admin' : 'User' }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-right">
-                                <button onclick="bukaModalHapusGoogle({{ $g->id }}, '{{ addslashes($g->email) }}')"
-                                    class="px-3 py-1.5 text-xs font-semibold text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors">
-                                    Hapus
-                                </button>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="4" class="px-6 py-10 text-center text-gray-500">Belum ada Gmail yang diizinkan.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    {{-- ==================== MODAL TAMBAH GOOGLE ==================== --}}
-    <div id="modalTambahGoogle" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
-        <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Tambah Akses Google</h3>
-                <button onclick="tutupModal('modalTambahGoogle')" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-                    <x-tabler-x class="w-5 h-5" />
-                </button>
-            </div>
-            <form id="formTambahGoogle" onsubmit="submitTambahGoogle(event)" class="space-y-4">
-                @csrf
-                <div>
-                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Email Gmail</label>
-                    <input type="email" id="google_email" placeholder="nama@gmail.com"
-                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
-                    <p class="text-xs text-red-400 mt-1 hidden" id="err_google_email"></p>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Nama</label>
-                    <input type="text" id="google_nama" placeholder="Nama petinggi"
-                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
-                    <p class="text-xs text-red-400 mt-1 hidden" id="err_google_nama"></p>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Role</label>
-                    <select id="google_role"
-                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
-                <div class="flex gap-3 justify-end pt-2">
-                    <button type="button" onclick="tutupModal('modalTambahGoogle')"
-                        class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">
-                        Batal
-                    </button>
-                    <button type="submit" id="btnTambahGoogle"
-                        class="px-5 py-2.5 text-sm font-bold text-white bg-[#E62C37] rounded-xl hover:bg-[#c5242d] transition-colors">
-                        Simpan
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    {{-- ==================== MODAL HAPUS GOOGLE ==================== --}}
-    <div id="modalHapusGoogle" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
-        <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
-                    <x-tabler-alert-triangle class="w-5 h-5 text-red-400" />
-                </div>
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Hapus Akses Google</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Gmail ini tidak akan bisa login lagi</p>
-                </div>
-            </div>
-            <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">Apakah Anda yakin ingin menghapus akses Google untuk <span id="hapus_email_google" class="font-semibold text-gray-900 dark:text-white"></span>?</p>
-            <form id="formHapusGoogle" onsubmit="submitHapusGoogle(event)">
-                @csrf
-                @method('DELETE')
-                <input type="hidden" id="hapus_id_google">
-                <div class="flex gap-3 justify-end">
-                    <button type="button" onclick="tutupModal('modalHapusGoogle')"
-                        class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-[#151a22] border border-gray-600 rounded-xl hover:border-gray-500 transition-colors">
-                        Batal
-                    </button>
-                    <button type="submit" id="btnHapusGoogle"
-                        class="px-4 py-2.5 text-sm font-bold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors">
-                        Ya, Hapus
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     {{-- ==================== MODAL TAMBAH USER ==================== --}}
     <div id="modalTambahUser" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
         <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto">
@@ -308,7 +172,7 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Password</label>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Password <span class="text-gray-500 normal-case">(opsional — kosongkan bila login hanya via Google)</span></label>
                     <div class="relative" x-data="{ show: false }">
                         <input :type="show ? 'text' : 'password'" id="tambah_password" placeholder="Minimal 8 karakter"
                             class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 pr-12 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
@@ -440,7 +304,6 @@
         var STORE_URL = '{{ route("admin.users.store") }}';
         var CSRF = '{{ csrf_token() }}';
         var BASE_URL = '{{ url("/admin/users") }}';
-        var GOOGLE_STORE_URL = '{{ route("admin.google-whitelist.store") }}';
 
         // Modal helpers
         function bukaModal(id) {
@@ -491,9 +354,8 @@
             else if (!/^[a-zA-Z0-9_.-]+$/.test(username)) { showError('err_tambah_username', 'Username hanya boleh huruf, angka, titik, strip, underscore'); valid = false; }
             if (!email) { showError('err_tambah_email', 'Email wajib diisi'); valid = false; }
             else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('err_tambah_email', 'Format email tidak valid'); valid = false; }
-            if (!password) { showError('err_tambah_password', 'Password wajib diisi'); valid = false; }
-            else if (password.length < 8) { showError('err_tambah_password', 'Password minimal 8 karakter'); valid = false; }
-            if (password !== passwordConf) { showError('err_tambah_password', 'Konfirmasi password tidak cocok'); valid = false; }
+            if (password && password.length < 8) { showError('err_tambah_password', 'Password minimal 8 karakter'); valid = false; }
+            if (password && password !== passwordConf) { showError('err_tambah_password', 'Konfirmasi password tidak cocok'); valid = false; }
 
             if (!valid) return;
 
@@ -605,95 +467,6 @@
             document.getElementById('hapus_id_user').value = id;
             document.getElementById('hapus_nama_user').textContent = nama;
             bukaModal('modalHapusUser');
-        }
-
-        // ==================== AKSES GOOGLE ====================
-        function bukaModalTambahGoogle() {
-            document.getElementById('formTambahGoogle').reset();
-            clearAllErrors();
-            bukaModal('modalTambahGoogle');
-        }
-
-        async function submitTambahGoogle(e) {
-            e.preventDefault();
-            clearAllErrors();
-            let valid = true;
-
-            const email = document.getElementById('google_email').value.trim();
-            const nama = document.getElementById('google_nama').value.trim();
-
-            if (!email) { showError('err_google_email', 'Email wajib diisi'); valid = false; }
-            else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('err_google_email', 'Format email tidak valid'); valid = false; }
-            if (!nama) { showError('err_google_nama', 'Nama wajib diisi'); valid = false; }
-
-            if (!valid) return;
-
-            const btn = document.getElementById('btnTambahGoogle');
-            btn.disabled = true;
-            btn.textContent = 'Menyimpan...';
-
-            try {
-                const res = await fetch(GOOGLE_STORE_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF },
-                    body: JSON.stringify({ email, nama, role: document.getElementById('google_role').value }),
-                });
-
-                const data = await res.json();
-                if (res.ok) {
-                    tutupModal('modalTambahGoogle');
-                    showToast('success', 'Berhasil', 'Akses Google berhasil ditambahkan!');
-                    window.location.reload();
-                } else {
-                    if (data.errors) {
-                        if (data.errors.email) showError('err_google_email', data.errors.email[0]);
-                        if (data.errors.nama) showError('err_google_nama', data.errors.nama[0]);
-                    } else {
-                        showToast('error', 'Gagal', data.message || 'Gagal menambahkan akses Google');
-                    }
-                }
-            } catch (err) {
-                showToast('error', 'Gagal', 'Terjadi kesalahan: ' + err.message);
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Simpan';
-            }
-        }
-
-        function bukaModalHapusGoogle(id, email) {
-            document.getElementById('hapus_id_google').value = id;
-            document.getElementById('hapus_email_google').textContent = email;
-            bukaModal('modalHapusGoogle');
-        }
-
-        async function submitHapusGoogle(e) {
-            e.preventDefault();
-            const id = document.getElementById('hapus_id_google').value;
-            const btn = document.getElementById('btnHapusGoogle');
-            btn.disabled = true;
-            btn.textContent = 'Menghapus...';
-
-            try {
-                const res = await fetch(`${BASE_URL}/google-whitelist/${id}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF },
-                    body: JSON.stringify({ _method: 'DELETE' }),
-                });
-
-                const data = await res.json();
-                if (res.ok) {
-                    tutupModal('modalHapusGoogle');
-                    showToast('success', 'Berhasil', 'Akses Google berhasil dihapus!');
-                    window.location.reload();
-                } else {
-                    showToast('error', 'Gagal', data.message || 'Gagal menghapus akses Google');
-                }
-            } catch (err) {
-                showToast('error', 'Gagal', 'Terjadi kesalahan: ' + err.message);
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Ya, Hapus';
-            }
         }
 
         async function submitHapusUser(e) {

@@ -50,9 +50,9 @@
             </div>
 
             <div>
-                <label for="password" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Password</label>
+                <label for="password" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Password <span class="font-normal text-gray-500 dark:text-gray-400">(opsional — kosongkan bila login hanya via Google)</span></label>
                 <div class="relative" x-data="{ show: false }">
-                    <input :type="show ? 'text' : 'password'" name="password" id="password" required
+                    <input :type="show ? 'text' : 'password'" name="password" id="password"
                         class="w-full px-4 py-3 pr-12 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#E62C37]/50 focus:border-[#E62C37] text-sm"
                         placeholder="Minimal 8 karakter">
                     <button type="button" @click="show = !show"
@@ -74,7 +74,7 @@
             <div>
                 <label for="password_confirmation" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Konfirmasi Password</label>
                 <div class="relative" x-data="{ show: false }">
-                    <input :type="show ? 'text' : 'password'" name="password_confirmation" id="password_confirmation" required
+                    <input :type="show ? 'text' : 'password'" name="password_confirmation" id="password_confirmation"
                         class="w-full px-4 py-3 pr-12 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#E62C37]/50 focus:border-[#E62C37] text-sm"
                         placeholder="Ulangi password">
                     <button type="button" @click="show = !show"

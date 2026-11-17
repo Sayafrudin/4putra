@@ -29,11 +29,10 @@ class KandangController extends Controller
             ->get()
             ->groupBy('blok');
 
-        // Pool = burung bebas + burung yang sedang di Aviary (badge "Di Aviary N"
-        // memungkinkan dipindah langsung ke kandang biasa).
-        $aviaryIds = Kandang::where('tipe', 'aviary')->pluck('id');
+        // Pool = hanya burung bebas. Burung aviary tidak ditawarkan di sini —
+        // kandang & aviary saling eksklusif: keluarkan dari aviary dulu.
         $pool = Burung::with('kandang:id,blok,nomor,tipe')
-            ->where(fn ($q) => $q->whereNull('kandang_id')->orWhereIn('kandang_id', $aviaryIds))
+            ->whereNull('kandang_id')
             ->orderByDesc('created_at')
             ->get();
 
@@ -103,13 +102,19 @@ class KandangController extends Controller
             $hasil = DB::transaction(function () use ($request, $burung, $data) {
                 $kandang = Kandang::lockForUpdate()->findOrFail($data['kandang_id']);
 
-                // Aturan bos: burung yang masih di kandang breeding tidak boleh
-                // lompat ke Aviary — keluarkan dulu. Arah sebaliknya
-                // (aviary → kandang breeding) tetap sah sebagai promosi.
+                // Aturan bos: kandang breeding dan Aviary saling eksklusif —
+                // pindah zona harus lewat pool bebas (keluarkan dulu).
                 if ($kandang->tipe === 'aviary' && $burung->kandang_id && $burung->kandang->tipe !== 'aviary') {
                     return response()->json([
                         'ok' => false,
                         'message' => 'Burung masih di kandang breeding '.$burung->kandang->label.'. Keluarkan dari kandang dulu sebelum dipindah ke Aviary.',
+                    ], 422);
+                }
+
+                if ($kandang->tipe !== 'aviary' && $burung->kandang_id && $burung->kandang->tipe === 'aviary') {
+                    return response()->json([
+                        'ok' => false,
+                        'message' => 'Burung masih di '.$burung->kandang->label.'. Keluarkan dari Aviary dulu sebelum dipindah ke kandang.',
                     ], 422);
                 }
 

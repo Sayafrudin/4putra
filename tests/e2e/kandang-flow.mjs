@@ -8,6 +8,7 @@
  *  K5  Hapus burung via modal konfirmasi → server kehilangan baris
  *  K9  Tap/klik chip (touch asli) → modal pindah kandang → server memindahkan
  *  K10 Tanpa JS (Alpine diblokir): sidebar mobile tetap tersembunyi, body tanpa scrollbar
+ *  K11 Aviary: teks kosong pool tampil/hilang akurat mengikuti isi pool (drag nyata)
  *
  * Jalankan: node tests/e2e/kandang-flow.mjs
  */
@@ -132,6 +133,16 @@ try {
         return resp;
     }
 
+    // Invarian teks kosong pool: pesan tampil ⇔ pool benar-benar 0 chip
+    // (hermetic — pool bisa berisi burung asli lain dari data pengembangan)
+    async function poolEmptyBenar(label) {
+        const state = await page.evaluate(() => ({
+            chips: document.querySelectorAll('#poolList .burung-chip').length,
+            pesan: document.querySelectorAll('#poolList [data-pool-empty]').length,
+        }));
+        assert((state.chips === 0) === (state.pesan === 1), `${label} [chips=${state.chips}, pesan=${state.pesan}]`);
+    }
+
     // Kandang kosong dicari dinamis — DB pengembangan bisa punya burung asli di kandang mana pun
     async function kandangKosongLabel() {
         return await page.evaluate(() => {
@@ -146,6 +157,7 @@ try {
     assert(!!labelK3, `K3-pre ada kandang kosong [aktual: ${labelK3 ?? 'tidak ada'}]`);
     const respK3 = await dragDenganRespons(BURUNG, `[data-kandang-label="${labelK3}"]`, '/letakkan');
     assert(!!respK3 && respK3.ok(), `K3a fetch letakkan merespons ${respK3 ? respK3.status() : 'null (guard client)'}`);
+    await poolEmptyBenar('K3d teks kosong pool konsisten dengan isi pool (tanpa reload)');
 
     // BUKTI SERVER: reload → burung benar di kandang tujuan, pool berkurang
     await page.goto(`${BASE}/admin/kandang`, { waitUntil: 'load' });
@@ -157,6 +169,7 @@ try {
     // ---------- K4: drag kandang → pool ----------
     const respK4 = await dragDenganRespons(BURUNG, '[data-drop-pool]', '/kosongkan');
     assert(!!respK4 && respK4.ok(), `K4a fetch kosongkan merespons ${respK4 ? respK4.status() : 'null'}`);
+    await poolEmptyBenar('K4c teks kosong pool konsisten setelah chip kembali (tanpa reload)');
     await page.goto(`${BASE}/admin/kandang`, { waitUntil: 'load' });
     assert((await page.locator(`#poolList .burung-chip:has-text("${BURUNG}")`).count()) === 1,
         'K4b setelah reload, burung kembali di pool (kandang dikosongkan server-side)');
@@ -239,6 +252,16 @@ try {
     await page.goto(`${BASE}/admin/kandang`, { waitUntil: 'load' });
     assert((await page.locator('#poolList .burung-chip:has-text("E2E Kandang Empat")').count()) === 1,
         'K7d setelah reload, burung ketiga tetap di pool (server menolak kapasitas)');
+
+    // ---------- K11: Aviary — teks kosong pool akurat via drag nyata ----------
+    await page.goto(`${BASE}/admin/aviary`, { waitUntil: 'load' });
+    await buatBurung('E2E Kandang Aviary', 'jantan');
+    const respK11a = await drag('E2E Kandang Aviary', '[data-kandang-label="Aviary 1"]');
+    assert(!!respK11a && respK11a.ok(), `K11a letakkan ke Aviary 1 merespons ${respK11a ? respK11a.status() : 'null'}`);
+    await poolEmptyBenar('K11b teks kosong pool aviary konsisten setelah letakkan');
+    const respK11c = await drag('E2E Kandang Aviary', '[data-drop-pool]');
+    assert(!!respK11c && respK11c.ok(), `K11c keluarkan dari Aviary 1 merespons ${respK11c ? respK11c.status() : 'null'}`);
+    await poolEmptyBenar('K11d teks kosong pool aviary konsisten setelah keluarkan');
 
     // ---------- K8: tampilan mobile (viewport HP 375x812) ----------
     const mobCtx = await browser.newContext({ viewport: { width: 375, height: 812 } });

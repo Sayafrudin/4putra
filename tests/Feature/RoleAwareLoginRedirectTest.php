@@ -75,8 +75,6 @@ class RoleAwareLoginRedirectTest extends TestCase
             'google_id' => 'g-roleaware-123',
         ]);
 
-        \App\Models\GoogleWhitelist::updateOrCreate(['email' => 'roleaware-google@4putra.test'], ['role' => 'user']);
-
         $abstractUser = Mockery::mock(\Laravel\Socialite\Two\User::class);
         $abstractUser->shouldReceive('getId')->andReturn('g-roleaware-123');
         $abstractUser->shouldReceive('getEmail')->andReturn('roleaware-google@4putra.test');
@@ -87,8 +85,6 @@ class RoleAwareLoginRedirectTest extends TestCase
         Socialite::shouldReceive('user')->andReturn($abstractUser);
 
         $this->get('/auth/google/callback')->assertRedirect(url('/'));
-
-        \App\Models\GoogleWhitelist::where('email', 'roleaware-google@4putra.test')->delete();
     }
 
     public function test_role_user_bisa_masuk_dashboard_admin(): void

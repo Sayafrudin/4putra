@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
+use App\Models\GoogleWhitelist;
 use App\Models\User;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -13,35 +14,54 @@ class GoogleController extends Controller
 {
     public function redirect()
     {
-        return Socialite::driver('google')->redirect();
+        // URI callback mengikuti host saat ini: admin subdomain, domain publik,
+        // maupun localhost semua jalan tanpa env terpisah (Console Google sudah
+        // mendaftarkan URI tiap domain).
+        $uri = config('services.google.redirect') ?: request()->getSchemeAndHttpHost().'/auth/google/callback';
+
+        return Socialite::driver('google')->redirectUrl($uri)->redirect();
     }
 
     public function callback()
     {
-        $googleUser = Socialite::driver('google')->user();
+        $uri = config('services.google.redirect') ?: request()->getSchemeAndHttpHost().'/auth/google/callback';
+        $googleUser = Socialite::driver('google')->redirectUrl($uri)->user();
+        $email = strtolower($googleUser->getEmail());
+
+        // Hanya Gmail di whitelist (dikelola admin di Kelola Akun User → Akses Google)
+        // yang boleh masuk. Gmail tak dikenal ditolak dan TIDAK membuat akun.
+        $whitelist = GoogleWhitelist::where('email', $email)->first();
+        if (! $whitelist) {
+            Log::warning('Login Google ditolak: email tidak terdaftar di whitelist', [
+                'email' => $email,
+                'ip' => request()->ip(),
+            ]);
+
+            return redirect()->route('login')->with('error', 'Email Google Anda tidak terdaftar. Hubungi admin 4PUTRA.');
+        }
 
         $user = User::where('google_id', $googleUser->getId())->first();
 
         if (! $user) {
-            $user = User::where('email', $googleUser->getEmail())->first();
+            $user = User::where('email', $email)->first();
 
             if ($user) {
-                $updateData = ['google_id' => $googleUser->getId()];
-                if ($googleUser->getEmail() === 'syafrudintdm@gmail.com') {
-                    $updateData['role'] = 'admin';
-                }
-                $user->update($updateData);
+                $user->update(['google_id' => $googleUser->getId()]);
             } else {
-                $role = $googleUser->getEmail() === 'syafrudintdm@gmail.com' ? 'admin' : 'user';
-
                 $user = User::create([
                     'name' => $googleUser->getName(),
-                    'email' => $googleUser->getEmail(),
+                    'email' => $email,
+                    'username' => $this->usernameUnik($email),
                     'google_id' => $googleUser->getId(),
-                    'password' => Hash::make(Str::random(32)),
-                    'role' => $role,
+                    'password' => bcrypt(Str::random(32)),
+                    'role' => $whitelist->role,
                 ]);
             }
+        }
+
+        // Role mengikuti whitelist (admin bisa promosi/demosi petinggi kapan saja).
+        if ($user->role !== $whitelist->role) {
+            $user->update(['role' => $whitelist->role]);
         }
 
         // Remember-me 14 hari (ala website besar) agar sesi admin dapat
@@ -55,11 +75,23 @@ class GoogleController extends Controller
         // Update last_login_at langsung ke database
         User::where('id', $user->id)->update(['last_login_at' => now()]);
 
-        // Non-admin diarahkan ke beranda, bukan /admin (jebakan 403 tanpa pintu keluar).
+        // Non-admin diarahkan ke beranda, bukan /admin (jebakan 403).
         if (! $user->isAdmin()) {
             return redirect('/');
         }
 
         return redirect()->intended(route('admin.dashboard'))->with('success', 'Selamat datang kembali, '.$user->name.'!');
+    }
+
+    private function usernameUnik(string $email): string
+    {
+        $base = substr(preg_replace('/[^a-zA-Z0-9._-]/', '', Str::of($email)->before('@')) ?: 'user', 0, 46);
+        $username = $base;
+        $i = 1;
+        while (User::where('username', $username)->exists()) {
+            $username = $base.($i++);
+        }
+
+        return $username;
     }
 }

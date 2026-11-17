@@ -24,20 +24,17 @@
     color-scheme: dark;
 }
 
-/* Icon kalender bawaan tidak mewarisi warna teks; invert agar terlihat di dark mode */
-.dark input[type='date']::-webkit-calendar-picker-indicator {
-    filter: invert(1) opacity(0.9);
-}
-
 html {
-    font-family: 'Inter', sans-serif;
+    font-family: "Inter", sans-serif;
     scroll-behavior: smooth;
 }
 
 /* Transisi warna untuk dark mode */
 body,
 .dark body {
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition:
+        background-color 0.3s ease,
+        color 0.3s ease;
 }
 
 /* Strip galeri media: scrollbar tipis terlihat di desktop (mouse),
@@ -79,4 +76,20 @@ body,
 
 #toast-container > div {
     pointer-events: auto;
+}
+
+/* Chevron kustom untuk semua <select> admin: panah rapih & konsisten di light/dark.
+   color-scheme: dark sudah menangani popup native; ini hanya ikon panahnya. */
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m19.5 8.25-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem 1rem;
+    padding-right: 2.25rem;
+}
+
+.dark select {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m19.5 8.25-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E");
 }

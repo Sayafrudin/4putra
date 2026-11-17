@@ -79,6 +79,15 @@
     @endif
 
     {{-- Riwayat --}}
+    <div class="mb-4">
+        <div class="relative max-w-md">
+            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+            </svg>
+            <input type="text" class="table-search-input w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:outline-none" placeholder="Cari induk / sesi / kondisi...">
+        </div>
+    </div>
+
     <div class="w-full overflow-hidden bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 shadow-sm mb-10 table-search-wrapper">
         <div class="w-full overflow-x-auto">
             <table class="table-searchable w-full text-left border-collapse">
@@ -164,10 +173,10 @@
             <form id="formTambah" onsubmit="submitTambah(event)" class="space-y-4" novalidate>
                 @csrf
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Kandang (pasangan induk — 2 burung otomatis tercatat)</label>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Kandang (pasangan induk - 2 burung otomatis tercatat)</label>
                     <select name="kandang_pasangan" id="tambah_kandang" onchange="tampilkanPasangan()"
                         class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
-                        <option value="">— Pilih kandang —</option>
+                        <option value="">- Pilih kandang -</option>
                         @foreach ($kandangPasangan as $i => $kp)
                             <option value="{{ $i }}">Kandang {{ $kp['label'] }}</option>
                         @endforeach
@@ -304,7 +313,7 @@
     </div>
 
     @php
-        // Daftar kandang pasangan (server-side): [{label, burung: [{id,nama,spesies} × 2]}]
+        // Daftar kandang pasangan (server-side): [{label, burung: [{id,nama,spesies,gender} × 2]}]
         // Data ekspor Excel (seluruh catatan telur, server-side)
         $dataEkspor = $telurs->map(fn ($t) => [
             $t->induk_label,
@@ -375,7 +384,7 @@
             const info = document.getElementById('info_pasangan');
             const kp = PASANGAN[idx];
             if (!kp) { info.classList.add('hidden'); return; }
-            document.getElementById('pasangan_label').textContent = kp.burung[0].nama + ' (' + kp.burung[0].spesies + ') × ' + kp.burung[1].nama + ' (' + kp.burung[1].spesies + ')';
+            document.getElementById('pasangan_label').textContent = kp.burung[0].nama + ' (' + kp.burung[0].spesies + (kp.burung[0].gender ? ' - ' + kp.burung[0].gender : '') + ') × ' + kp.burung[1].nama + ' (' + kp.burung[1].spesies + (kp.burung[1].gender ? ' - ' + kp.burung[1].gender : '') + ')';
             info.classList.remove('hidden');
         }
 

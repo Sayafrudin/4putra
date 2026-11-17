@@ -23,6 +23,24 @@ class StokMakananController extends Controller
         return view('admin.stok-makanan.index', compact('stoks', 'perluBeli'));
     }
 
+    public function exportPdf(Request $request)
+    {
+        try {
+            $stoks = StokMakanan::orderBy('nama')->get();
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.stok-makanan.pdf', compact('stoks'))
+                ->setPaper('a4', 'portrait');
+
+            $this->logActivity($request, 'ekspor_stok_pdf', 'Mengekspor laporan stok makanan PDF ('.$stoks->count().' item)');
+
+            return $pdf->download('laporan_stok_makanan_'.date('Y-m-d').'.pdf');
+        } catch (\Throwable $e) {
+            Log::error('Gagal ekspor PDF stok makanan', ['error' => $e->getMessage()]);
+
+            return redirect()->route('admin.stok.index')->with('error', 'Gagal membuat PDF. Coba lagi.');
+        }
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([

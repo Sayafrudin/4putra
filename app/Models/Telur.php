@@ -28,7 +28,12 @@ class Telur extends Model
     /** Label induk: "BNG × Military" untuk pasangan, satu nama untuk catatan lama. */
     public function getIndukLabelAttribute(): string
     {
-        return $this->pasangan ? $this->burung->nama.' × '.$this->pasangan->nama : $this->burung->nama;
+        if (! $this->pasangan) {
+            return $this->burung->nama;
+        }
+
+        return $this->burung->nama.' ('.$this->burung->spesies.($this->burung->gender_label ? ' - '.$this->burung->gender_label : '').') × '
+            .$this->pasangan->nama.' ('.$this->pasangan->spesies.($this->pasangan->gender_label ? ' - '.$this->pasangan->gender_label : '').')';
     }
 
     /** Usia telur dihitung sejak tanggal diambil (sesuai alur laporan farm). */

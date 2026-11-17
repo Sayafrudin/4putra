@@ -14,6 +14,18 @@
         </div>
     </div>
 
+    {{-- Search bar: filter pool & papan kandang (desktop + mobile) --}}
+    <div class="mb-6">
+        <div class="relative max-w-md">
+            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+            </svg>
+            <input type="text" id="kandang_search" placeholder="Cari kandang (contoh: E-3) atau nama burung..."
+                class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:outline-none">
+        </div>
+        <p id="kandang_search_empty" class="hidden mt-2 text-sm text-gray-500 dark:text-gray-400">Tidak ada kandang atau burung yang cocok.</p>
+    </div>
+
     {{-- Pool: burung belum ditempatkan (zona drop juga) --}}
     <div class="mb-8 bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm">
         <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200 dark:border-gray-800">
@@ -56,7 +68,7 @@
                                 @endforeach
                             </div>
                             @if ($k->burungs->isEmpty())
-                                <span class="kosong-hint text-[10px] text-gray-300 dark:text-gray-600 text-center py-1.5 border border-dashed border-gray-200 dark:border-gray-700 rounded-lg">Kosong — geser/tap burung lalu pilih kandang</span>
+                                <span class="kosong-hint text-[10px] text-gray-300 dark:text-gray-600 text-center py-1.5 border border-dashed border-gray-200 dark:border-gray-700 rounded-lg">Kosong - geser/tap burung lalu pilih kandang</span>
                             @endif
                         </div>
                     @empty
@@ -79,6 +91,13 @@
                 </button>
             </div>
             <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Pilih kandang tujuan (maksimal 2 burung per kandang).</p>
+            <div class="relative mb-3">
+                <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+                </svg>
+                <input type="text" id="pindah_search" placeholder="Cari kandang tujuan..."
+                    class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:outline-none">
+            </div>
             <div id="pindahCageList" class="grid grid-cols-2 gap-2 max-h-72 overflow-y-auto">
                 @foreach ($kandangs as $kandangBlok)
                     @foreach ($kandangBlok as $k)
@@ -445,7 +464,7 @@
                 if (!hint) {
                     const span = document.createElement('span');
                     span.className = 'kosong-hint text-[10px] text-gray-300 dark:text-gray-600 text-center py-1.5 border border-dashed border-gray-200 dark:border-gray-700 rounded-lg';
-                    span.textContent = 'Kosong — geser/tap burung lalu pilih kandang';
+                    span.textContent = 'Kosong - geser/tap burung lalu pilih kandang';
                     zona.querySelector('.kandang-isi').after(span);
                 } else {
                     hint.classList.remove('hidden');
@@ -621,5 +640,43 @@
                 setBusy(false);
             }
         });
+        // ==================== SEARCH KANDANG (desktop + mobile) ====================
+        const kandangSearch = document.getElementById('kandang_search');
+        const kandangEmpty = document.getElementById('kandang_search_empty');
+
+        if (kandangSearch) {
+            kandangSearch.addEventListener('input', function () {
+                const query = this.value.toLowerCase().trim();
+                const cards = document.querySelectorAll('.kandang-drop');
+                let visibleCount = 0;
+
+                cards.forEach(card => {
+                    const isMatch = card.textContent.toLowerCase().includes(query);
+                    card.style.display = isMatch ? '' : 'none';
+                    if (isMatch) visibleCount++;
+                });
+
+                // Sembunyikan blok (section) jika semua kartunya tersembunyi
+                document.querySelectorAll('section').forEach(section => {
+                    const visibleCards = section.querySelectorAll('.kandang-drop:not([style*="display: none"])');
+                    section.style.display = visibleCards.length ? '' : 'none';
+                });
+
+                if (kandangEmpty) {
+                    kandangEmpty.classList.toggle('hidden', visibleCount > 0 || query === '');
+                }
+            });
+        }
+
+        // Search modal pindah kandang
+        const pindahSearch = document.getElementById('pindah_search');
+        if (pindahSearch) {
+            pindahSearch.addEventListener('input', function () {
+                const query = this.value.toLowerCase().trim();
+                document.querySelectorAll('#pindahCageList .pindah-ke').forEach(btn => {
+                    btn.style.display = btn.textContent.toLowerCase().includes(query) ? '' : 'none';
+                });
+            });
+        }
     </script>
 @endsection

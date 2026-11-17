@@ -4,13 +4,31 @@
     <div class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-5">
         <div>
             <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">Stok Makanan Burung</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Biji-bijian & pellet — estimasi habis dan prediksi kapan beli lagi dihitung otomatis</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Biji-bijian & pellet - estimasi habis dan prediksi kapan beli lagi dihitung otomatis</p>
         </div>
-        <div class="flex gap-3">
+        <div class="flex gap-3 flex-wrap">
+            <button onclick="eksporExcel(this, { namaFile: 'laporan_stok_makanan_{{ now()->toDateString() }}.xlsx', judul: 'Laporan Stok Makanan', headers: ['Nama Pakan', 'Stok', 'Konsumsi/Hari', 'Estimasi Habis (hari)', 'Perkiraan Beli Lagi', 'Catatan'], rows: DATA_EKSPOR })"
+                class="px-4 py-2.5 text-sm font-semibold text-white bg-green-600 hover:bg-green-700 rounded-xl transition-colors">
+                Export Excel
+            </button>
+            <a href="{{ route('admin.stok.export-pdf') }}"
+                class="px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-[#262d3a] rounded-xl transition-colors">
+                Export PDF
+            </a>
             <button onclick="bukaModalTambah()"
                 class="px-4 py-2.5 text-sm font-semibold text-white bg-[#E62C37] hover:bg-[#c5242d] rounded-xl transition-colors">
                 + Tambah Stok
             </button>
+        </div>
+    </div>
+
+    {{-- Input search --}}
+    <div class="mb-4">
+        <div class="relative max-w-md">
+            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+            </svg>
+            <input type="text" class="table-search-input w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:outline-none" placeholder="Cari nama pakan...">
         </div>
     </div>
 
@@ -26,7 +44,7 @@
             <ul class="flex flex-wrap gap-2">
                 @foreach ($perluBeli as $s)
                     <li class="text-xs font-semibold bg-[#E62C37]/10 text-[#E62C37] px-2.5 py-1.5 rounded-lg">
-                        {{ $s->nama }} — tinggal {{ $s->estimasi_hari }} hari
+                        {{ $s->nama }} - tinggal {{ $s->estimasi_hari }} hari
                     </li>
                 @endforeach
             </ul>
@@ -242,12 +260,25 @@
         </div>
     </div>
 
+    @php
+        // Data ekspor Excel (seluruh stok, server-side)
+        $dataEkspor = $stoks->map(fn ($s) => [
+            $s->nama,
+            number_format((float) $s->jumlah_stok, 2, ',', '.').' '.$s->satuan,
+            number_format((float) $s->konsumsi_per_hari, 2, ',', '.').' '.$s->satuan,
+            $s->estimasi_hari !== null ? $s->estimasi_hari.' hari' : '-',
+            $s->tanggal_beli_ulang?->translatedFormat('d M Y') ?? '-',
+            $s->catatan ?: '-',
+        ])->values()->all();
+    @endphp
+
     <script>
         var CSRF = document.querySelector('meta[name="csrf-token"]').content;
         var sedangBusy = false;
         var updateTargetId = null;
         var hapusTargetId = null;
         var formActionUpdate = '';
+        var DATA_EKSPOR = @json($dataEkspor);
 
         function setBusy(on) {
             sedangBusy = on;

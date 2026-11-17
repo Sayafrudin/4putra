@@ -66,8 +66,8 @@ try {
 
     // Login admin (field readonly+onfocus: klik dulu agar readonly hilang)
     await page.goto(`${BASE}/login`, { waitUntil: 'load' });
-    await page.click('#email');
-    await page.fill('#email', ADMIN.email);
+    await page.click('#username');
+    await page.fill('#username', ADMIN.email.split('@')[0]);
     await page.click('#password');
     await page.fill('#password', ADMIN.password);
     await page.click('button[type="submit"]');

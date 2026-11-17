@@ -20,6 +20,15 @@
             </div>
 
             <div>
+                <label for="username" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Username</label>
+                <input type="text" name="username" id="username" value="{{ old('username') }}" required
+                    class="w-full px-4 py-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#E62C37]/50 focus:border-[#E62C37] text-sm">
+                @error('username')
+                    <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div>
                 <label for="email" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Email</label>
                 <input type="email" name="email" id="email" value="{{ old('email') }}" required
                     class="w-full px-4 py-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#E62C37]/50 focus:border-[#E62C37] text-sm">

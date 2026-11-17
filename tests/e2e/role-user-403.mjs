@@ -108,8 +108,8 @@ try {
 
     // ---------- R1: login role user via form asli ----------
     await page.goto(`${BASE}/login`, { waitUntil: "load" });
-    await page.click("#email");
-    await page.fill("#email", ROLE_USER.email);
+    await page.click("#username");
+    await page.fill("#username", ROLE_USER.email.split("@")[0]);
     await page.click("#password");
     await page.fill("#password", ROLE_USER.password);
     await page.click("button[type=submit]");

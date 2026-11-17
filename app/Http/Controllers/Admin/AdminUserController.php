@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Models\GoogleWhitelist;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -17,10 +18,12 @@ class AdminUserController extends Controller
     public function index()
     {
         $users = Cache::remember('admin.users', 120, function () {
-            return User::orderBy('created_at', 'desc')->get();
+            return User::whereNull('google_id')->orderBy('created_at', 'desc')->get();
         });
 
-        return view('admin.users.index', compact('users'));
+        $googleWhitelist = GoogleWhitelist::orderBy('created_at', 'desc')->get();
+
+        return view('admin.users.index', compact('users', 'googleWhitelist'));
     }
 
     public function create()
@@ -32,6 +35,7 @@ class AdminUserController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'max:50', 'regex:/^[a-zA-Z0-9_.-]+$/', 'unique:users'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Password::min(8)],
             'role' => ['required', 'in:admin,user'],
@@ -39,6 +43,7 @@ class AdminUserController extends Controller
 
         $user = User::create([
             'name' => $validated['name'],
+            'username' => $validated['username'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
@@ -49,7 +54,7 @@ class AdminUserController extends Controller
             'Menambahkan akun user: '.$validated['name'].' ('.$validated['email'].')',
             'Manajemen Akun',
             null,
-            ['name' => $validated['name'], 'email' => $validated['email'], 'role' => $validated['role']]
+            ['name' => $validated['name'], 'username' => $validated['username'], 'email' => $validated['email'], 'role' => $validated['role']]
         );
 
         Cache::forget('admin.users');
@@ -70,6 +75,7 @@ class AdminUserController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'max:50', 'regex:/^[a-zA-Z0-9_.-]+$/', 'unique:users,username,'.$user->id],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$user->id],
             'password' => ['nullable', 'confirmed', Password::min(8)],
             'role' => ['required', 'in:admin,user'],
@@ -78,6 +84,7 @@ class AdminUserController extends Controller
         $oldValues = $user->getOriginal();
 
         $user->name = $validated['name'];
+        $user->username = $validated['username'];
         $user->email = $validated['email'];
         $user->role = $validated['role'];
 
@@ -141,6 +148,44 @@ class AdminUserController extends Controller
         $activities = $user->activityLogs()->latest()->get();
 
         return view('admin.users.activity', compact('user', 'activities'));
+    }
+
+    public function storeGoogleWhitelist(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:google_whitelists,email'],
+            'nama' => ['required', 'string', 'max:255'],
+            'role' => ['required', 'in:admin,user'],
+        ]);
+
+        GoogleWhitelist::create($validated);
+
+        $this->logDataChange(
+            $request, 'create',
+            'Menambahkan akses Google: '.$validated['email'].' (role '.$validated['role'].')',
+            'Manajemen Akun',
+            null,
+            $validated
+        );
+
+        return redirect()->route('admin.users.index')->with('success', 'Akses Google berhasil ditambahkan!');
+    }
+
+    public function destroyGoogleWhitelist(Request $request, GoogleWhitelist $whitelist)
+    {
+        $email = $whitelist->email;
+
+        $this->logDataChange(
+            $request, 'delete',
+            'Menghapus akses Google: '.$email,
+            'Manajemen Akun',
+            $whitelist->getOriginal(),
+            null
+        );
+
+        $whitelist->delete();
+
+        return redirect()->route('admin.users.index')->with('success', 'Akses Google berhasil dihapus!');
     }
 
     public function commentActivity(Request $request, $activityId)

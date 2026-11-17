@@ -102,4 +102,15 @@ class StokMakananTest extends TestCase
         $this->actingAs($this->admin)->deleteJson("/admin/stok-makanan/{$stok->id}")->assertOk();
         $this->assertDatabaseMissing('stok_makanans', ['id' => $stok->id]);
     }
+
+    public function test_export_pdf_menghasilkan_unduhan(): void
+    {
+        StokMakanan::create(['nama' => 'uji-stok-sunseed', 'jumlah_stok' => 50, 'satuan' => 'kg', 'konsumsi_per_hari' => 1]);
+
+        $this->get('/admin/stok-makanan/export/pdf')->assertRedirect(route('login'));
+
+        $response = $this->actingAs($this->admin)->get('/admin/stok-makanan/export/pdf');
+        $response->assertOk();
+        $this->assertStringContainsString('application/pdf', (string) $response->headers->get('Content-Type'));
+    }
 }

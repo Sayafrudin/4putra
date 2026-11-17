@@ -32,15 +32,16 @@ class KeuanganTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_hanya_admin_yang_bisa_mengakses(): void
+    public function test_menu_terbuka_role_user_dan_terproteksi_login(): void
     {
         $this->get('/admin/keuangan')->assertRedirect(route('login'));
 
-        $bukanAdmin = User::updateOrCreate(
+        $roleUser = User::updateOrCreate(
             ['email' => 'user-keu-test@4putra.test'],
-            ['name' => 'Bukan Admin', 'password' => bcrypt('password123'), 'role' => 'user']
+            ['name' => 'Role User', 'password' => bcrypt('password123'), 'role' => 'user']
         );
-        $this->actingAs($bukanAdmin)->get('/admin/keuangan')->assertStatus(403);
+        // Role user boleh memantau keuangan (full akses menu monitoring).
+        $this->actingAs($roleUser)->get('/admin/keuangan')->assertOk();
         $this->actingAs($this->admin)->get('/admin/keuangan')->assertOk();
     }
 

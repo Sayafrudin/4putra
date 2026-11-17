@@ -19,14 +19,15 @@ class TelurController extends Controller
     {
         $telurs = Telur::with(['burung', 'pasangan'])->orderByDesc('tanggal_diambil')->orderByDesc('id')->get();
 
-        // Dropdown = kandang berisi TEPAT 2 induk dewasa (pasangan). Satu query + operasi koleksi, tanpa N+1.
-        $kandangPasangan = Burung::with('kandang:id,blok,nomor')
+        // Dropdown = kandang BIASA berisi TEPAT 2 induk dewasa (pasangan).
+        // Aviary dikecualikan (pra-breeding, bukan kandang pasangan). Satu query + operasi koleksi, tanpa N+1.
+        $kandangPasangan = Burung::with('kandang:id,blok,nomor,tipe')
             ->where('fase', 'dewasa')
             ->whereNotNull('kandang_id')
             ->orderBy('nama')
             ->get(['id', 'nama', 'spesies', 'gender', 'kandang_id'])
             ->groupBy('kandang_id')
-            ->filter(fn ($grup) => $grup->count() === 2)
+            ->filter(fn ($grup) => $grup->count() === 2 && $grup->first()->kandang->tipe !== 'aviary')
             ->map(fn ($grup) => [
                 'label' => $grup->first()->kandang->label,
                 'burung' => $grup->map(fn ($b) => ['id' => $b->id, 'nama' => $b->nama, 'spesies' => $b->spesies, 'gender' => $b->gender_label])->values()->all(),

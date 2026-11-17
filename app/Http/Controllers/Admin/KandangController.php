@@ -20,14 +20,20 @@ class KandangController extends Controller
 
     public function index()
     {
-        // Eager loading: tanpa N+1 (1 query kandang + 1 query burung)
+        // Eager loading: tanpa N+1 (1 query kandang + 1 query burung).
+        // Aviary (tipe 'aviary') dipisah ke halaman Aviary, tidak di papan ini.
         $kandangs = Kandang::with('burungs')
+            ->where('tipe', '!=', 'aviary')
             ->orderBy('blok')
             ->orderBy('nomor')
             ->get()
             ->groupBy('blok');
 
-        $pool = Burung::whereNull('kandang_id')
+        // Pool = burung bebas + burung yang sedang di Aviary (badge "Di Aviary N"
+        // memungkinkan dipindah langsung ke kandang biasa).
+        $aviaryIds = Kandang::where('tipe', 'aviary')->pluck('id');
+        $pool = Burung::with('kandang:id,blok,nomor,tipe')
+            ->where(fn ($q) => $q->whereNull('kandang_id')->orWhereIn('kandang_id', $aviaryIds))
             ->orderByDesc('created_at')
             ->get();
 
@@ -91,13 +97,14 @@ class KandangController extends Controller
         ]);
 
         try {
-            // Kapasitas kandang = 2 burung; lockForUpdate mencegah dua admin
-            // menempatkan burung ke kandang terakhir slotnya secara serentak.
+            // Kapasitas kandang biasa = 2 burung; Aviary tanpa batas (pra-breeding).
+            // lockForUpdate mencegah dua admin menempatkan burung ke kandang
+            // terakhir slotnya secara serentak.
             $hasil = DB::transaction(function () use ($request, $burung, $data) {
                 $kandang = Kandang::lockForUpdate()->findOrFail($data['kandang_id']);
                 $isi = $kandang->burungs()->where('id', '!=', $burung->id)->count();
 
-                if ($isi >= 2) {
+                if ($kandang->tipe !== 'aviary' && $isi >= 2) {
                     return response()->json([
                         'ok' => false,
                         'message' => 'Kandang '.$kandang->label.' sudah penuh (maksimal 2 burung).',
@@ -107,7 +114,7 @@ class KandangController extends Controller
                 $burung->update(['kandang_id' => $kandang->id]);
                 $this->logActivity($request, 'letakkan_burung', 'Menempatkan '.$burung->nama.' ke '.$kandang->label);
 
-                return response()->json(['ok' => true, 'message' => $burung->nama.' ditempatkan di kandang '.$kandang->label]);
+                return response()->json(['ok' => true, 'message' => $burung->nama.' ditempatkan di '.$kandang->label]);
             });
 
             return $hasil;

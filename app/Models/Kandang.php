@@ -18,6 +18,6 @@ class Kandang extends Model
 
     public function getLabelAttribute(): string
     {
-        return $this->blok.'-'.$this->nomor;
+        return $this->tipe === 'aviary' ? 'Aviary '.$this->nomor : $this->blok.'-'.$this->nomor;
     }
 }

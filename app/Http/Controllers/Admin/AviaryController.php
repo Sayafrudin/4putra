@@ -1,0 +1,36 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Burung;
+use App\Models\Kandang;
+
+/**
+ * Aviary (kandang besar pra-breeding): penampungan burung sebelum masuk
+ * kandang breeding. Fitur papan sama dengan Kandang, tapi isinya tanpa batas.
+ * Aksi letakkan/kosongkan/CRUD burung memakai endpoint KandangController yang sama.
+ */
+class AviaryController extends Controller
+{
+    public function index()
+    {
+        $aviaries = Kandang::with('burungs')
+            ->where('tipe', 'aviary')
+            ->orderBy('nomor')
+            ->get();
+
+        // Pool = semua burung yang TIDAK sedang di aviary (bebas + di kandang biasa),
+        // sehingga burung bisa dipindah ke aviary dari mana pun asalnya.
+        $aviaryIds = $aviaries->pluck('id');
+        $pool = Burung::with('kandang:id,blok,nomor,tipe')
+            ->where(fn ($q) => $q->whereNull('kandang_id')->orWhereNotIn('kandang_id', $aviaryIds))
+            ->orderByDesc('created_at')
+            ->get();
+
+        $total = Burung::count();
+        $terpasang = $aviaries->sum(fn ($a) => $a->burungs->count());
+
+        return view('admin.aviary.index', compact('aviaries', 'pool', 'total', 'terpasang'));
+    }
+}

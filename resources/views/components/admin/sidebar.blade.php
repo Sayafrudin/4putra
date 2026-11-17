@@ -14,9 +14,7 @@
                 </a>
                 <button @click="sidebarOpen = false"
                     class="lg:hidden p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <x-tabler-x class="w-5 h-5" />
                 </button>
             </div>
 
@@ -28,11 +26,7 @@
                     @endif
                     <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.dashboard') ? 'text-gray-900 dark:text-white font-bold' : '' }}"
                         href="{{ route('admin.dashboard') }}" data-turbo="true" @click="sidebarOpen = false">
-                        <svg class="w-5 h-5" fill="none" stroke-linecap="round" stroke-linejoin="round"
-                            stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
-                            <path
-                                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h3m-6 0a1 1 0 001-1v-4a1 1 0 00-1-1m-5 0a1 1 0 00-1 1v4a1 1 0 001 1m6 0v-4a1 1 0 00-1-1H9a1 1 0 00-1 1v4a1 1 0 001 1m6 0h6" />
-                        </svg>
+                        <x-tabler-layout-dashboard class="w-5 h-5" />
                         <span class="ml-4">Beranda (Dashboard)</span>
                     </a>
                 </li>
@@ -51,17 +45,10 @@
                     <button @click="openMenu = !openMenu"
                         class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.achievements.*') || request()->routeIs('admin.about.*') || request()->routeIs('admin.collections.*') || request()->routeIs('admin.daily-activities.*') || request()->routeIs('admin.facilities.*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
                         <span class="inline-flex items-center">
-                            <svg class="w-5 h-5" fill="none" stroke-linecap="round" stroke-linejoin="round"
-                                stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
-                                <path
-                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                            </svg>
+                            <x-tabler-package class="w-5 h-5" />
                             <span class="ml-4">Manajemen Konten</span>
                         </span>
-                        <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': openMenu }"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <x-tabler-chevron-down class="w-4 h-4 transition-transform duration-200" />
                     </button>
 
                     <div x-show="openMenu" x-transition:enter="transition ease-out duration-100"
@@ -72,41 +59,25 @@
                         x-transition:leave-end="opacity-0 -translate-y-1" class="mt-2 ml-4 space-y-1">
                         <a href="{{ route('admin.collections.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.collections.*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                            </svg>
+                            <x-tabler-category class="w-4 h-4 mr-2" />
                             Koleksi (Collections)
                         </a>
                         {{-- Full-reload: script halaman = ES module (tak dieksekusi ulang Turbo, module map cache) --}}
                         <a href="{{ route('admin.facilities.index') }}" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.facilities.*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" />
-                            </svg>
+                            <x-tabler-building-store class="w-4 h-4 mr-2" />
                             Fasilitas (Facilities)
                         </a>
                         {{-- Full-reload: script halaman = ES module (tak dieksekusi ulang Turbo, module map cache) --}}
                         <a href="{{ route('admin.daily-activities.index') }}" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.daily-activities.*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                            </svg>
+                            <x-tabler-calendar class="w-4 h-4 mr-2" />
                             Aktivitas Harian (Daily Activities)
                         </a>
                         {{-- Full-reload: script halaman = ES module (achievements+about) tak dieksekusi ulang Turbo --}}
                         <a href="{{ route('admin.achievements.index') }}" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.achievements.*') || request()->routeIs('admin.about.*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                            </svg>
+                            <x-tabler-clipboard-list class="w-4 h-4 mr-2" />
                             Pencapaian (Achievements)
                         </a>
                     </div>
@@ -115,26 +86,18 @@
 
                 {{-- Menu Manajemen Farm (data burung, bukan urusan chatbot) --}}
                 <li class="relative px-6 py-3"
-                    x-data="{ openFarm: {{ request()->routeIs('admin.kandang*') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.stok*') ? 'true' : 'false' }} }">
-                    @if (request()->routeIs('admin.kandang*') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.stok*'))
+                    x-data="{ openFarm: {{ request()->routeIs('admin.aviary*') || request()->routeIs('admin.kandang*') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.stok*') ? 'true' : 'false' }} }">
+                    @if (request()->routeIs('admin.aviary*') || request()->routeIs('admin.kandang*') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.stok*'))
                         <span class="absolute inset-y-0 left-0 w-1 bg-[#E62C37] rounded-tr-lg rounded-br-lg"
                             aria-hidden="true"></span>
                     @endif
                     <button @click="openFarm = !openFarm"
-                        class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.kandang*') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.stok*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
+                        class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.aviary*') || request()->routeIs('admin.kandang*') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.stok*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
                         <span class="inline-flex items-center">
-                            <svg class="w-5 h-5" fill="none" stroke-linecap="round" stroke-linejoin="round"
-                                stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h7.5c.621 0 1.125-.504 1.125-1.125a1.125 1.125 0 011.125 1.125c0 .621.504 1.125 1.125 1.125m5.25-3.75h7.5c.621 0 1.125-.504 1.125-1.125m-17.25 0a1.125 1.125 0 011.125 1.125M3.375 16.875V4.125C3.375 3.504 3.879 3 4.5 3h15c.621 0 1.125.504 1.125 1.125v12.75m0 0a1.125 1.125 0 01-1.125 1.125M21 8.25h-4.5a1.125 1.125 0 00-1.125 1.125v3.75c0 .621.504 1.125 1.125 1.125H21M5.25 8.25h6.75a1.125 1.125 0 001.125-1.125v-1.5a1.125 1.125 0 00-1.125-1.125H5.25a1.125 1.125 0 00-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-                            </svg>
+                            <x-tabler-building-warehouse class="w-5 h-5" />
                             <span class="ml-4">Manajemen Farm</span>
                         </span>
-                        <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': openFarm }"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <x-tabler-chevron-down class="w-4 h-4 transition-transform duration-200" />
                     </button>
 
                     <div x-show="openFarm" x-transition:enter="transition ease-out duration-100"
@@ -143,40 +106,29 @@
                         x-transition:leave="transition ease-in duration-75"
                         x-transition:leave-start="opacity-100 translate-y-0"
                         x-transition:leave-end="opacity-0 -translate-y-1" class="mt-2 ml-4 space-y-1">
+                        <a href="{{ route('admin.aviary.index') }}" data-turbo="true" @click="sidebarOpen = false"
+                            class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.aviary*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
+                            <x-tabler-fence class="w-4 h-4 mr-2" />
+                            Aviary
+                        </a>
                         <a href="{{ route('admin.kandang.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.kandang*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M13.5 21v-7.785a.75.75 0 00-.263-.57l-4.5-3.998a.75.75 0 00-1.036.06L4.202 12.28a.75.75 0 00.055 1.03L9 17.5V21m4.5-11.34V5.25a1.5 1.5 0 011.5-1.5h2.25a1.5 1.5 0 011.5 1.5v8.01M21 21H3m0-9l9-7.5L21 12" />
-                            </svg>
+                            <x-tabler-home-2 class="w-4 h-4 mr-2" />
                             Kandang
                         </a>
                         <a href="{{ route('admin.vaksinasi.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.vaksinasi*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V15a2.25 2.25 0 00.73-1.677L21 6.75A2.25 2.25 0 0018.75 4.5H5.25A2.25 2.25 0 003 6.75l.02 6.573A2.25 2.25 0 003.75 15v3.75A2.25 2.25 0 006 21h6.75" />
-                            </svg>
+                            <x-tabler-vaccine class="w-4 h-4 mr-2" />
                             Vaksinasi
                         </a>
                         <a href="{{ route('admin.telur.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.telur*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M12 2.25c-2.9 0-5.25 2.7-5.25 6 0 2.4 1.2 4.5 2.625 5.625.45.36.75.9.75 1.463v.412c0 .621.504 1.125 1.125 1.125h1.5c.621 0 1.125-.504 1.125-1.125v-.412c0-.563.3-1.103.75-1.463C15.05 12.75 16.25 10.65 16.25 8.25c0-3.3-2.35-6-4.25-6z" />
-                            </svg>
+                            <x-tabler-egg class="w-4 h-4 mr-2" />
                             Telur & Incubator
                         </a>
                         <a href="{{ route('admin.stok.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.stok*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026M21 9.776c-1.68 0-3.044 1.364-3.044 3.044v1.125c0 1.68 1.364 3.044 3.044 3.044M3 9.776c1.68 0 3.044 1.364 3.044 3.044v1.125c0 1.68-1.364 3.044-3.044 3.044M10.5 8.25h3a1.5 1.5 0 011.5 1.5v4.5a1.5 1.5 0 01-1.5 1.5h-3a1.5 1.5 0 01-1.5-1.5v-4.5a1.5 1.5 0 011.5-1.5z" />
-                            </svg>
+                            <x-tabler-packages class="w-4 h-4 mr-2" />
                             Stok Makanan
                         </a>
                     </div>
@@ -190,11 +142,7 @@
                     @endif
                     <a href="{{ route('admin.keuangan.index') }}" data-turbo="true" @click="sidebarOpen = false"
                         class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.keuangan*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
-                        <svg class="w-5 h-5" fill="none" stroke-linecap="round" stroke-linejoin="round"
-                            stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0M5.25 6.75h13.5a2.25 2.25 0 012.25 2.25v9.75A2.25 2.25 0 0118.75 21H5.25A2.25 2.25 0 013 18.75V9a2.25 2.25 0 012.25-2.25z" />
-                        </svg>
+                        <x-tabler-wallet class="w-5 h-5" />
                         <span class="ml-4">Keuangan</span>
                     </a>
                 </li>
@@ -209,11 +157,7 @@
                         <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.users.*') ? 'text-gray-900 dark:text-white font-bold' : '' }}"
                             {{-- Full-reload: presence users pakai inline module (RTDB) tak dieksekusi ulang Turbo --}}
                             href="{{ route('admin.users.index') }}" @click="sidebarOpen = false">
-                            <svg class="w-5 h-5" fill="none" stroke-linecap="round" stroke-linejoin="round"
-                                stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
-                                <path
-                                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zM12 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
+                            <x-tabler-users class="w-5 h-5" />
                             <span class="ml-4">Kelola Akun User</span>
                         </a>
                     </li>
@@ -229,18 +173,10 @@
                     <button @click="openChatbot = !openChatbot"
                         class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.chatbot.*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
                         <span class="inline-flex items-center">
-                            <svg class="w-5 h-5" fill="none" stroke-linecap="round" stroke-linejoin="round"
-                                stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
-                                <path
-                                    d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
-                            </svg>
+                            <x-tabler-message-chatbot class="w-5 h-5" />
                             <span class="ml-4">Chatbot WhatsApp</span>
                         </span>
-                        <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': openChatbot }"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <x-tabler-chevron-down class="w-4 h-4 transition-transform duration-200" />
                     </button>
 
                     <div x-show="openChatbot" x-transition:enter="transition ease-out duration-100"
@@ -251,38 +187,22 @@
                         x-transition:leave-end="opacity-0 -translate-y-1" class="mt-2 ml-4 space-y-1">
                         <a href="{{ route('admin.chatbot.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.chatbot.index') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-                            </svg>
+                            <x-tabler-layout-grid class="w-4 h-4 mr-2" />
                             Ringkasan
                         </a>
                         <a href="{{ route('admin.chatbot.inventaris') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.chatbot.inventaris*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-                            </svg>
+                            <x-tabler-archive class="w-4 h-4 mr-2" />
                             Inventaris Burung
                         </a>
                         <a href="{{ route('admin.chatbot.chat') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.chatbot.chat') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" />
-                            </svg>
+                            <x-tabler-message class="w-4 h-4 mr-2" />
                             WhatsApp Chat
                         </a>
                         <a href="{{ route('admin.chatbot.transaksi') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.chatbot.transaksi*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
-                            </svg>
+                            <x-tabler-coins class="w-4 h-4 mr-2" />
                             Transaksi
                         </a>
                     </div>
@@ -297,11 +217,7 @@
             <a href="{{ route('admin.profile.edit') }}" data-turbo="true" @click="sidebarOpen = false"
                 class="flex items-center text-sm font-medium transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.profile.*') ? 'text-[#E62C37]' : '' }}">
                 <div class="w-8 h-8 rounded-full bg-[#E62C37]/10 flex items-center justify-center mr-3">
-                    <svg class="w-4 h-4 text-[#E62C37]" fill="none" stroke="currentColor" stroke-width="2"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
+                    <x-tabler-user class="w-4 h-4 text-[#E62C37]" />
                 </div>
                 <div>
                     <p class="font-semibold text-gray-800 dark:text-white text-sm leading-tight">
@@ -319,11 +235,7 @@
                 @csrf
                 <button type="button" id="logoutBtn"
                     class="flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-[#E62C37] text-gray-500 dark:text-gray-400 py-2">
-                    <svg class="w-5 h-5" fill="none" stroke-linecap="round" stroke-linejoin="round"
-                        stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
-                        <path
-                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
+                    <x-tabler-logout class="w-5 h-5" />
                     <span class="ml-3">Keluar (Logout)</span>
                 </button>
             </form>
@@ -337,11 +249,7 @@
         class="bg-white dark:bg-[#1e2530] rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl border border-gray-200 dark:border-gray-700">
         <div class="flex items-center gap-3 mb-4">
             <div class="w-10 h-10 rounded-full bg-[#E62C37]/10 flex items-center justify-center">
-                <svg class="w-5 h-5 text-[#E62C37]" fill="none" stroke="currentColor" stroke-width="2"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
+                <x-tabler-logout class="w-5 h-5 text-[#E62C37]" />
             </div>
             <div>
                 <h3 class="text-lg font-bold text-gray-800 dark:text-white">Konfirmasi Logout</h3>

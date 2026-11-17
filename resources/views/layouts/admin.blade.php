@@ -73,9 +73,7 @@
                     {{-- Hamburger mobile --}}
                     <button @click="sidebarOpen = !sidebarOpen"
                         class="lg:hidden p-2 -ml-2 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
+                        <x-tabler-menu-2 class="w-6 h-6" />
                     </button>
 
                     {{-- Logo mobile (tampil di header saat sidebar hidden) --}}
@@ -90,12 +88,12 @@
                             <div class="flex items-center">
                                 <button type="button" class="hs-dark-mode-active:hidden block hs-dark-mode text-gray-500 dark:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none transition-colors" data-hs-theme-click-value="dark">
                                     <span class="group inline-flex shrink-0 justify-center items-center size-9">
-                                        <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                                        <x-tabler-moon class="shrink-0 size-4" />
                                     </span>
                                 </button>
                                 <button type="button" class="hs-dark-mode-active:block hidden hs-dark-mode text-gray-500 dark:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none transition-colors" data-hs-theme-click-value="light">
                                     <span class="group inline-flex shrink-0 justify-center items-center size-9">
-                                        <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                                        <x-tabler-sun class="shrink-0 size-4" />
                                     </span>
                                 </button>
                             </div>

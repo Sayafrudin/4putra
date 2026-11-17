@@ -22,7 +22,7 @@ class VaksinasiController extends Controller
         $terakhir = Vaksinasi::vaksinTerakhirPerBurung();
         $jatuhTempo = $terakhir->filter(fn ($v) => $v->sudah_jatuh_tempo)->sortBy('tanggal_vaksin');
         $riwayat = Vaksinasi::with('burung')->orderByDesc('tanggal_vaksin')->orderByDesc('id')->get();
-        $burungList = Burung::with('kandang:id,blok,nomor')->orderBy('nama')->get(['id', 'nama', 'spesies', 'fase', 'gender', 'kandang_id']);
+        $burungList = Burung::with('kandang:id,blok,nomor,tipe')->orderBy('nama')->get(['id', 'nama', 'spesies', 'fase', 'gender', 'kandang_id']);
 
         return view('admin.vaksinasi.index', compact('terakhir', 'jatuhTempo', 'riwayat', 'burungList'));
     }
@@ -30,7 +30,7 @@ class VaksinasiController extends Controller
     public function exportPdf(Request $request)
     {
         try {
-            $riwayat = Vaksinasi::with('burung.kandang:id,blok,nomor')->orderByDesc('tanggal_vaksin')->orderByDesc('id')->get();
+            $riwayat = Vaksinasi::with('burung.kandang:id,blok,nomor,tipe')->orderByDesc('tanggal_vaksin')->orderByDesc('id')->get();
 
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.vaksinasi.pdf', compact('riwayat'))
                 ->setPaper('a4', 'portrait');

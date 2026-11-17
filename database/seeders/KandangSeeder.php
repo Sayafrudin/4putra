@@ -29,5 +29,9 @@ class KandangSeeder extends Seeder
                 );
             }
         }
+
+        // Aviary (kandang besar pra-breeding): 2 unit, isi tanpa batas
+        Kandang::updateOrCreate(['blok' => 'V', 'nomor' => 1], ['tipe' => 'aviary']);
+        Kandang::updateOrCreate(['blok' => 'V', 'nomor' => 2], ['tipe' => 'aviary']);
     }
 }

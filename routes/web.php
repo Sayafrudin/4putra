@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\AdminCollectionController;
 use App\Http\Controllers\Admin\AdminDailyActivityController;
 use App\Http\Controllers\Admin\AdminFacilityController;
 use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\AviaryController;
 use App\Http\Controllers\Admin\ChatbotController;
 use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -248,6 +249,9 @@ Route::prefix('admin')->middleware(['admin.domain', 'admin.auth'])->group(functi
         Route::delete('/chat/{pelanggan}/clear', [ChatbotController::class, 'chatClear'])->name('admin.chatbot.chat.clear');
         Route::post('/chat/{pelanggan}/delete', [ChatbotController::class, 'chatDelete'])->name('admin.chatbot.chat.delete');
     });
+
+    // Aviary (kandang besar pra-breeding, semua role: menu monitoring)
+    Route::get('/aviary', [AviaryController::class, 'index'])->name('admin.aviary.index');
 
     // Kandang & penempatan burung individu (semua role: menu monitoring)
     Route::get('/kandang', [KandangController::class, 'index'])->name('admin.kandang.index');

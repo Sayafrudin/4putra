@@ -20,11 +20,10 @@ class AviaryController extends Controller
             ->orderBy('nomor')
             ->get();
 
-        // Pool = semua burung yang TIDAK sedang di aviary (bebas + di kandang biasa),
-        // sehingga burung bisa dipindah ke aviary dari mana pun asalnya.
-        $aviaryIds = $aviaries->pluck('id');
+        // Pool = hanya burung bebas. Burung kandang breeding tidak ditawarkan —
+        // aturan: breeding → aviary ditolak server-side (keluarkan dulu).
         $pool = Burung::with('kandang:id,blok,nomor,tipe')
-            ->where(fn ($q) => $q->whereNull('kandang_id')->orWhereNotIn('kandang_id', $aviaryIds))
+            ->whereNull('kandang_id')
             ->orderByDesc('created_at')
             ->get();
 

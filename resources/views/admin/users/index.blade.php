@@ -178,8 +178,8 @@
                             class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 pr-12 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                         <button type="button" @click="show = !show"
                             class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none">
-                            <x-tabler-eye class="w-5 h-5" />
-                            <x-tabler-eye-off class="w-5 h-5" />
+                            <x-tabler-eye class="w-5 h-5" x-show="!show" />
+                            <x-tabler-eye-off class="w-5 h-5" x-show="show" />
                         </button>
                     </div>
                     <p class="text-xs text-red-400 mt-1 hidden" id="err_tambah_password"></p>
@@ -249,8 +249,8 @@
                             class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 pr-12 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                         <button type="button" @click="show = !show"
                             class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none">
-                            <x-tabler-eye class="w-5 h-5" />
-                            <x-tabler-eye-off class="w-5 h-5" />
+                            <x-tabler-eye class="w-5 h-5" x-show="!show" />
+                            <x-tabler-eye-off class="w-5 h-5" x-show="show" />
                         </button>
                     </div>
                     <p class="text-xs text-red-400 mt-1 hidden" id="err_edit_password"></p>

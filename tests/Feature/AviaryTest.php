@@ -58,7 +58,7 @@ class AviaryTest extends TestCase
         $response->assertSee('Di Aviary 1');
     }
 
-    public function test_halaman_aviary_menampilkan_kartu_dan_pool_lintas_lokasi(): void
+    public function test_halaman_aviary_pool_hanya_burung_bebas(): void
     {
         $reguler = Kandang::where('tipe', '!=', 'aviary')->orderBy('blok')->orderBy('nomor')->first();
         Burung::create(['nama' => 'uji-aviary-b', 'spesies' => 'African Grey', 'fase' => 'dewasa']);
@@ -73,10 +73,50 @@ class AviaryTest extends TestCase
         $response->assertSee('Aviary 1');
         $response->assertSee('Aviary 2');
 
-        // Pool aviary: burung bebas + burung yang sedang di kandang biasa (badge lokasi)
+        // Pool aviary: hanya burung bebas — burung kandang breeding tidak
+        // ditawarkan (aturan bos: breeding → aviary harus ditolak).
         $response->assertSee('uji-aviary-b');
-        $response->assertSee('uji-aviary-c');
-        $response->assertSee('Di Kandang '.$reguler->label);
+        $response->assertDontSee('uji-aviary-c');
+        $response->assertDontSee('Di Kandang '.$reguler->label);
+    }
+
+    public function test_burung_kandang_breeding_ditolak_masuk_aviary(): void
+    {
+        $aviary = Kandang::where('tipe', 'aviary')->orderBy('nomor')->first();
+        $reguler = Kandang::updateOrCreate(
+            ['blok' => 'Z', 'nomor' => 2],
+            ['tipe' => 'kecil']
+        );
+        $burung = Burung::create([
+            'nama' => 'uji-aviary-d', 'spesies' => 'African Grey', 'fase' => 'dewasa', 'kandang_id' => $reguler->id,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->postJson("/admin/burung/{$burung->id}/letakkan", ['kandang_id' => $aviary->id])
+            ->assertStatus(422)
+            ->assertJsonPath('ok', false);
+
+        // Posisi burung tidak berubah: tetap di kandang breeding
+        $this->assertEquals($reguler->id, $burung->fresh()->kandang_id);
+    }
+
+    public function test_burung_aviary_tetap_bisa_masuk_kandang_breeding(): void
+    {
+        $aviary = Kandang::where('tipe', 'aviary')->orderBy('nomor')->first();
+        $reguler = Kandang::updateOrCreate(
+            ['blok' => 'Z', 'nomor' => 3],
+            ['tipe' => 'kecil']
+        );
+        $burung = Burung::create([
+            'nama' => 'uji-aviary-e', 'spesies' => 'African Grey', 'fase' => 'dewasa', 'kandang_id' => $aviary->id,
+        ]);
+
+        // Arah sah: promosi aviary → kandang breeding
+        $this->actingAs($this->admin)
+            ->postJson("/admin/burung/{$burung->id}/letakkan", ['kandang_id' => $reguler->id])
+            ->assertOk();
+
+        $this->assertEquals($reguler->id, $burung->fresh()->kandang_id);
     }
 
     public function test_letakkan_ke_aviary_tanpa_batas_kapasitas(): void

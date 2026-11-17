@@ -102,6 +102,17 @@ class KandangController extends Controller
             // terakhir slotnya secara serentak.
             $hasil = DB::transaction(function () use ($request, $burung, $data) {
                 $kandang = Kandang::lockForUpdate()->findOrFail($data['kandang_id']);
+
+                // Aturan bos: burung yang masih di kandang breeding tidak boleh
+                // lompat ke Aviary — keluarkan dulu. Arah sebaliknya
+                // (aviary → kandang breeding) tetap sah sebagai promosi.
+                if ($kandang->tipe === 'aviary' && $burung->kandang_id && $burung->kandang->tipe !== 'aviary') {
+                    return response()->json([
+                        'ok' => false,
+                        'message' => 'Burung masih di kandang breeding '.$burung->kandang->label.'. Keluarkan dari kandang dulu sebelum dipindah ke Aviary.',
+                    ], 422);
+                }
+
                 $isi = $kandang->burungs()->where('id', '!=', $burung->id)->count();
 
                 if ($kandang->tipe !== 'aviary' && $isi >= 2) {

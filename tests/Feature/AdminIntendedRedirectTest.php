@@ -23,6 +23,7 @@ class AdminIntendedRedirectTest extends TestCase
             ['email' => 'admin-intended@4putra.test'],
             [
                 'name' => 'Admin Intended',
+                'username' => 'admin-intended',
                 'password' => bcrypt('password123'),
                 'role' => 'admin',
             ]
@@ -31,7 +32,7 @@ class AdminIntendedRedirectTest extends TestCase
         Session::put('url.intended', url('/admin/facilities'));
 
         $response = $this->post('/login', [
-            'email' => 'admin-intended@4putra.test',
+            'username' => 'admin-intended',
             'password' => 'password123',
         ]);
 
@@ -46,11 +47,14 @@ class AdminIntendedRedirectTest extends TestCase
             ['email' => 'admin-intended-google@4putra.test'],
             [
                 'name' => 'Admin Google',
+                'username' => 'admin-intended-google',
                 'password' => bcrypt('password123'),
                 'role' => 'admin',
                 'google_id' => 'g-intended-123',
             ]
         );
+
+        $this->seedWhitelist('admin-intended-google@4putra.test');
 
         $abstractUser = Mockery::mock(\Laravel\Socialite\Two\User::class);
         $abstractUser->shouldReceive('getId')->andReturn('g-intended-123');
@@ -58,6 +62,7 @@ class AdminIntendedRedirectTest extends TestCase
         $abstractUser->shouldReceive('getName')->andReturn('Admin Google');
 
         Socialite::shouldReceive('driver')->with('google')->andReturnSelf();
+        Socialite::shouldReceive('redirectUrl')->andReturnSelf();
         Socialite::shouldReceive('user')->andReturn($abstractUser);
 
         Session::put('url.intended', url('/admin/facilities'));
@@ -67,5 +72,16 @@ class AdminIntendedRedirectTest extends TestCase
         $response->assertRedirect(url('/admin/facilities'));
 
         $user->delete();
+        $this->clearWhitelist('admin-intended-google@4putra.test');
+    }
+
+    private function seedWhitelist(string $email, string $role = 'admin'): void
+    {
+        \App\Models\GoogleWhitelist::updateOrCreate(['email' => $email], ['role' => $role]);
+    }
+
+    private function clearWhitelist(string $email): void
+    {
+        \App\Models\GoogleWhitelist::where('email', $email)->delete();
     }
 }

@@ -98,8 +98,8 @@ try {
     // ---------- S1: Login via form asli ----------
     await page.goto(`${BASE}/login`, { waitUntil: 'load' });
     // Field login memakai readonly+onfocus (anti-autofill): klik dulu agar readonly hilang
-    await page.click('#email');
-    await page.fill('#email', ADMIN.email);
+    await page.click('#username');
+    await page.fill('#username', ADMIN.email.split('@')[0]);
     await page.click('#password');
     await page.fill('#password', ADMIN.password);
     await page.click('button[type=submit]');
@@ -143,8 +143,8 @@ try {
     await page.click('#session-extend-btn'); // tombol sudah jadi "Muat Ulang Halaman"
     await page.waitForURL(/\/login/, { timeout: 15000 });
     assert(true, 'S5c muat ulang → halaman login (intended disimpan)');
-    await page.click('#email');
-    await page.fill('#email', ADMIN.email);
+    await page.click('#username');
+    await page.fill('#username', ADMIN.email.split('@')[0]);
     await page.click('#password');
     await page.fill('#password', ADMIN.password);
     await page.click('button[type=submit]');

@@ -24,12 +24,12 @@ class TelurController extends Controller
             ->where('fase', 'dewasa')
             ->whereNotNull('kandang_id')
             ->orderBy('nama')
-            ->get(['id', 'nama', 'spesies', 'kandang_id'])
+            ->get(['id', 'nama', 'spesies', 'gender', 'kandang_id'])
             ->groupBy('kandang_id')
             ->filter(fn ($grup) => $grup->count() === 2)
             ->map(fn ($grup) => [
                 'label' => $grup->first()->kandang->label,
-                'burung' => $grup->map(fn ($b) => ['id' => $b->id, 'nama' => $b->nama, 'spesies' => $b->spesies])->values()->all(),
+                'burung' => $grup->map(fn ($b) => ['id' => $b->id, 'nama' => $b->nama, 'spesies' => $b->spesies, 'gender' => $b->gender_label])->values()->all(),
             ])
             ->sortBy('label', SORT_NATURAL | SORT_FLAG_CASE)
             ->values();

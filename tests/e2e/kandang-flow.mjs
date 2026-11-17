@@ -86,8 +86,8 @@ try {
 
     // ---------- Login via form asli ----------
     await page.goto(`${BASE}/login`, { waitUntil: 'load' });
-    await page.click('#email');
-    await page.fill('#email', ADMIN.email);
+    await page.click('#username');
+    await page.fill('#username', ADMIN.email.split('@')[0]);
     await page.click('#password');
     await page.fill('#password', ADMIN.password);
     await page.click('button[type=submit]');
@@ -244,8 +244,8 @@ try {
     const mobCtx = await browser.newContext({ viewport: { width: 375, height: 812 } });
     const mobile = await mobCtx.newPage();
     await mobile.goto(`${BASE}/login`, { waitUntil: 'load' });
-    await mobile.click('#email');
-    await mobile.fill('#email', ADMIN.email);
+    await mobile.click('#username');
+    await mobile.fill('#username', ADMIN.email.split('@')[0]);
     await mobile.click('#password');
     await mobile.fill('#password', ADMIN.password);
     await mobile.click('button[type=submit]');
@@ -275,8 +275,8 @@ try {
     const touchCtx = await browser.newContext({ viewport: { width: 375, height: 812 }, hasTouch: true });
     const touch = await touchCtx.newPage();
     await touch.goto(`${BASE}/login`, { waitUntil: 'load' });
-    await touch.click('#email');
-    await touch.fill('#email', ADMIN.email);
+    await touch.click('#username');
+    await touch.fill('#username', ADMIN.email.split('@')[0]);
     await touch.click('#password');
     await touch.fill('#password', ADMIN.password);
     await touch.click('button[type=submit]');

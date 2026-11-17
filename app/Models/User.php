@@ -13,6 +13,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name',
+        'username',
         'email',
         'password',
         'google_id',
@@ -39,6 +40,23 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    // Login dashboard memakai username; bila dibuat tanpa username, turunkan
+    // otomatis dari prefix email (syafrudintdm@gmail.com → syafrudintdm).
+    protected static function booted(): void
+    {
+        static::creating(function (self $user) {
+            if (empty($user->username) && ! empty($user->email)) {
+                $base = substr(preg_replace('/[^a-zA-Z0-9._-]/', '', explode('@', $user->email)[0]) ?: 'user', 0, 50);
+                $username = $base;
+                $i = 1;
+                while (self::where('username', $username)->exists()) {
+                    $username = substr($base, 0, 46).($i++);
+                }
+                $user->username = $username;
+            }
+        });
     }
 
     public function activityLogs(): HasMany

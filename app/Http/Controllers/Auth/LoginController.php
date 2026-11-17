@@ -17,29 +17,35 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
+        $data = $request->validate([
+            'username' => ['required', 'string', 'max:50'],
             'password' => ['required'],
         ], [
-            'email.required' => 'Email wajib diisi.',
-            'email.email' => 'Format email tidak valid.',
+            'username.required' => 'Username wajib diisi.',
             'password.required' => 'Password wajib diisi.',
         ]);
 
+        // Akun yang didaftarkan lewat Google (whitelist) hanya bisa login Google:
+        // satu pintu per metode pendaftaran, password-nya acak dan tidak dipakai.
+        $gUser = User::where('username', $data['username'])->first();
+        if ($gUser && $gUser->google_id) {
+            return back()->withErrors([
+                'username' => 'Akun ini terdaftar via Google. Gunakan tombol "Masuk dengan Google".',
+            ])->onlyInput('username');
+        }
+
         // Remember-me selalu aktif 14 hari (ala website besar): cookie remember
-        // memungkinkan sesi admin dipulihkan otomatis tanpa login ulang saat
-        // sesi web kedaluwarsa — klik "Perpanjang Sesi" tetap menyelamatkan sesi.
-        // Logout (manual maupun timeout) menghapus cookie ini.
+        // memungkinkan sesi admin dipulihkan otomatis tanpa login ulang — klik
+        // "Perpanjang Sesi" tetap menyelamatkan sesi.
         Auth::setRememberDuration(14 * 24 * 60);
 
-        if (Auth::attempt($credentials, true)) {
+        if (Auth::attempt(['username' => $data['username'], 'password' => $data['password']], true)) {
             $request->session()->regenerate();
 
             // Update last_login_at langsung ke database
-            $userId = Auth::id();
-            User::where('id', $userId)->update(['last_login_at' => now()]);
+            User::where('id', Auth::id())->update(['last_login_at' => now()]);
 
-            // Non-admin tidak boleh ke /admin (jebakan 403 tanpa pintu keluar);
+            // Non-admin tidak boleh ke /admin oleh intended (jebakan 403);
             // url.intended bisa berisi URL admin, jadi abaikan intended untuk non-admin.
             if (! Auth::user()->isAdmin()) {
                 return redirect('/');
@@ -49,12 +55,12 @@ class LoginController extends Controller
         }
 
         Log::warning('Percobaan login gagal', [
-            'email' => $credentials['email'],
+            'username' => $data['username'],
             'ip' => $request->ip(),
         ]);
 
         return back()->withErrors([
-            'email' => 'Email atau password salah.',
-        ])->onlyInput('email');
+            'username' => 'Username atau password salah.',
+        ])->onlyInput('username');
     }
 }

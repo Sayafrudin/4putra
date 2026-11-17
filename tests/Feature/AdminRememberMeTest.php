@@ -19,6 +19,7 @@ class AdminRememberMeTest extends TestCase
             ['email' => 'admin-remember-test@4putra.test'],
             [
                 'name' => 'Admin Remember Test',
+                'username' => 'admin-remember-test',
                 'password' => bcrypt('password123'),
                 'role' => 'admin',
             ]
@@ -30,7 +31,7 @@ class AdminRememberMeTest extends TestCase
         $user = $this->makeAdmin();
 
         $response = $this->post('/login', [
-            'email' => 'admin-remember-test@4putra.test',
+            'username' => 'admin-remember-test',
             'password' => 'password123',
         ]);
 
@@ -52,7 +53,7 @@ class AdminRememberMeTest extends TestCase
         $user = $this->makeAdmin();
 
         $response = $this->post('/login', [
-            'email' => 'admin-remember-test@4putra.test',
+            'username' => 'admin-remember-test',
             'password' => 'password123',
         ]);
         $response->assertRedirect();

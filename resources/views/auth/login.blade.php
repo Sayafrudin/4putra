@@ -23,7 +23,7 @@
         <div class="bg-white rounded-2xl shadow-lg p-8">
             <h1 class="text-2xl font-bold text-gray-800 text-center mb-6">Masuk ke Akun</h1>
 
-            @if ($errors->any() && !$errors->has('email') && !$errors->has('password'))
+            @if ($errors->any() && !$errors->has('username') && !$errors->has('password'))
                 <div class="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
                     {{ $errors->first() }}
                 </div>
@@ -60,12 +60,12 @@
                 @csrf
 
                 <div class="mb-4">
-                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input type="email" name="email" id="email" value="{{ old('email') }}"
-                        placeholder="user@example.com" required autofocus autocomplete="off" readonly
+                    <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                    <input type="text" name="username" id="username" value="{{ old('username') }}"
+                        placeholder="username" required autofocus autocomplete="off" readonly
                         onfocus="this.removeAttribute('readonly')"
-                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#E62C37]/30 focus:border-[#E62C37] transition-colors duration-200 text-sm @error('email') border-red-500 @enderror">
-                    @error('email')
+                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#E62C37]/30 focus:border-[#E62C37] transition-colors duration-200 text-sm @error('username') border-red-500 @enderror">
+                    @error('username')
                         <p class="mt-1.5 text-xs text-red-600 flex items-center gap-1">
                             <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd"

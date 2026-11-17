@@ -47,6 +47,15 @@
     </div>
 
     {{-- Riwayat vaksinasi --}}
+    <div class="mb-4">
+        <div class="relative max-w-md">
+            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+            </svg>
+            <input type="text" class="table-search-input w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:outline-none" placeholder="Cari burung / jenis vaksin...">
+        </div>
+    </div>
+
     <div class="w-full overflow-hidden bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 shadow-sm mb-10 table-search-wrapper">
         <div class="w-full overflow-x-auto">
             <table class="table-searchable w-full text-left border-collapse">
@@ -104,21 +113,21 @@
                     <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Burung</label>
                     <select name="burung_id" id="tambah_burung"
                         class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
-                        <option value="">— Pilih burung —</option>
+                        <option value="">- Pilih burung -</option>
                         @php
                             $tertempatkan = $burungList->filter(fn ($b) => $b->kandang)->groupBy(fn ($b) => $b->kandang->label)->sortKeysUsing('strnatcasecmp');
                         @endphp
                         @foreach ($tertempatkan as $label => $grup)
                             <optgroup label="Kandang {{ $label }}">
                                 @foreach ($grup as $b)
-                                    <option value="{{ $b->id }}">{{ $b->nama }} — {{ $b->spesies }} ({{ $b->fase === 'anakan' ? 'Baby' : 'Dewasa' }})</option>
+                                    <option value="{{ $b->id }}">{{ $b->nama }} - {{ $b->spesies }} ({{ $b->fase_label }}){{ $b->gender_label ? ' - '.$b->gender_label : '' }}</option>
                                 @endforeach
                             </optgroup>
                         @endforeach
                         @if (($belumDitempatkan = $burungList->filter(fn ($b) => ! $b->kandang))->isNotEmpty())
                             <optgroup label="Belum ditempatkan">
                                 @foreach ($belumDitempatkan as $b)
-                                    <option value="{{ $b->id }}">{{ $b->nama }} — {{ $b->spesies }} ({{ $b->fase === 'anakan' ? 'Baby' : 'Dewasa' }})</option>
+                                    <option value="{{ $b->id }}">{{ $b->nama }} - {{ $b->spesies }} ({{ $b->fase_label }}){{ $b->gender_label ? ' - '.$b->gender_label : '' }}</option>
                                 @endforeach
                             </optgroup>
                         @endif

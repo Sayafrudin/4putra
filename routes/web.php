@@ -215,6 +215,10 @@ Route::prefix('admin')->middleware(['admin.domain', 'admin.auth'])->group(functi
 
         Route::get('/users/{user}/activity', [AdminUserController::class, 'activity'])->name('admin.users.activity');
         Route::post('/activity/{activity}/comment', [AdminUserController::class, 'commentActivity'])->name('admin.activity.comment');
+
+        // Akses Google (whitelist Gmail petinggi)
+        Route::post('/google-whitelist', [AdminUserController::class, 'storeGoogleWhitelist'])->name('admin.google-whitelist.store');
+        Route::delete('/google-whitelist/{whitelist}', [AdminUserController::class, 'destroyGoogleWhitelist'])->name('admin.google-whitelist.destroy');
     });
 
     // Chatbot WhatsApp (hanya admin; fitur skripsi → local-only, 404 di produksi lewat middleware local.only)
@@ -274,6 +278,7 @@ Route::prefix('admin')->middleware(['admin.domain', 'admin.auth'])->group(functi
 
     // Stok makanan burung (semua role: menu monitoring)
     Route::get('/stok-makanan', [StokMakananController::class, 'index'])->name('admin.stok.index');
+    Route::get('/stok-makanan/export/pdf', [StokMakananController::class, 'exportPdf'])->name('admin.stok.export-pdf');
     Route::post('/stok-makanan', [StokMakananController::class, 'store'])->name('admin.stok.store');
     Route::put('/stok-makanan/{stokMakanan}', [StokMakananController::class, 'update'])->name('admin.stok.update');
     Route::delete('/stok-makanan/{stokMakanan}', [StokMakananController::class, 'destroy'])->name('admin.stok.destroy');

@@ -24,7 +24,7 @@
         <p id="kandang_search_empty" class="hidden mt-2 text-sm text-gray-500 dark:text-gray-400">Tidak ada aviary atau burung yang cocok.</p>
     </div>
 
-    {{-- Pool: burung yang tidak sedang di aviary (bebas + dari kandang biasa) --}}
+    {{-- Pool: hanya burung bebas (breeding → aviary ditolak server-side) --}}
     <div class="mb-8 bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm">
         <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200 dark:border-gray-800">
             <h3 class="text-sm font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Belum di Aviary</h3>
@@ -33,9 +33,9 @@
         <div id="poolList" class="p-4 min-h-20 flex flex-wrap gap-2"
             data-drop-pool>
             @forelse($pool as $b)
-                <x-admin.burung-chip :burung="$b" :lokasi-badge="$b->kandang ? 'Di Kandang '.$b->kandang->label : null" />
+                <x-admin.burung-chip :burung="$b" />
             @empty
-                <p class="text-sm text-gray-400 dark:text-gray-500 px-1 py-2">Semua burung sudah ditempatkan di aviary.</p>
+                <p data-pool-empty class="text-sm text-gray-400 dark:text-gray-500 px-1 py-2">Semua burung sudah ditempatkan di aviary.</p>
             @endforelse
         </div>
     </div>
@@ -416,6 +416,18 @@
             const pool = document.getElementById('poolList');
             const chips = pool.querySelectorAll('.burung-chip').length;
             document.querySelector('[data-pool-count]').textContent = chips + ' burung';
+
+            // Teks kosong pool selalu akurat: hilang saat ada chip, tampil lagi saat kosang
+            let pesanKosong = pool.querySelector('[data-pool-empty]');
+            if (chips === 0) {
+                if (!pesanKosong) {
+                    pool.insertAdjacentHTML('afterbegin', '<p data-pool-empty class="text-sm text-gray-400 dark:text-gray-500 px-1 py-2">Semua burung sudah ditempatkan di aviary.</p>');
+                } else {
+                    pesanKosong.classList.remove('hidden');
+                }
+            } else if (pesanKosong) {
+                pesanKosong.remove();
+            }
 
             if (!zona) return;
             const isi = zona.querySelectorAll('.kandang-isi .burung-chip').length;

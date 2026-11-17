@@ -33,9 +33,9 @@
         <div id="poolList" class="p-4 min-h-20 flex flex-wrap gap-2"
             data-drop-pool>
             @forelse($pool as $b)
-                <x-admin.burung-chip :burung="$b" :lokasi-badge="$b->kandang?->tipe === 'aviary' ? 'Di '.$b->kandang->label : null" />
+                <x-admin.burung-chip :burung="$b" />
             @empty
-                <p class="text-sm text-gray-400 dark:text-gray-500 px-1 py-2">Semua burung sudah ditempatkan di kandang.</p>
+                <p data-pool-empty class="text-sm text-gray-400 dark:text-gray-500 px-1 py-2">Semua burung sudah ditempatkan di kandang.</p>
             @endforelse
         </div>
     </div>
@@ -439,6 +439,18 @@
             const pool = document.getElementById('poolList');
             const chips = pool.querySelectorAll('.burung-chip').length;
             document.querySelector('[data-pool-count]').textContent = chips + ' burung';
+
+            // Teks kosong pool selalu akurat: hilang saat ada chip, tampil lagi saat kosang
+            let pesanKosong = pool.querySelector('[data-pool-empty]');
+            if (chips === 0) {
+                if (!pesanKosong) {
+                    pool.insertAdjacentHTML('afterbegin', '<p data-pool-empty class="text-sm text-gray-400 dark:text-gray-500 px-1 py-2">Semua burung sudah ditempatkan di kandang.</p>');
+                } else {
+                    pesanKosong.classList.remove('hidden');
+                }
+            } else if (pesanKosong) {
+                pesanKosong.remove();
+            }
 
             if (!zona) return;
             const isi = zona.querySelectorAll('.kandang-isi .burung-chip').length;

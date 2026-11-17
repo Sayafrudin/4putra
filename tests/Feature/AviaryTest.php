@@ -41,7 +41,7 @@ class AviaryTest extends TestCase
         $this->assertSame('Aviary 2', $aviaries[1]->label);
     }
 
-    public function test_papan_kandang_mengecualikan_aviary_dan_pool_menandai_burung_aviary(): void
+    public function test_papan_kandang_dan_pool_mengecualikan_burung_aviary(): void
     {
         $aviary = Kandang::where('tipe', 'aviary')->orderBy('nomor')->first();
         Burung::create([
@@ -53,9 +53,9 @@ class AviaryTest extends TestCase
 
         // Papan kandang tidak menampilkan kartu aviary
         $this->assertStringNotContainsString('data-kandang-label="Aviary 1"', $response->getContent());
-        // Burung aviary muncul di pool dengan badge lokasi (bisa langsung dipindah ke kandang)
-        $response->assertSee('uji-aviary-a');
-        $response->assertSee('Di Aviary 1');
+        // Pool kandang TIDAK menampilkan burung aviary (keluarkan dari aviary dulu)
+        $response->assertDontSee('uji-aviary-a');
+        $response->assertDontSee('Di Aviary 1');
     }
 
     public function test_halaman_aviary_pool_hanya_burung_bebas(): void
@@ -100,7 +100,7 @@ class AviaryTest extends TestCase
         $this->assertEquals($reguler->id, $burung->fresh()->kandang_id);
     }
 
-    public function test_burung_aviary_tetap_bisa_masuk_kandang_breeding(): void
+    public function test_burung_aviary_ditolak_masuk_kandang_breeding(): void
     {
         $aviary = Kandang::where('tipe', 'aviary')->orderBy('nomor')->first();
         $reguler = Kandang::updateOrCreate(
@@ -111,12 +111,13 @@ class AviaryTest extends TestCase
             'nama' => 'uji-aviary-e', 'spesies' => 'African Grey', 'fase' => 'dewasa', 'kandang_id' => $aviary->id,
         ]);
 
-        // Arah sah: promosi aviary → kandang breeding
+        // Aviary & kandang breeding saling eksklusif: keluarkan dari aviary dulu
         $this->actingAs($this->admin)
             ->postJson("/admin/burung/{$burung->id}/letakkan", ['kandang_id' => $reguler->id])
-            ->assertOk();
+            ->assertStatus(422)
+            ->assertJsonPath('ok', false);
 
-        $this->assertEquals($reguler->id, $burung->fresh()->kandang_id);
+        $this->assertEquals($aviary->id, $burung->fresh()->kandang_id);
     }
 
     public function test_letakkan_ke_aviary_tanpa_batas_kapasitas(): void
@@ -132,7 +133,8 @@ class AviaryTest extends TestCase
                 ->assertOk();
         }
 
-        $this->assertSame(3, $aviary->fresh()->burungs()->count());
+        // Aviary bisa berisi burung asli — hitung hanya burung uji ini
+        $this->assertSame(3, $aviary->fresh()->burungs()->where('nama', 'like', 'uji-aviary-ke%')->count());
 
         $burungs->each(fn ($b) => $b->delete());
     }

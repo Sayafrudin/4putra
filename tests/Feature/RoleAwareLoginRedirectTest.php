@@ -8,10 +8,11 @@ use Mockery;
 use Tests\TestCase;
 
 /**
- * Redirect sadar-role setelah login: pengguna non-admin tidak boleh
- * diarahkan ke /admin (jebakan 403 tanpa pintu keluar), admin tetap
- * menuju dashboard via intended. Halaman 403 wajib menyediakan tombol
- * keluar agar sesi non-admin tidak terjebak selamanya.
+ * Redirect sadar-role setelah login: pengguna non-admin di host publik tidak
+ * boleh diarahkan ke /admin (AdminDomain 404), admin tetap menuju dashboard
+ * via intended. Role user BOLEH masuk dashboard admin (menu terbatas):
+ * menu monitoring terbuka penuh, kelola user & manajemen konten ditolak
+ * server-side (403) dengan tombol tunggal kembali ke halaman login.
  */
 class RoleAwareLoginRedirectTest extends TestCase
 {
@@ -82,7 +83,7 @@ class RoleAwareLoginRedirectTest extends TestCase
         $this->get('/auth/google/callback')->assertRedirect(url('/'));
     }
 
-    public function test_forbidden_page_offers_logout_escape(): void
+    public function test_role_user_bisa_masuk_dashboard_admin(): void
     {
         $user = User::updateOrCreate(['email' => 'roleaware-user@4putra.test'], [
             'name' => 'Pengguna Biasa',
@@ -90,10 +91,41 @@ class RoleAwareLoginRedirectTest extends TestCase
             'role' => 'user',
         ]);
 
-        $response = $this->actingAs($user)->get('/admin');
+        $this->actingAs($user)->get('/admin')->assertOk();
+    }
+
+    public function test_role_user_ditolak_di_kelola_user_dan_manajemen_konten(): void
+    {
+        $user = User::updateOrCreate(['email' => 'roleaware-user@4putra.test'], [
+            'name' => 'Pengguna Biasa',
+            'password' => bcrypt('password123'),
+            'role' => 'user',
+        ]);
+
+        $this->actingAs($user)->get('/admin/users')->assertStatus(403);
+        $this->actingAs($user)->get('/admin/collections')->assertStatus(403);
+        $this->actingAs($user)->get('/admin/achievements')->assertStatus(403);
+        $this->actingAs($user)->get('/admin/daily-activities')->assertStatus(403);
+        $this->actingAs($user)->get('/admin/facilities')->assertStatus(403);
+    }
+
+    public function test_halaman_403_satu_tombol_kembali_ke_login(): void
+    {
+        $user = User::updateOrCreate(['email' => 'roleaware-user@4putra.test'], [
+            'name' => 'Pengguna Biasa',
+            'password' => bcrypt('password123'),
+            'role' => 'user',
+        ]);
+
+        // Tombol tunggal POST /admin/logout: path /admin/* tidak dibajak
+        // AdminHostRedirect di subdomain admin (POST /logout lama terbawa
+        // redirect balik ke /admin sehingga 403 terus-menerus).
+        $response = $this->actingAs($user)->get('/admin/users');
 
         $response->assertStatus(403);
-        $response->assertSee(route('logout'), false);
-        $response->assertSee('Keluar');
+        $response->assertSee(route('admin.logout'), false);
+        $response->assertSee('Kembali ke Halaman Login');
+        $response->assertDontSee('Kembali ke Beranda');
+        $response->assertDontSee(route('logout'), false);
     }
 }

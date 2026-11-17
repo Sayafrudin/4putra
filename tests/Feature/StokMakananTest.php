@@ -31,15 +31,16 @@ class StokMakananTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_hanya_admin_yang_bisa_mengakses(): void
+    public function test_menu_terbuka_role_user_dan_terproteksi_login(): void
     {
         $this->get('/admin/stok-makanan')->assertRedirect(route('login'));
 
-        $bukanAdmin = User::updateOrCreate(
+        $roleUser = User::updateOrCreate(
             ['email' => 'user-stok-test@4putra.test'],
-            ['name' => 'Bukan Admin', 'password' => bcrypt('password123'), 'role' => 'user']
+            ['name' => 'Role User', 'password' => bcrypt('password123'), 'role' => 'user']
         );
-        $this->actingAs($bukanAdmin)->get('/admin/stok-makanan')->assertStatus(403);
+        // Role user boleh memantau stok makanan (full akses menu monitoring).
+        $this->actingAs($roleUser)->get('/admin/stok-makanan')->assertOk();
         $this->actingAs($this->admin)->get('/admin/stok-makanan')->assertOk();
     }
 

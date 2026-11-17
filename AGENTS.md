@@ -166,7 +166,7 @@ Semua poin wajib tetap terpenuhi; saat refactor, jangan menonaktifkan kontrol di
 | 5-6 | Debug mode off, error tidak bocor | `APP_DEBUG=false` (vercel.json); pesan exception generik ke klien + detail ke log (semua controller admin, 2026-09-28) |
 | 7-9 | Validasi input, sanitasi, anti SQL injection | `$request->validate` di semua controller; query Eloquent/binding; Node pakai mysql2 `execute` (`db.js`) |
 | 10 | Anti XSS | Output `{{ }}` escaping; JSON hex-escape (`JSON_HEX_APOS`) untuk konten user di JS |
-| 11-13 | Server-side auth, cek akses user, role admin aman | `admin.auth`+`admin.only`+`admin.domain` di seluruh grup `/admin` (routes/web.php); role dicek di server (`AdminOnly`) |
+| 11-13 | Server-side auth, cek akses user, role admin aman | `admin.auth`+`admin.domain` di seluruh grup `/admin` (semua role login boleh masuk; role user = monitoring farm); route sensitif digate `admin.only` per grup (kelola user, manajemen konten, chatbot); role dicek di server (`AdminOnly`) |
 | 14-15 | DB tidak publik, DB permission ketat | TiDB private + SSL (`config/database.php`: `SSL_CA`, `VERIFY_SERVER_CERT`); gunakan user DB non-root dengan hak minimal di TiDB Cloud |
 | 16-17 | Hash password, session aman | `Hash::make` (AdminUserController, ProfileController); cookie `http_only`+`same_site=lax`+`secure` produksi; remember-me dihapus saat logout |
 | 18 | Reset password aman | Tidak ada alur reset mandiri (permukaan serangan nol); ganti password via admin (hash). Bila kelak dibuat: token sekali-pakai + throttle |
@@ -179,7 +179,7 @@ Semua poin wajib tetap terpenuhi; saat refactor, jangan menonaktifkan kontrol di
 | 37-38 | Uptime monitoring, error logging | `/up` Laravel + `/health` chatbot; `Log::error/warning` aktif, `LOG_CHANNEL=stderr` di Vercel |
 | 39-40 | Uji user simultan, uji restore backup | Prosedur manual sebelum demo (2-3 user); backup TiDB diuji restore, catat hasil |
 | 41-47 | Kredensial DB, .env publik, secret, log, authz, cross-user, DB perms, cloud misconfig | Tertutup poin 1-15; Cloudinary unsigned preset dibatasi via dashboard (folder + format + ukuran) |
-| 48 | Admin route terproteksi | `/admin/*` = 3 middleware + `local.only` (chatbot); host publik produksi → 404 (`AdminDomain` + env `ADMIN_HOST`, subdomain admin `management4putra-m4p.vercel.app`) |
+| 48 | Admin route terproteksi | `/admin/*` = `admin.domain` + `admin.auth` (semua role login); `admin.only` per grup sensitif (kelola user, manajemen konten, chatbot) + `local.only` (chatbot); host publik produksi → 404 (`AdminDomain` + env `ADMIN_HOST`, subdomain admin `management4putra-m4p.vercel.app`) |
 | 49-50 | SQL injection, NoSQL injection | Binding penuh (Laravel + mysql2); Laravel tidak pakai NoSQL |
 | 51-52 | Verbose error, auth lemah | Pesan generik + log detail; password min 8 + throttle login + log gagal |
 | 53-54 | Secret di git, secret di JS | Bersih (`git ls-files`); bundle client tidak memuat key (Midtrans/GROQ server-side saja) |

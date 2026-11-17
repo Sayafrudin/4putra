@@ -38,15 +38,16 @@ class VaksinasiTest extends TestCase
         return Burung::create(['nama' => 'uji-vaksin-burung', 'spesies' => 'African Grey', 'fase' => 'dewasa']);
     }
 
-    public function test_hanya_admin_yang_bisa_mengakses(): void
+    public function test_menu_terbuka_role_user_dan_terproteksi_login(): void
     {
         $this->get('/admin/vaksinasi')->assertRedirect(route('login'));
 
-        $bukanAdmin = User::updateOrCreate(
+        $roleUser = User::updateOrCreate(
             ['email' => 'user-vaksin-test@4putra.test'],
-            ['name' => 'Bukan Admin', 'password' => bcrypt('password123'), 'role' => 'user']
+            ['name' => 'Role User', 'password' => bcrypt('password123'), 'role' => 'user']
         );
-        $this->actingAs($bukanAdmin)->get('/admin/vaksinasi')->assertStatus(403);
+        // Role user boleh memantau vaksinasi (full akses menu monitoring).
+        $this->actingAs($roleUser)->get('/admin/vaksinasi')->assertOk();
         $this->actingAs($this->admin)->get('/admin/vaksinasi')->assertOk();
     }
 

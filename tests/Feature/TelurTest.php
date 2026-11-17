@@ -50,15 +50,16 @@ class TelurTest extends TestCase
         return [$kandang, $jantan, $betina];
     }
 
-    public function test_hanya_admin_yang_bisa_mengakses(): void
+    public function test_menu_terbuka_role_user_dan_terproteksi_login(): void
     {
         $this->get('/admin/telur')->assertRedirect(route('login'));
 
-        $bukanAdmin = User::updateOrCreate(
+        $roleUser = User::updateOrCreate(
             ['email' => 'user-telur-test@4putra.test'],
-            ['name' => 'Bukan Admin', 'password' => bcrypt('password123'), 'role' => 'user']
+            ['name' => 'Role User', 'password' => bcrypt('password123'), 'role' => 'user']
         );
-        $this->actingAs($bukanAdmin)->get('/admin/telur')->assertStatus(403);
+        // Role user boleh memantau telur (full akses menu monitoring).
+        $this->actingAs($roleUser)->get('/admin/telur')->assertOk();
         $this->actingAs($this->admin)->get('/admin/telur')->assertOk();
     }
 

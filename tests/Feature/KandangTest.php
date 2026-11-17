@@ -49,19 +49,20 @@ class KandangTest extends TestCase
         ], $attr));
     }
 
-    public function test_papan_kandang_terproteksi_admin(): void
+    public function test_papan_kandang_terbuka_role_user_dan_terproteksi_login(): void
     {
         $this->get('/admin/kandang')->assertRedirect(route('login'));
 
-        $bukanAdmin = User::updateOrCreate(
+        $roleUser = User::updateOrCreate(
             ['email' => 'user-kandang-test@4putra.test'],
-            ['name' => 'Bukan Admin', 'password' => bcrypt('password123'), 'role' => 'user']
+            ['name' => 'Role User', 'password' => bcrypt('password123'), 'role' => 'user']
         );
 
-        $this->actingAs($bukanAdmin)->get('/admin/kandang')->assertStatus(403);
+        // Role user boleh memantau kandang (full akses menu monitoring).
+        $this->actingAs($roleUser)->get('/admin/kandang')->assertOk();
         $this->actingAs($this->admin)->get('/admin/kandang')->assertOk();
 
-        $bukanAdmin->delete();
+        $roleUser->delete();
     }
 
     public function test_papan_render_blok_dan_isi_kandang(): void

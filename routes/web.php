@@ -128,8 +128,9 @@ Route::post('/midtrans/callback-laravel', [ChatbotController::class, 'midtransCa
 // Grup Rute Dashboard Admin PT 4Putra Vertex Aviary
 // admin.domain PALING DEPAN: host selain local & ADMIN_HOST langsung 404 (admin hanya di subdomain khusus),
 // sebelum auth check memunculkan redirect /login di host produksi.
-// admin.only: role admin diverifikasi SERVER-SIDE untuk SELURUH grup (bukan hanya login)
-Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'admin.only'])->group(function () {
+// Semua role login boleh masuk dashboard (role user = monitoring farm);
+// route sensitif digate admin.only PER GRUP di bawah (role tetap diverifikasi SERVER-SIDE).
+Route::prefix('admin')->middleware(['admin.domain', 'admin.auth'])->group(function () {
 
     Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
 
@@ -147,56 +148,59 @@ Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'admin.only'])
     Route::get('/chat/contacts', [ChatController::class, 'contacts'])->name('admin.chat.contacts');
     Route::get('/chat/users', [ChatController::class, 'users'])->name('admin.chat.users');
 
-    // Hapus gambar achievement
-    Route::delete('/achievements/images/{image}', [AchievementController::class, 'destroyImage'])
-        ->name('admin.achievements.images.destroy');
+    // Manajemen Konten (hanya admin: achievements, about, collections, aktivitas harian, fasilitas)
+    Route::middleware('admin.only')->group(function () {
+        // Hapus gambar achievement
+        Route::delete('/achievements/images/{image}', [AchievementController::class, 'destroyImage'])
+            ->name('admin.achievements.images.destroy');
 
-    // CRUD Achievements
-    // show dikecualikan: UI memakai modal, method show() tidak ada (hindari 500)
-    Route::resource('achievements', AdminAchievementController::class)->except(['show'])->names([
-        'index' => 'admin.achievements.index',
-        'create' => 'admin.achievements.create',
-        'store' => 'admin.achievements.store',
-        'edit' => 'admin.achievements.edit',
-        'update' => 'admin.achievements.update',
-        'destroy' => 'admin.achievements.destroy',
-    ]);
+        // CRUD Achievements
+        // show dikecualikan: UI memakai modal, method show() tidak ada (hindari 500)
+        Route::resource('achievements', AdminAchievementController::class)->except(['show'])->names([
+            'index' => 'admin.achievements.index',
+            'create' => 'admin.achievements.create',
+            'store' => 'admin.achievements.store',
+            'edit' => 'admin.achievements.edit',
+            'update' => 'admin.achievements.update',
+            'destroy' => 'admin.achievements.destroy',
+        ]);
 
-    // CRUD About Us (media hero + leadership) - satu halaman dengan Achievements
-    Route::post('/about/media', [AdminAboutController::class, 'updateMedia'])->name('admin.about.media.update');
-    Route::post('/about/leaderships', [AdminAboutController::class, 'storeLeader'])->name('admin.about.leadership.store');
-    Route::put('/about/leaderships/{leadership}', [AdminAboutController::class, 'updateLeader'])->name('admin.about.leadership.update');
-    Route::delete('/about/leaderships/{leadership}', [AdminAboutController::class, 'destroyLeader'])->name('admin.about.leadership.destroy');
+        // CRUD About Us (media hero + leadership) - satu halaman dengan Achievements
+        Route::post('/about/media', [AdminAboutController::class, 'updateMedia'])->name('admin.about.media.update');
+        Route::post('/about/leaderships', [AdminAboutController::class, 'storeLeader'])->name('admin.about.leadership.store');
+        Route::put('/about/leaderships/{leadership}', [AdminAboutController::class, 'updateLeader'])->name('admin.about.leadership.update');
+        Route::delete('/about/leaderships/{leadership}', [AdminAboutController::class, 'destroyLeader'])->name('admin.about.leadership.destroy');
 
-    // CRUD Collections
-    Route::resource('collections', AdminCollectionController::class)->except(['show'])->names([
-        'index' => 'admin.collections.index',
-        'create' => 'admin.collections.create',
-        'store' => 'admin.collections.store',
-        'edit' => 'admin.collections.edit',
-        'update' => 'admin.collections.update',
-        'destroy' => 'admin.collections.destroy',
-    ]);
+        // CRUD Collections
+        Route::resource('collections', AdminCollectionController::class)->except(['show'])->names([
+            'index' => 'admin.collections.index',
+            'create' => 'admin.collections.create',
+            'store' => 'admin.collections.store',
+            'edit' => 'admin.collections.edit',
+            'update' => 'admin.collections.update',
+            'destroy' => 'admin.collections.destroy',
+        ]);
 
-    // CRUD Aktivitas Harian
-    Route::resource('daily-activities', AdminDailyActivityController::class)->only([
-        'index', 'store', 'update', 'destroy',
-    ])->names([
-        'index' => 'admin.daily-activities.index',
-        'store' => 'admin.daily-activities.store',
-        'update' => 'admin.daily-activities.update',
-        'destroy' => 'admin.daily-activities.destroy',
-    ]);
+        // CRUD Aktivitas Harian
+        Route::resource('daily-activities', AdminDailyActivityController::class)->only([
+            'index', 'store', 'update', 'destroy',
+        ])->names([
+            'index' => 'admin.daily-activities.index',
+            'store' => 'admin.daily-activities.store',
+            'update' => 'admin.daily-activities.update',
+            'destroy' => 'admin.daily-activities.destroy',
+        ]);
 
-    // CRUD Fasilitas
-    Route::resource('facilities', AdminFacilityController::class)->only([
-        'index', 'store', 'update', 'destroy',
-    ])->names([
-        'index' => 'admin.facilities.index',
-        'store' => 'admin.facilities.store',
-        'update' => 'admin.facilities.update',
-        'destroy' => 'admin.facilities.destroy',
-    ]);
+        // CRUD Fasilitas
+        Route::resource('facilities', AdminFacilityController::class)->only([
+            'index', 'store', 'update', 'destroy',
+        ])->names([
+            'index' => 'admin.facilities.index',
+            'store' => 'admin.facilities.store',
+            'update' => 'admin.facilities.update',
+            'destroy' => 'admin.facilities.destroy',
+        ]);
+    });
 
     // Manajemen User (hanya admin)
     Route::middleware('admin.only')->group(function () {
@@ -241,46 +245,36 @@ Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'admin.only'])
         Route::post('/chat/{pelanggan}/delete', [ChatbotController::class, 'chatDelete'])->name('admin.chatbot.chat.delete');
     });
 
-    // Kandang & penempatan burung individu (hanya admin)
-    Route::middleware('admin.only')->group(function () {
-        Route::get('/kandang', [KandangController::class, 'index'])->name('admin.kandang.index');
-        Route::post('/burung', [KandangController::class, 'storeBurung'])->name('admin.burung.store');
-        Route::post('/burung/{burung}/letakkan', [KandangController::class, 'letakkan'])->name('admin.burung.letakkan');
-        Route::post('/burung/{burung}/kosongkan', [KandangController::class, 'kosongkan'])->name('admin.burung.kosongkan');
-        Route::put('/burung/{burung}', [KandangController::class, 'updateBurung'])->name('admin.burung.update');
-        Route::delete('/burung/{burung}', [KandangController::class, 'destroyBurung'])->name('admin.burung.destroy');
-    });
+    // Kandang & penempatan burung individu (semua role: menu monitoring)
+    Route::get('/kandang', [KandangController::class, 'index'])->name('admin.kandang.index');
+    Route::post('/burung', [KandangController::class, 'storeBurung'])->name('admin.burung.store');
+    Route::post('/burung/{burung}/letakkan', [KandangController::class, 'letakkan'])->name('admin.burung.letakkan');
+    Route::post('/burung/{burung}/kosongkan', [KandangController::class, 'kosongkan'])->name('admin.burung.kosongkan');
+    Route::put('/burung/{burung}', [KandangController::class, 'updateBurung'])->name('admin.burung.update');
+    Route::delete('/burung/{burung}', [KandangController::class, 'destroyBurung'])->name('admin.burung.destroy');
 
-    // Vaksinasi burung + deteksi booster bulanan (hanya admin)
-    Route::middleware('admin.only')->group(function () {
-        Route::get('/vaksinasi', [VaksinasiController::class, 'index'])->name('admin.vaksinasi.index');
-        Route::get('/vaksinasi/export/pdf', [VaksinasiController::class, 'exportPdf'])->name('admin.vaksinasi.export-pdf');
-        Route::post('/vaksinasi', [VaksinasiController::class, 'store'])->name('admin.vaksinasi.store');
-        Route::delete('/vaksinasi/{vaksinasi}', [VaksinasiController::class, 'destroy'])->name('admin.vaksinasi.destroy');
-    });
+    // Vaksinasi burung + deteksi booster bulanan (semua role: menu monitoring)
+    Route::get('/vaksinasi', [VaksinasiController::class, 'index'])->name('admin.vaksinasi.index');
+    Route::get('/vaksinasi/export/pdf', [VaksinasiController::class, 'exportPdf'])->name('admin.vaksinasi.export-pdf');
+    Route::post('/vaksinasi', [VaksinasiController::class, 'store'])->name('admin.vaksinasi.store');
+    Route::delete('/vaksinasi/{vaksinasi}', [VaksinasiController::class, 'destroy'])->name('admin.vaksinasi.destroy');
 
-    // Telur & incubator (hanya admin)
-    Route::middleware('admin.only')->group(function () {
-        Route::get('/telur', [TelurController::class, 'index'])->name('admin.telur.index');
-        Route::get('/telur/export/pdf', [TelurController::class, 'exportPdf'])->name('admin.telur.export-pdf');
-        Route::post('/telur', [TelurController::class, 'store'])->name('admin.telur.store');
-        Route::put('/telur/{telur}', [TelurController::class, 'update'])->name('admin.telur.update');
-        Route::delete('/telur/{telur}', [TelurController::class, 'destroy'])->name('admin.telur.destroy');
-    });
+    // Telur & incubator (semua role: menu monitoring)
+    Route::get('/telur', [TelurController::class, 'index'])->name('admin.telur.index');
+    Route::get('/telur/export/pdf', [TelurController::class, 'exportPdf'])->name('admin.telur.export-pdf');
+    Route::post('/telur', [TelurController::class, 'store'])->name('admin.telur.store');
+    Route::put('/telur/{telur}', [TelurController::class, 'update'])->name('admin.telur.update');
+    Route::delete('/telur/{telur}', [TelurController::class, 'destroy'])->name('admin.telur.destroy');
 
-    // Keuangan farm (hanya admin)
-    Route::middleware('admin.only')->group(function () {
-        Route::get('/keuangan', [KeuanganController::class, 'index'])->name('admin.keuangan.index');
-        Route::get('/keuangan/export/pdf', [KeuanganController::class, 'exportPdf'])->name('admin.keuangan.export-pdf');
-        Route::post('/keuangan', [KeuanganController::class, 'store'])->name('admin.keuangan.store');
-        Route::delete('/keuangan/{keuangan}', [KeuanganController::class, 'destroy'])->name('admin.keuangan.destroy');
-    });
+    // Keuangan farm (semua role: menu monitoring)
+    Route::get('/keuangan', [KeuanganController::class, 'index'])->name('admin.keuangan.index');
+    Route::get('/keuangan/export/pdf', [KeuanganController::class, 'exportPdf'])->name('admin.keuangan.export-pdf');
+    Route::post('/keuangan', [KeuanganController::class, 'store'])->name('admin.keuangan.store');
+    Route::delete('/keuangan/{keuangan}', [KeuanganController::class, 'destroy'])->name('admin.keuangan.destroy');
 
-    // Stok makanan burung (hanya admin)
-    Route::middleware('admin.only')->group(function () {
-        Route::get('/stok-makanan', [StokMakananController::class, 'index'])->name('admin.stok.index');
-        Route::post('/stok-makanan', [StokMakananController::class, 'store'])->name('admin.stok.store');
-        Route::put('/stok-makanan/{stokMakanan}', [StokMakananController::class, 'update'])->name('admin.stok.update');
-        Route::delete('/stok-makanan/{stokMakanan}', [StokMakananController::class, 'destroy'])->name('admin.stok.destroy');
-    });
+    // Stok makanan burung (semua role: menu monitoring)
+    Route::get('/stok-makanan', [StokMakananController::class, 'index'])->name('admin.stok.index');
+    Route::post('/stok-makanan', [StokMakananController::class, 'store'])->name('admin.stok.store');
+    Route::put('/stok-makanan/{stokMakanan}', [StokMakananController::class, 'update'])->name('admin.stok.update');
+    Route::delete('/stok-makanan/{stokMakanan}', [StokMakananController::class, 'destroy'])->name('admin.stok.destroy');
 });

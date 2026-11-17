@@ -37,6 +37,8 @@
                     </a>
                 </li>
 
+                {{-- Manajemen Konten hanya admin (route digate server-side admin.only) --}}
+                @if (Auth::user()->isAdmin())
                 <li class="relative px-6 py-3">
                     @if (request()->routeIs('admin.achievements.*') ||
                             request()->routeIs('admin.about.*') ||
@@ -109,6 +111,7 @@
                         </a>
                     </div>
                 </li>
+                @endif
 
                 {{-- Menu Manajemen Farm (data burung, bukan urusan chatbot) --}}
                 <li class="relative px-6 py-3"
@@ -216,8 +219,8 @@
                     </li>
                 @endif
 
-                {{-- Menu Chatbot WhatsApp: fitur skripsi → local-only, tidak dirender di produksi --}}
-                @if (! app()->environment('production'))
+                {{-- Menu Chatbot WhatsApp: fitur skripsi → hanya admin, local-only, tidak dirender di produksi --}}
+                @if (Auth::user()->isAdmin() && ! app()->environment('production'))
                 <li class="relative px-6 py-3" x-data="{ openChatbot: {{ request()->routeIs('admin.chatbot.*') ? 'true' : 'false' }} }">
                     @if (request()->routeIs('admin.chatbot.*'))
                         <span class="absolute inset-y-0 left-0 w-1 bg-[#E62C37] rounded-tr-lg rounded-br-lg"

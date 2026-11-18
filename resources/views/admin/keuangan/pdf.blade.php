@@ -43,6 +43,10 @@
         </div>
     </div>
 
+    @if ($tab)
+        <div class="filter">Proyek: {{ $tab->nama }}</div>
+    @endif
+
     @if ($tipeAktif || $kategoriAktif)
         <div class="filter">
             Filter aktif: {{ $tipeAktif ? 'Tipe '.ucfirst($tipeAktif) : '' }}{{ $tipeAktif && $kategoriAktif ? ' · ' : '' }}{{ $kategoriAktif ? 'Kategori '.$kategoriAktif : 'Semua kategori' }}
@@ -58,15 +62,59 @@
             <div class="label">Total Keluar</div>
             <div class="value red">Rp {{ number_format((float) $ringkasan['keluar'], 0, ',', '.') }}</div>
         </div>
-        <div class="summary-card">
-            <div class="label">Saldo</div>
-            <div class="value">Rp {{ number_format((float) $ringkasan['saldo'], 0, ',', '.') }}</div>
-        </div>
+        @if ($tab)
+            <div class="summary-card">
+                <div class="label">Total Budget</div>
+                <div class="value">Rp {{ number_format((float) $totalBudget, 0, ',', '.') }}</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">Sisa Budget</div>
+                <div class="value {{ $sisaBudget < 0 ? 'red' : '' }}">Rp {{ number_format((float) $sisaBudget, 0, ',', '.') }}</div>
+            </div>
+        @else
+            <div class="summary-card">
+                <div class="label">Saldo</div>
+                <div class="value">Rp {{ number_format((float) $ringkasan['saldo'], 0, ',', '.') }}</div>
+            </div>
+        @endif
         <div class="summary-card">
             <div class="label">Jumlah Transaksi</div>
             <div class="value">{{ $transaksis->count() }}</div>
         </div>
     </div>
+
+    @if ($tab)
+        {{-- Target anggaran & rincian biaya tambahan (khusus tab proyek) --}}
+        <div class="content">
+            <h2 style="font-size: 14px; margin-bottom: 8px;">Target Anggaran &amp; Rincian Biaya — {{ $tab->nama }}</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Target Anggaran Utama</th>
+                        <th style="text-align: right;">Rp {{ number_format((float) $tab->target_anggaran, 0, ',', '.') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($tab->costs as $c)
+                        <tr>
+                            <td>{{ $c->nama }} <span style="color:#888;">(biaya tambahan)</span></td>
+                            <td style="text-align: right;">Rp {{ number_format((float) $c->nominal, 0, ',', '.') }}</td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="2" style="text-align: center; color: #888;">Tidak ada biaya tambahan</td></tr>
+                    @endempty
+                    <tr style="background: #eef2f7; font-weight: 700;">
+                        <td>TOTAL BUDGET</td>
+                        <td style="text-align: right;">Rp {{ number_format((float) $totalBudget, 0, ',', '.') }}</td>
+                    </tr>
+                    <tr style="font-weight: 700;">
+                        <td>SISA BUDGET (total budget − pengeluaran)</td>
+                        <td style="text-align: right;" class="{{ $sisaBudget < 0 ? 'keluar' : '' }}">Rp {{ number_format((float) $sisaBudget, 0, ',', '.') }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    @endif
 
     <div class="content">
         <table>

@@ -18,6 +18,7 @@ class User extends Authenticatable
         'password',
         'google_id',
         'role',
+        'menu_access',
         'last_login_at',
         'last_active_at',
     ];
@@ -34,6 +35,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'last_login_at' => 'datetime',
             'last_active_at' => 'datetime',
+            'menu_access' => 'array',
         ];
     }
 

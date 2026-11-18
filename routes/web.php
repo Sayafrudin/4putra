@@ -131,7 +131,7 @@ Route::post('/midtrans/callback-laravel', [ChatbotController::class, 'midtransCa
 // sebelum auth check memunculkan redirect /login di host produksi.
 // Semua role login boleh masuk dashboard (role user = monitoring farm);
 // route sensitif digate admin.only PER GRUP di bawah (role tetap diverifikasi SERVER-SIDE).
-Route::prefix('admin')->middleware(['admin.domain', 'admin.auth'])->group(function () {
+Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'menu.access'])->group(function () {
 
     Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
 
@@ -275,6 +275,15 @@ Route::prefix('admin')->middleware(['admin.domain', 'admin.auth'])->group(functi
     Route::get('/keuangan/export/pdf', [KeuanganController::class, 'exportPdf'])->name('admin.keuangan.export-pdf');
     Route::post('/keuangan', [KeuanganController::class, 'store'])->name('admin.keuangan.store');
     Route::delete('/keuangan/{keuangan}', [KeuanganController::class, 'destroy'])->name('admin.keuangan.destroy');
+
+    // Tab proyek keuangan (multi-tab): buat/rename/hapus tab, budget, rincian biaya
+    Route::post('/keuangan/tabs', [KeuanganController::class, 'storeTab'])->name('admin.keuangan.tabs.store');
+    Route::put('/keuangan/tabs/{tab}', [KeuanganController::class, 'updateTab'])->name('admin.keuangan.tabs.update');
+    Route::delete('/keuangan/tabs/{tab}', [KeuanganController::class, 'destroyTab'])->name('admin.keuangan.tabs.destroy');
+    Route::put('/keuangan/tabs/{tab}/budget', [KeuanganController::class, 'updateBudget'])->name('admin.keuangan.tabs.budget');
+    Route::post('/keuangan/tabs/{tab}/costs', [KeuanganController::class, 'storeCost'])->name('admin.keuangan.costs.store');
+    Route::put('/keuangan/costs/{cost}', [KeuanganController::class, 'updateCost'])->name('admin.keuangan.costs.update');
+    Route::delete('/keuangan/costs/{cost}', [KeuanganController::class, 'destroyCost'])->name('admin.keuangan.costs.destroy');
 
     // Stok makanan burung (semua role: menu monitoring)
     Route::get('/stok-makanan', [StokMakananController::class, 'index'])->name('admin.stok.index');

@@ -50,7 +50,7 @@ class VaksinasiController extends Controller
         $data = $request->validate([
             'burung_id' => ['required', 'integer', 'exists:burungs,id'],
             'jenis' => ['required', 'string', 'max:100'],
-            'tanggal_vaksin' => ['required', 'date', 'before_or_equal:today'],
+            'tanggal_vaksin' => ['required', 'date', 'before_or_equal:'.now('Asia/Jakarta')->toDateString()],
             'catatan' => ['nullable', 'string', 'max:500'],
         ]);
 

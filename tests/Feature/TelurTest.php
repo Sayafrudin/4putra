@@ -6,6 +6,7 @@ use App\Models\Burung;
 use App\Models\Kandang;
 use App\Models\Telur;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
@@ -89,6 +90,34 @@ class TelurTest extends TestCase
             'jumlah' => 2,
             'status' => 'diinkubasi',
         ]);
+    }
+
+    public function test_tanggal_hari_ini_diterima_pada_dini_hari_wib(): void
+    {
+        // Simulasi produksi (UTC): 18 Nov 01:00 WIB = 17 Nov 18:00 UTC.
+        Carbon::setTestNow(Carbon::parse('2026-11-17 18:00', 'UTC'));
+        $tzLama = date_default_timezone_get();
+        date_default_timezone_set('UTC');
+
+        try {
+            [$kandang, $jantan, $betina] = $this->kandangPasanganUji();
+
+            $this->actingAs($this->admin)
+                ->postJson('/admin/telur', [
+                    'burung_id' => $betina->id,
+                    'burung_pasangan_id' => $jantan->id,
+                    'sesi' => 1,
+                    'jumlah' => 1,
+                    'tanggal_diambil' => '2026-11-18',
+                    'diambil_oleh' => 'uji-pekerja-telur',
+                    'kondisi' => 'Kondisi telur baik',
+                ])->assertOk();
+
+            $this->assertDatabaseHas('telurs', ['burung_id' => $betina->id, 'tanggal_diambil' => '2026-11-18']);
+        } finally {
+            Carbon::setTestNow();
+            date_default_timezone_set($tzLama);
+        }
     }
 
     public function test_pasangan_ditolak_jika_bukan_dua_burung_dewasa_satu_kandang(): void

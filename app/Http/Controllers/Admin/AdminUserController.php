@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\User;
+use App\Support\AdminMenus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class AdminUserController extends Controller
@@ -27,7 +29,7 @@ class AdminUserController extends Controller
 
     public function create()
     {
-        return view('admin.users.create');
+        return view('admin.users.create', ['menuKeys' => AdminMenus::keys()]);
     }
 
     public function store(Request $request)
@@ -39,6 +41,10 @@ class AdminUserController extends Controller
             // Password opsional: kosong = akun hanya bisa login "Masuk dengan Google".
             'password' => ['nullable', 'confirmed', Password::min(8)],
             'role' => ['required', 'in:admin,user'],
+            // Hak akses menu (khusus role admin): NULL = akses penuh.
+            'akses_penuh' => ['nullable', 'boolean'],
+            'menu_access' => ['nullable', 'array'],
+            'menu_access.*' => ['string', Rule::in(AdminMenus::keys())],
         ]);
 
         $user = User::create([
@@ -47,6 +53,7 @@ class AdminUserController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password'] ?? Str::random(32)),
             'role' => $validated['role'],
+            'menu_access' => $this->menuAccessTersimpan($validated),
         ]);
 
         $this->logDataChange(
@@ -68,7 +75,7 @@ class AdminUserController extends Controller
 
     public function edit(User $user)
     {
-        return view('admin.users.edit', compact('user'));
+        return view('admin.users.edit', ['user' => $user, 'menuKeys' => AdminMenus::keys()]);
     }
 
     public function update(Request $request, User $user)
@@ -79,6 +86,9 @@ class AdminUserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$user->id],
             'password' => ['nullable', 'confirmed', Password::min(8)],
             'role' => ['required', 'in:admin,user'],
+            'akses_penuh' => ['nullable', 'boolean'],
+            'menu_access' => ['nullable', 'array'],
+            'menu_access.*' => ['string', Rule::in(AdminMenus::keys())],
         ]);
 
         $oldValues = $user->getOriginal();
@@ -87,6 +97,7 @@ class AdminUserController extends Controller
         $user->username = $validated['username'];
         $user->email = $validated['email'];
         $user->role = $validated['role'];
+        $user->menu_access = $this->menuAccessTersimpan($validated);
 
         if (! empty($validated['password'])) {
             $user->password = Hash::make($validated['password']);
@@ -109,6 +120,24 @@ class AdminUserController extends Controller
         }
 
         return redirect()->route('admin.users.index')->with('success', 'Akun berhasil diperbarui!');
+    }
+
+    /**
+     * Normalisasi hak akses menu dari payload form:
+     * role user → selalu NULL; admin + "akses penuh" → NULL (semua menu);
+     * admin terbatas → daftar kunci menu (array kosong = hanya dashboard).
+     */
+    private function menuAccessTersimpan(array $validated): ?array
+    {
+        if (($validated['role'] ?? 'user') !== 'admin') {
+            return null;
+        }
+
+        if (! empty($validated['akses_penuh'])) {
+            return null;
+        }
+
+        return array_values(array_intersect(AdminMenus::keys(), $validated['menu_access'] ?? []));
     }
 
     public function destroy(Request $request, User $user)

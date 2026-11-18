@@ -11,48 +11,60 @@
 return [
     /*
      * Menu yang bisa diatur per akun admin. Kunci = disimpan di users.menu_access.
+     * 'akses' => 'admin' = menu eksklusif role admin (server digate admin.only);
+     * 'akses' => 'semua' = role user juga bisa diberi menu ini (monitoring farm).
      */
     'menus' => [
         'collections' => [
             'label' => 'Koleksi (Collections)',
+            'akses' => 'admin',
             'patterns' => ['admin.collections.*'],
         ],
         'facilities' => [
             'label' => 'Fasilitas (Facilities)',
+            'akses' => 'admin',
             'patterns' => ['admin.facilities.*'],
         ],
         'daily-activities' => [
             'label' => 'Aktivitas Harian (Daily Activities)',
+            'akses' => 'admin',
             'patterns' => ['admin.daily-activities.*'],
         ],
         'achievements' => [
             'label' => 'Pencapaian (Achievements)',
+            'akses' => 'admin',
             // About Us satu halaman dengan Achievements (tab sama di sidebar)
             'patterns' => ['admin.achievements.*', 'admin.about.*'],
         ],
         'aviary' => [
             'label' => 'Aviary',
+            'akses' => 'semua',
             'patterns' => ['admin.aviary.*'],
         ],
         'kandang' => [
             'label' => 'Kandang',
+            'akses' => 'semua',
             // Penempatan burung memakai nama route admin.burung.* (bukan admin.kandang.*)
             'patterns' => ['admin.kandang.*', 'admin.burung.*'],
         ],
         'vaksinasi' => [
             'label' => 'Vaksinasi',
+            'akses' => 'semua',
             'patterns' => ['admin.vaksinasi.*'],
         ],
         'telur' => [
             'label' => 'Telur & Incubator',
+            'akses' => 'semua',
             'patterns' => ['admin.telur.*'],
         ],
         'stok' => [
             'label' => 'Stok Makanan',
+            'akses' => 'semua',
             'patterns' => ['admin.stok.*'],
         ],
         'keuangan' => [
             'label' => 'Keuangan',
+            'akses' => 'semua',
             'patterns' => ['admin.keuangan.*'],
         ],
     ],

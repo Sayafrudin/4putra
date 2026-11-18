@@ -3,6 +3,11 @@
     "file": "assets/alpine-A8h-QRCZ.js",
     "name": "alpine"
   },
+  "_exceljs.min-_FHOiBEn.js": {
+    "file": "assets/exceljs.min-_FHOiBEn.js",
+    "name": "exceljs.min",
+    "isDynamicEntry": true
+  },
   "_firebase-BqLH3y0R.js": {
     "file": "assets/firebase-BqLH3y0R.js",
     "name": "firebase"
@@ -11,19 +16,13 @@
     "file": "assets/preload-helper-BfFHrpNk.js",
     "name": "preload-helper"
   },
-  "node_modules/xlsx/xlsx.mjs": {
-    "file": "assets/xlsx-CkFp8p6R.js",
-    "name": "xlsx",
-    "src": "node_modules/xlsx/xlsx.mjs",
-    "isDynamicEntry": true
-  },
   "resources/css/app.css": {
-    "file": "assets/app-Cm9-Y4KV.css",
+    "file": "assets/app-BJ4HEJCY.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/js/admin-export.js": {
-    "file": "assets/admin-export-C9TP7XzS.js",
+    "file": "assets/admin-export-C6QDxpL-.js",
     "name": "admin-export",
     "src": "resources/js/admin-export.js",
     "isEntry": true,
@@ -31,7 +30,7 @@
       "_preload-helper-BfFHrpNk.js"
     ],
     "dynamicImports": [
-      "node_modules/xlsx/xlsx.mjs"
+      "_exceljs.min-_FHOiBEn.js"
     ]
   },
   "resources/js/app.js": {

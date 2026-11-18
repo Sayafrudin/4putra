@@ -34,12 +34,9 @@ class LoginController extends Controller
             ])->onlyInput('username');
         }
 
-        // Remember-me selalu aktif 14 hari (ala website besar): cookie remember
-        // memungkinkan sesi admin dipulihkan otomatis tanpa login ulang — klik
-        // "Perpanjang Sesi" tetap menyelamatkan sesi.
-        Auth::setRememberDuration(14 * 24 * 60);
-
-        if (Auth::attempt(['username' => $data['username'], 'password' => $data['password']], true)) {
+        // Tanpa remember-me (sesi ala MyBCA): sesi mati = login ulang saat
+        // dibuka lagi. Tidak ada cookie remember yang diterbitkan.
+        if (Auth::attempt(['username' => $data['username'], 'password' => $data['password']])) {
             $request->session()->regenerate();
 
             // Update last_login_at langsung ke database

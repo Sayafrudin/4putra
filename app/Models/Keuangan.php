@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Keuangan extends Model
 {
-    protected $fillable = ['tipe', 'kategori', 'financial_tab_id', 'jumlah', 'tanggal', 'keterangan'];
+    protected $fillable = ['tipe', 'kategori', 'financial_tab_id', 'transfer_id', 'jumlah', 'tanggal', 'keterangan'];
 
     protected $casts = ['jumlah' => 'decimal:2', 'tanggal' => 'date'];
 
-    public const KATEGORI = ['Gaji', 'Operasional', 'Pembangunan', 'Penjualan', 'Lainnya'];
+    public const KATEGORI = ['Gaji', 'Operasional', 'Pembangunan', 'Penjualan', 'Transfer', 'Lainnya'];
 
     public function tab()
     {

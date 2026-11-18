@@ -45,12 +45,13 @@ class User extends Authenticatable
     }
 
     // Login dashboard memakai username; bila dibuat tanpa username, turunkan
-    // otomatis dari prefix email (syafrudintdm@gmail.com → syafrudintdm).
+    // otomatis dari prefix email, atau dari nama bila email kosong.
     protected static function booted(): void
     {
         static::creating(function (self $user) {
-            if (empty($user->username) && ! empty($user->email)) {
-                $base = substr(preg_replace('/[^a-zA-Z0-9._-]/', '', explode('@', $user->email)[0]) ?: 'user', 0, 50);
+            if (empty($user->username)) {
+                $sumber = ! empty($user->email) ? explode('@', $user->email)[0] : ($user->name ?? '');
+                $base = substr(preg_replace('/[^a-zA-Z0-9._-]/', '', $sumber) ?: 'user', 0, 50);
                 $username = $base;
                 $i = 1;
                 while (self::where('username', $username)->exists()) {

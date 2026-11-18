@@ -24,6 +24,7 @@ class AdminUserStoreTest extends TestCase
     protected function tearDown(): void
     {
         User::whereIn('email', $this->emails)->delete();
+        User::whereIn('username', ['petugas-lapangan', 'tanpa-jalur-login', 'email-pertama', 'email-kedua'])->delete();
 
         parent::tearDown();
     }
@@ -92,6 +93,61 @@ class AdminUserStoreTest extends TestCase
         ])->assertStatus(422)->assertJsonValidationErrors('password');
 
         $this->assertDatabaseMissing('users', ['email' => 'store-baru@4putra.test']);
+    }
+
+    public function test_email_boleh_kosong_asalkan_password_diisi(): void
+    {
+        $admin = $this->admin();
+
+        $this->actingAs($admin)->postJson('/admin/users', [
+            'name' => 'Petugas Lapangan',
+            'username' => 'petugas-lapangan',
+            'email' => null,
+            'role' => 'user',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])->assertOk()->assertJson(['status' => 'OK']);
+
+        $user = User::where('username', 'petugas-lapangan')->first();
+        $this->assertNotNull($user);
+        $this->assertNull($user->email);
+
+        // Login username+password tetap bisa tanpa email
+        $this->post('/logout');
+        $this->post('/login', ['username' => 'petugas-lapangan', 'password' => 'password123']);
+        $this->assertAuthenticatedAs($user->fresh());
+
+        $user->delete();
+    }
+
+    public function test_email_dan_password_keduanya_kosong_ditolak(): void
+    {
+        $admin = $this->admin();
+
+        $this->actingAs($admin)->postJson('/admin/users', [
+            'name' => 'Nggak Bisa Login',
+            'username' => 'tanpa-jalur-login',
+            'role' => 'user',
+        ])->assertStatus(422)->assertJsonValidationErrors('password');
+
+        $this->assertDatabaseMissing('users', ['username' => 'tanpa-jalur-login']);
+    }
+
+    public function test_email_duplikat_tetap_ditolak(): void
+    {
+        $admin = $this->admin();
+
+        $this->actingAs($admin)->postJson('/admin/users', [
+            'name' => 'Pertama', 'username' => 'email-pertama', 'email' => 'store-baru@4putra.test',
+            'role' => 'user', 'password' => 'password123', 'password_confirmation' => 'password123',
+        ])->assertOk();
+
+        $this->actingAs($admin)->postJson('/admin/users', [
+            'name' => 'Kedua', 'username' => 'email-kedua', 'email' => 'store-baru@4putra.test',
+            'role' => 'user', 'password' => 'password123', 'password_confirmation' => 'password123',
+        ])->assertStatus(422)->assertJsonValidationErrors('email');
+
+        $this->assertDatabaseMissing('users', ['username' => 'email-kedua']);
     }
 
     public function test_daftar_user_memuat_akun_google_terlink(): void

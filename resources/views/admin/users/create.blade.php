@@ -30,9 +30,10 @@
             </div>
 
             <div>
-                <label for="email" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Email</label>
-                <input type="email" name="email" id="email" value="{{ old('email') }}" required
+                <label for="email" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Email <span class="font-normal text-gray-500 dark:text-gray-400">(opsional)</span></label>
+                <input type="email" name="email" id="email" value="{{ old('email') }}"
                     class="w-full px-4 py-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#E62C37]/50 focus:border-[#E62C37] text-sm">
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Diisi → email ini bisa masuk via "Masuk dengan Google". Kosongkan → login via username &amp; password.</p>
                 @error('email')
                     <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
                 @enderror
@@ -50,31 +51,42 @@
                 @enderror
             </div>
 
-            <div x-show="role === 'admin'" x-cloak class="rounded-lg border border-gray-300 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800/50">
+            <div class="rounded-lg border border-gray-300 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800/50">
                 <label class="inline-flex items-start gap-2 mb-3 cursor-pointer">
                     <input type="checkbox" name="akses_penuh" value="1" {{ old('akses_penuh') ? 'checked' : '' }}
                         class="mt-0.5 rounded border-gray-400 dark:border-gray-600 text-[#E62C37] focus:ring-[#E62C37]/50 bg-white dark:bg-gray-800">
                     <span>
-                        <span class="block text-sm font-medium text-gray-600 dark:text-gray-300">Akses penuh (semua menu)</span>
-                        <span class="block text-xs text-gray-500 dark:text-gray-400">Berikan akses ke seluruh menu dashboard tanpa batasan.</span>
+                        <span class="block text-sm font-medium text-gray-600 dark:text-gray-300">Akses penuh (semua menu yang tersedia untuk role ini)</span>
+                        <span class="block text-xs text-gray-500 dark:text-gray-400">Role Admin = seluruh menu dashboard. Role User = menu monitoring farm &amp; keuangan.</span>
                     </span>
                 </label>
-                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Atau pilih menu tertentu saja</p>
+                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Atau pilih menu tertentu saja — Admin</p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    @foreach ($menuKeys as $key)
+                    @foreach ($menuListAdmin as $m)
                         <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-                            <input type="checkbox" name="menu_access[]" value="{{ $key }}"
-                                {{ in_array($key, old('menu_access', [])) ? 'checked' : '' }}
+                            <input type="checkbox" name="menu_access[]" value="{{ $m['key'] }}"
+                                {{ in_array($m['key'], old('menu_access', [])) ? 'checked' : '' }}
                                 class="rounded border-gray-400 dark:border-gray-600 text-[#E62C37] focus:ring-[#E62C37]/50 bg-white dark:bg-gray-800">
-                            {{ \App\Support\AdminMenus::label($key) }}
+                            {{ $m['label'] }}
                         </label>
                     @endforeach
                 </div>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">Dashboard & profil selalu tersedia. Menu "Kelola Akun User" hanya untuk akun dengan akses penuh. Role "User" tidak memakai pilihan ini.</p>
+                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 mt-4">Pilihan menu untuk Role User</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    @foreach ($menuListUser as $m)
+                        <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                            <input type="checkbox" name="menu_access[]" value="{{ $m['key'] }}"
+                                {{ in_array($m['key'], old('menu_access', [])) ? 'checked' : '' }}
+                                class="rounded border-gray-400 dark:border-gray-600 text-[#E62C37] focus:ring-[#E62C37]/50 bg-white dark:bg-gray-800">
+                            {{ $m['label'] }}
+                        </label>
+                    @endforeach
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">Dashboard & profil selalu tersedia. Menu "Kelola Akun User" hanya untuk akun dengan akses penuh. Centang daftar sesuai role yang dipilih di atas.</p>
             </div>
 
             <div>
-                <label for="password" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Password <span class="font-normal text-gray-500 dark:text-gray-400">(opsional — kosongkan bila login hanya via Google)</span></label>
+                <label for="password" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Password <span class="font-normal text-gray-500 dark:text-gray-400">(wajib bila email kosong — login via username)</span></label>
                 <div class="relative" x-data="{ show: false }">
                     <input :type="show ? 'text' : 'password'" name="password" id="password"
                         class="w-full px-4 py-3 pr-12 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#E62C37]/50 focus:border-[#E62C37] text-sm"

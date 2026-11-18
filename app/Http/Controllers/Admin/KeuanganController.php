@@ -9,6 +9,7 @@ use App\Models\Keuangan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 /**
@@ -144,14 +145,79 @@ class KeuanganController extends Controller
     {
         try {
             $info = $keuangan->jumlah_format.' ('.$keuangan->kategori.')';
-            $keuangan->delete();
+            if ($keuangan->transfer_id) {
+                // Transfer = pasangan dua sisi; hapus kedua sisinya sekaligus
+                // agar buku asal & tujuan tetap cocok.
+                Keuangan::where('transfer_id', $keuangan->transfer_id)->delete();
+                $info .= ' (pasangan transfer)';
+            } else {
+                $keuangan->delete();
+            }
             $this->logActivity($request, 'hapus_keuangan', 'Menghapus transaksi keuangan '.$info);
 
-            return response()->json(['ok' => true, 'message' => 'Transaksi dihapus.']);
+            return response()->json(['ok' => true, 'message' => 'Transaksi dihapus.'.($keuangan->transfer_id ? ' Sisi pasangannya pada tab tujuan/asal ikut terhapus.' : '')]);
         } catch (\Throwable $e) {
             Log::error('Gagal hapus keuangan', ['id' => $keuangan->id, 'error' => $e->getMessage()]);
 
             return response()->json(['ok' => false, 'message' => 'Gagal menghapus transaksi. Coba lagi.'], 500);
+        }
+    }
+
+    public function transfer(Request $request)
+    {
+        $data = $request->validate([
+            'dari' => ['required'],
+            'ke' => ['required', 'integer', 'exists:financial_tabs,id'],
+            'nominal' => ['required', 'numeric', 'min:1', 'max:999999999999.99'],
+            'keterangan' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        // Asal: "kas_umum" (virtual, financial_tab_id NULL) atau id tab proyek.
+        $dariTab = ctype_digit((string) $data['dari']) && (int) $data['dari'] > 0
+            ? FinancialTab::findOrFail((int) $data['dari'])
+            : null;
+
+        if ($dariTab && (int) $dariTab->id === (int) $data['ke']) {
+            return response()->json(['ok' => false, 'message' => 'Tab asal dan tujuan tidak boleh sama.'], 422);
+        }
+
+        // Saldo asal dihitung dari DATABASE, bukan dari input.
+        $saldoAsal = Keuangan::query()
+            ->when($dariTab, fn ($q) => $q->where('financial_tab_id', $dariTab->id), fn ($q) => $q->whereNull('financial_tab_id'))
+            ->selectRaw("COALESCE(SUM(CASE WHEN tipe = 'masuk' THEN jumlah ELSE -jumlah END), 0) AS saldo")
+            ->value('saldo');
+
+        if ((float) $saldoAsal < (float) $data['nominal']) {
+            return response()->json(['ok' => false, 'message' => 'Saldo asal tidak cukup (saldo: Rp '.number_format((float) $saldoAsal, 0, ',', '.').').'], 422);
+        }
+
+        try {
+            $transferId = Str::uuid()->toString();
+            $hariIni = now('Asia/Jakarta')->toDateString();
+            $namaAsal = $dariTab ? $dariTab->nama : 'Kas Umum';
+            $tujuan = FinancialTab::findOrFail($data['ke']);
+            $catatan = $data['keterangan'] ?? null;
+
+            Keuangan::create([
+                'tipe' => 'keluar', 'kategori' => 'Transfer',
+                'financial_tab_id' => $dariTab?->id, 'transfer_id' => $transferId,
+                'jumlah' => $data['nominal'], 'tanggal' => $hariIni,
+                'keterangan' => 'Transfer ke '.$tujuan->nama.($catatan ? ' — '.$catatan : ''),
+            ]);
+            Keuangan::create([
+                'tipe' => 'masuk', 'kategori' => 'Transfer',
+                'financial_tab_id' => $tujuan->id, 'transfer_id' => $transferId,
+                'jumlah' => $data['nominal'], 'tanggal' => $hariIni,
+                'keterangan' => 'Dari '.$namaAsal.($catatan ? ' — '.$catatan : ''),
+            ]);
+
+            $this->logActivity($request, 'transfer_dana', 'Transfer dana Rp '.number_format((float) $data['nominal'], 0, ',', '.').' dari '.$namaAsal.' ke '.$tujuan->nama);
+
+            return response()->json(['ok' => true, 'transfer_id' => $transferId, 'message' => 'Transfer Rp '.number_format((float) $data['nominal'], 0, ',', '.').' dari '.$namaAsal.' ke '.$tujuan->nama.' dicatat.']);
+        } catch (\Throwable $e) {
+            Log::error('Gagal transfer dana', ['error' => $e->getMessage()]);
+
+            return response()->json(['ok' => false, 'message' => 'Gagal mencatat transfer. Coba lagi.'], 500);
         }
     }
 
@@ -192,16 +258,25 @@ class KeuanganController extends Controller
 
     public function destroyTab(Request $request, FinancialTab $tab)
     {
+        // Uang tidak pernah berpindah diam-diam: tab yang masih berisi
+        // transaksi TIDAK boleh dihapus — kosongkan dulu (hapus transaksi,
+        // atau transfer dana balik ke Kas Umum lalu hapus transaksinya).
+        $jumlahTransaksi = $tab->keuangans()->count();
+        if ($jumlahTransaksi > 0) {
+            return response()->json([
+                'ok' => false,
+                'message' => "Tab \"{$tab->nama}\" masih memiliki {$jumlahTransaksi} transaksi. Hapus atau catat ulang transaksinya dulu sebelum menghapus tab.",
+            ], 422);
+        }
+
         try {
             DB::transaction(function () use ($tab) {
-                // Transaksi tidak hilang: pindah ke Kas Umum (financial_tab_id NULL);
-                // rincian biaya ikut terhapus (FK cascade).
-                $tab->keuangans()->update(['financial_tab_id' => null]);
+                // Rincian biaya ikut terhapus (FK cascade)
                 $tab->delete();
             });
-            $this->logActivity($request, 'hapus_tab_keuangan', 'Menghapus tab keuangan "'.$tab->nama.'" (transaksi dipindah ke Kas Umum)');
+            $this->logActivity($request, 'hapus_tab_keuangan', 'Menghapus tab keuangan "'.$tab->nama.'"');
 
-            return response()->json(['ok' => true, 'message' => 'Tab "'.$tab->nama.'" dihapus. Transaksinya dipindahkan ke Kas Umum.']);
+            return response()->json(['ok' => true, 'message' => 'Tab "'.$tab->nama.'" dihapus.']);
         } catch (\Throwable $e) {
             Log::error('Gagal hapus tab keuangan', ['id' => $tab->id, 'error' => $e->getMessage()]);
 

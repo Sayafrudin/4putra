@@ -4,12 +4,17 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Laravel\Socialite\Facades\Socialite;
+use Mockery;
 use Tests\TestCase;
 
 /**
- * Alur "Perpanjang Sesi": ketika sesi web mati di server (tab dibekukan
- * browser / laptop sleep melewati SESSION_LIFETIME), cookie remember harus
- * memulihkan sesi otomatis — ping /admin/ping tetap 200 tanpa login ulang.
+ * Kontrak sesi baru (ala MyBCA): TIDAK ADA remember-me.
+ * - Login (username/password maupun Google) tidak menerbitkan cookie remember.
+ * - Sesi yang mati di server tidak dibangkitkan ulang diam-diam: cookie
+ *   remember lama (sisa deploy sebelumnya) harus diabaikan.
+ * - Logout tetap bersih: sesi hancur, /admin kembali terkunci.
  */
 class AdminRememberMeTest extends TestCase
 {
@@ -22,11 +27,12 @@ class AdminRememberMeTest extends TestCase
                 'username' => 'admin-remember-test',
                 'password' => bcrypt('password123'),
                 'role' => 'admin',
+                'remember_token' => Str::random(60),
             ]
         );
     }
 
-    public function test_login_always_issues_remember_cookie_for_14_days(): void
+    public function test_login_username_tidak_menerbitkan_cookie_remember(): void
     {
         $user = $this->makeAdmin();
 
@@ -41,14 +47,36 @@ class AdminRememberMeTest extends TestCase
         $recaller = collect($response->headers->getCookies())
             ->first(fn ($c) => str_starts_with($c->getName(), 'remember_web_'));
 
-        $this->assertNotNull($recaller, 'Cookie remember wajib diterbitkan saat login');
-        // Toleransi 1 detik: Max-Age dihitung dari timestamp Expires yang membulat
-        $this->assertEqualsWithDelta(14 * 24 * 60 * 60, $recaller->getMaxAge(), 1);
+        $this->assertNull($recaller, 'Cookie remember TIDAK boleh diterbitkan saat login');
 
         $user->delete();
     }
 
-    public function test_ping_recovers_dead_session_via_remember_cookie(): void
+    public function test_login_google_tidak_menerbitkan_cookie_remember(): void
+    {
+        $user = $this->makeAdmin();
+
+        $abstractUser = Mockery::mock(\Laravel\Socialite\Two\User::class);
+        $abstractUser->shouldReceive('getId')->andReturn('g-remember-1');
+        $abstractUser->shouldReceive('getEmail')->andReturn('admin-remember-test@4putra.test');
+        $abstractUser->shouldReceive('getName')->andReturn('Admin Remember Test');
+        Socialite::shouldReceive('driver')->with('google')->andReturnSelf();
+        Socialite::shouldReceive('redirectUrl')->andReturnSelf();
+        Socialite::shouldReceive('user')->andReturn($abstractUser);
+
+        $response = $this->get('/auth/google/callback');
+        $response->assertRedirect();
+        $this->assertAuthenticated();
+
+        $recaller = collect($response->headers->getCookies())
+            ->first(fn ($c) => str_starts_with($c->getName(), 'remember_web_'));
+
+        $this->assertNull($recaller, 'Cookie remember TIDAK boleh diterbitkan saat login Google');
+
+        $user->delete();
+    }
+
+    public function test_cookie_remember_lama_tidak_membangkitkan_sesi_mati(): void
     {
         $user = $this->makeAdmin();
 
@@ -58,23 +86,44 @@ class AdminRememberMeTest extends TestCase
         ]);
         $response->assertRedirect();
 
-        $recaller = collect($response->headers->getCookies())
-            ->first(fn ($c) => str_starts_with($c->getName(), 'remember_web_'));
-        $this->assertNotNull($recaller);
+        // Cookie recaller "sah" dengan format id|token|hash (sisa deploy lama),
+        // lalu token di server dirotasi (prosedur pasca-deploy) → cookie basi.
+        $namaRecaller = 'remember_web_'.sha1(config('auth.defaults.guard'));
+        $this->withUnencryptedCookies([
+            $namaRecaller => $user->id.'|'.$user->remember_token.'|'.$user->password,
+        ]);
+        $user->forceFill(['remember_token' => Str::random(60)])->save();
 
-        // Simulasi tab dibekukan melewati lifetime: payload sesi dihancurkan
-        // (sama seperti cookie sesi hilang dari browser), hanya cookie
-        // remember yang tersisa dan direplay oleh browser.
+        // Sesi dihancurkan (simulasi tab dibekukan melewati lifetime) dan guard
+        // di-reset — tanpa ini, objek user dari login POST masih tertanam di
+        // memori guard dalam proses test yang sama.
         $store = $this->app['session.store'];
         $store->flush();
         $store->getHandler()->destroy($store->getId());
+        $this->app['auth']->forgetGuards();
 
-        // Tombol "Perpanjang Sesi" memanggil /admin/ping → harus recall otomatis
-        $ping = $this->withUnencryptedCookies([$recaller->getName() => $recaller->getValue()])
-            ->getJson('/admin/ping');
+        // Sesi tidak boleh dibangkitkan ulang diam-diam — ping harus 401
+        $this->getJson('/admin/ping')->assertStatus(401);
+        $this->assertNull(Auth::id(), 'Sesi mati tidak boleh dibangkitkan via cookie remember');
 
-        $ping->assertStatus(200)->assertJson(['ok' => true]);
-        $this->assertSame((string) $user->id, (string) Auth::id(), 'Sesi wajib dipulihkan otomatis via remember cookie');
+        $user->delete();
+    }
+
+    public function test_logout_mengakhiri_sesi_dengan_bersih(): void
+    {
+        $user = $this->makeAdmin();
+
+        $this->post('/login', [
+            'username' => 'admin-remember-test',
+            'password' => 'password123',
+        ])->assertRedirect();
+        $this->assertAuthenticated();
+        $this->get('/admin')->assertOk();
+
+        $this->post('/logout')->assertRedirect(route('login'));
+
+        $this->assertGuest();
+        $this->get('/admin')->assertRedirect(route('login'));
 
         $user->delete();
     }

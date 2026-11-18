@@ -17,6 +17,9 @@ class KeuanganTabTest extends TestCase
 {
     private User $admin;
 
+    /** transfer_id yang dibuat test — dibersihkan pasangan-pasangannya di tearDown. */
+    private array $transferIds = [];
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -29,6 +32,11 @@ class KeuanganTabTest extends TestCase
     protected function tearDown(): void
     {
         DB::table('keuangans')->where('keterangan', 'like', 'uji-keu%')->delete();
+        // Sisi transfer yang dibuat test (akurat walau keterangannya bebas),
+        // sebelum tab uji dihapus (FK nullOnDelete akan mengaburkan jejaknya).
+        if ($this->transferIds !== []) {
+            DB::table('keuangans')->whereIn('transfer_id', $this->transferIds)->delete();
+        }
         FinancialTab::where('nama', 'like', 'uji-tab%')->delete();
         User::where('email', 'admin-keutab-test@4putra.test')->delete();
         parent::tearDown();
@@ -78,12 +86,17 @@ class KeuanganTabTest extends TestCase
             ->assertOk();
         $this->assertDatabaseHas('financial_tabs', ['id' => $tabId, 'nama' => 'uji-tab-farm-2']);
 
-        // Transaksi di dalam tab lalu tab dihapus → transaksi pindah Kas Umum
+        // Tab yang masih berisi transaksi TIDAK boleh dihapus (diblok)
         Keuangan::create(['tipe' => 'keluar', 'kategori' => 'Operasional', 'financial_tab_id' => $tabId, 'jumlah' => 75000, 'tanggal' => '2026-11-05', 'keterangan' => 'uji-keu-tab-hapus']);
-        $this->actingAs($this->admin)->deleteJson("/admin/keuangan/tabs/{$tabId}")->assertOk();
+        $this->actingAs($this->admin)->deleteJson("/admin/keuangan/tabs/{$tabId}")
+            ->assertStatus(422)
+            ->assertJson(['ok' => false]);
+        $this->assertDatabaseHas('financial_tabs', ['id' => $tabId]);
 
+        // Setelah transaksinya dihapus, tab baru bisa dihapus
+        DB::table('keuangans')->where('keterangan', 'uji-keu-tab-hapus')->delete();
+        $this->actingAs($this->admin)->deleteJson("/admin/keuangan/tabs/{$tabId}")->assertOk();
         $this->assertDatabaseMissing('financial_tabs', ['id' => $tabId]);
-        $this->assertDatabaseHas('keuangans', ['keterangan' => 'uji-keu-tab-hapus', 'financial_tab_id' => null]);
     }
 
     public function test_target_anggaran_biaya_tambahan_dan_total_budget(): void
@@ -118,6 +131,74 @@ class KeuanganTabTest extends TestCase
         // Hapus biaya tambahan
         $this->actingAs($this->admin)->deleteJson("/admin/keuangan/costs/{$costId}")->assertOk();
         $this->assertDatabaseMissing('financial_tab_costs', ['id' => $costId]);
+    }
+
+    public function test_hapus_tab_diblok_selama_ada_transaksi(): void
+    {
+        $tab = FinancialTab::create(['nama' => 'uji-tab-blok']);
+        Keuangan::create(['tipe' => 'masuk', 'kategori' => 'Pembangunan', 'financial_tab_id' => $tab->id, 'jumlah' => 65000000, 'tanggal' => '2026-11-05', 'keterangan' => 'uji-keu-tab-blok']);
+
+        $res = $this->actingAs($this->admin)->deleteJson("/admin/keuangan/tabs/{$tab->id}");
+
+        $res->assertStatus(422)->assertJson(['ok' => false]);
+        $this->assertDatabaseHas('financial_tabs', ['id' => $tab->id]);
+        $this->assertDatabaseHas('keuangans', ['keterangan' => 'uji-keu-tab-blok']);
+    }
+
+    public function test_transfer_dana_membuat_pasangan_dua_sisi(): void
+    {
+        $tujuan = FinancialTab::create(['nama' => 'uji-tab-tujuan']);
+        Keuangan::create(['tipe' => 'masuk', 'kategori' => 'Penjualan', 'jumlah' => 100000000, 'tanggal' => '2026-11-01', 'keterangan' => 'uji-keu-saldo-awal']);
+
+        $res = $this->actingAs($this->admin)->postJson('/admin/keuangan/transfer', [
+            'dari' => 'kas_umum', 'ke' => $tujuan->id, 'nominal' => 15000000, 'keterangan' => 'uji-transfer-bayar-bahan',
+        ])->assertOk()->assertJson(['ok' => true]);
+        $this->transferIds[] = $res->json('transfer_id');
+        $this->transferIds[] = $res->json('transfer_id');
+
+        // Kas Umum berkurang: baris keluar berkategori Transfer
+        $keluar = Keuangan::where('tipe', 'keluar')->where('kategori', 'Transfer')->first();
+        $this->assertNotNull($keluar);
+        $this->assertSame('15000000.00', (string) $keluar->jumlah);
+        $this->assertNull($keluar->financial_tab_id);
+        $this->assertStringContainsString('uji-tab-tujuan', $keluar->keterangan);
+        $this->assertStringContainsString('uji-transfer-bayar-bahan', $keluar->keterangan);
+
+        // Tab tujuan bertambah: baris masuk berkategori Transfer
+        $masuk = Keuangan::where('tipe', 'masuk')->where('transfer_id', $res->json('transfer_id'))->first();
+        $this->assertNotNull($masuk);
+        $this->assertSame('15000000.00', (string) $masuk->jumlah);
+        $this->assertEquals($tujuan->id, $masuk->financial_tab_id);
+        $this->assertStringContainsString('Kas Umum', $masuk->keterangan);
+
+        // Pasangan terikat satu transfer_id
+        $this->assertNotNull($keluar->transfer_id);
+        $this->assertSame($keluar->transfer_id, $masuk->transfer_id);
+
+        // Hapus satu sisi → kedua sisi ikut terhapus
+        $this->actingAs($this->admin)->deleteJson("/admin/keuangan/{$keluar->id}")->assertOk();
+        $this->assertDatabaseMissing('keuangans', ['id' => $keluar->id]);
+        $this->assertDatabaseMissing('keuangans', ['id' => $masuk->id]);
+    }
+
+    public function test_transfer_ditolak_jika_saldo_asal_tidak_cukup(): void
+    {
+        // Tab kosong = saldo pasti 0 (deterministik, tak tergantung data nyata kas umum)
+        $asal = FinancialTab::create(['nama' => 'uji-tab-asal-kering']);
+        $tujuan = FinancialTab::create(['nama' => 'uji-tab-tujuan2']);
+
+        $this->actingAs($this->admin)->postJson('/admin/keuangan/transfer', [
+            'dari' => $asal->id, 'ke' => $tujuan->id, 'nominal' => 10000000,
+        ])->assertStatus(422)->assertJson(['ok' => false]);
+    }
+
+    public function test_transfer_ditolak_ke_tab_yang_sama(): void
+    {
+        $tab = FinancialTab::create(['nama' => 'uji-tab-sama']);
+
+        $this->actingAs($this->admin)->postJson('/admin/keuangan/transfer', [
+            'dari' => $tab->id, 'ke' => $tab->id, 'nominal' => 1000,
+        ])->assertStatus(422);
     }
 
     public function test_validasi_tab_dan_biaya(): void

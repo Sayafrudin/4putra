@@ -37,7 +37,7 @@ class AdminMenuAccessTest extends TestCase
     {
         User::whereIn('email', [
             'admin-penuh-test@4putra.test', 'admin-terbatas-test@4putra.test', 'admin-kosong-test@4putra.test',
-            'uji-menu-akses@4putra.test', 'uji-role-user-ma@4putra.test',
+            'uji-menu-akses@4putra.test', 'uji-role-user-ma@4putra.test', 'uji-role-user-ma2@4putra.test',
         ])->delete();
         parent::tearDown();
     }
@@ -114,18 +114,52 @@ class AdminMenuAccessTest extends TestCase
         $this->assertEqualsCanonicalizing(['keuangan', 'kandang'], $baru->menu_access);
     }
 
-    public function test_role_user_tidak_menyimpan_menu_access(): void
+    public function test_role_user_menyimpan_menu_access_sesuai_cakupan_role(): void
     {
         $admin = User::where('email', 'admin-penuh-test@4putra.test')->first();
 
+        // Role user: hanya menu akses 'semua' yang sah (kunci admin diabaikan)
         $this->actingAs($admin)->post('/admin/users', [
             'name' => 'Uji Role User', 'username' => 'uji-role-user-ma', 'email' => 'uji-role-user-ma@4putra.test',
             'password' => 'password123', 'password_confirmation' => 'password123',
-            'role' => 'user', 'menu_access' => ['keuangan'],
+            'role' => 'user', 'menu_access' => ['keuangan', 'kandang', 'collections'],
         ])->assertSessionHasNoErrors();
 
         $baru = User::where('email', 'uji-role-user-ma@4putra.test')->first();
-        $this->assertNull($baru->menu_access);
+        $this->assertEqualsCanonicalizing(['keuangan', 'kandang'], $baru->menu_access);
+
+        // Role user + akses penuh → NULL (semua menu monitoring)
+        $this->actingAs($admin)->post('/admin/users', [
+            'name' => 'Uji Role User 2', 'username' => 'uji-role-user-ma2', 'email' => 'uji-role-user-ma2@4putra.test',
+            'password' => 'password123', 'password_confirmation' => 'password123',
+            'role' => 'user', 'akses_penuh' => 1, 'menu_access' => ['kandang'],
+        ])->assertSessionHasNoErrors();
+
+        $kedua = User::where('email', 'uji-role-user-ma2@4putra.test')->first();
+        $this->assertNull($kedua->menu_access);
+    }
+
+    public function test_role_user_menu_access_mengatur_menu_monitoring(): void
+    {
+        $terbatas = User::updateOrCreate(
+            ['email' => 'user-terbatas-test@4putra.test'],
+            ['name' => 'Role Terbatas', 'password' => bcrypt('password123'), 'role' => 'user', 'menu_access' => ['keuangan']]
+        );
+
+        // Menu yang diberikan → boleh; di luar daftar → ditolak
+        $this->actingAs($terbatas)->get('/admin/keuangan')->assertOk();
+        $this->actingAs($terbatas)->get('/admin/kandang')
+            ->assertRedirect(route('admin.dashboard'))
+            ->assertSessionHas('error');
+
+        // Role user TANPA menu_access (akun lama) → monitoring penuh
+        $bebas = User::updateOrCreate(
+            ['email' => 'user-bebas-test@4putra.test'],
+            ['name' => 'Role Bebas', 'password' => bcrypt('password123'), 'role' => 'user', 'menu_access' => null]
+        );
+        $this->actingAs($bebas)->get('/admin/kandang')->assertOk();
+
+        User::whereIn('email', ['user-terbatas-test@4putra.test', 'user-bebas-test@4putra.test'])->delete();
     }
 
     /**

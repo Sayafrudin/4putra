@@ -245,7 +245,7 @@
                 <div>
                     <p class="font-semibold text-gray-800 dark:text-white text-sm leading-tight">
                         {{ Auth::user()->name }}</p>
-                    <p class="text-xs text-gray-500">{{ Auth::user()->email }}</p>
+                    <p class="text-xs text-gray-500">{{ Auth::user()->email ?? '—' }}</p>
                     <span
                         class="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider {{ Auth::user()->isAdmin() ? 'bg-[#E62C37]/20 text-[#E62C37]' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300' }}">
                         {{ Auth::user()->role }}

@@ -24,12 +24,20 @@ class AdminUserController extends Controller
             return User::orderBy('created_at', 'desc')->get();
         });
 
-        return view('admin.users.index', compact('users'));
+        return view('admin.users.index', [
+            'users' => $users,
+            'menuListAdmin' => AdminMenus::listForRole('admin'),
+            'menuListUser' => AdminMenus::listForRole('user'),
+        ]);
     }
 
     public function create()
     {
-        return view('admin.users.create', ['menuKeys' => AdminMenus::keys()]);
+        return view('admin.users.create', [
+            'menuKeys' => AdminMenus::keys(),
+            'menuListAdmin' => AdminMenus::listForRole('admin'),
+            'menuListUser' => AdminMenus::listForRole('user'),
+        ]);
     }
 
     public function store(Request $request)
@@ -37,11 +45,12 @@ class AdminUserController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:50', 'regex:/^[a-zA-Z0-9_.-]+$/', 'unique:users'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            // Password opsional: kosong = akun hanya bisa login "Masuk dengan Google".
-            'password' => ['nullable', 'confirmed', Password::min(8)],
+            // Email opsional: kosong = login username+password; diisi = bisa "Masuk dengan Google".
+            'email' => ['nullable', 'string', 'email', 'max:255', Rule::unique('users', 'email')],
+            // Password wajib bila email kosong (satu-satunya jalur login).
+            'password' => ['required_without:email', 'nullable', 'confirmed', Password::min(8)],
             'role' => ['required', 'in:admin,user'],
-            // Hak akses menu (khusus role admin): NULL = akses penuh.
+            // Hak akses menu (role admin & user): NULL = akses penuh.
             'akses_penuh' => ['nullable', 'boolean'],
             'menu_access' => ['nullable', 'array'],
             'menu_access.*' => ['string', Rule::in(AdminMenus::keys())],
@@ -75,7 +84,12 @@ class AdminUserController extends Controller
 
     public function edit(User $user)
     {
-        return view('admin.users.edit', ['user' => $user, 'menuKeys' => AdminMenus::keys()]);
+        return view('admin.users.edit', [
+            'user' => $user,
+            'menuKeys' => AdminMenus::keys(),
+            'menuListAdmin' => AdminMenus::listForRole('admin'),
+            'menuListUser' => AdminMenus::listForRole('user'),
+        ]);
     }
 
     public function update(Request $request, User $user)
@@ -83,7 +97,8 @@ class AdminUserController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:50', 'regex:/^[a-zA-Z0-9_.-]+$/', 'unique:users,username,'.$user->id],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$user->id],
+            'email' => ['nullable', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            // Edit: password tetap opsional (akun lama selalu punya hash) — beda dengan create.
             'password' => ['nullable', 'confirmed', Password::min(8)],
             'role' => ['required', 'in:admin,user'],
             'akses_penuh' => ['nullable', 'boolean'],
@@ -124,20 +139,20 @@ class AdminUserController extends Controller
 
     /**
      * Normalisasi hak akses menu dari payload form:
-     * role user → selalu NULL; admin + "akses penuh" → NULL (semua menu);
-     * admin terbatas → daftar kunci menu (array kosong = hanya dashboard).
+     * role apa pun + "akses penuh" → NULL (semua menu yang tersedia untuk role itu);
+     * terbatas → daftar kunci menu sesuai role (array kosong = hanya dashboard).
      */
     private function menuAccessTersimpan(array $validated): ?array
     {
-        if (($validated['role'] ?? 'user') !== 'admin') {
-            return null;
-        }
+        $role = $validated['role'] ?? 'user';
 
         if (! empty($validated['akses_penuh'])) {
             return null;
         }
 
-        return array_values(array_intersect(AdminMenus::keys(), $validated['menu_access'] ?? []));
+        $keysValid = array_column(AdminMenus::listForRole($role), 'key');
+
+        return array_values(array_intersect($keysValid, $validated['menu_access'] ?? []));
     }
 
     public function destroy(Request $request, User $user)

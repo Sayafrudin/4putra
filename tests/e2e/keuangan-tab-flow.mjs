@@ -53,7 +53,9 @@ function waitForServer(retries = 30) {
 
 function cleanupDb() {
     execSync(
-        `php artisan tinker --execute="App\\Models\\FinancialTab::whereIn('nama',['${NAMA_TAB}','${NAMA_TAB} 2'])->each(function ($t) { App\\Models\\Keuangan::where('financial_tab_id',$t->id)->update(['financial_tab_id'=>null]); }); App\\Models\\FinancialTab::whereIn('nama',['${NAMA_TAB}','${NAMA_TAB} 2'])->delete(); Illuminate\\Support\\Facades\\DB::table('keuangans')->where('keterangan','like','e2e-tab-uji%')->delete(); $u=App\\Models\\User::where('email','${ADMIN.email}')->first(); if($u){Illuminate\\Support\\Facades\\DB::table('sessions')->where('user_id',$u->id)->delete(); $u->delete();} echo 'bersih';"`,
+        // Sapu pasangan transfer berdasarkan transfer_id (kedua sisi sekaligus),
+        // baris uji berketerangan e2e-tab-uji%, lalu tab uji & akun E2E.
+        `php artisan tinker --execute="App\\Models\\Keuangan::where(function ($q) { $q->whereIn('transfer_id', function ($s) { $s->from('keuangans')->select('transfer_id')->where('keterangan','like','%E2E Proyek Uji%')->whereNotNull('transfer_id'); })->orWhere('keterangan','like','%E2E Proyek Uji%'); })->orWhere('keterangan','like','e2e-tab-uji%')->delete(); App\\Models\\FinancialTab::where('nama','${NAMA_TAB}')->orWhere('nama','${NAMA_TAB} 2')->delete(); $u=App\\Models\\User::where('email','${ADMIN.email}')->first(); if($u){Illuminate\\Support\\Facades\\DB::table('sessions')->where('user_id',$u->id)->delete(); $u->delete();} echo 'bersih';"`,
         { stdio: "ignore", timeout: 90000 },
     );
 }
@@ -173,29 +175,47 @@ try {
         `Sisa Budget = budget - keluar (dapat "${sisaVal}")`,
     );
 
-    // 7. Rename tab
-    await page.click("button[title='Ganti nama tab']");
-    await page.fill("#tab_nama_rename", `${NAMA_TAB} 2`);
-    await page.click("#btnTabRename");
-    const tabBaru = await Promise.race([
-        page.waitForSelector(`a:has-text("${NAMA_TAB} 2")`, { timeout: 10000 }),
-        sleep(10000).then(() => null),
+    // 7. Transfer dana: Kas Umum → tab, 50.000
+    await page.click("button:has-text('+ Transfer Dana')");
+    await page.selectOption("#transfer_dari", "kas_umum");
+    await page.selectOption("#transfer_ke", { label: NAMA_TAB });
+    await page.fill("#transfer_nominal", "50000");
+    await page.fill("#transfer_ket", "e2e-transfer-uji");
+    await page.click("#btnTransfer");
+    const barisTransfer = await Promise.race([
+        page.waitForSelector('td:has-text("Dari Kas Umum")', {
+            timeout: 12000,
+        }),
+        sleep(12000).then(() => null),
     ]);
-    assert(!!tabBaru, "Nama tab berubah tanpa reload penuh");
+    assert(!!barisTransfer, 'Transfer tercatat di tab (baris "Dari Kas Umum")');
 
-    // 8. Export Excel menghasilkan unduhan
-    const unduh = Promise.race([
-        page.waitForEvent("download", { timeout: 15000 }),
-        sleep(15000).then(() => null),
-    ]);
-    await page.click("button:has-text('Export Excel')");
-    const download = await unduh;
+    // 8. Hapus tab DIBLOK karena masih ada transaksi
+    await page.click("button[title='Hapus tab']");
+    await page.click("#btnTabHapus");
+    await sleep(1500);
     assert(
-        !!download,
-        `Export Excel mengunduh file (${download ? download.suggestedFilename() : "tidak ada"})`,
+        page.url().includes("tab="),
+        "Hapus tab diblok — masih di tab proyek",
     );
+    assert(
+        await page.isVisible(`a:has-text("${NAMA_TAB}")`),
+        "Tab masih ada setelah diblok",
+    );
+    await page.click("#modalTabHapus button:has-text('Batal')");
+    await sleep(400);
 
-    // 9. Hapus tab → transaksi pindah Kas Umum (dicek lewat UI Kas Umum)
+    // 9. Kosongkan tab: hapus baris transfer (kedua sisi ikut) + uang keluar
+    await page.click("tr:has-text('Dari Kas Umum') button:has-text('Hapus')");
+    await page.click("#btnHapus");
+    await sleep(2000);
+    await page.click(
+        "tr:has-text('e2e-tab-uji-keluar') button:has-text('Hapus')",
+    );
+    await page.click("#btnHapus");
+    await sleep(2000);
+
+    // 10. Tab kosong → hapus tab berhasil
     await page.click("button[title='Hapus tab']");
     await page.click("#btnTabHapus");
     await page.waitForURL((u) => !u.searchParams.has("tab"), {
@@ -203,8 +223,12 @@ try {
     });
     await sleep(1000);
     assert(
-        await page.isVisible('td:has-text("e2e-tab-uji-keluar")'),
-        "Transaksi tab pindah ke Kas Umum setelah tab dihapus",
+        !(await page.isVisible(`a:has-text("${NAMA_TAB}")`)),
+        "Tab terhapus setelah kosong",
+    );
+    assert(
+        !(await page.isVisible('td:has-text("e2e-transfer-uji")')),
+        "Tidak ada residu transfer di Kas Umum (pasangan ikut terhapus)",
     );
 
     assert(pageErrors.length === 0, `Bebas page error (${pageErrors.length})`);

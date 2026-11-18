@@ -23,6 +23,16 @@ class AdminMenus
         return array_keys(self::menus());
     }
 
+    /** Daftar menu untuk role tertentu: admin = semua, user = menu 'akses' => 'semua'. */
+    public static function listForRole(string $role): array
+    {
+        return collect(self::menus())
+            ->filter(fn ($menu) => $role === 'admin' || ($menu['akses'] ?? 'admin') === 'semua')
+            ->map(fn ($menu, $key) => ['key' => $key, 'label' => $menu['label']])
+            ->values()
+            ->all();
+    }
+
     public static function label(string $key): string
     {
         return self::menus()[$key]['label'] ?? $key;

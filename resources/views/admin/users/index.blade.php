@@ -71,7 +71,7 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-sm font-mono">{{ $u->username }}</td>
-                            <td class="px-6 py-4 text-sm">{{ $u->email }}</td>
+                            <td class="px-6 py-4 text-sm">{{ $u->email ?? '—' }}</td>
                             <td class="px-6 py-4 text-sm">
                                 <span class="px-2 py-1 rounded-full text-xs font-semibold {{ $u->isAdmin() ? 'bg-[#E62C37]/20 text-[#E62C37]' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200' }}">
                                     {{ $u->isAdmin() ? 'Admin' : 'User' }}
@@ -158,9 +158,10 @@
                     <p class="text-xs text-red-400 mt-1 hidden" id="err_tambah_username"></p>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Email</label>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Email <span class="normal-case text-gray-500">(opsional)</span></label>
                     <input type="email" id="tambah_email" placeholder="email@example.com"
                         class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Diisi → bisa masuk via "Masuk dengan Google". Kosong → login via username &amp; password.</p>
                     <p class="text-xs text-red-400 mt-1 hidden" id="err_tambah_email"></p>
                 </div>
                 <div>
@@ -170,6 +171,33 @@
                         <option value="user">User</option>
                         <option value="admin">Admin</option>
                     </select>
+                </div>
+                <div class="rounded-lg border border-gray-300 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800/50">
+                    <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Hak Akses Menu</p>
+                    <label class="inline-flex items-start gap-2 mb-3 cursor-pointer">
+                        <input type="checkbox" id="tambah_akses_penuh" value="1"
+                            class="mt-0.5 rounded border-gray-400 dark:border-gray-600 text-[#E62C37] focus:ring-[#E62C37]/50 bg-white dark:bg-gray-800">
+                        <span class="text-sm text-gray-700 dark:text-gray-300">Akses penuh (semua menu yang tersedia untuk role ini)</span>
+                    </label>
+                    <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 mt-1">Pilihan untuk Role Admin</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        @foreach ($menuListAdmin as $m)
+                            <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                                <input type="checkbox" class="tambah-menu rounded border-gray-400 dark:border-gray-600 text-[#E62C37] focus:ring-[#E62C37]/50 bg-white dark:bg-gray-800" value="{{ $m['key'] }}">
+                                {{ $m['label'] }}
+                            </label>
+                        @endforeach
+                    </div>
+                    <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 mt-3">Pilihan untuk Role User</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        @foreach ($menuListUser as $m)
+                            <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                                <input type="checkbox" class="tambah-menu rounded border-gray-400 dark:border-gray-600 text-[#E62C37] focus:ring-[#E62C37]/50 bg-white dark:bg-gray-800" value="{{ $m['key'] }}">
+                                {{ $m['label'] }}
+                            </label>
+                        @endforeach
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Dashboard & profil selalu tersedia. Kosongkan + tanpa akses penuh = hanya dashboard.</p>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Password <span class="text-gray-500 normal-case">(opsional — kosongkan bila login hanya via Google)</span></label>
@@ -229,9 +257,10 @@
                     <p class="text-xs text-red-400 mt-1 hidden" id="err_edit_username"></p>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Email</label>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Email <span class="normal-case text-gray-500">(opsional)</span></label>
                     <input type="email" id="edit_email" placeholder="email@example.com"
                         class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Diisi → bisa masuk via "Masuk dengan Google". Kosong → login via username &amp; password.</p>
                     <p class="text-xs text-red-400 mt-1 hidden" id="err_edit_email"></p>
                 </div>
                 <div>
@@ -241,6 +270,33 @@
                         <option value="user">User</option>
                         <option value="admin">Admin</option>
                     </select>
+                </div>
+                <div class="rounded-lg border border-gray-300 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800/50">
+                    <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Hak Akses Menu</p>
+                    <label class="inline-flex items-start gap-2 mb-3 cursor-pointer">
+                        <input type="checkbox" id="edit_akses_penuh" value="1"
+                            class="mt-0.5 rounded border-gray-400 dark:border-gray-600 text-[#E62C37] focus:ring-[#E62C37]/50 bg-white dark:bg-gray-800">
+                        <span class="text-sm text-gray-700 dark:text-gray-300">Akses penuh (semua menu yang tersedia untuk role ini)</span>
+                    </label>
+                    <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 mt-1">Pilihan untuk Role Admin</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        @foreach ($menuListAdmin as $m)
+                            <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                                <input type="checkbox" class="edit-menu rounded border-gray-400 dark:border-gray-600 text-[#E62C37] focus:ring-[#E62C37]/50 bg-white dark:bg-gray-800" value="{{ $m['key'] }}">
+                                {{ $m['label'] }}
+                            </label>
+                        @endforeach
+                    </div>
+                    <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 mt-3">Pilihan untuk Role User</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        @foreach ($menuListUser as $m)
+                            <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                                <input type="checkbox" class="edit-menu rounded border-gray-400 dark:border-gray-600 text-[#E62C37] focus:ring-[#E62C37]/50 bg-white dark:bg-gray-800" value="{{ $m['key'] }}">
+                                {{ $m['label'] }}
+                            </label>
+                        @endforeach
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Dashboard & profil selalu tersedia. Kosongkan + tanpa akses penuh = hanya dashboard.</p>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Password Baru <span class="text-gray-500">(kosongkan jika tidak diubah)</span></label>
@@ -352,8 +408,10 @@
             if (!name) { showError('err_tambah_name', 'Nama wajib diisi'); valid = false; }
             if (!username) { showError('err_tambah_username', 'Username wajib diisi'); valid = false; }
             else if (!/^[a-zA-Z0-9_.-]+$/.test(username)) { showError('err_tambah_username', 'Username hanya boleh huruf, angka, titik, strip, underscore'); valid = false; }
-            if (!email) { showError('err_tambah_email', 'Email wajib diisi'); valid = false; }
-            else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('err_tambah_email', 'Format email tidak valid'); valid = false; }
+            // Email opsional; wajib valid bila diisi
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('err_tambah_email', 'Format email tidak valid'); valid = false; }
+            // Password wajib bila email kosong (satu-satunya jalur login)
+            if (!email && !password) { showError('err_tambah_password', 'Password wajib diisi bila email dikosongkan'); valid = false; }
             if (password && password.length < 8) { showError('err_tambah_password', 'Password minimal 8 karakter'); valid = false; }
             if (password && password !== passwordConf) { showError('err_tambah_password', 'Konfirmasi password tidak cocok'); valid = false; }
 
@@ -367,7 +425,13 @@
                 const res = await fetch(STORE_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF },
-                    body: JSON.stringify({ name, username, email, role: document.getElementById('tambah_role').value, password, password_confirmation: passwordConf }),
+                    body: JSON.stringify({
+                        name, username, email: email || null,
+                        role: document.getElementById('tambah_role').value,
+                        password, password_confirmation: passwordConf,
+                        akses_penuh: document.getElementById('tambah_akses_penuh').checked ? 1 : null,
+                        menu_access: [...document.querySelectorAll('.tambah-menu:checked')].map(el => el.value),
+                    }),
                 });
 
                 const data = await res.json();
@@ -399,9 +463,13 @@
             document.getElementById('edit_id').value = user.id;
             document.getElementById('edit_name').value = user.name;
             document.getElementById('edit_username').value = user.username;
-            document.getElementById('edit_email').value = user.email;
+            document.getElementById('edit_email').value = user.email ?? '';
             document.getElementById('edit_role').value = user.role;
             document.getElementById('edit_password').value = '';
+            document.getElementById('edit_akses_penuh').checked = user.menu_access === null || user.menu_access === undefined;
+            document.querySelectorAll('.edit-menu').forEach(el => {
+                el.checked = Array.isArray(user.menu_access) && user.menu_access.includes(el.value);
+            });
             bukaModal('modalEditUser');
         }
 
@@ -419,8 +487,8 @@
             if (!name) { showError('err_edit_name', 'Nama wajib diisi'); valid = false; }
             if (!username) { showError('err_edit_username', 'Username wajib diisi'); valid = false; }
             else if (!/^[a-zA-Z0-9_.-]+$/.test(username)) { showError('err_edit_username', 'Username hanya boleh huruf, angka, titik, strip, underscore'); valid = false; }
-            if (!email) { showError('err_edit_email', 'Email wajib diisi'); valid = false; }
-            else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('err_edit_email', 'Format email tidak valid'); valid = false; }
+            // Email opsional; wajib valid bila diisi
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('err_edit_email', 'Format email tidak valid'); valid = false; }
             if (password && password.length < 8) { showError('err_edit_password', 'Password minimal 8 karakter'); valid = false; }
 
             if (!valid) return;
@@ -430,7 +498,13 @@
             btn.textContent = 'Menyimpan...';
 
             try {
-                const body = { name, username, email, role: document.getElementById('edit_role').value, _method: 'PUT' };
+                const body = {
+                    name, username, email: email || null,
+                    role: document.getElementById('edit_role').value,
+                    akses_penuh: document.getElementById('edit_akses_penuh').checked ? 1 : null,
+                    menu_access: [...document.querySelectorAll('.edit-menu:checked')].map(el => el.value),
+                    _method: 'PUT',
+                };
                 if (password) { body.password = password; body.password_confirmation = password; }
 
                 const res = await fetch(`${BASE_URL}/${id}`, {

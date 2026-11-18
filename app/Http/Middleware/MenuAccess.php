@@ -19,21 +19,21 @@ class MenuAccess
     {
         $user = $request->user();
 
-        if ($user === null || $user->isAdmin() === false) {
+        if ($user === null) {
             return $next($request);
         }
 
         $routeName = $request->route()?->getName();
 
-        // Kelola Akun User = eksklusif admin penuh (menu_access NULL), mencegah
-        // admin terbatas mengubah hak akses akun lain.
+        // Kelola Akun User & komentar aktivitas = eksklusif admin PENUH
+        // (menu_access NULL) — mencegah akun terbatas mengubah hak akses lain.
         if ($user->menu_access !== null
             && (str_starts_with((string) $routeName, 'admin.users.')
                 || str_starts_with((string) $routeName, 'admin.activity.'))) {
             return $this->tolak($request);
         }
 
-        // Admin penuh → semua menu.
+        // menu_access NULL → akses penuh (akun lama tak berubah perilaku).
         if ($user->menu_access === null) {
             return $next($request);
         }

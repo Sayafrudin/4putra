@@ -274,6 +274,7 @@ Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'menu.access']
     Route::get('/keuangan', [KeuanganController::class, 'index'])->name('admin.keuangan.index');
     Route::get('/keuangan/export/pdf', [KeuanganController::class, 'exportPdf'])->name('admin.keuangan.export-pdf');
     Route::post('/keuangan', [KeuanganController::class, 'store'])->name('admin.keuangan.store');
+    Route::post('/keuangan/transfer', [KeuanganController::class, 'transfer'])->name('admin.keuangan.transfer');
     Route::delete('/keuangan/{keuangan}', [KeuanganController::class, 'destroy'])->name('admin.keuangan.destroy');
 
     // Tab proyek keuangan (multi-tab): buat/rename/hapus tab, budget, rincian biaya

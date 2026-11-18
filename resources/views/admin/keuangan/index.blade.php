@@ -15,6 +15,10 @@
                 class="px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
                 Export PDF
             </a>
+            <button onclick="bukaModalTransfer()"
+                class="px-4 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors">
+                + Transfer Dana
+            </button>
             <button onclick="bukaModalTambah('masuk')"
                 class="px-4 py-2.5 text-sm font-semibold text-white bg-green-600 hover:bg-green-700 rounded-xl transition-colors">
                 + Uang Masuk
@@ -299,6 +303,66 @@
         </div>
     </div>
 
+    {{-- ==================== MODAL TRANSFER DANA ==================== --}}
+    <div id="modalTransfer" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Transfer <span class="text-indigo-500">Dana</span> Antar-Tab</h3>
+                <button onclick="tutupModal('modalTransfer')" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                    <x-tabler-x class="w-5 h-5" />
+                </button>
+            </div>
+            <form onsubmit="submitTransfer(event)" class="space-y-4" novalidate>
+                @csrf
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Dari</label>
+                        <select id="transfer_dari"
+                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                            <option value="kas_umum">Kas Umum</option>
+                            @foreach ($tabs as $t)
+                                <option value="{{ $t->id }}">{{ $t->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Ke</label>
+                        <select id="transfer_ke"
+                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                            <option value="" disabled selected>Pilih tujuan...</option>
+                            @foreach ($tabs as $t)
+                                <option value="{{ $t->id }}">{{ $t->nama }}</option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-red-400 mt-1 hidden" id="err_transfer_ke"></p>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Nominal (Rp)</label>
+                    <input type="number" id="transfer_nominal" min="1" step="1000" placeholder="0"
+                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm tabular-nums text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                    <p class="text-xs text-red-400 mt-1 hidden" id="err_transfer_nominal"></p>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Keterangan (opsional)</label>
+                    <textarea id="transfer_ket" rows="2" placeholder="Misal: dana untuk bayar material pembangunan"
+                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none"></textarea>
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Dua catatan dibuat sekaligus: keluar di tab asal & masuk di tab tujuan — menghapus salah satunya menghapus keduanya.</p>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="tutupModal('modalTransfer')"
+                        class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" id="btnTransfer"
+                        class="px-4 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors">
+                        Transfer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     {{-- ==================== MODAL HAPUS TRANSAKSI ==================== --}}
     <div id="modalHapus" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
         <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6">
@@ -395,7 +459,7 @@
                 </div>
                 <div>
                     <h3 class="text-lg font-bold text-gray-900 dark:text-white">Hapus Tab</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Hapus tab <span class="font-semibold text-gray-700 dark:text-gray-200">{{ $tabAktif?->nama }}</span>? Semua transaksinya akan dipindahkan ke <span class="font-semibold">Kas Umum</span>, rincian biaya & target anggaran ikut terhapus.</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Hapus tab <span class="font-semibold text-gray-700 dark:text-gray-200">{{ $tabAktif?->nama }}</span>? Tab yang masih berisi transaksi tidak bisa dihapus — kosongkan dulu. Rincian biaya & target anggaran ikut terhapus bersama tab.</p>
                 </div>
             </div>
             <div class="flex justify-end gap-3 mt-6">
@@ -680,6 +744,51 @@
                 setBusy(false);
             }
         });
+
+        // ===== Transfer dana antar-tab =====
+        function bukaModalTransfer() {
+            bersihkanError([['transfer_ke', 'err_transfer_ke'], ['transfer_nominal', 'err_transfer_nominal']]);
+            bukaModal('modalTransfer');
+        }
+
+        async function submitTransfer(e) {
+            e.preventDefault();
+            const dari = document.getElementById('transfer_dari');
+            const ke = document.getElementById('transfer_ke');
+            const nominal = document.getElementById('transfer_nominal');
+            bersihkanError([['transfer_ke', 'err_transfer_ke'], ['transfer_nominal', 'err_transfer_nominal']]);
+            let valid = true;
+            if (!ke.value) { tandaiError('transfer_ke', 'err_transfer_ke', 'Tab tujuan wajib dipilih.'); valid = false; }
+            else if (ke.value === dari.value) { tandaiError('transfer_ke', 'err_transfer_ke', 'Tab asal dan tujuan tidak boleh sama.'); valid = false; }
+            if (!nominal.value || Number(nominal.value) < 1) { tandaiError('transfer_nominal', 'err_transfer_nominal', 'Nominal wajib diisi (minimal 1).'); valid = false; }
+            if (!valid) return;
+
+            setBusy(true);
+            try {
+                const res = await fetch('{{ route('admin.keuangan.transfer') }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        dari: dari.value === 'kas_umum' ? 'kas_umum' : Number(dari.value),
+                        ke: Number(ke.value),
+                        nominal: Number(nominal.value),
+                        keterangan: document.getElementById('transfer_ket').value.trim() || null,
+                    })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    showToast('error', 'Gagal', data.message || 'Gagal mencatat transfer.');
+                    return;
+                }
+                showToast('success', 'Berhasil', data.message);
+                tutupModal('modalTransfer');
+                window.location.reload();
+            } catch (err) {
+                showToast('error', 'Gagal', 'Tidak dapat terhubung ke server.');
+            } finally {
+                setBusy(false);
+            }
+        }
 
         // ===== Budget & biaya (khusus tab proyek) =====
         function perbaruiTotalBudget(total) {

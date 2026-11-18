@@ -49,8 +49,8 @@ function initChatWidget(currentUser) {
                     '<span id="chat-unread-badge" class="hidden bg-white text-[#E62C37] text-xs font-bold rounded-full min-w-[20px] h-5 items-center justify-center px-1">0</span>' +
                 '</div>' +
             '</div>' +
-            // Chat panel
-            '<div id="chat-panel" class="hidden fixed bottom-20 right-6 z-[9999] w-96 bg-[#151a22] rounded-xl shadow-2xl border border-gray-700 overflow-hidden" style="height:520px;">' +
+            // Chat panel — mobile: lembar hampir layar penuh (w-96 + right-6 terpotong di viewport HP)
+            '<div id="chat-panel" class="hidden fixed bottom-20 left-3 right-3 z-[9999] w-auto bg-[#151a22] rounded-xl shadow-2xl border border-gray-700 overflow-hidden sm:left-auto sm:w-96" style="height:min(520px,70vh);">' +
                 // Contact list view
                 '<div id="chat-contact-list" class="h-full flex flex-col">' +
                     '<div class="bg-[#E62C37] text-white px-4 py-3 flex items-center justify-between shrink-0">' +

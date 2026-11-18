@@ -103,7 +103,9 @@
             </header>
 
             <main class="h-full overflow-y-auto bg-gray-50 dark:bg-gray-900">
-                <div class="container px-4 py-4 mx-auto lg:px-6 lg:py-0 lg:grid">
+                {{-- pb-24 (mobile): beri ruang di bawah agar tombol terakhir bisa di-scroll
+                     di atas FAB chat yang selalu mengapung pojok kanan bawah --}}
+                <div class="container px-4 pt-4 pb-24 mx-auto lg:px-6 lg:pt-6 lg:pb-8 lg:grid">
                     @yield('content')
                 </div>
             </main>

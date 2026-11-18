@@ -33,6 +33,15 @@ class AdminMenus
             ->all();
     }
 
+    /** Satu daftar lengkap (key, label, akses) untuk checkbox tunggal di form. */
+    public static function listSemua(): array
+    {
+        return collect(self::menus())
+            ->map(fn ($menu, $key) => ['key' => $key, 'label' => $menu['label'], 'akses' => $menu['akses'] ?? 'admin'])
+            ->values()
+            ->all();
+    }
+
     public static function label(string $key): string
     {
         return self::menus()[$key]['label'] ?? $key;

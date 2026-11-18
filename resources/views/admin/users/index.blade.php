@@ -174,30 +174,15 @@
                 </div>
                 <div class="rounded-lg border border-gray-300 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800/50">
                     <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Hak Akses Menu</p>
-                    <label class="inline-flex items-start gap-2 mb-3 cursor-pointer">
-                        <input type="checkbox" id="tambah_akses_penuh" value="1"
-                            class="mt-0.5 rounded border-gray-400 dark:border-gray-600 text-[#E62C37] focus:ring-[#E62C37]/50 bg-white dark:bg-gray-800">
-                        <span class="text-sm text-gray-700 dark:text-gray-300">Akses penuh (semua menu yang tersedia untuk role ini)</span>
-                    </label>
-                    <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 mt-1">Pilihan untuk Role Admin</p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        @foreach ($menuListAdmin as $m)
+                        @foreach ($menuList as $m)
                             <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-                                <input type="checkbox" class="tambah-menu rounded border-gray-400 dark:border-gray-600 text-[#E62C37] focus:ring-[#E62C37]/50 bg-white dark:bg-gray-800" value="{{ $m['key'] }}">
-                                {{ $m['label'] }}
+                                <input type="checkbox" class="tambah-menu rounded border-gray-400 dark:border-gray-600 text-[#E62C37] focus:ring-[#E62C37]/50 bg-white dark:bg-gray-800" value="{{ $m['key'] }}" data-akses="{{ $m['akses'] }}">
+                                {{ $m['label'] }}@if($m['akses'] === 'admin') <span class="text-[10px] uppercase tracking-wider text-gray-400">admin</span>@endif
                             </label>
                         @endforeach
                     </div>
-                    <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 mt-3">Pilihan untuk Role User</p>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        @foreach ($menuListUser as $m)
-                            <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-                                <input type="checkbox" class="tambah-menu rounded border-gray-400 dark:border-gray-600 text-[#E62C37] focus:ring-[#E62C37]/50 bg-white dark:bg-gray-800" value="{{ $m['key'] }}">
-                                {{ $m['label'] }}
-                            </label>
-                        @endforeach
-                    </div>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Dashboard & profil selalu tersedia. Kosongkan + tanpa akses penuh = hanya dashboard.</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Role Admin = semua menu otomatis terbuka. Role User = menu bertanda "admin" tidak tersedia. Dashboard & profil selalu tersedia.</p>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Password <span class="text-gray-500 normal-case">(opsional — kosongkan bila login hanya via Google)</span></label>
@@ -273,30 +258,15 @@
                 </div>
                 <div class="rounded-lg border border-gray-300 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800/50">
                     <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Hak Akses Menu</p>
-                    <label class="inline-flex items-start gap-2 mb-3 cursor-pointer">
-                        <input type="checkbox" id="edit_akses_penuh" value="1"
-                            class="mt-0.5 rounded border-gray-400 dark:border-gray-600 text-[#E62C37] focus:ring-[#E62C37]/50 bg-white dark:bg-gray-800">
-                        <span class="text-sm text-gray-700 dark:text-gray-300">Akses penuh (semua menu yang tersedia untuk role ini)</span>
-                    </label>
-                    <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 mt-1">Pilihan untuk Role Admin</p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        @foreach ($menuListAdmin as $m)
+                        @foreach ($menuList as $m)
                             <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-                                <input type="checkbox" class="edit-menu rounded border-gray-400 dark:border-gray-600 text-[#E62C37] focus:ring-[#E62C37]/50 bg-white dark:bg-gray-800" value="{{ $m['key'] }}">
-                                {{ $m['label'] }}
+                                <input type="checkbox" class="edit-menu rounded border-gray-400 dark:border-gray-600 text-[#E62C37] focus:ring-[#E62C37]/50 bg-white dark:bg-gray-800" value="{{ $m['key'] }}" data-akses="{{ $m['akses'] }}">
+                                {{ $m['label'] }}@if($m['akses'] === 'admin') <span class="text-[10px] uppercase tracking-wider text-gray-400">admin</span>@endif
                             </label>
                         @endforeach
                     </div>
-                    <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 mt-3">Pilihan untuk Role User</p>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        @foreach ($menuListUser as $m)
-                            <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-                                <input type="checkbox" class="edit-menu rounded border-gray-400 dark:border-gray-600 text-[#E62C37] focus:ring-[#E62C37]/50 bg-white dark:bg-gray-800" value="{{ $m['key'] }}">
-                                {{ $m['label'] }}
-                            </label>
-                        @endforeach
-                    </div>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Dashboard & profil selalu tersedia. Kosongkan + tanpa akses penuh = hanya dashboard.</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Role Admin = semua menu otomatis terbuka. Role User = menu bertanda "admin" tidak tersedia. Dashboard & profil selalu tersedia.</p>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Password Baru <span class="text-gray-500">(kosongkan jika tidak diubah)</span></label>
@@ -361,6 +331,28 @@
         var CSRF = '{{ csrf_token() }}';
         var BASE_URL = '{{ url("/admin/users") }}';
 
+        // Role menentukan keadaan checkbox hak akses: Admin = semua tercentang &
+        // terkunci (akses penuh); User = menu eksklusif admin terkunci tertutup.
+        function terapkanAksesRole(role, className) {
+            document.querySelectorAll('.' + className).forEach(function (cb) {
+                const adminOnly = cb.dataset.akses === 'admin';
+                if (role === 'admin') {
+                    cb.checked = true;
+                    cb.disabled = true;
+                } else {
+                    cb.disabled = adminOnly;
+                    if (adminOnly) cb.checked = false;
+                }
+            });
+        }
+
+        document.getElementById('tambah_role').addEventListener('change', function () {
+            terapkanAksesRole(this.value, 'tambah-menu');
+        });
+        document.getElementById('edit_role').addEventListener('change', function () {
+            terapkanAksesRole(this.value, 'edit-menu');
+        });
+
         // Modal helpers
         function bukaModal(id) {
             const m = document.getElementById(id);
@@ -391,6 +383,7 @@
         function bukaModalTambahUser() {
             document.getElementById('formTambahUser').reset();
             clearAllErrors();
+            terapkanAksesRole(document.getElementById('tambah_role').value, 'tambah-menu');
             bukaModal('modalTambahUser');
         }
 
@@ -429,7 +422,6 @@
                         name, username, email: email || null,
                         role: document.getElementById('tambah_role').value,
                         password, password_confirmation: passwordConf,
-                        akses_penuh: document.getElementById('tambah_akses_penuh').checked ? 1 : null,
                         menu_access: [...document.querySelectorAll('.tambah-menu:checked')].map(el => el.value),
                     }),
                 });
@@ -466,10 +458,10 @@
             document.getElementById('edit_email').value = user.email ?? '';
             document.getElementById('edit_role').value = user.role;
             document.getElementById('edit_password').value = '';
-            document.getElementById('edit_akses_penuh').checked = user.menu_access === null || user.menu_access === undefined;
             document.querySelectorAll('.edit-menu').forEach(el => {
                 el.checked = Array.isArray(user.menu_access) && user.menu_access.includes(el.value);
             });
+            terapkanAksesRole(user.role, 'edit-menu');
             bukaModal('modalEditUser');
         }
 
@@ -501,7 +493,6 @@
                 const body = {
                     name, username, email: email || null,
                     role: document.getElementById('edit_role').value,
-                    akses_penuh: document.getElementById('edit_akses_penuh').checked ? 1 : null,
                     menu_access: [...document.querySelectorAll('.edit-menu:checked')].map(el => el.value),
                     _method: 'PUT',
                 };

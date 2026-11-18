@@ -870,7 +870,11 @@
             }
         });
 
-        const btnHapusSemua = document.getElementById('btnTabHapusSemua');
+        // var (bukan const/let): script inline dieksekusi ulang Turbo pada tiap
+        // navigasi — const top-level membuat binding global leksikal yang gagal
+        // dideklarasikan ulang ("Identifier already declared") dan mematikan
+        // seluruh script halaman berikutnya.
+        var btnHapusSemua = document.getElementById('btnTabHapusSemua');
         if (btnHapusSemua) btnHapusSemua.addEventListener('click', async function () {
             if (sedangBusy) return;
             setBusy(true);

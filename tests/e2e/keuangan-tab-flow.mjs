@@ -128,11 +128,36 @@ try {
     // 3. Set target anggaran 200.000
     await page.fill("#budget_target", "200000");
     await page.click("#btnBudget");
-    await sleep(900);
-    let budgetVal = await page.textContent("#cardBudgetVal");
+    const statusBudget = [];
+    page.on("response", async (r) => {
+        if (r.url().includes("/budget"))
+            statusBudget.push(
+                r.status() +
+                    " | URL: " +
+                    r.url() +
+                    " | " +
+                    (await r.text()).replace(/\s+/g, " ").slice(0, 120),
+            );
+    });
+    let tercapai = true;
+    try {
+        await page.waitForFunction(
+            () =>
+                document.getElementById("cardBudgetVal").textContent.trim() ===
+                "200.000",
+            null,
+            { timeout: 15000 },
+        );
+    } catch {
+        tercapai = false;
+    }
     assert(
-        budgetVal.trim() === "200.000",
-        `Total Budget = target (dapat "${budgetVal.trim()}")`,
+        tercapai,
+        "Total Budget = target 200.000 (status PUT budget: " +
+            statusBudget.join(",") +
+            "; pageErrors: " +
+            JSON.stringify(pageErrors) +
+            ")",
     );
 
     // 4. Tambah biaya tambahan 50.000 → total 250.000
@@ -141,26 +166,31 @@ try {
     await page.click("#btnBiaya");
     const barisBiaya = await Promise.race([
         page.waitForSelector('td:has-text("e2e-biaya-material")', {
-            timeout: 10000,
+            timeout: 12000,
         }),
-        sleep(10000).then(() => null),
+        sleep(12000).then(() => null),
     ]);
     assert(!!barisBiaya, "Baris biaya tambahan tampil");
-    budgetVal = (await page.textContent("#cardBudgetVal")).trim();
-    assert(
-        budgetVal === "250.000",
-        `Total Budget = target + biaya (dapat "${budgetVal}")`,
+    await page.waitForFunction(
+        () =>
+            document.getElementById("cardBudgetVal").textContent.trim() ===
+            "250.000",
+        null,
+        { timeout: 15000 },
     );
+    assert(true, "Total Budget = target + biaya (250.000)");
 
     // 5. Hapus biaya via modal → kembali 200.000
     await page.click('#daftarBiaya button:has-text("Hapus")');
     await page.click("#btnHapusBiaya");
-    await sleep(1500);
-    budgetVal = (await page.textContent("#cardBudgetVal")).trim();
-    assert(
-        budgetVal === "200.000",
-        `Total Budget kembali setelah biaya dihapus (dapat "${budgetVal}")`,
+    await page.waitForFunction(
+        () =>
+            document.getElementById("cardBudgetVal").textContent.trim() ===
+            "200.000",
+        null,
+        { timeout: 15000 },
     );
+    assert(true, "Total Budget kembali setelah biaya dihapus");
 
     // 6. Catat uang keluar 30.000 di tab → Sisa Budget 170.000
     await page.click("button:has-text('+ Uang Keluar')");
@@ -168,12 +198,30 @@ try {
     await page.fill("#tambah_tanggal", new Date().toISOString().slice(0, 10));
     await page.fill("#tambah_ket", "e2e-tab-uji-keluar");
     await page.click("#btnTambah");
-    await sleep(2000);
-    const sisaVal = (await page.textContent("#cardSisaVal")).trim();
-    assert(
-        sisaVal === "170.000",
-        `Sisa Budget = budget - keluar (dapat "${sisaVal}")`,
+    await page.waitForFunction(
+        () =>
+            document.getElementById("cardSisaVal").textContent.trim() ===
+            "170.000",
+        null,
+        { timeout: 15000 },
     );
+    assert(true, "Sisa Budget = budget - keluar (170.000)");
+
+    // 6b. Edit transaksi (typo fix): 30.000 → 35.000 → Sisa Budget 165.000
+    await page.click(
+        "tr:has-text('e2e-tab-uji-keluar') button:has-text('Edit')",
+    );
+    await page.waitForSelector("#modalEdit:not(.hidden)", { timeout: 5000 });
+    await page.fill("#edit_jumlah", "35000");
+    await page.click("#modalEdit button[type=submit]");
+    await page.waitForFunction(
+        () =>
+            document.getElementById("cardSisaVal").textContent.trim() ===
+            "165.000",
+        null,
+        { timeout: 15000 },
+    );
+    assert(true, "Edit transaksi tersimpan — Sisa Budget = 165.000");
 
     // 7. Transfer dana: Kas Umum → tab, 50.000
     await page.click("button:has-text('+ Transfer Dana')");
@@ -190,17 +238,21 @@ try {
     ]);
     assert(!!barisTransfer, 'Transfer tercatat di tab (baris "Dari Kas Umum")');
 
-    // 8. Hapus tab DIBLOK karena masih ada transaksi
+    // 8. Hapus tab DIBLOK karena masih ada transaksi:
+    // tombol "Hapus Tab (kosong)" disabled + tombol massal tersedia.
     await page.click("button[title='Hapus tab']");
-    await page.click("#btnTabHapus");
-    await sleep(1500);
-    assert(
-        page.url().includes("tab="),
-        "Hapus tab diblok — masih di tab proyek",
+    await page.waitForSelector("#btnTabHapusSemua", { timeout: 5000 });
+    const btnKosongDisabled = await page.$eval(
+        "#btnTabHapus",
+        (el) => el.disabled,
     );
     assert(
-        await page.isVisible(`a:has-text("${NAMA_TAB}")`),
-        "Tab masih ada setelah diblok",
+        btnKosongDisabled,
+        "Hapus tab diblok — tombol kosong disabled saat tab berisi transaksi",
+    );
+    assert(
+        await page.isVisible("#btnTabHapusSemua"),
+        "Tombol Hapus Semua (N transaksi) + Tab tersedia di modal",
     );
     await page.click("#modalTabHapus button:has-text('Batal')");
     await sleep(400);
@@ -229,6 +281,36 @@ try {
     assert(
         !(await page.isVisible('td:has-text("e2e-transfer-uji")')),
         "Tidak ada residu transfer di Kas Umum (pasangan ikut terhapus)",
+    );
+
+    // 11. Hapus massal: tab baru berisi transaksi → satu klik bersihkan semua
+    await page.click("button[title='Tab proyek baru']");
+    await page.fill("#tab_nama_baru", `${NAMA_TAB} 2`);
+    await page.click("#btnTabBaru");
+    await page.waitForURL("**/admin/keuangan?tab=*", { timeout: 15000 });
+    await sleep(900);
+    await page.click("button:has-text('+ Uang Keluar')");
+    await page.fill("#tambah_jumlah", "12000");
+    await page.fill("#tambah_tanggal", new Date().toISOString().slice(0, 10));
+    await page.fill("#tambah_ket", "e2e-tab-uji-massal");
+    await page.click("#btnTambah");
+    await page.waitForSelector('td:has-text("e2e-tab-uji-massal")', {
+        timeout: 12000,
+    });
+    await page.click("button[title='Hapus tab']");
+    await page.waitForSelector("#btnTabHapusSemua", { timeout: 5000 });
+    await page.click("#btnTabHapusSemua");
+    await page.waitForURL((u) => !u.searchParams.has("tab"), {
+        timeout: 15000,
+    });
+    await sleep(1000);
+    assert(
+        !(await page.isVisible('td:has-text("e2e-tab-uji-massal")')),
+        "Hapus massal: transaksi tab ikut terhapus",
+    );
+    assert(
+        !(await page.isVisible(`a:has-text("${NAMA_TAB} 2")`)),
+        "Hapus massal: tab terhapus sekali klik",
     );
 
     assert(pageErrors.length === 0, `Bebas page error (${pageErrors.length})`);

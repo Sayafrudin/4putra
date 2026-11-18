@@ -183,7 +183,9 @@ try {
     await page.fill("#transfer_ket", "e2e-transfer-uji");
     await page.click("#btnTransfer");
     const barisTransfer = await Promise.race([
-        page.waitForSelector('td:has-text("Dari Kas Umum")', { timeout: 12000 }),
+        page.waitForSelector('td:has-text("Dari Kas Umum")', {
+            timeout: 12000,
+        }),
         sleep(12000).then(() => null),
     ]);
     assert(!!barisTransfer, 'Transfer tercatat di tab (baris "Dari Kas Umum")');
@@ -192,7 +194,10 @@ try {
     await page.click("button[title='Hapus tab']");
     await page.click("#btnTabHapus");
     await sleep(1500);
-    assert(page.url().includes("tab="), "Hapus tab diblok — masih di tab proyek");
+    assert(
+        page.url().includes("tab="),
+        "Hapus tab diblok — masih di tab proyek",
+    );
     assert(
         await page.isVisible(`a:has-text("${NAMA_TAB}")`),
         "Tab masih ada setelah diblok",
@@ -204,7 +209,9 @@ try {
     await page.click("tr:has-text('Dari Kas Umum') button:has-text('Hapus')");
     await page.click("#btnHapus");
     await sleep(2000);
-    await page.click("tr:has-text('e2e-tab-uji-keluar') button:has-text('Hapus')");
+    await page.click(
+        "tr:has-text('e2e-tab-uji-keluar') button:has-text('Hapus')",
+    );
     await page.click("#btnHapus");
     await sleep(2000);
 

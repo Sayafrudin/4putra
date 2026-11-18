@@ -6,7 +6,10 @@
 // API: window.eksporExcel(btn, { namaFile, judul, headers, rows, ringkasan? })
 // ringkasan (opsional, khusus keuangan): { rows: [[label, nilai], ...] } —
 // dicetak sebagai blok terpisah yang rapi di bawah tabel, bukan nyempil di data.
-window.eksporExcel = async function (btn, { namaFile, judul, headers, rows, ringkasan }) {
+window.eksporExcel = async function (
+    btn,
+    { namaFile, judul, headers, rows, ringkasan },
+) {
     const teksAwal = btn ? btn.textContent : "";
     const kunci = () => {
         if (!btn) return;
@@ -28,7 +31,8 @@ window.eksporExcel = async function (btn, { namaFile, judul, headers, rows, ring
         const ws = wb.addWorksheet(judul.slice(0, 31));
 
         // Formula-injection guard: nilai yang diawali =+-@ diawali apostrof
-        const aman = (v) => (typeof v === "string" && /^[=+\-@]/.test(v) ? "'" + v : v);
+        const aman = (v) =>
+            typeof v === "string" && /^[=+\-@]/.test(v) ? "'" + v : v;
 
         // Judul: merged bold di tengah atas
         ws.mergeCells(1, 1, 1, headers.length);
@@ -44,7 +48,11 @@ window.eksporExcel = async function (btn, { namaFile, judul, headers, rows, ring
             const sel = barisHeader.getCell(i + 1);
             sel.value = h;
             sel.font = { bold: true, size: 11, color: { argb: "FF1A1A2E" } };
-            sel.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF176" } };
+            sel.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FFFFF176" },
+            };
             sel.alignment = { horizontal: "center", vertical: "middle" };
         });
         barisHeader.height = 20;
@@ -63,7 +71,11 @@ window.eksporExcel = async function (btn, { namaFile, judul, headers, rows, ring
         });
 
         // Blok ringkasan terpisah (khusus keuangan)
-        if (ringkasan && Array.isArray(ringkasan.rows) && ringkasan.rows.length) {
+        if (
+            ringkasan &&
+            Array.isArray(ringkasan.rows) &&
+            ringkasan.rows.length
+        ) {
             ws.addRow([]); // jarak kosong antar tabel & ringkasan
             const awal = ws.rowCount + 1;
             ringkasan.rows.forEach(([label, nilai], i) => {
@@ -71,15 +83,22 @@ window.eksporExcel = async function (btn, { namaFile, judul, headers, rows, ring
                 const selLabel = baris.getCell(1);
                 const selNilai = baris.getCell(2);
                 selLabel.value = aman(label);
-                selNilai.value = typeof nilai === "number" ? nilai : aman(nilai);
+                selNilai.value =
+                    typeof nilai === "number" ? nilai : aman(nilai);
                 selLabel.font = { bold: true, size: 11 };
-                selNilai.font = { bold: i === ringkasan.rows.length - 1, size: 11 };
-                selNilai.numFmt = typeof nilai === "number" ? "#,##0" : undefined;
+                selNilai.font = {
+                    bold: i === ringkasan.rows.length - 1,
+                    size: 11,
+                };
+                selNilai.numFmt =
+                    typeof nilai === "number" ? "#,##0" : undefined;
                 selNilai.alignment = { horizontal: "right" };
             });
             // Garis atas & bawah blok ringkasan ala laporan
             ws.getRow(awal).eachCell((sel) => {
-                sel.border = { top: { style: "medium", color: { argb: "FF1A1A2E" } } };
+                sel.border = {
+                    top: { style: "medium", color: { argb: "FF1A1A2E" } },
+                };
             });
             ws.getRow(awal + ringkasan.rows.length - 1).eachCell((sel) => {
                 sel.border = {

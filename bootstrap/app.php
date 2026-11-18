@@ -42,6 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.only' => \App\Http\Middleware\AdminOnly::class,
             'admin.domain' => \App\Http\Middleware\AdminDomain::class,
             'local.only' => \App\Http\Middleware\LocalOnly::class,
+            'menu.access' => \App\Http\Middleware\MenuAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

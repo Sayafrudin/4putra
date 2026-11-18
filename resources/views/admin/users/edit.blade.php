@@ -7,7 +7,8 @@
     </div>
 
     <div class="max-w-2xl">
-        <form method="POST" action="{{ route('admin.users.update', $user) }}" class="space-y-6">
+        <form method="POST" action="{{ route('admin.users.update', $user) }}" class="space-y-6"
+            x-data="{ role: '{{ old('role', $user->role) }}' }">
             @csrf
             @method('PUT')
 
@@ -40,7 +41,7 @@
 
             <div>
                 <label for="role" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Role</label>
-                <select name="role" id="role" required
+                <select name="role" id="role" required x-model="role"
                     class="w-full px-4 py-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#E62C37]/50 focus:border-[#E62C37] text-sm">
                     <option value="user" {{ old('role', $user->role) === 'user' ? 'selected' : '' }}>User</option>
                     <option value="admin" {{ old('role', $user->role) === 'admin' ? 'selected' : '' }}>Admin</option>
@@ -48,6 +49,29 @@
                 @error('role')
                     <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
                 @enderror
+            </div>
+
+            <div x-show="role === 'admin'" x-cloak class="rounded-lg border border-gray-300 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800/50">
+                <label class="inline-flex items-start gap-2 mb-3 cursor-pointer">
+                    <input type="checkbox" name="akses_penuh" value="1" {{ old('akses_penuh', $user->menu_access === null) ? 'checked' : '' }}
+                        class="mt-0.5 rounded border-gray-400 dark:border-gray-600 text-[#E62C37] focus:ring-[#E62C37]/50 bg-white dark:bg-gray-800">
+                    <span>
+                        <span class="block text-sm font-medium text-gray-600 dark:text-gray-300">Akses penuh (semua menu)</span>
+                        <span class="block text-xs text-gray-500 dark:text-gray-400">Berikan akses ke seluruh menu dashboard tanpa batasan.</span>
+                    </span>
+                </label>
+                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Atau pilih menu tertentu saja</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    @foreach ($menuKeys as $key)
+                        <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                            <input type="checkbox" name="menu_access[]" value="{{ $key }}"
+                                {{ in_array($key, old('menu_access', $user->menu_access ?? [])) ? 'checked' : '' }}
+                                class="rounded border-gray-400 dark:border-gray-600 text-[#E62C37] focus:ring-[#E62C37]/50 bg-white dark:bg-gray-800">
+                            {{ \App\Support\AdminMenus::label($key) }}
+                        </label>
+                    @endforeach
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">Dashboard & profil selalu tersedia. Menu "Kelola Akun User" hanya untuk akun dengan akses penuh. Role "User" tidak memakai pilihan ini.</p>
             </div>
 
             <div class="border-t border-gray-300 dark:border-gray-700 pt-6">

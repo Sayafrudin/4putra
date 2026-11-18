@@ -131,7 +131,7 @@ Route::post('/midtrans/callback-laravel', [ChatbotController::class, 'midtransCa
 // sebelum auth check memunculkan redirect /login di host produksi.
 // Semua role login boleh masuk dashboard (role user = monitoring farm);
 // route sensitif digate admin.only PER GRUP di bawah (role tetap diverifikasi SERVER-SIDE).
-Route::prefix('admin')->middleware(['admin.domain', 'admin.auth'])->group(function () {
+Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'menu.access'])->group(function () {
 
     Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
 

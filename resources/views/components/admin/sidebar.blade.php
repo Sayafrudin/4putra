@@ -31,8 +31,9 @@
                     </a>
                 </li>
 
-                {{-- Manajemen Konten hanya admin (route digate server-side admin.only) --}}
-                @if (Auth::user()->isAdmin())
+                {{-- Manajemen Konten hanya admin (route digate server-side admin.only);
+                    tiap anak difilter hak akses menu (NULL = penuh) --}}
+                @if (Auth::user()->isAdmin() && (\App\Support\AdminMenus::boleh(Auth::user(), 'collections') || \App\Support\AdminMenus::boleh(Auth::user(), 'facilities') || \App\Support\AdminMenus::boleh(Auth::user(), 'daily-activities') || \App\Support\AdminMenus::boleh(Auth::user(), 'achievements')))
                 <li class="relative px-6 py-3">
                     @if (request()->routeIs('admin.achievements.*') ||
                             request()->routeIs('admin.about.*') ||
@@ -57,34 +58,43 @@
                         x-transition:leave="transition ease-in duration-75"
                         x-transition:leave-start="opacity-100 translate-y-0"
                         x-transition:leave-end="opacity-0 -translate-y-1" class="mt-2 ml-4 space-y-1">
+                        @if (\App\Support\AdminMenus::boleh(Auth::user(), 'collections'))
                         <a href="{{ route('admin.collections.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.collections.*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <x-tabler-category class="w-4 h-4 mr-2" />
                             Koleksi (Collections)
                         </a>
+                        @endif
+                        @if (\App\Support\AdminMenus::boleh(Auth::user(), 'facilities'))
                         {{-- Full-reload: script halaman = ES module (tak dieksekusi ulang Turbo, module map cache) --}}
                         <a href="{{ route('admin.facilities.index') }}" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.facilities.*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <x-tabler-building-store class="w-4 h-4 mr-2" />
                             Fasilitas (Facilities)
                         </a>
+                        @endif
+                        @if (\App\Support\AdminMenus::boleh(Auth::user(), 'daily-activities'))
                         {{-- Full-reload: script halaman = ES module (tak dieksekusi ulang Turbo, module map cache) --}}
                         <a href="{{ route('admin.daily-activities.index') }}" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.daily-activities.*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <x-tabler-calendar class="w-4 h-4 mr-2" />
                             Aktivitas Harian (Daily Activities)
                         </a>
+                        @endif
+                        @if (\App\Support\AdminMenus::boleh(Auth::user(), 'achievements'))
                         {{-- Full-reload: script halaman = ES module (achievements+about) tak dieksekusi ulang Turbo --}}
                         <a href="{{ route('admin.achievements.index') }}" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.achievements.*') || request()->routeIs('admin.about.*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <x-tabler-clipboard-list class="w-4 h-4 mr-2" />
                             Pencapaian (Achievements)
                         </a>
+                        @endif
                     </div>
                 </li>
                 @endif
 
-                {{-- Menu Manajemen Farm (data burung, bukan urusan chatbot) --}}
+                {{-- Menu Manajemen Farm (data burung, bukan urusan chatbot); tiap anak difilter hak akses menu --}}
+                @if (\App\Support\AdminMenus::boleh(Auth::user(), 'aviary') || \App\Support\AdminMenus::boleh(Auth::user(), 'kandang') || \App\Support\AdminMenus::boleh(Auth::user(), 'vaksinasi') || \App\Support\AdminMenus::boleh(Auth::user(), 'telur') || \App\Support\AdminMenus::boleh(Auth::user(), 'stok'))
                 <li class="relative px-6 py-3"
                     x-data="{ openFarm: {{ request()->routeIs('admin.aviary*') || request()->routeIs('admin.kandang*') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.stok*') ? 'true' : 'false' }} }">
                     @if (request()->routeIs('admin.aviary*') || request()->routeIs('admin.kandang*') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.stok*'))
@@ -106,35 +116,47 @@
                         x-transition:leave="transition ease-in duration-75"
                         x-transition:leave-start="opacity-100 translate-y-0"
                         x-transition:leave-end="opacity-0 -translate-y-1" class="mt-2 ml-4 space-y-1">
+                        @if (\App\Support\AdminMenus::boleh(Auth::user(), 'aviary'))
                         <a href="{{ route('admin.aviary.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.aviary*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <x-tabler-fence class="w-4 h-4 mr-2" />
                             Aviary
                         </a>
+                        @endif
+                        @if (\App\Support\AdminMenus::boleh(Auth::user(), 'kandang'))
                         <a href="{{ route('admin.kandang.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.kandang*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <x-tabler-home-2 class="w-4 h-4 mr-2" />
                             Kandang
                         </a>
+                        @endif
+                        @if (\App\Support\AdminMenus::boleh(Auth::user(), 'vaksinasi'))
                         <a href="{{ route('admin.vaksinasi.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.vaksinasi*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <x-tabler-vaccine class="w-4 h-4 mr-2" />
                             Vaksinasi
                         </a>
+                        @endif
+                        @if (\App\Support\AdminMenus::boleh(Auth::user(), 'telur'))
                         <a href="{{ route('admin.telur.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.telur*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <x-tabler-egg class="w-4 h-4 mr-2" />
                             Telur & Incubator
                         </a>
+                        @endif
+                        @if (\App\Support\AdminMenus::boleh(Auth::user(), 'stok'))
                         <a href="{{ route('admin.stok.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.stok*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <x-tabler-packages class="w-4 h-4 mr-2" />
                             Stok Makanan
                         </a>
+                        @endif
                     </div>
                 </li>
+                @endif
 
-                {{-- Menu Keuangan (uang krusial farm) --}}
+                {{-- Menu Keuangan (uang krusial farm) — difilter hak akses menu --}}
+                @if (\App\Support\AdminMenus::boleh(Auth::user(), 'keuangan'))
                 <li class="relative px-6 py-3">
                     @if (request()->routeIs('admin.keuangan*'))
                         <span class="absolute inset-y-0 left-0 w-1 bg-[#E62C37] rounded-tr-lg rounded-br-lg"
@@ -146,9 +168,10 @@
                         <span class="ml-4">Keuangan</span>
                     </a>
                 </li>
+                @endif
 
-                {{-- Menu Manajemen User (hanya admin) --}}
-                @if (Auth::user()->isAdmin())
+                {{-- Menu Manajemen User (hanya admin PENUH — menu_access NULL) --}}
+                @if (Auth::user()->isAdmin() && Auth::user()->menu_access === null)
                     <li class="relative px-6 py-3">
                         @if (request()->routeIs('admin.users.*'))
                             <span class="absolute inset-y-0 left-0 w-1 bg-[#E62C37] rounded-tr-lg rounded-br-lg"

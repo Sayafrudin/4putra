@@ -297,22 +297,19 @@
     function logoutNow() {
         hideWarning();
 
-        // Buat form logout dan submit
-        var form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/logout';
-
-        var csrfToken = document.querySelector('meta[name="csrf-token"]');
-        if (csrfToken) {
-            var input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = '_token';
-            input.value = csrfToken.getAttribute('content');
-            form.appendChild(input);
-        }
-
-        document.body.appendChild(form);
-        form.submit();
+        // Sesi bisa saja SUDAH mati di server (idle melewati lifetime) — POST
+        // form biasa akan 419 dan user mendarat di halaman error. Logout via
+        // fetch lalu arahkan ke /login apa pun hasilnya.
+        fetch('/logout', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': getCsrfToken(),
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin',
+        }).catch(function () {}).finally(function () {
+            window.location.href = '/login';
+        });
     }
 
     function resetTimer() {

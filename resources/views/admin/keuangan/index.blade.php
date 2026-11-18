@@ -7,7 +7,7 @@
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Pemasukan, pengeluaran, gaji bulanan, dan budget pembangunan</p>
         </div>
         <div class="flex gap-3 flex-wrap">
-            <button onclick="eksporExcel(this, { namaFile: eksporNamaFile(), judul: eksporJudul(), headers: ['Tanggal', 'Tipe', 'Kategori', 'Jumlah (Rp)', 'Keterangan'], rows: DATA_EKSPOR })"
+            <button onclick="eksporExcel(this, { namaFile: eksporNamaFile(), judul: eksporJudul(), headers: ['Tanggal', 'Tipe', 'Kategori', 'Jumlah (Rp)', 'Keterangan'], rows: DATA_EKSPOR, ringkasan: { rows: RINGKASAN_EKSPOR } })"
                 class="px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors">
                 Export Excel
             </button>
@@ -502,35 +502,36 @@
 
     @php
         // Data ekspor Excel: SELURUH baris sesuai filter & tab aktif (bukan hanya halaman paginasi).
-        // Tab proyek menyertakan ringkasan budget + rincian biaya tambahan di sheet yang sama.
+        // Ringkasan dipisah sebagai blok tersendiri (dicetak rapi di bawah tabel oleh admin-export.js).
+        // Tab proyek menyertakan target anggaran, biaya tambahan, total & sisa budget.
         $dataEkspor = $semuaTransaksi->map(fn ($trx) => [
             $trx->tanggal->translatedFormat('d M Y'),
             ucfirst($trx->tipe),
             $trx->kategori,
             (float) $trx->jumlah,
             $trx->keterangan ?? '',
-        ])->concat([
-            ['', '', 'TOTAL MASUK', (float) $ringkasan['masuk'], ''],
-            ['', '', 'TOTAL KELUAR', (float) $ringkasan['keluar'], ''],
-            ['', '', 'SALDO', (float) $ringkasan['saldo'], ''],
-        ]);
+        ])->values()->all();
+
+        $ringkasanEkspor = [
+            ['TOTAL MASUK', (float) $ringkasan['masuk']],
+            ['TOTAL KELUAR', (float) $ringkasan['keluar']],
+            ['SALDO', (float) $ringkasan['saldo']],
+        ];
 
         if ($tabAktif) {
-            $dataEkspor = $dataEkspor
-                ->concat([['', '', 'TARGET ANGGARAN UTAMA', (float) $tabAktif->target_anggaran, '']])
-                ->concat($tabAktif->costs->map(fn ($c) => ['', $c->nama, 'BIAYA TAMBAHAN', (float) $c->nominal, ''])->values())
-                ->concat([
-                    ['', '', 'TOTAL BUDGET', (float) $totalBudget, ''],
-                    ['', '', 'SISA BUDGET', (float) $sisaBudget, ''],
-                ]);
+            $ringkasanEkspor[] = ['TARGET ANGGARAN UTAMA', (float) $tabAktif->target_anggaran];
+            foreach ($tabAktif->costs as $c) {
+                $ringkasanEkspor[] = ['BIAYA: '.$c->nama, (float) $c->nominal];
+            }
+            $ringkasanEkspor[] = ['TOTAL BUDGET', (float) $totalBudget];
+            $ringkasanEkspor[] = ['SISA BUDGET', (float) $sisaBudget];
         }
-
-        $dataEkspor = $dataEkspor->values()->all();
     @endphp
     <script>
         var CSRF = document.querySelector('meta[name="csrf-token"]').content;
         {{-- Hex-escape: input admin tak boleh bisa memutus konteks <script> --}}
         var DATA_EKSPOR = @json($dataEkspor, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+        var RINGKASAN_EKSPOR = @json($ringkasanEkspor, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
         var TAB_ID = {{ $tabAktif?->id ?? 'null' }};
         var TAB_KELUAR = {{ (float) $ringkasan['keluar'] }};
         var biayaEditId = null;

@@ -45,10 +45,9 @@ class GoogleController extends Controller
             $user->update(['google_id' => $googleUser->getId()]);
         }
 
-        // Remember-me 14 hari (ala website besar) agar sesi admin dapat
-        // dipulihkan otomatis tanpa login ulang. Logout menghapusnya.
-        Auth::setRememberDuration(14 * 24 * 60);
-        Auth::login($user, true);
+        // Tanpa remember-me (sesi ala MyBCA): sesi mati = login ulang saat
+        // dibuka lagi. Logout tetap menghapus cookie remember lama bila ada.
+        Auth::login($user);
 
         // Regenerate session untuk keamanan
         request()->session()->regenerate();

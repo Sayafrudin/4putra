@@ -11,8 +11,9 @@
 
     var lifetimeMeta = document.querySelector('meta[name="session-lifetime-minutes"]');
     var TIMEOUT_MINUTES = Math.max(1, parseInt(lifetimeMeta ? lifetimeMeta.getAttribute('content') : '30', 10) || 30);
-    // Popup peringatan muncul sedikitnya 5 menit sebelum sesi server kedaluwarsa
-    var WARNING_MINUTES = 5;
+    // Popup peringatan muncul 5 menit sebelum sesi server kedaluwarsa
+    // (dalam, minimal 1 menit, agar lifetime pendek di env test tetap workable)
+    var WARNING_MINUTES = Math.max(1, Math.min(5, TIMEOUT_MINUTES - 1));
     var TIMEOUT_MS = TIMEOUT_MINUTES * 60 * 1000;
     var WARNING_MS = WARNING_MINUTES * 60 * 1000;
     var PING_INTERVAL_MS = 10 * 60 * 1000; // Ping setiap 10 menit
@@ -22,6 +23,7 @@
     var pingTimer = null;
     var warningShown = false;
     var modalEl = null;
+    var lastActivity = Date.now();
 
     function getCsrfToken() {
         var csrfMeta = document.querySelector('meta[name="csrf-token"]');
@@ -72,6 +74,11 @@
     }
 
     function pingSession() {
+        // Ping = memperbarui sesi server. Tab tak terlihat (browser mem-bekukan
+        // timer & user tidak melihat popup) atau pengguna sudah lama tidak
+        // beraktivitas TIDAK boleh merahasiakan sesi tetap hidup.
+        if (document.visibilityState === 'hidden') return;
+        if (Date.now() - lastActivity > TIMEOUT_MS - WARNING_MS) return;
         requestPing().then(function (data) {
             if (data && !data.expired) {
                 applyCsrf(data);
@@ -183,10 +190,10 @@
         var logoutBtn = document.getElementById('session-logout-btn');
 
         if (titleEl) {
-            titleEl.textContent = 'Sesi Anda Telah Berakhir';
+            titleEl.textContent = 'Sesi Anda Telah Habis';
         }
         if (paragraphs.length > 0) {
-            paragraphs[0].textContent = 'Sesi telah benar-benar habis. Silakan login kembali untuk melanjutkan.';
+            paragraphs[0].textContent = 'Anda telah ter-logout karena sesi berakhir. Silakan login kembali untuk melanjutkan.';
         }
         if (paragraphs.length > 1) {
             paragraphs[1].textContent = 'Data pada form tidak terkirim — salin teks penting terlebih dahulu bila diperlukan. Setelah login ulang, Anda dikembalikan otomatis ke halaman ini.';
@@ -324,6 +331,7 @@
     var activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
 
     function handleActivity() {
+        lastActivity = Date.now();
         if (!warningShown) {
             resetTimer();
         }
@@ -348,10 +356,16 @@
     resetTimer();
 
     // Validasi ulang saat tab kembali aktif (bangun dari sleep / pindah tab).
-    // Server-side bisa saja sudah mati lebih dulu karena interval ping tidak
-    // jalan selama tab dibekukan browser. Dengan remember-me, ping ini juga
-    // memulihkan sesi yang telah mati → klik Perpanjang Sesi tetap berhasil.
+    // PENTING: kalau pengguna sudah lama tidak beraktivitas (melewati batas
+    // popup), JANGAN ping — ping akan memperbarui sesi diam-diam tanpa izin
+    // (perilaku lama yang membuat sesi tak pernah mati). Tunjukkan popup;
+    // sesi benar-benar mati baru terasa saat tombol Perpanjang diklik.
     function validateOnWake() {
+        var idleMs = Date.now() - lastActivity;
+        if (idleMs >= TIMEOUT_MS - WARNING_MS) {
+            showWarning(); // popup jujur, tanpa refresh di belakang
+            return;
+        }
         requestPing().then(function (data) {
             if (data && data.expired) {
                 showExpiredState(); // jujur sejak awal, sebelum user klik apa pun

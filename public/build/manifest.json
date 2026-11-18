@@ -16,8 +16,14 @@
     "file": "assets/preload-helper-BfFHrpNk.js",
     "name": "preload-helper"
   },
+  "node_modules/chart.js/auto/auto.js": {
+    "file": "assets/auto-DK3XubW5.js",
+    "name": "auto",
+    "src": "node_modules/chart.js/auto/auto.js",
+    "isDynamicEntry": true
+  },
   "resources/css/app.css": {
-    "file": "assets/app-BJ4HEJCY.css",
+    "file": "assets/app-DM6lNeP-.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
@@ -54,6 +60,18 @@
     "isDynamicEntry": true,
     "imports": [
       "_firebase-BqLH3y0R.js"
+    ]
+  },
+  "resources/js/dashboard-charts.js": {
+    "file": "assets/dashboard-charts-DwYSAdZK.js",
+    "name": "dashboard-charts",
+    "src": "resources/js/dashboard-charts.js",
+    "isEntry": true,
+    "imports": [
+      "_preload-helper-BfFHrpNk.js"
+    ],
+    "dynamicImports": [
+      "node_modules/chart.js/auto/auto.js"
     ]
   },
   "resources/js/dropzone.js": {

@@ -93,11 +93,12 @@ class AdminMenuAccessTest extends TestCase
         $res->assertDontSee('href="'.route('admin.users.index').'"', false);
     }
 
-    public function test_tambah_user_menyimpan_menu_access_dan_menolak_kunci_asing(): void
+    public function test_tambah_user_admin_selalu_akses_penuh_dan_menolak_kunci_asing(): void
     {
         $admin = User::where('email', 'admin-penuh-test@4putra.test')->first();
 
-        // Kunci menu yang tidak dikenal → 422
+        // Role admin = akses penuh SELALU (menu_access disimpan NULL),
+        // apa pun isi checkbox yang dikirim (UI mengunci semua saat admin).
         $this->actingAs($admin)->post('/admin/users', [
             'name' => 'Uji Menu', 'username' => 'uji-menu-akses', 'email' => 'uji-menu-akses@4putra.test',
             'password' => 'password123', 'password_confirmation' => 'password123',
@@ -111,7 +112,7 @@ class AdminMenuAccessTest extends TestCase
         ])->assertSessionHasNoErrors();
 
         $baru = User::where('email', 'uji-menu-akses@4putra.test')->first();
-        $this->assertEqualsCanonicalizing(['keuangan', 'kandang'], $baru->menu_access);
+        $this->assertNull($baru->menu_access, 'Role admin wajib akses penuh (menu_access NULL)');
     }
 
     public function test_role_user_menyimpan_menu_access_sesuai_cakupan_role(): void
@@ -128,15 +129,16 @@ class AdminMenuAccessTest extends TestCase
         $baru = User::where('email', 'uji-role-user-ma@4putra.test')->first();
         $this->assertEqualsCanonicalizing(['keuangan', 'kandang'], $baru->menu_access);
 
-        // Role user + akses penuh → NULL (semua menu monitoring)
+        // Role user mencentang SEMUA menu 'semua' = monitoring penuh (tersimpan eksplisit)
         $this->actingAs($admin)->post('/admin/users', [
             'name' => 'Uji Role User 2', 'username' => 'uji-role-user-ma2', 'email' => 'uji-role-user-ma2@4putra.test',
             'password' => 'password123', 'password_confirmation' => 'password123',
-            'role' => 'user', 'akses_penuh' => 1, 'menu_access' => ['kandang'],
+            'role' => 'user',
+            'menu_access' => ['aviary', 'kandang', 'vaksinasi', 'telur', 'stok', 'keuangan'],
         ])->assertSessionHasNoErrors();
 
         $kedua = User::where('email', 'uji-role-user-ma2@4putra.test')->first();
-        $this->assertNull($kedua->menu_access);
+        $this->assertCount(6, $kedua->menu_access);
     }
 
     public function test_role_user_menu_access_mengatur_menu_monitoring(): void

@@ -26,8 +26,7 @@ class AdminUserController extends Controller
 
         return view('admin.users.index', [
             'users' => $users,
-            'menuListAdmin' => AdminMenus::listForRole('admin'),
-            'menuListUser' => AdminMenus::listForRole('user'),
+            'menuList' => AdminMenus::listSemua(),
         ]);
     }
 
@@ -35,8 +34,7 @@ class AdminUserController extends Controller
     {
         return view('admin.users.create', [
             'menuKeys' => AdminMenus::keys(),
-            'menuListAdmin' => AdminMenus::listForRole('admin'),
-            'menuListUser' => AdminMenus::listForRole('user'),
+            'menuList' => AdminMenus::listSemua(),
         ]);
     }
 
@@ -50,8 +48,7 @@ class AdminUserController extends Controller
             // Password wajib bila email kosong (satu-satunya jalur login).
             'password' => ['required_without:email', 'nullable', 'confirmed', Password::min(8)],
             'role' => ['required', 'in:admin,user'],
-            // Hak akses menu (role admin & user): NULL = akses penuh.
-            'akses_penuh' => ['nullable', 'boolean'],
+            // Hak akses menu: role admin selalu penuh; role user = daftar menu 'semua'.
             'menu_access' => ['nullable', 'array'],
             'menu_access.*' => ['string', Rule::in(AdminMenus::keys())],
         ]);
@@ -87,8 +84,7 @@ class AdminUserController extends Controller
         return view('admin.users.edit', [
             'user' => $user,
             'menuKeys' => AdminMenus::keys(),
-            'menuListAdmin' => AdminMenus::listForRole('admin'),
-            'menuListUser' => AdminMenus::listForRole('user'),
+            'menuList' => AdminMenus::listSemua(),
         ]);
     }
 
@@ -101,7 +97,6 @@ class AdminUserController extends Controller
             // Edit: password tetap opsional (akun lama selalu punya hash) — beda dengan create.
             'password' => ['nullable', 'confirmed', Password::min(8)],
             'role' => ['required', 'in:admin,user'],
-            'akses_penuh' => ['nullable', 'boolean'],
             'menu_access' => ['nullable', 'array'],
             'menu_access.*' => ['string', Rule::in(AdminMenus::keys())],
         ]);
@@ -139,14 +134,14 @@ class AdminUserController extends Controller
 
     /**
      * Normalisasi hak akses menu dari payload form:
-     * role apa pun + "akses penuh" → NULL (semua menu yang tersedia untuk role itu);
-     * terbatas → daftar kunci menu sesuai role (array kosong = hanya dashboard).
+     * role admin → selalu NULL (akses penuh, UI mengunci semua checkbox);
+     * role user → daftar kunci menu 'akses: semua' saja (array kosong = hanya dashboard).
      */
     private function menuAccessTersimpan(array $validated): ?array
     {
         $role = $validated['role'] ?? 'user';
 
-        if (! empty($validated['akses_penuh'])) {
+        if ($role === 'admin') {
             return null;
         }
 

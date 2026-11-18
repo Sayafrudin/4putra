@@ -231,6 +231,12 @@
                             <td class="px-6 py-4 text-sm tabular-nums">{{ $t->tanggal->translatedFormat('d M Y') }}</td>
                             <td class="px-6 py-4 text-sm">{{ $t->keterangan }}</td>
                             <td class="px-6 py-4 text-right">
+                                @if (! $t->transfer_id)
+                                    <button onclick='bukaModalEdit({{ $t->id }}, "{{ $t->tipe }}", "{{ addslashes($t->kategori) }}", "{{ $t->jumlah }}", "{{ $t->tanggal->toDateString() }}", "{{ addslashes($t->keterangan ?? '') }}")'
+                                        class="px-3 py-1.5 text-xs font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg hover:bg-blue-500/20 hover:border-blue-500/40 transition-colors mr-1.5">
+                                        Edit
+                                    </button>
+                                @endif
                                 <button onclick='bukaModalHapus({{ $t->id }}, "{{ addslashes($t->jumlah_format) }}", "{{ addslashes($t->kategori) }}")'
                                     class="px-3 py-1.5 text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg hover:bg-red-500/20 hover:border-red-500/40 transition-colors">
                                     Hapus
@@ -363,6 +369,67 @@
         </div>
     </div>
 
+    {{-- ==================== MODAL EDIT TRANSAKSI ==================== --}}
+    <div id="modalEdit" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Edit Transaksi</h3>
+                <button onclick="tutupModal('modalEdit')" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                    <x-tabler-x class="w-5 h-5" />
+                </button>
+            </div>
+            <form onsubmit="submitEdit(event)" class="space-y-4" novalidate>
+                @csrf
+                @method('PUT')
+                <input type="hidden" id="edit_id">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Tipe</label>
+                    <select id="edit_tipe"
+                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                        <option value="masuk">Masuk</option>
+                        <option value="keluar">Keluar</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Kategori</label>
+                    <select id="edit_kategori"
+                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                        @foreach ($kategoriList as $k)
+                            <option value="{{ $k }}">{{ $k }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Jumlah (Rp)</label>
+                    <input type="number" id="edit_jumlah" min="1" step="1000" placeholder="0"
+                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm tabular-nums text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                    <p class="text-xs text-red-400 mt-1 hidden" id="err_edit_jumlah"></p>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Tanggal</label>
+                    <input type="date" id="edit_tanggal" max="{{ now('Asia/Jakarta')->toDateString() }}"
+                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                    <p class="text-xs text-red-400 mt-1 hidden" id="err_edit_tanggal"></p>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Keterangan (opsional)</label>
+                    <textarea id="edit_ket" rows="2"
+                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none"></textarea>
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="tutupModal('modalEdit')"
+                        class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" id="btnEdit"
+                        class="px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     {{-- ==================== MODAL HAPUS TRANSAKSI ==================== --}}
     <div id="modalHapus" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
         <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6">
@@ -459,17 +526,24 @@
                 </div>
                 <div>
                     <h3 class="text-lg font-bold text-gray-900 dark:text-white">Hapus Tab</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Hapus tab <span class="font-semibold text-gray-700 dark:text-gray-200">{{ $tabAktif?->nama }}</span>? Tab yang masih berisi transaksi tidak bisa dihapus — kosongkan dulu. Rincian biaya & target anggaran ikut terhapus bersama tab.</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Hapus tab <span class="font-semibold text-gray-700 dark:text-gray-200">{{ $tabAktif?->nama }}</span>?@if($jumlahTransaksi > 0) Tab ini masih berisi <span class="font-semibold text-[#E62C37]">{{ $jumlahTransaksi }} transaksi</span>. @endif Rincian biaya & target anggaran ikut terhapus bersama tab.</p>
                 </div>
             </div>
-            <div class="flex justify-end gap-3 mt-6">
-                <button type="button" onclick="tutupModal('modalTabHapus')"
-                    class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
-                    Batal
-                </button>
+            <div class="flex flex-col gap-3 mt-6">
+                @if ($jumlahTransaksi > 0)
+                    <button type="button" id="btnTabHapusSemua"
+                        class="w-full px-4 py-2.5 text-sm font-semibold text-white bg-[#E62C37] hover:bg-[#c5242d] rounded-xl transition-colors">
+                        Hapus Semua ({{ $jumlahTransaksi }} transaksi) + Tab
+                    </button>
+                @endif
                 <button type="button" id="btnTabHapus"
-                    class="px-4 py-2.5 text-sm font-semibold text-white bg-[#E62C37] hover:bg-[#c5242d] rounded-xl transition-colors">
-                    Ya, Hapus Tab
+                    class="w-full px-4 py-2.5 text-sm font-semibold text-white bg-gray-600 hover:bg-gray-700 rounded-xl transition-colors {{ $jumlahTransaksi > 0 ? 'opacity-50 cursor-not-allowed' : '' }}"
+                    {{ $jumlahTransaksi > 0 ? 'disabled' : '' }}>
+                    Hapus Tab (kosong)
+                </button>
+                <button type="button" onclick="tutupModal('modalTabHapus')"
+                    class="w-full px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                    Batal
                 </button>
             </div>
         </div>
@@ -541,7 +615,7 @@
 
         function setBusy(on) {
             sedangBusy = on;
-            document.querySelectorAll('#btnTambah, #btnHapus, #btnBudget, #btnBiaya, #btnTabBaru, #btnTabRename, #btnTabHapus, #btnHapusBiaya').forEach(btn => {
+            document.querySelectorAll('#btnTambah, #btnHapus, #btnEdit, #btnBudget, #btnBiaya, #btnTabBaru, #btnTabRename, #btnTabHapus, #btnTabHapusSemua, #btnHapusBiaya').forEach(btn => {
                 if (!btn) return;
                 btn.disabled = on;
                 btn.classList.toggle('opacity-60', on);
@@ -664,6 +738,56 @@
             }
         });
 
+        // ===== Edit transaksi =====
+        function bukaModalEdit(id, tipe, kategori, jumlah, tanggal, keterangan) {
+            bersihkanError([['edit_jumlah', 'err_edit_jumlah'], ['edit_tanggal', 'err_edit_tanggal']]);
+            document.getElementById('edit_id').value = id;
+            document.getElementById('edit_tipe').value = tipe;
+            document.getElementById('edit_kategori').value = kategori;
+            document.getElementById('edit_jumlah').value = Number(jumlah);
+            document.getElementById('edit_tanggal').value = tanggal;
+            document.getElementById('edit_ket').value = keterangan;
+            bukaModal('modalEdit');
+        }
+
+        async function submitEdit(e) {
+            e.preventDefault();
+            bersihkanError([['edit_jumlah', 'err_edit_jumlah'], ['edit_tanggal', 'err_edit_tanggal']]);
+            const jumlah = document.getElementById('edit_jumlah');
+            const tanggal = document.getElementById('edit_tanggal');
+            let valid = true;
+            if (!jumlah.value || Number(jumlah.value) < 1) { tandaiError('edit_jumlah', 'err_edit_jumlah', 'Jumlah wajib diisi (minimal 1).'); valid = false; }
+            if (!tanggal.value) { tandaiError('edit_tanggal', 'err_edit_tanggal', 'Tanggal wajib diisi.'); valid = false; }
+            if (!valid) return;
+
+            setBusy(true);
+            try {
+                const res = await fetch('{{ route('admin.keuangan.update', ':id') }}'.replace(':id', document.getElementById('edit_id').value), {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        tipe: document.getElementById('edit_tipe').value,
+                        kategori: document.getElementById('edit_kategori').value,
+                        jumlah: Number(jumlah.value),
+                        tanggal: tanggal.value,
+                        keterangan: document.getElementById('edit_ket').value.trim() || null,
+                    })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    showToast('error', 'Gagal', data.message || 'Gagal memperbarui transaksi.');
+                    return;
+                }
+                showToast('success', 'Berhasil', data.message);
+                tutupModal('modalEdit');
+                window.location.reload();
+            } catch (err) {
+                showToast('error', 'Gagal', 'Tidak dapat terhubung ke server.');
+            } finally {
+                setBusy(false);
+            }
+        }
+
         // ===== Tab proyek =====
         function bukaModalTabRename() { bersihkanError([['tab_nama_rename', 'err_tab_rename']]); bukaModal('modalTabRename'); }
         function bukaModalTabHapus() { bukaModal('modalTabHapus'); }
@@ -728,6 +852,34 @@
             setBusy(true);
             try {
                 const res = await fetch('{{ route('admin.keuangan.tabs.destroy', $tabAktif?->id ?? 0) }}', {
+                    method: 'DELETE',
+                    headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' }
+                });
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    showToast('error', 'Gagal', data.message || 'Gagal menghapus tab.');
+                    return;
+                }
+                showToast('success', 'Berhasil', data.message);
+                tutupModal('modalTabHapus');
+                window.Turbo ? Turbo.visit('{{ route('admin.keuangan.index') }}') : window.location.href = '{{ route('admin.keuangan.index') }}';
+            } catch (err) {
+                showToast('error', 'Gagal', 'Tidak dapat terhubung ke server.');
+            } finally {
+                setBusy(false);
+            }
+        });
+
+        // var (bukan const/let): script inline dieksekusi ulang Turbo pada tiap
+        // navigasi — const top-level membuat binding global leksikal yang gagal
+        // dideklarasikan ulang ("Identifier already declared") dan mematikan
+        // seluruh script halaman berikutnya.
+        var btnHapusSemua = document.getElementById('btnTabHapusSemua');
+        if (btnHapusSemua) btnHapusSemua.addEventListener('click', async function () {
+            if (sedangBusy) return;
+            setBusy(true);
+            try {
+                const res = await fetch('{{ route('admin.keuangan.tabs.destroy', $tabAktif?->id ?? 0) }}?hapus_semua=1', {
                     method: 'DELETE',
                     headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' }
                 });

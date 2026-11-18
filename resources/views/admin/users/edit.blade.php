@@ -53,37 +53,18 @@
             </div>
 
             <div class="rounded-lg border border-gray-300 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800/50">
-                <label class="inline-flex items-start gap-2 mb-3 cursor-pointer">
-                    <input type="checkbox" name="akses_penuh" value="1" {{ old('akses_penuh', $user->menu_access === null) ? 'checked' : '' }}
-                        class="mt-0.5 rounded border-gray-400 dark:border-gray-600 text-[#E62C37] focus:ring-[#E62C37]/50 bg-white dark:bg-gray-800">
-                    <span>
-                        <span class="block text-sm font-medium text-gray-600 dark:text-gray-300">Akses penuh (semua menu yang tersedia untuk role ini)</span>
-                        <span class="block text-xs text-gray-500 dark:text-gray-400">Role Admin = seluruh menu dashboard. Role User = menu monitoring farm &amp; keuangan.</span>
-                    </span>
-                </label>
-                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Atau pilih menu tertentu saja — Admin</p>
+                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Hak Akses Menu</p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    @foreach ($menuListAdmin as $m)
+                    @foreach ($menuList as $m)
                         <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-                            <input type="checkbox" name="menu_access[]" value="{{ $m['key'] }}"
+                            <input type="checkbox" name="menu_access[]" value="{{ $m['key'] }}" data-akses="{{ $m['akses'] }}"
                                 {{ in_array($m['key'], old('menu_access', $user->menu_access ?? [])) ? 'checked' : '' }}
-                                class="rounded border-gray-400 dark:border-gray-600 text-[#E62C37] focus:ring-[#E62C37]/50 bg-white dark:bg-gray-800">
-                            {{ $m['label'] }}
+                                class="menu-akses-item rounded border-gray-400 dark:border-gray-600 text-[#E62C37] focus:ring-[#E62C37]/50 bg-white dark:bg-gray-800">
+                            {{ $m['label'] }}@if($m['akses'] === 'admin') <span class="text-[10px] uppercase tracking-wider text-gray-400">admin</span>@endif
                         </label>
                     @endforeach
                 </div>
-                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 mt-4">Pilihan menu untuk Role User</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    @foreach ($menuListUser as $m)
-                        <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-                            <input type="checkbox" name="menu_access[]" value="{{ $m['key'] }}"
-                                {{ in_array($m['key'], old('menu_access', $user->menu_access ?? [])) ? 'checked' : '' }}
-                                class="rounded border-gray-400 dark:border-gray-600 text-[#E62C37] focus:ring-[#E62C37]/50 bg-white dark:bg-gray-800">
-                            {{ $m['label'] }}
-                        </label>
-                    @endforeach
-                </div>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">Dashboard & profil selalu tersedia. Menu "Kelola Akun User" hanya untuk akun dengan akses penuh. Centang daftar sesuai role yang dipilih di atas.</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">Role Admin = semua menu otomatis terbuka. Role User = menu bertanda "admin" tidak tersedia. Dashboard & profil selalu tersedia.</p>
             </div>
 
             <div class="border-t border-gray-300 dark:border-gray-700 pt-6">
@@ -145,4 +126,26 @@
             </div>
         </form>
     </div>
+    <script>
+        // Role menentukan keadaan checkbox hak akses: Admin = semua tercentang &
+        // terkunci (akses penuh); User = menu eksklusif admin terkunci tertutup.
+        function terapkanAkses(role) {
+            document.querySelectorAll('.menu-akses-item').forEach(function (cb) {
+                const adminOnly = cb.dataset.akses === 'admin';
+                if (role === 'admin') {
+                    cb.checked = true;
+                    cb.disabled = true;
+                } else {
+                    cb.disabled = adminOnly;
+                    if (adminOnly) cb.checked = false;
+                }
+            });
+        }
+        (function () {
+            const roleEl = document.getElementById('role');
+            if (!roleEl) return;
+            terapkanAkses(roleEl.value);
+            roleEl.addEventListener('change', function () { terapkanAkses(roleEl.value); });
+        })();
+    </script>
 @endsection

@@ -13,7 +13,11 @@ class DashboardController extends Controller
         $vaksinJatuhTempo = \App\Models\Vaksinasi::vaksinTerakhirPerBurung()
             ->filter(fn ($v) => $v->sudah_jatuh_tempo);
 
-        return view('admin.index', compact('vaksinJatuhTempo'));
+        // Pintu tunggal angka agregat (tersaring per hak akses + cache 60 detik)
+        $stats = \App\Support\DashboardStats::untuk(auth()->user());
+        $usersOnline = \App\Models\User::where('last_active_at', '>=', now()->subMinutes(5))->count();
+
+        return view('admin.index', compact('vaksinJatuhTempo', 'stats', 'usersOnline'));
     }
 
     public function ping(Request $request)

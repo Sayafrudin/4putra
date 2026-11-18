@@ -133,6 +133,66 @@ class KeuanganTabTest extends TestCase
         $this->assertDatabaseMissing('financial_tab_costs', ['id' => $costId]);
     }
 
+    public function test_hapus_tab_dengan_hapus_semua_transaksi_sekali_klik(): void
+    {
+        $tab = FinancialTab::create(['nama' => 'uji-tab-massal']);
+        foreach ([1, 2, 3] as $i) {
+            Keuangan::create(['tipe' => 'keluar', 'kategori' => 'Operasional', 'financial_tab_id' => $tab->id, 'jumlah' => 1000 * $i, 'tanggal' => '2026-11-05', 'keterangan' => 'uji-keu-massal-'.$i]);
+        }
+
+        $this->actingAs($this->admin)->deleteJson("/admin/keuangan/tabs/{$tab->id}?hapus_semua=1")
+            ->assertOk()
+            ->assertJson(['ok' => true]);
+
+        $this->assertDatabaseMissing('financial_tabs', ['id' => $tab->id]);
+        $this->assertDatabaseMissing('keuangans', ['keterangan' => 'uji-keu-massal-1']);
+        $this->assertDatabaseMissing('keuangans', ['keterangan' => 'uji-keu-massal-3']);
+    }
+
+    public function test_edit_transaksi_tersimpan_dan_divalidasi(): void
+    {
+        $trx = Keuangan::create(['tipe' => 'keluar', 'kategori' => 'Operasional', 'jumlah' => 100000, 'tanggal' => '2026-11-05', 'keterangan' => 'uji-keu-edit']);
+
+        // Perbaikan typo: kategori & jumlah diubah
+        $this->actingAs($this->admin)->putJson("/admin/keuangan/{$trx->id}", [
+            'tipe' => 'keluar', 'kategori' => 'Gaji', 'jumlah' => 200000,
+            'tanggal' => '2026-11-06', 'keterangan' => 'uji-keu-edit-2',
+        ])->assertOk()->assertJson(['ok' => true]);
+
+        $this->assertDatabaseHas('keuangans', [
+            'id' => $trx->id, 'kategori' => 'Gaji', 'jumlah' => '200000.00', 'tanggal' => '2026-11-06',
+        ]);
+
+        // Tanggal masa depan (di luar batas WIB) tetap ditolak saat edit
+        $besok = now('Asia/Jakarta')->addDay()->toDateString();
+        $this->actingAs($this->admin)->putJson("/admin/keuangan/{$trx->id}", [
+            'tipe' => 'keluar', 'kategori' => 'Gaji', 'jumlah' => 200000,
+            'tanggal' => $besok, 'keterangan' => 'uji-keu-edit-3',
+        ])->assertStatus(422);
+
+        // Tipe tidak valid ditolak
+        $this->actingAs($this->admin)->putJson("/admin/keuangan/{$trx->id}", [
+            'tipe' => 'urpal', 'kategori' => 'Gaji', 'jumlah' => 200000,
+            'tanggal' => '2026-11-06', 'keterangan' => 'uji-keu-edit-4',
+        ])->assertStatus(422);
+    }
+
+    public function test_edit_transaksi_transfer_ditolak(): void
+    {
+        $tujuan = FinancialTab::create(['nama' => 'uji-tab-edit-transfer']);
+        Keuangan::create(['tipe' => 'masuk', 'kategori' => 'Penjualan', 'jumlah' => 50000000, 'tanggal' => '2026-11-01', 'keterangan' => 'uji-keu-edit-saldo']);
+
+        $res = $this->actingAs($this->admin)->postJson('/admin/keuangan/transfer', [
+            'dari' => 'kas_umum', 'ke' => $tujuan->id, 'nominal' => 15000000, 'keterangan' => 'uji-transfer-edit',
+        ])->assertOk();
+        $this->transferIds[] = $res->json('transfer_id');
+
+        $keluar = Keuangan::where('tipe', 'keluar')->where('transfer_id', $res->json('transfer_id'))->first();
+        $this->actingAs($this->admin)->putJson("/admin/keuangan/{$keluar->id}", [
+            'tipe' => 'keluar', 'kategori' => 'Gaji', 'jumlah' => 1, 'tanggal' => '2026-11-06',
+        ])->assertStatus(422)->assertJson(['ok' => false]);
+    }
+
     public function test_hapus_tab_diblok_selama_ada_transaksi(): void
     {
         $tab = FinancialTab::create(['nama' => 'uji-tab-blok']);
@@ -156,8 +216,8 @@ class KeuanganTabTest extends TestCase
         $this->transferIds[] = $res->json('transfer_id');
         $this->transferIds[] = $res->json('transfer_id');
 
-        // Kas Umum berkurang: baris keluar berkategori Transfer
-        $keluar = Keuangan::where('tipe', 'keluar')->where('kategori', 'Transfer')->first();
+        // Kas Umum berkurang: baris keluar berkategori Transfer (milik pasangan test ini)
+        $keluar = Keuangan::where('tipe', 'keluar')->where('transfer_id', $res->json('transfer_id'))->first();
         $this->assertNotNull($keluar);
         $this->assertSame('15000000.00', (string) $keluar->jumlah);
         $this->assertNull($keluar->financial_tab_id);

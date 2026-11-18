@@ -66,6 +66,7 @@ class KeuanganController extends Controller
             'kategoriAktif' => $kategori,
             'tabs' => $tabs,
             'tabAktif' => $tab,
+            'jumlahTransaksi' => $tab?->keuangans()->count() ?? 0,
             'totalBudget' => $totalBudget,
             'sisaBudget' => $sisaBudget,
         ]);
@@ -221,6 +222,38 @@ class KeuanganController extends Controller
         }
     }
 
+    public function update(Request $request, Keuangan $keuangan)
+    {
+        // Baris transfer = pasangan dua sisi: mengubah satu sisi membuat buku
+        // timpang — cukup Hapus (menghapus pasangan) atau transfer ulang.
+        if ($keuangan->transfer_id) {
+            return response()->json(['ok' => false, 'message' => 'Baris transfer tidak bisa diedit sendirian. Hapus pasangannya lalu transfer ulang.'], 422);
+        }
+
+        // Batas "hari ini" pakai WIB eksplisit (produksi UTC).
+        $hariIni = now('Asia/Jakarta')->toDateString();
+
+        $data = $request->validate([
+            'tipe' => ['required', 'in:masuk,keluar'],
+            'kategori' => ['required', 'in:'.implode(',', Keuangan::KATEGORI)],
+            'jumlah' => ['required', 'numeric', 'min:1', 'max:999999999999.99'],
+            'tanggal' => ['required', 'date', 'before_or_equal:'.$hariIni],
+            'keterangan' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        try {
+            $lama = $keuangan->jumlah_format.' ('.$keuangan->kategori.')';
+            $keuangan->update($data);
+            $this->logActivity($request, 'edit_keuangan', 'Mengubah transaksi keuangan '.$lama.' menjadi '.$keuangan->jumlah_format.' ('.$keuangan->kategori.')');
+
+            return response()->json(['ok' => true, 'message' => 'Transaksi diperbarui.']);
+        } catch (\Throwable $e) {
+            Log::error('Gagal edit keuangan', ['id' => $keuangan->id, 'error' => $e->getMessage()]);
+
+            return response()->json(['ok' => false, 'message' => 'Gagal memperbarui transaksi. Coba lagi.'], 500);
+        }
+    }
+
     // ==================== TAB PROYEK ====================
 
     public function storeTab(Request $request)
@@ -259,24 +292,28 @@ class KeuanganController extends Controller
     public function destroyTab(Request $request, FinancialTab $tab)
     {
         // Uang tidak pernah berpindah diam-diam: tab yang masih berisi
-        // transaksi TIDAK boleh dihapus — kosongkan dulu (hapus transaksi,
-        // atau transfer dana balik ke Kas Umum lalu hapus transaksinya).
+        // transaksi TIDAK boleh dihapus — kecuali admin memilih hapus massal
+        // (?hapus_semua=1): seluruh transaksi tab ikut terhapus bersama tabnya.
         $jumlahTransaksi = $tab->keuangans()->count();
-        if ($jumlahTransaksi > 0) {
+
+        if ($jumlahTransaksi > 0 && ! $request->boolean('hapus_semua')) {
             return response()->json([
                 'ok' => false,
-                'message' => "Tab \"{$tab->nama}\" masih memiliki {$jumlahTransaksi} transaksi. Hapus atau catat ulang transaksinya dulu sebelum menghapus tab.",
+                'message' => "Tab \"{$tab->nama}\" masih memiliki {$jumlahTransaksi} transaksi. Hapus satu-satu, atau pilih \"Hapus Semua + Tab\".",
             ], 422);
         }
 
         try {
-            DB::transaction(function () use ($tab) {
+            DB::transaction(function () use ($tab, $jumlahTransaksi) {
+                if ($jumlahTransaksi > 0) {
+                    $tab->keuangans()->delete();
+                }
                 // Rincian biaya ikut terhapus (FK cascade)
                 $tab->delete();
             });
-            $this->logActivity($request, 'hapus_tab_keuangan', 'Menghapus tab keuangan "'.$tab->nama.'"');
+            $this->logActivity($request, 'hapus_tab_keuangan', 'Menghapus tab keuangan "'.$tab->nama.'"'.($jumlahTransaksi > 0 ? ' beserta '.$jumlahTransaksi.' transaksinya' : ''));
 
-            return response()->json(['ok' => true, 'message' => 'Tab "'.$tab->nama.'" dihapus.']);
+            return response()->json(['ok' => true, 'message' => 'Tab "'.$tab->nama.'" dihapus.'.($jumlahTransaksi > 0 ? ' Beserta '.$jumlahTransaksi.' transaksinya.' : '')]);
         } catch (\Throwable $e) {
             Log::error('Gagal hapus tab keuangan', ['id' => $tab->id, 'error' => $e->getMessage()]);
 

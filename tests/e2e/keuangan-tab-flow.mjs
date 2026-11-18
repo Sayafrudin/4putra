@@ -128,17 +128,6 @@ try {
     // 3. Set target anggaran 200.000
     await page.fill("#budget_target", "200000");
     await page.click("#btnBudget");
-    const statusBudget = [];
-    page.on("response", async (r) => {
-        if (r.url().includes("/budget"))
-            statusBudget.push(
-                r.status() +
-                    " | URL: " +
-                    r.url() +
-                    " | " +
-                    (await r.text()).replace(/\s+/g, " ").slice(0, 120),
-            );
-    });
     let tercapai = true;
     try {
         await page.waitForFunction(
@@ -151,13 +140,13 @@ try {
     } catch {
         tercapai = false;
     }
-    assert(
-        tercapai,
-        "Total Budget = target 200.000 (status PUT budget: " +
-            statusBudget.join(",") +
-            "; pageErrors: " +
-            JSON.stringify(pageErrors) +
-            ")",
+    assert(tercapai, "Total Budget = target 200.000");
+
+
+
+
+
+
     );
 
     // 4. Tambah biaya tambahan 50.000 → total 250.000

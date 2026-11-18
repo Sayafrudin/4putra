@@ -63,7 +63,7 @@ class TelurController extends Controller
             'burung_pasangan_id' => ['required', 'integer', 'exists:burungs,id', 'different:burung_id'],
             'sesi' => ['required', 'integer', 'min:1', 'max:20'],
             'jumlah' => ['required', 'integer', 'min:1', 'max:20'],
-            'tanggal_diambil' => ['required', 'date', 'before_or_equal:today'],
+            'tanggal_diambil' => ['required', 'date', 'before_or_equal:'.now('Asia/Jakarta')->toDateString()],
             'diambil_oleh' => ['required', 'string', 'max:100'],
             'kondisi' => ['required', 'string', 'max:200'],
             'catatan' => ['nullable', 'string', 'max:500'],
@@ -96,7 +96,7 @@ class TelurController extends Controller
         $data = $request->validate([
             'kondisi' => ['required', 'string', 'max:200'],
             'status' => ['required', 'in:diinkubasi,menetas,dilepas'],
-            'tanggal_menetas' => ['nullable', 'required_if:status,menetas', 'date', 'before_or_equal:today'],
+            'tanggal_menetas' => ['nullable', 'required_if:status,menetas', 'date', 'before_or_equal:'.now('Asia/Jakarta')->toDateString()],
             'catatan' => ['nullable', 'string', 'max:500'],
         ]);
 

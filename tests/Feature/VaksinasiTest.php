@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Burung;
 use App\Models\User;
 use App\Models\Vaksinasi;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
@@ -72,6 +73,29 @@ class VaksinasiTest extends TestCase
             'jenis' => 'uji-vaksin-baru',
             'tanggal_vaksin' => '2026-11-01',
         ]);
+    }
+
+    public function test_tanggal_hari_ini_diterima_pada_dini_hari_wib(): void
+    {
+        // Simulasi produksi (UTC): 18 Nov 01:00 WIB = 17 Nov 18:00 UTC.
+        Carbon::setTestNow(Carbon::parse('2026-11-17 18:00', 'UTC'));
+        $tzLama = date_default_timezone_get();
+        date_default_timezone_set('UTC');
+
+        try {
+            $burung = $this->burungUji();
+            $this->actingAs($this->admin)
+                ->postJson('/admin/vaksinasi', [
+                    'burung_id' => $burung->id,
+                    'jenis' => 'uji-vaksin-baru',
+                    'tanggal_vaksin' => '2026-11-18',
+                ])->assertOk();
+
+            $this->assertDatabaseHas('vaksinasis', ['burung_id' => $burung->id, 'tanggal_vaksin' => '2026-11-18']);
+        } finally {
+            Carbon::setTestNow();
+            date_default_timezone_set($tzLama);
+        }
     }
 
     public function test_burung_vaksin_lama_muncul_jatuh_tempo_dan_yang_baru_tidak(): void

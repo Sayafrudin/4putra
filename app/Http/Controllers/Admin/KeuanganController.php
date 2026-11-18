@@ -78,11 +78,15 @@ class KeuanganController extends Controller
 
     public function store(Request $request)
     {
+        // Batas "hari ini" pakai WIB eksplisit: APP_TIMEZONE=UTC membuat jam 00:00-06:59 WIB
+        // masih dianggap kemarin oleh aturan before_or_equal:today bawaan.
+        $hariIni = now('Asia/Jakarta')->toDateString();
+
         $data = $request->validate([
             'tipe' => ['required', 'in:masuk,keluar'],
             'kategori' => ['required', 'in:'.implode(',', Keuangan::KATEGORI)],
             'jumlah' => ['required', 'numeric', 'min:1', 'max:999999999999.99'],
-            'tanggal' => ['required', 'date', 'before_or_equal:today'],
+            'tanggal' => ['required', 'date', 'before_or_equal:'.$hariIni],
             'keterangan' => ['nullable', 'string', 'max:500'],
         ]);
 

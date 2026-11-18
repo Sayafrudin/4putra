@@ -141,7 +141,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Tanggal Vaksin</label>
-                    <input type="date" name="tanggal_vaksin" id="tambah_tanggal" max="{{ now()->toDateString() }}"
+                    <input type="date" name="tanggal_vaksin" id="tambah_tanggal" max="{{ now('Asia/Jakarta')->toDateString() }}"
                         class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                     <p class="text-xs text-red-400 mt-1 hidden" id="err_tambah_tanggal"></p>
                 </div>

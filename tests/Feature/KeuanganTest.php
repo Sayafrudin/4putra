@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Keuangan;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
@@ -63,6 +64,36 @@ class KeuanganTest extends TestCase
         $this->assertDatabaseHas('keuangans', [
             'tipe' => 'masuk', 'kategori' => 'Pembangunan', 'jumlah' => '50000000.00',
         ]);
+    }
+
+    public function test_tanggal_hari_ini_diterima_pada_dini_hari_wib(): void
+    {
+        // Simulasi produksi (Vercel = APP_TIMEZONE UTC): instan 18 Nov 01:00 WIB = 17 Nov 18:00 UTC.
+        // "today" server versi UTC = 17 Nov → input tanggal 18 Nov ditolak oleh before_or_equal:today lama.
+        Carbon::setTestNow(Carbon::parse('2026-11-17 18:00', 'UTC'));
+        $tzLama = date_default_timezone_get();
+        date_default_timezone_set('UTC');
+
+        try {
+            $this->actingAs($this->admin)
+                ->postJson('/admin/keuangan', [
+                    'tipe' => 'masuk', 'kategori' => 'Gaji', 'jumlah' => 50000000,
+                    'tanggal' => '2026-11-18', 'keterangan' => 'uji-keu-malam-masuk',
+                ])->assertOk();
+
+            // Uang keluar di hari yang sama setelah uang masuk juga wajib diterima.
+            $this->actingAs($this->admin)
+                ->postJson('/admin/keuangan', [
+                    'tipe' => 'keluar', 'kategori' => 'Operasional', 'jumlah' => 250000,
+                    'tanggal' => '2026-11-18', 'keterangan' => 'uji-keu-malam-keluar',
+                ])->assertOk();
+
+            $this->assertDatabaseHas('keuangans', ['tipe' => 'masuk', 'tanggal' => '2026-11-18']);
+            $this->assertDatabaseHas('keuangans', ['tipe' => 'keluar', 'tanggal' => '2026-11-18']);
+        } finally {
+            Carbon::setTestNow();
+            date_default_timezone_set($tzLama);
+        }
     }
 
     public function test_ringkasan_masuk_keluar_saldo_dihitung_dari_database(): void

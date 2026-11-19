@@ -48,7 +48,7 @@ return [
             'patterns' => ['admin.kandang.*', 'admin.burung.*'],
         ],
         'vaksinasi' => [
-            'label' => 'Vaksinasi',
+            'label' => 'Obat & Vaksinasi',
             'akses' => 'semua',
             'patterns' => ['admin.vaksinasi.*'],
         ],

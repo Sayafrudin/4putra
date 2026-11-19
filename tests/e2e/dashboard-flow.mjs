@@ -104,28 +104,30 @@ try {
         await page.isVisible("text=Total Burung"),
         "D1a kartu Total Burung tampil",
     );
+    // Data keuangan sensitif (Saldo Kas, Arus Kas, Transaksi Terbaru) DIHAPUS
+    // dari dashboard untuk semua role — hanya farm stats + komposisi burung.
     assert(
-        await page.isVisible("text=Saldo Kas Umum"),
-        "D1b kartu Saldo Kas Umum tampil",
+        !(await page.isVisible("text=Saldo Kas Umum")),
+        "D1b kartu Saldo Kas Umum TIDAK tampil (data sensitif dihapus)",
     );
     assert(
-        await page.isVisible("text=Arus Kas 30 Hari"),
-        "D1c judul grafik kas tampil",
+        !(await page.isVisible("text=Arus Kas 30 Hari")),
+        "D1c judul grafik kas TIDAK tampil (data sensitif dihapus)",
     );
     await sleep(1200); // chart.js lazy chunk terunduh + canvas dirender
     const canvasTerisi = await page.evaluate(() => {
-        return ["grafik-kas", "grafik-fase", "grafik-spesies"].map((id) => {
+        return ["grafik-fase", "grafik-spesies"].map((id) => {
             const el = document.getElementById(id);
             return el && el.width > 0 && el.height > 0;
         });
     });
     assert(
         canvasTerisi.every(Boolean),
-        `D1d tiga canvas grafik terisi (${JSON.stringify(canvasTerisi)})`,
+        `D1d dua canvas grafik terisi (${JSON.stringify(canvasTerisi)})`,
     );
     assert(
-        await page.isVisible("text=Transaksi Terbaru"),
-        "D1e panel transaksi terbaru tampil",
+        !(await page.isVisible("text=Transaksi Terbaru")),
+        "D1e panel transaksi terbaru TIDAK tampil (data sensitif dihapus)",
     );
     assert(
         pageErrors.length === 0,

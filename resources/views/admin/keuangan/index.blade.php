@@ -213,7 +213,7 @@
                         <th class="px-6 py-4 w-40">Jumlah</th>
                         <th class="px-6 py-4 w-32">Tanggal</th>
                         <th class="px-6 py-4">Keterangan</th>
-                        <th class="px-6 py-4 w-24 text-right">Aksi</th>
+                        <th class="px-6 py-4 w-32 text-right">Aksi</th>
                     </tr>
                 </thead>
                 <tbody data-admin-list class="divide-y divide-gray-200 dark:divide-gray-800">
@@ -231,16 +231,18 @@
                             <td class="px-6 py-4 text-sm tabular-nums">{{ $t->tanggal->translatedFormat('d M Y') }}</td>
                             <td class="px-6 py-4 text-sm">{{ $t->keterangan }}</td>
                             <td class="px-6 py-4 text-right">
-                                @if (! $t->transfer_id)
-                                    <button onclick='bukaModalEdit({{ $t->id }}, "{{ $t->tipe }}", "{{ addslashes($t->kategori) }}", "{{ $t->jumlah }}", "{{ $t->tanggal->toDateString() }}", "{{ addslashes($t->keterangan ?? '') }}")'
-                                        class="px-3 py-1.5 text-xs font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg hover:bg-blue-500/20 hover:border-blue-500/40 transition-colors mr-1.5">
-                                        Edit
+                                <div class="flex items-center justify-end gap-2">
+                                    @if (! $t->transfer_id)
+                                        <button onclick='bukaModalEdit({{ $t->id }}, "{{ $t->tipe }}", "{{ addslashes($t->kategori) }}", "{{ $t->jumlah }}", "{{ $t->tanggal->toDateString() }}", "{{ addslashes($t->keterangan ?? '') }}")'
+                                            class="px-3 py-1.5 text-xs font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg hover:bg-blue-500/20 hover:border-blue-500/40 transition-colors">
+                                            Edit
+                                        </button>
+                                    @endif
+                                    <button onclick='bukaModalHapus({{ $t->id }}, "{{ addslashes($t->jumlah_format) }}", "{{ addslashes($t->kategori) }}")'
+                                        class="px-3 py-1.5 text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg hover:bg-red-500/20 hover:border-red-500/40 transition-colors">
+                                        Hapus
                                     </button>
-                                @endif
-                                <button onclick='bukaModalHapus({{ $t->id }}, "{{ addslashes($t->jumlah_format) }}", "{{ addslashes($t->kategori) }}")'
-                                    class="px-3 py-1.5 text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg hover:bg-red-500/20 hover:border-red-500/40 transition-colors">
-                                    Hapus
-                                </button>
+                                </div>
                             </td>
                         </tr>
                     @empty

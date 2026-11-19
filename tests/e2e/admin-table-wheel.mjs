@@ -10,21 +10,27 @@
  * Prasyarat: tidak ada (spawn server sendiri, port 8026, read-only).
  * Jalankan: node tests/e2e/admin-table-wheel.mjs
  */
-import { chromium } from 'playwright-core';
-import { spawn, execSync } from 'node:child_process';
-import http from 'node:http';
+import { chromium } from "playwright-core";
+import { spawn, execSync } from "node:child_process";
+import http from "node:http";
 
 const PORT = 8026;
 const BASE = `http://127.0.0.1:${PORT}`;
-const ADMIN = { email: 'admin@4putra.com', password: 'password123' };
+const ADMIN = { email: "e2e-wheel@4putra.test", password: "E2eWheel123!" };
 
 // Watchdog anti-stuck: proses wajib mati sendiri maksimal 5 menit
-setTimeout(() => { console.log('WATCHDOG: melewati 5 menit, proses dihentikan paksa'); process.exit(1); }, 5 * 60 * 1000).unref();
+setTimeout(
+    () => {
+        console.log("WATCHDOG: melewati 5 menit, proses dihentikan paksa");
+        process.exit(1);
+    },
+    5 * 60 * 1000,
+).unref();
 
 let failures = 0;
 function assert(cond, label) {
     const ok = !!cond;
-    console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}`);
+    console.log(`${ok ? "PASS" : "FAIL"}  ${label}`);
     if (!ok) failures++;
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -35,9 +41,18 @@ function waitForServer(retries = 30) {
             http.get(`${BASE}/login`, (res) => {
                 res.resume();
                 if (res.statusCode === 200) return resolve(200);
-                if (n <= 0) return reject(new Error(`Server tidak siap (terakhir: ${res.statusCode})`));
+                if (n <= 0)
+                    return reject(
+                        new Error(
+                            `Server tidak siap (terakhir: ${res.statusCode})`,
+                        ),
+                    );
                 setTimeout(() => tryOnce(n - 1), 1000);
-            }).on('error', () => n <= 0 ? reject(new Error('Server tidak siap')) : setTimeout(() => tryOnce(n - 1), 1000));
+            }).on("error", () =>
+                n <= 0
+                    ? reject(new Error("Server tidak siap"))
+                    : setTimeout(() => tryOnce(n - 1), 1000),
+            );
         };
         tryOnce(retries);
     });
@@ -48,43 +63,70 @@ let browser = null;
 
 function matikanServer() {
     if (!server) return;
-    try { execSync(`taskkill /pid ${server.pid} /T /F`, { stdio: 'ignore' }); }
-    catch { try { server.kill(); } catch { /* sudah mati */ } }
+    try {
+        execSync(`taskkill /pid ${server.pid} /T /F`, { stdio: "ignore" });
+    } catch {
+        try {
+            server.kill();
+        } catch {
+            /* sudah mati */
+        }
+    }
     server = null;
 }
 
 try {
-    server = spawn('php', ['artisan', 'serve', '--host=127.0.0.1', `--port=${PORT}`], {
-        env: { ...process.env, PHP_CLI_SERVER_WORKERS: '4' },
-        stdio: 'ignore',
-    });
+    // Buat user uji (tidak bergantung user nyata)
+    execSync(
+        `php artisan tinker --execute="App\\Models\\User::updateOrCreate(['email'=>'${ADMIN.email}'],['name'=>'E2E Wheel','password'=>bcrypt('${ADMIN.password}'),'role'=>'admin']); echo 'user siap';"`,
+        { stdio: "ignore", timeout: 60000 },
+    );
+    server = spawn(
+        "php",
+        ["artisan", "serve", "--host=127.0.0.1", `--port=${PORT}`],
+        {
+            env: { ...process.env, PHP_CLI_SERVER_WORKERS: "4" },
+            stdio: "ignore",
+        },
+    );
     await waitForServer();
 
-    browser = await chromium.launch({ channel: 'msedge', headless: true });
-    const ctx = await browser.newContext({ viewport: { width: 1024, height: 768 } });
+    browser = await chromium.launch({ channel: "msedge", headless: true });
+    const ctx = await browser.newContext({
+        viewport: { width: 1024, height: 768 },
+    });
     const page = await ctx.newPage();
 
     // Login admin (field readonly+onfocus: klik dulu agar readonly hilang)
-    await page.goto(`${BASE}/login`, { waitUntil: 'load' });
-    await page.click('#username');
-    await page.fill('#username', ADMIN.email.split('@')[0]);
-    await page.click('#password');
-    await page.fill('#password', ADMIN.password);
+    await page.goto(`${BASE}/login`, { waitUntil: "load" });
+    await page.click("#username");
+    await page.fill("#username", ADMIN.email.split("@")[0]);
+    await page.click("#password");
+    await page.fill("#password", ADMIN.password);
     await page.click('button[type="submit"]');
-    await page.waitForURL(`${BASE.replace(/\/$/, '')}/admin`, { timeout: 15000 });
-    assert(true, 'A0 login admin → /admin');
+    await page.waitForURL(`${BASE.replace(/\/$/, "")}/admin`, {
+        timeout: 15000,
+    });
+    assert(true, "A0 login admin → /admin");
 
     // Cari container tabel admin yang benar-benar overflow
     async function findTableScroll(path) {
-        await page.goto(`${BASE}${path}`, { waitUntil: 'load' });
+        await page.goto(`${BASE}${path}`, { waitUntil: "load" });
         const idx = await page.evaluate(() =>
-            [...document.querySelectorAll('.overflow-x-auto')].findIndex((el) => el.scrollWidth > el.clientWidth)
+            [...document.querySelectorAll(".overflow-x-auto")].findIndex(
+                (el) => el.scrollWidth > el.clientWidth,
+            ),
         );
-        return idx < 0 ? null : page.locator('.overflow-x-auto').nth(idx);
+        return idx < 0 ? null : page.locator(".overflow-x-auto").nth(idx);
     }
 
-    const scroller = (await findTableScroll('/admin/achievements')) || (await findTableScroll('/admin/collections'));
-    assert(!!scroller, 'A1 container tabel admin (.overflow-x-auto) overflow horizontal');
+    const scroller =
+        (await findTableScroll("/admin/achievements")) ||
+        (await findTableScroll("/admin/collections"));
+    assert(
+        !!scroller,
+        "A1 container tabel admin (.overflow-x-auto) overflow horizontal",
+    );
 
     if (scroller) {
         await scroller.scrollIntoViewIfNeeded();
@@ -92,11 +134,14 @@ try {
         const box = await scroller.boundingBox();
         // Titik dispatch WAJIB di dalam viewport (container tabel bisa ribuan px tinggi)
         const cx = Math.round(box.x + box.width / 2);
-        const cy = Math.max(60, Math.min(Math.round(box.y + box.height / 2), 728));
+        const cy = Math.max(
+            60,
+            Math.min(Math.round(box.y + box.height / 2), 728),
+        );
         const cdp = await ctx.newCDPSession(page);
         const wheel = (deltaY) =>
-            cdp.send('Input.dispatchMouseEvent', {
-                type: 'mouseWheel',
+            cdp.send("Input.dispatchMouseEvent", {
+                type: "mouseWheel",
                 x: cx,
                 y: cy,
                 deltaX: 0,
@@ -108,58 +153,87 @@ try {
         await wheel(480);
         await sleep(400);
         const after = await scroller.evaluate((el) => el.scrollLeft);
-        assert(after > before, `A2 wheel di atas tabel → scroll kanan (${before} → ${after})`);
+        assert(
+            after > before,
+            `A2 wheel di atas tabel → scroll kanan (${before} → ${after})`,
+        );
 
         // Page scroll terjadi di <main> (shell h-screen overflow-hidden), bukan window
-        const getMainY = () => page.evaluate(() => document.querySelector('main').scrollTop);
+        const getMainY = () =>
+            page.evaluate(() => document.querySelector("main").scrollTop);
 
         // A3: di tepi kanan → page TETAP (wheel murni milik tabel, page terkunci)
-        await scroller.evaluate((el) => { el.scrollLeft = el.scrollWidth; });
-        await page.evaluate(() => { document.querySelector('main').scrollTop = 0; });
+        await scroller.evaluate((el) => {
+            el.scrollLeft = el.scrollWidth;
+        });
+        await page.evaluate(() => {
+            document.querySelector("main").scrollTop = 0;
+        });
         await sleep(300);
         const pageY0 = await getMainY();
         await wheel(480);
         await sleep(400);
         const pageY1 = await getMainY();
-        const edgeLeft = await scroller.evaluate((el) => el.scrollLeft >= el.scrollWidth - el.clientWidth - 1);
-        assert(pageY1 === pageY0 && edgeLeft, `A3 di tepi kanan page terkunci, tabel tetap di tepi (main ${pageY0} → ${pageY1})`);
+        const edgeLeft = await scroller.evaluate(
+            (el) => el.scrollLeft >= el.scrollWidth - el.clientWidth - 1,
+        );
+        assert(
+            pageY1 === pageY0 && edgeLeft,
+            `A3 di tepi kanan page terkunci, tabel tetap di tepi (main ${pageY0} → ${pageY1})`,
+        );
 
         // A4: di tepi kiri + wheel ke atas → page TETAP
-        await scroller.evaluate((el) => { el.scrollLeft = 0; });
+        await scroller.evaluate((el) => {
+            el.scrollLeft = 0;
+        });
         await sleep(200);
         const pageY2 = await getMainY();
         await wheel(-480);
         await sleep(400);
         const pageY3 = await getMainY();
-        assert(pageY3 === pageY2, `A4 di tepi kiri page terkunci (main ${pageY2} → ${pageY3})`);
+        assert(
+            pageY3 === pageY2,
+            `A4 di tepi kiri page terkunci (main ${pageY2} → ${pageY3})`,
+        );
 
         // A6: wheel DI LUAR tabel → page scroll normal lagi
-        const box6 = await scroller.boundingBox();
+        // (titik wheel: judul halaman — area konten main, bukan header — header
+        //  adalah sibling main, bukan ancestor, jadi wheel di sana tak scroll main)
+        const heading = page.locator("main h1, main h2").first();
+        const box6 = await heading.boundingBox();
         const cdp6 = await ctx.newCDPSession(page);
-        await page.evaluate(() => { document.querySelector('main').scrollTop = 0; });
+        await page.evaluate(() => {
+            document.querySelector("main").scrollTop = 0;
+        });
         await sleep(300);
-        await cdp6.send('Input.dispatchMouseEvent', {
-            type: 'mouseWheel',
+        await cdp6.send("Input.dispatchMouseEvent", {
+            type: "mouseWheel",
             x: Math.round(box6.x + box6.width / 2),
-            y: Math.max(60, Math.min(Math.round(box6.y - 40), 700)), // area header, di luar tabel
+            y: Math.max(
+                80,
+                Math.min(Math.round(box6.y + box6.height / 2), 700),
+            ),
             deltaX: 0,
             deltaY: 480,
         });
         await sleep(400);
         const pageY6 = await getMainY();
-        assert(pageY6 > 0, `A6 wheel di luar tabel → page scroll normal (main 0 → ${pageY6})`);
+        assert(
+            pageY6 > 0,
+            `A6 wheel di luar tabel → page scroll normal (main 0 → ${pageY6})`,
+        );
     }
 
     // A5: container tabel lain juga ter-scroll (collections, sudah login)
-    const scroller2 = await findTableScroll('/admin/collections');
+    const scroller2 = await findTableScroll("/admin/collections");
     if (scroller2) {
         await scroller2.scrollIntoViewIfNeeded();
         await sleep(300);
         const b2 = await scroller2.boundingBox();
         const before2 = await scroller2.evaluate((el) => el.scrollLeft);
         const cdp2 = await ctx.newCDPSession(page);
-        await cdp2.send('Input.dispatchMouseEvent', {
-            type: 'mouseWheel',
+        await cdp2.send("Input.dispatchMouseEvent", {
+            type: "mouseWheel",
             x: Math.round(b2.x + b2.width / 2),
             y: Math.max(60, Math.min(Math.round(b2.y + b2.height / 2), 728)),
             deltaX: 0,
@@ -167,18 +241,40 @@ try {
         });
         await sleep(400);
         const after2 = await scroller2.evaluate((el) => el.scrollLeft);
-        assert(after2 > before2, `A5 wheel di tabel collections → scroll kanan (${before2} → ${after2})`);
+        assert(
+            after2 > before2,
+            `A5 wheel di tabel collections → scroll kanan (${before2} → ${after2})`,
+        );
     } else {
-        assert(true, 'A5 tabel collections tidak overflow (lewati — tabel muat penuh)');
+        assert(
+            true,
+            "A5 tabel collections tidak overflow (lewati — tabel muat penuh)",
+        );
     }
 } catch (err) {
     failures++;
     console.log(`FAIL  Exception: ${err.message}`);
 } finally {
-    if (browser) { try { await browser.close(); } catch { /* sudah tertutup */ } }
+    if (browser) {
+        try {
+            await browser.close();
+        } catch {
+            /* sudah tertutup */
+        }
+    }
+    try {
+        execSync(
+            `php artisan tinker --execute="$u=App\\Models\\User::where('email','${ADMIN.email}')->first(); if($u){Illuminate\\Support\\Facades\\DB::table('sessions')->where('user_id',$u->id)->delete(); $u->delete();} echo 'bersih';"`,
+            { stdio: "ignore", timeout: 60000 },
+        );
+    } catch {
+        /* best effort */
+    }
     matikanServer();
 }
 
-console.log('='.repeat(50));
-console.log(failures === 0 ? 'SEMUA E2E BROWSER LULUS' : `${failures} E2E GAGAL`);
+console.log("=".repeat(50));
+console.log(
+    failures === 0 ? "SEMUA E2E BROWSER LULUS" : `${failures} E2E GAGAL`,
+);
 process.exit(failures === 0 ? 0 : 1);

@@ -35,6 +35,13 @@
                 </div>
             @endif
 
+            @if (session('sesi_digantikan'))
+                <div class="mb-4 p-4 bg-amber-50 border border-amber-300 text-amber-800 rounded-xl text-sm">
+                    <p class="font-bold mb-0.5">Sesi Anda Telah Digantikan</p>
+                    {{ session('sesi_digantikan') }}
+                </div>
+            @endif
+
             <a href="{{ route('auth.google.redirect') }}"
                 class="flex items-center justify-center w-full py-3 px-4 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200 mb-6">
                 <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24">

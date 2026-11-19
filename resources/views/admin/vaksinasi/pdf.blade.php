@@ -33,7 +33,7 @@
                 <p>Penangkaran Burung Paruh Bengkok Premium - Surabaya Barat</p>
             </div>
             <div class="date">
-                <div style="font-size: 14px; font-weight: 700;">LAPORAN VAKSINASI</div>
+                <div style="font-size: 14px; font-weight: 700;">LAPORAN OBAT & VAKSINASI</div>
                 <div>Dicetak: {{ now()->format('d F Y H:i') }}</div>
             </div>
         </div>
@@ -42,15 +42,15 @@
     @php($jatuhTempo = $riwayat->groupBy('burung_id')->map(fn ($grup) => $grup->first())->filter(fn ($v) => $v->sudah_jatuh_tempo))
     <div class="summary">
         <div class="summary-card">
-            <div class="label">Total Catatan Vaksinasi</div>
+            <div class="label">Total Catatan</div>
             <div class="value">{{ $riwayat->count() }}</div>
         </div>
         <div class="summary-card">
-            <div class="label">Burung Tervaksin</div>
+            <div class="label">Burung Tertangani</div>
             <div class="value">{{ $riwayat->groupBy('burung_id')->count() }}</div>
         </div>
         <div class="summary-card">
-            <div class="label">Perlu Vaksin Ulang (booster bulanan)</div>
+            <div class="label">Perlu Ulang (suntik 1 tahun / oral 3 bulan)</div>
             <div class="value {{ $jatuhTempo->isNotEmpty() ? 'red' : '' }}">{{ $jatuhTempo->count() }} burung</div>
         </div>
     </div>
@@ -61,9 +61,11 @@
                 <tr>
                     <th>No</th>
                     <th>Burung</th>
-                    <th>Jenis Vaksin</th>
+                    <th>Jenis</th>
+                    <th>Metode</th>
+                    <th>Dosis</th>
                     <th>Tanggal</th>
-                    <th>Status Booster</th>
+                    <th>Status Ulang</th>
                 </tr>
             </thead>
             <tbody>
@@ -75,13 +77,15 @@
                             <div style="color: #888; font-size: 10px;">{{ $v->burung->spesies }}{{ $v->burung->kandang ? ' · Kandang '.$v->burung->kandang->label : '' }}</div>
                         </td>
                         <td>{{ $v->jenis }}</td>
+                        <td>{{ $v->metode === 'oral' ? 'Oral' : 'Suntik' }}</td>
+                        <td>{{ $v->dosis ?? '—' }}</td>
                         <td>{{ $v->tanggal_vaksin->format('d/m/Y') }}</td>
                         <td style="font-weight: 600; color: {{ $v->sudah_jatuh_tempo ? '#E62C37' : '#16a34a' }};">
-                            {{ $v->sudah_jatuh_tempo ? 'Perlu vaksin ulang' : 'Masih terlindungi' }}
+                            {{ $v->sudah_jatuh_tempo ? 'Perlu ulang' : 'Terlindungi' }}
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="5" style="text-align: center; padding: 30px; color: #888;">Belum ada catatan vaksinasi</td></tr>
+                    <tr><td colspan="7" style="text-align: center; padding: 30px; color: #888;">Belum ada catatan</td></tr>
                 @endforelse
             </tbody>
         </table>

@@ -49,6 +49,7 @@ class KandangController extends Controller
             'spesies' => ['required', 'string', 'max:100'],
             'fase' => ['required', 'in:anakan,dewasa'],
             'gender' => ['nullable', 'in:jantan,betina'],
+            'nomor_ring' => ['nullable', 'string', 'max:50'],
             'catatan' => ['nullable', 'string', 'max:500'],
         ]);
 
@@ -165,6 +166,7 @@ class KandangController extends Controller
             'fase' => ['required', 'in:anakan,dewasa'],
             'gender' => ['nullable', 'in:jantan,betina'],
             'nomor_dna' => ['nullable', 'string', 'max:50'],
+            'nomor_ring' => ['nullable', 'string', 'max:50'],
             'catatan' => ['nullable', 'string', 'max:500'],
         ]);
 

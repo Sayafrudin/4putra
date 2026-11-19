@@ -92,6 +92,29 @@ class TelurTest extends TestCase
         ]);
     }
 
+    public function test_jumlah_butir_dipecah_jadi_satu_baris_per_butir(): void
+    {
+        // 1 baris = 1 butir: jumlah=2 membuat 2 baris (butir_ke 1 & 2) —
+        // tiap butir termonitor sendiri (status/tanggal menetas bisa beda).
+        [$kandang, $jantan, $betina] = $this->kandangPasanganUji();
+
+        $this->actingAs($this->admin)
+            ->postJson('/admin/telur', [
+                'burung_id' => $betina->id,
+                'burung_pasangan_id' => $jantan->id,
+                'sesi' => 3,
+                'jumlah' => 2,
+                'tanggal_diambil' => now()->subDays(5)->toDateString(),
+                'diambil_oleh' => 'uji-pekerja-telur',
+                'kondisi' => 'Kondisi telur baik',
+            ])->assertOk();
+
+        $this->assertSame(2, DB::table('telurs')->where('sesi', 3)->where('diambil_oleh', 'uji-pekerja-telur')->count());
+        $this->assertSame(1, DB::table('telurs')->where('sesi', 3)->where('diambil_oleh', 'uji-pekerja-telur')->where('butir_ke', 1)->count());
+        $this->assertSame(1, DB::table('telurs')->where('sesi', 3)->where('diambil_oleh', 'uji-pekerja-telur')->where('butir_ke', 2)->count());
+        $this->assertSame(2, DB::table('telurs')->where('sesi', 3)->where('diambil_oleh', 'uji-pekerja-telur')->where('jumlah', 2)->count());
+    }
+
     public function test_tanggal_hari_ini_diterima_pada_dini_hari_wib(): void
     {
         // Simulasi produksi (UTC): 18 Nov 01:00 WIB = 17 Nov 18:00 UTC.

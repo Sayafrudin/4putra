@@ -7,7 +7,6 @@ use App\Models\FinancialTab;
 use App\Models\FinancialTabCost;
 use App\Models\Keuangan;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -132,7 +131,6 @@ class KeuanganController extends Controller
         ]);
 
         try {
-            Cache::forget('dashboard.stats');
             $trx = Keuangan::create($data);
             $this->logActivity($request, 'tambah_keuangan', 'Mencatat keuangan '.$data['tipe'].' '.$trx->jumlah_format.' ('.$data['kategori'].')');
 
@@ -156,7 +154,6 @@ class KeuanganController extends Controller
             } else {
                 $keuangan->delete();
             }
-            Cache::forget('dashboard.stats');
             $this->logActivity($request, 'hapus_keuangan', 'Menghapus transaksi keuangan '.$info);
 
             return response()->json(['ok' => true, 'message' => 'Transaksi dihapus.'.($keuangan->transfer_id ? ' Sisi pasangannya pada tab tujuan/asal ikut terhapus.' : '')]);
@@ -214,7 +211,6 @@ class KeuanganController extends Controller
                 'jumlah' => $data['nominal'], 'tanggal' => $hariIni,
                 'keterangan' => 'Dari '.$namaAsal.($catatan ? ' — '.$catatan : ''),
             ]);
-            Cache::forget('dashboard.stats');
 
             $this->logActivity($request, 'transfer_dana', 'Transfer dana Rp '.number_format((float) $data['nominal'], 0, ',', '.').' dari '.$namaAsal.' ke '.$tujuan->nama);
 
@@ -248,7 +244,6 @@ class KeuanganController extends Controller
         try {
             $lama = $keuangan->jumlah_format.' ('.$keuangan->kategori.')';
             $keuangan->update($data);
-            Cache::forget('dashboard.stats');
             $this->logActivity($request, 'edit_keuangan', 'Mengubah transaksi keuangan '.$lama.' menjadi '.$keuangan->jumlah_format.' ('.$keuangan->kategori.')');
 
             return response()->json(['ok' => true, 'message' => 'Transaksi diperbarui.']);
@@ -316,7 +311,6 @@ class KeuanganController extends Controller
                 // Rincian biaya ikut terhapus (FK cascade)
                 $tab->delete();
             });
-            Cache::forget('dashboard.stats');
             $this->logActivity($request, 'hapus_tab_keuangan', 'Menghapus tab keuangan "'.$tab->nama.'"'.($jumlahTransaksi > 0 ? ' beserta '.$jumlahTransaksi.' transaksinya' : ''));
 
             return response()->json(['ok' => true, 'message' => 'Tab "'.$tab->nama.'" dihapus.'.($jumlahTransaksi > 0 ? ' Beserta '.$jumlahTransaksi.' transaksinya.' : '')]);

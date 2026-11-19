@@ -34,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\AdminHostRedirect::class,
             Localization::class,
             \App\Http\Middleware\TrackActivity::class,
+            \App\Http\Middleware\SingleSession::class,
             \App\Http\Middleware\SecurityHeaders::class,
         ]);
 

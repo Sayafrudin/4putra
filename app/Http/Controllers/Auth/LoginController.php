@@ -42,6 +42,9 @@ class LoginController extends Controller
             // Update last_login_at langsung ke database
             User::where('id', Auth::id())->update(['last_login_at' => now()]);
 
+            // Sesi tunggal: tiket baru menggantikan tiket lama (perangkat lama dikick)
+            Auth::user()->terbitkanTiketSesi();
+
             // Non-admin tidak boleh ke /admin oleh intended (jebakan 403);
             // url.intended bisa berisi URL admin, jadi abaikan intended untuk non-admin.
             if (! Auth::user()->isAdmin()) {

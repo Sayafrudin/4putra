@@ -5,84 +5,112 @@
  * Verifikasi sisi server: 2 baris varian di DB dengan parent_id sama + badge "2 Varian".
  * Jalankan: node tests/e2e/variant-flow.mjs  (spawn server sendiri, port 8023)
  */
-import { chromium } from 'playwright-core';
-import { execSync, spawn } from 'node:child_process';
-import http from 'node:http';
+import { chromium } from "playwright-core";
+import { execSync, spawn } from "node:child_process";
+import http from "node:http";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const PORT = 8023;
 const BASE = `http://127.0.0.1:${PORT}`;
-const ADMIN = { email: 'admin@4putra.com', password: 'password123' };
-const PARENT = 'E2E Induk Varian Uji';
-const V1 = 'E2E Varian Uji 1';
-const V2 = 'E2E Varian Uji 2';
+const ADMIN = { email: "e2e-variant@4putra.test", password: "E2eVariant123!" };
+const PARENT = "E2E Induk Varian Uji";
+const V1 = "E2E Varian Uji 1";
+const V2 = "E2E Varian Uji 2";
 
 // Watchdog anti-stuck: proses wajib mati sendiri maksimal 5 menit
-setTimeout(() => { console.log('WATCHDOG: melewati 5 menit, proses dihentikan paksa'); process.exit(1); }, 5 * 60 * 1000).unref();
+setTimeout(
+    () => {
+        console.log("WATCHDOG: melewati 5 menit, proses dihentikan paksa");
+        process.exit(1);
+    },
+    5 * 60 * 1000,
+).unref();
 
 let failures = 0;
 function assert(cond, label) {
     const ok = !!cond;
-    console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}`);
+    console.log(`${ok ? "PASS" : "FAIL"}  ${label}`);
     if (!ok) failures++;
 }
 
 function tinker(code) {
-    return execSync(`php artisan tinker --execute="${code}"`, { encoding: 'utf8', timeout: 60000 }).trim();
+    return execSync(`php artisan tinker --execute="${code}"`, {
+        encoding: "utf8",
+        timeout: 60000,
+    }).trim();
 }
 function dbCount(name) {
-    const out = tinker(`echo App\\Models\\Collection::where('name','${name}')->count();`);
+    const out = tinker(
+        `echo App\\Models\\Collection::where('name','${name}')->count();`,
+    );
     return parseInt(out.trim(), 10);
 }
 function seed() {
     const id = tinker(
         `$c = App\\Models\\Collection::firstOrCreate(['name'=>'${PARENT}'],['category'=>'Uji','sort_order'=>9999]); ` +
-        `echo $c->id;`
+            `echo $c->id;`,
     );
     tinker(
-        `Illuminate\\Support\\Facades\\Cache::forget('admin.collections'); ` +
-        `Illuminate\\Support\\Facades\\Cache::forget('public.collections.v2'); echo 'ok';`
+        `App\\Models\\User::updateOrCreate(['email'=>'${ADMIN.email}'],['name'=>'E2E Variant','password'=>bcrypt('${ADMIN.password}'),'role'=>'admin']); ` +
+            `Illuminate\\Support\\Facades\\Cache::forget('admin.collections'); ` +
+            `Illuminate\\Support\\Facades\\Cache::forget('public.collections.v2'); echo 'ok';`,
     );
     return id;
 }
 function cleanupDb() {
     execSync(
         `php artisan tinker --execute="App\\Models\\Collection::whereIn('name',['${PARENT}','${V1}','${V2}'])->delete(); ` +
-        `Illuminate\\Support\\Facades\\Cache::forget('admin.collections'); ` +
-        `Illuminate\\Support\\Facades\\Cache::forget('public.collections.v2'); echo 'bersih';"`,
-        { stdio: 'ignore', timeout: 60000 }
+            `App\\Models\\User::where('email','${ADMIN.email}')->delete(); ` +
+            `Illuminate\\Support\\Facades\\Cache::forget('admin.collections'); ` +
+            `Illuminate\\Support\\Facades\\Cache::forget('public.collections.v2'); echo 'bersih';"`,
+        { stdio: "ignore", timeout: 60000 },
     );
 }
 
 async function addVariantViaModal(page, parentName, variantName) {
     // Klik "+ Varian" di baris induk -> modal create terbuka dengan induk terpilih
-    const row = page.locator('tr', { hasText: parentName }).first();
-    await row.locator('button', { hasText: 'Varian' }).first().click();
-    const info = page.locator('#create-col-parent-info');
-    await info.waitFor({ state: 'visible', timeout: 5000 });
+    const row = page.locator("tr", { hasText: parentName }).first();
+    await row.locator("button", { hasText: "Varian" }).first().click();
+    const info = page.locator("#create-col-parent-info");
+    await info.waitFor({ state: "visible", timeout: 5000 });
     const infoText = await info.textContent();
-    assert(infoText.includes(parentName), `Modal varian terbuka: "${infoText.trim()}"`);
+    assert(
+        infoText.includes(parentName),
+        `Modal varian terbuka: "${infoText.trim()}"`,
+    );
 
-    await page.fill('#create-col-name', variantName);
+    await page.fill("#create-col-name", variantName);
 
     // Foto via Dropzone: canvas 1x1 jadi JPEG, masuk antrean (tanpa auto-upload)
     await page.evaluate(async () => {
-        const blob = await new Promise((res) => document.createElement('canvas').toBlob(res, 'image/jpeg'));
-        const file = new File([blob], 'uji.jpg', { type: 'image/jpeg' });
-        Dropzone.forElement('#dz-collection-create').addFile(file);
+        const blob = await new Promise((res) =>
+            document.createElement("canvas").toBlob(res, "image/jpeg"),
+        );
+        const file = new File([blob], "uji.jpg", { type: "image/jpeg" });
+        Dropzone.forElement("#dz-collection-create").addFile(file);
     });
-    const queued = await page.evaluate(() => Dropzone.forElement('#dz-collection-create').getQueuedFiles().length);
+    const queued = await page.evaluate(
+        () =>
+            Dropzone.forElement("#dz-collection-create").getQueuedFiles()
+                .length,
+    );
     assert(queued === 1, `Foto masuk antrean Dropzone (${queued} file)`);
 
     // Klik Simpan sungguhan -> upload Cloudinary -> POST store
-    await page.click('#submit-create-collection-btn');
+    await page.click("#submit-create-collection-btn");
     // refreshAdminList menukar tbody hanya saat store sukses
     await page.waitForFunction(
-        (n) => [...document.querySelectorAll('tbody tr')].some((tr) => tr.textContent.includes(n)),
+        (n) =>
+            [...document.querySelectorAll("tbody tr")].some((tr) =>
+                tr.textContent.includes(n),
+            ),
         variantName,
-        { timeout: 30000 }
+        { timeout: 30000 },
     );
-    assert(true, `Simpan varian "${variantName}" sukses (baris muncul via refresh daftar)`);
+    assert(
+        true,
+        `Simpan varian "${variantName}" sukses (baris muncul via refresh daftar)`,
+    );
 }
 
 function waitForServer(retries = 30) {
@@ -91,9 +119,18 @@ function waitForServer(retries = 30) {
             http.get(`${BASE}/login`, (res) => {
                 res.resume();
                 if (res.statusCode === 200) return resolve(200);
-                if (n <= 0) return reject(new Error(`Server tidak siap (terakhir: ${res.statusCode})`));
+                if (n <= 0)
+                    return reject(
+                        new Error(
+                            `Server tidak siap (terakhir: ${res.statusCode})`,
+                        ),
+                    );
                 setTimeout(() => tryOnce(n - 1), 1000);
-            }).on('error', () => n <= 0 ? reject(new Error('Server tidak siap')) : setTimeout(() => tryOnce(n - 1), 1000));
+            }).on("error", () =>
+                n <= 0
+                    ? reject(new Error("Server tidak siap"))
+                    : setTimeout(() => tryOnce(n - 1), 1000),
+            );
         };
         tryOnce(retries);
     });
@@ -104,41 +141,57 @@ let browser = null;
 
 function matikanServer() {
     if (!server) return;
-    try { execSync(`taskkill /pid ${server.pid} /T /F`, { stdio: 'ignore' }); }
-    catch { try { server.kill(); } catch { /* sudah mati */ } }
+    try {
+        execSync(`taskkill /pid ${server.pid} /T /F`, { stdio: "ignore" });
+    } catch {
+        try {
+            server.kill();
+        } catch {
+            /* sudah mati */
+        }
+    }
     server = null;
 }
 
 try {
     cleanupDb();
     const parentId = seed();
-    assert(dbCount(PARENT) === 1, 'Seed: 1 koleksi induk ada di DB');
-    assert(parentId.trim() !== '', `Seed: id induk=${parentId}`);
+    assert(dbCount(PARENT) === 1, "Seed: 1 koleksi induk ada di DB");
+    assert(parentId.trim() !== "", `Seed: id induk=${parentId}`);
 
     // Server sendiri multi-worker: hindari serialisasi single-worker (delete/refresh > timeout)
-    server = spawn('php', ['artisan', 'serve', '--host=127.0.0.1', `--port=${PORT}`], {
-        env: { ...process.env, PHP_CLI_SERVER_WORKERS: '4' },
-        stdio: 'ignore',
-    });
+    server = spawn(
+        "php",
+        ["artisan", "serve", "--host=127.0.0.1", `--port=${PORT}`],
+        {
+            env: { ...process.env, PHP_CLI_SERVER_WORKERS: "4" },
+            stdio: "ignore",
+        },
+    );
     await waitForServer();
 
-    browser = await chromium.launch({ channel: 'msedge', headless: true });
+    browser = await chromium.launch({ channel: "msedge", headless: true });
     const page = await browser.newPage();
 
     // Login via form asli
-    await page.goto(`${BASE}/login`, { waitUntil: 'load' });
-    await page.click('#username');
-    await page.fill('#username', ADMIN.email.split('@')[0]);
-    await page.click('#password');
-    await page.fill('#password', ADMIN.password);
-    await page.click('button[type=submit]');
-    await page.waitForURL('**/admin**', { timeout: 15000 });
+    await page.goto(`${BASE}/login`, { waitUntil: "load" });
+    await page.click("#username");
+    await page.fill("#username", ADMIN.email.split("@")[0]);
+    await page.click("#password");
+    await page.fill("#password", ADMIN.password);
+    await page.click("button[type=submit]");
+    await page.waitForURL("**/admin**", { timeout: 15000 });
 
     // Performa: load halaman koleksi < 3 detik
     const navStart = Date.now();
-    await page.goto(`${BASE}/admin/collections`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${BASE}/admin/collections`, {
+        waitUntil: "domcontentloaded",
+    });
     const navMs = Date.now() - navStart;
-    assert(navMs < 3000, `Performa: /admin/collections load ${navMs}ms < 3000ms`);
+    assert(
+        navMs < 3000,
+        `Performa: /admin/collections load ${navMs}ms < 3000ms`,
+    );
 
     // --- VARIAN #1 ---
     await addVariantViaModal(page, PARENT, V1);
@@ -151,40 +204,64 @@ try {
     assert(dbCount(V2) === 1, `Varian #2 server: "${V2}" tersimpan di DB`);
 
     // Server: tepat 2 varian di bawah induk yang sama, kedalaman tetap 1 level
-    const nVariants = tinker(`echo App\\Models\\Collection::where('parent_id','${parentId.trim()}')->count();`);
-    assert(parseInt(nVariants.trim(), 10) === 2, `Server: 2 varian dengan parent_id sama (dapat ${nVariants.trim()})`);
+    const nVariants = tinker(
+        `echo App\\Models\\Collection::where('parent_id','${parentId.trim()}')->count();`,
+    );
+    assert(
+        parseInt(nVariants.trim(), 10) === 2,
+        `Server: 2 varian dengan parent_id sama (dapat ${nVariants.trim()})`,
+    );
 
     // Admin DOM: badge jumlah varian ter-update
     await page.waitForFunction(
-        (n) => [...document.querySelectorAll('tbody tr')].some((tr) => tr.textContent.includes(n) && tr.textContent.includes('2 Varian')),
+        (n) =>
+            [...document.querySelectorAll("tbody tr")].some(
+                (tr) =>
+                    tr.textContent.includes(n) &&
+                    tr.textContent.includes("2 Varian"),
+            ),
         PARENT,
-        { timeout: 10000 }
+        { timeout: 10000 },
     );
     assert(true, 'Admin UI: badge "2 Varian" tampil di baris induk');
 
     // --- CLEANUP via UI asli (juga menghapus aset Cloudinary) ---
     for (const nama of [V2, V1, PARENT]) {
-        const row = page.locator('tr', { hasText: nama }).first();
-        await row.locator('button', { hasText: 'Hapus' }).first().click();
-        const modal = page.locator('#modal-delete-collection');
-        await modal.waitFor({ state: 'visible', timeout: 5000 });
-        await modal.locator('#form-delete-collection button[type="submit"]').click();
+        const row = page.locator("tr", { hasText: nama }).first();
+        await row.locator("button", { hasText: "Hapus" }).first().click();
+        const modal = page.locator("#modal-delete-collection");
+        await modal.waitFor({ state: "visible", timeout: 5000 });
+        await modal
+            .locator('#form-delete-collection button[type="submit"]')
+            .click();
         await page.waitForFunction(
-            (n) => ![...document.querySelectorAll('tbody tr')].some((tr) => tr.textContent.includes(n)),
+            (n) =>
+                ![...document.querySelectorAll("tbody tr")].some((tr) =>
+                    tr.textContent.includes(n),
+                ),
             nama,
-            { timeout: 10000 }
+            { timeout: 10000 },
         );
         await sleep(300);
     }
-    assert(true, 'Cleanup UI: 3 baris uji dihapus via tombol Hapus asli');
+    assert(true, "Cleanup UI: 3 baris uji dihapus via tombol Hapus asli");
 } catch (e) {
-    console.log('FAIL  Exception: ' + e.message);
+    console.log("FAIL  Exception: " + e.message);
     failures++;
 } finally {
-    if (browser) { try { await browser.close(); } catch { /* sudah tertutup */ } }
+    if (browser) {
+        try {
+            await browser.close();
+        } catch {
+            /* sudah tertutup */
+        }
+    }
     matikanServer();
     cleanupDb();
-    assert(dbCount(PARENT) === 0 && dbCount(V1) === 0 && dbCount(V2) === 0, 'Cleanup DB: semua data uji terhapus');
-    console.log(failures === 0 ? '\nSEMUA PASS' : `\n${failures} GAGAL`);
+    assert(
+        dbCount(PARENT) === 0 && dbCount(V1) === 0 && dbCount(V2) === 0,
+        "Cleanup DB: semua data uji terhapus",
+    );
+    console.log(failures === 0 ? "\nSEMUA PASS" : `\n${failures} GAGAL`);
     process.exit(failures === 0 ? 0 : 1);
 }

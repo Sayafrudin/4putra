@@ -3,54 +3,128 @@
 @section('content')
     <div class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-5">
         <div>
-            <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">Vaksinasi Burung</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Catat vaksin dan pantau booster bulanan tiap burung</p>
+            <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">Obat & Vaksinasi</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Catat pemberian obat/vaksin — suntik 1x/tahun, oral tiap 3 bulan</p>
         </div>
         <div class="flex gap-3 flex-wrap">
-            <button onclick="eksporExcel(this, { namaFile: 'laporan_vaksinasi_{{ now()->toDateString() }}.xlsx', judul: 'Laporan Vaksinasi', headers: ['Burung', 'Spesies', 'Jenis Vaksin', 'Tanggal', 'Status Booster'], rows: DATA_EKSPOR })"
+            <button onclick="eksporExcel(this, { namaFile: 'laporan_obat_vaksinasi_{{ now()->toDateString() }}.xlsx', judul: 'Laporan Obat & Vaksinasi', headers: ['Burung', 'Spesies', 'Jenis', 'Metode', 'Dosis', 'Tanggal', 'Status Ulang'], rows: DATA_EKSPOR })"
                 class="px-4 py-2.5 text-sm font-semibold text-white bg-green-600 hover:bg-green-700 rounded-xl transition-colors">
                 Export Excel
             </button>
             <a href="{{ route('admin.vaksinasi.export-pdf') }}"
-                class="px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                class="px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200 border border-gray-600 rounded-xl hover:border-gray-400 transition-colors">
                 Export PDF
             </a>
-            <button onclick="bukaModalTambah()"
+            <button onclick="bukaModalCatat([])"
                 class="px-4 py-2.5 text-sm font-semibold text-white bg-[#E62C37] hover:bg-[#c5242d] rounded-xl transition-colors">
-                + Catat Vaksin
+                + Catat
             </button>
         </div>
     </div>
 
-    {{-- Daftar jatuh tempo: vaksin terakhir tiap burung sudah lewat 1 bulan --}}
-    <div class="mb-8 bg-white dark:bg-[#1e2530] border {{ $jatuhTempo->isNotEmpty() ? 'border-[#E62C37]/40' : 'border-gray-200 dark:border-gray-800' }} rounded-xl shadow-sm">
-        <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200 dark:border-gray-800">
-            <h3 class="text-sm font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Perlu Vaksin Ulang
-                (booster bulanan)</h3>
-            <span class="text-xs font-bold {{ $jatuhTempo->isNotEmpty() ? 'text-[#E62C37] bg-[#E62C37]/10' : 'text-green-600 bg-green-500/10' }} px-2.5 py-1 rounded-full">
+    {{-- Panel jatuh tempo: siklus per metode (suntik 12 bulan, oral 3 bulan) --}}
+    <div class="mb-8 bg-white dark:bg-[#1e2530] border {{ $jatuhTempo->isNotEmpty() ? 'border-[#E62C37]/40' : 'border-gray-700' }} rounded-xl shadow-sm">
+        <div class="px-5 py-3 border-b border-gray-700 flex items-center justify-between gap-3">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-gray-300">Perlu Ulang (Suntik/Oral)</h3>
+            <span class="text-xs font-bold {{ $jatuhTempo->isNotEmpty() ? 'text-[#E62C37] bg-[#E62C37]/10' : 'text-green-600 bg-green-600/10' }} px-2.5 py-1 rounded-full">
                 {{ $jatuhTempo->isNotEmpty() ? $jatuhTempo->count().' burung' : 'Aman' }}
             </span>
         </div>
         <div class="p-4">
             @forelse ($jatuhTempo as $v)
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 py-2.5 border-b border-gray-800 last:border-0">
                     <div class="min-w-0">
-                        <p class="text-sm font-bold text-gray-900 dark:text-white">{{ $v->burung->nama }}</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ $v->burung->spesies }} · vaksin terakhir "{{ $v->jenis }}" pada {{ $v->tanggal_vaksin->translatedFormat('d M Y') }}</p>
+                        <p class="text-sm font-semibold text-gray-200">{{ $v->burung->nama }} <span class="text-xs font-medium text-gray-500">· {{ $v->burung->spesies }}</span></p>
+                        <p class="text-xs text-gray-500">terakhir "{{ $v->jenis }}" ({{ $v->metode === 'oral' ? 'Oral' : 'Suntik' }}) pada {{ $v->tanggal_vaksin->translatedFormat('d M Y') }}</p>
                     </div>
-                    <span class="text-xs font-bold text-[#E62C37] bg-[#E62C37]/10 px-2.5 py-1 rounded-lg self-start">Telah {{ (int) $v->tanggal_vaksin->diffInMonths(now()) }} bulan</span>
+                    <span class="text-xs font-bold text-[#E62C37] bg-[#E62C37]/10 px-2.5 py-1 rounded-lg self-start">Jatuh tempo</span>
                 </div>
             @empty
-                <p class="text-sm text-gray-500 dark:text-gray-400 py-2">Semua burung sudah tervaksin dalam 1 bulan terakhir. 👍</p>
+                <p class="text-sm text-gray-500">Semua burung masih terlindungi sesuai siklus masing-masing.</p>
             @endforelse
         </div>
     </div>
 
-    {{-- Riwayat vaksinasi --}}
+    {{-- Papan ala kandang: section per blok, card per kandang, chip burung + badge status --}}
     <div class="mb-4">
         <div class="relative max-w-md">
             <x-tabler-search class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-            <input type="text" class="table-search-input w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:outline-none" placeholder="Cari burung / jenis vaksin...">
+            <input type="text" id="vaksin_search" placeholder="Cari kandang (contoh: E-3) atau nama burung..."
+                class="w-full bg-white dark:bg-[#151a22] border border-gray-600 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:outline-none">
+        </div>
+        <div class="flex items-center gap-4 mt-3 text-xs text-gray-500">
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-green-600 inline-block"></span> Masih terlindungi</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#E62C37] inline-block"></span> Jatuh tempo / belum dicatat</span>
+            <span class="hidden sm:inline text-gray-600">Klik card kandang untuk catat per burung atau massal.</span>
+        </div>
+    </div>
+
+    <div class="space-y-8 pb-10">
+        @foreach ($perKandang as $blok => $grupKandang)
+            <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">Blok {{ $blok }}</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    @foreach ($grupKandang as $item)
+                        @php
+                            $kandang = $item['kandang'];
+                            $burungList = $item['burung'];
+                            $perlu = $burungList->filter(fn ($b) => !$terakhirPerBurung->has($b->id) || $terakhirPerBurung[$b->id]->sudah_jatuh_tempo)->count();
+                        @endphp
+                        <button type="button" onclick="bukaModalKandang({{ $kandang->id }})"
+                            class="kandang-card text-left bg-white dark:bg-[#1e2530] border {{ $perlu > 0 ? 'border-[#E62C37]/40' : 'border-gray-700' }} rounded-xl p-3 hover:border-[#E62C37]/60 transition-colors"
+                            data-kandang-id="{{ $kandang->id }}" data-label="{{ $kandang->label }}">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-bold text-gray-900 dark:text-white">{{ $kandang->label }}</span>
+                                <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full {{ $perlu > 0 ? 'text-[#E62C37] bg-[#E62C37]/10' : 'text-green-600 bg-green-600/10' }}">
+                                    {{ $perlu > 0 ? $perlu.' perlu ulang' : 'Aman' }}
+                                </span>
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                @foreach ($burungList as $b)
+                                    @php
+                                        $terakhir = $terakhirPerBurung->get($b->id);
+                                        $aman = $terakhir && !$terakhir->sudah_jatuh_tempo;
+                                    @endphp
+                                    <div class="flex items-center gap-2 text-xs">
+                                        <span class="w-2 h-2 rounded-full shrink-0 {{ $aman ? 'bg-green-600' : 'bg-[#E62C37]' }}"></span>
+                                        <span class="font-semibold text-gray-800 dark:text-gray-200 truncate">{{ $b->nama }}</span>
+                                        <span class="text-gray-500 truncate">{{ $terakhir?->jenis ?? 'belum dicatat' }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </button>
+                    @endforeach
+                </div>
+            </section>
+        @endforeach
+
+        @if ($tanpaKandang->isNotEmpty())
+            <section>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">Belum Ditempatkan</h3>
+                <div class="bg-white dark:bg-[#1e2530] border border-gray-700 rounded-xl p-3">
+                    <div class="flex flex-col gap-1.5">
+                        @foreach ($tanpaKandang as $b)
+                            @php
+                                $terakhir = $terakhirPerBurung->get($b->id);
+                                $aman = $terakhir && !$terakhir->sudah_jatuh_tempo;
+                            @endphp
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="w-2 h-2 rounded-full shrink-0 {{ $aman ? 'bg-green-600' : 'bg-[#E62C37]' }}"></span>
+                                <span class="font-semibold text-gray-800 dark:text-gray-200">{{ $b->nama }}</span>
+                                <span class="text-gray-500">{{ $b->spesies }} · {{ $terakhir?->jenis ?? 'belum dicatat' }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </section>
+        @endif
+    </div>
+
+    {{-- Riwayat --}}
+    <div class="mb-4">
+        <div class="relative max-w-md">
+            <x-tabler-search class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <input type="text" class="table-search-input w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:outline-none" placeholder="Cari burung / jenis / metode...">
         </div>
     </div>
 
@@ -60,33 +134,46 @@
                 <thead>
                     <tr class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-white dark:bg-[#151a22] border-b border-gray-200 dark:border-gray-800">
                         <th class="px-6 py-4">Burung</th>
-                        <th class="px-6 py-4">Jenis Vaksin</th>
-                        <th class="px-6 py-4 w-36">Tanggal</th>
-                        <th class="px-6 py-4 w-32">Status</th>
+                        <th class="px-6 py-4">Jenis</th>
+                        <th class="px-6 py-4 w-24">Metode</th>
+                        <th class="px-6 py-4 w-32">Dosis</th>
+                        <th class="px-6 py-4 w-32">Tanggal</th>
+                        <th class="px-6 py-4 w-32">Status Ulang</th>
                         <th class="px-6 py-4 w-24 text-right">Aksi</th>
                     </tr>
                 </thead>
                 <tbody data-admin-list class="divide-y divide-gray-200 dark:divide-gray-800">
                     @forelse ($riwayat as $v)
                         <tr class="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#262d3a] transition-colors">
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{{ $v->burung->nama }}</td>
+                            <td class="px-6 py-4 text-sm">
+                                <span class="font-semibold text-gray-900 dark:text-white">{{ $v->burung->nama }}</span>
+                                <span class="block text-xs text-gray-500">{{ $v->burung->spesies }}</span>
+                            </td>
                             <td class="px-6 py-4 text-sm">{{ $v->jenis }}</td>
+                            <td class="px-6 py-4 text-sm">
+                                <span class="px-2 py-1 rounded-full text-xs font-bold {{ $v->metode === 'oral' ? 'bg-amber-500/10 text-amber-600' : 'bg-blue-500/10 text-blue-500' }}">
+                                    {{ $v->metode === 'oral' ? 'Oral' : 'Suntik' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm">{{ $v->dosis ?? '—' }}</td>
                             <td class="px-6 py-4 text-sm tabular-nums">{{ $v->tanggal_vaksin->translatedFormat('d M Y') }}</td>
                             <td class="px-6 py-4 text-sm">
                                 <span class="px-2 py-1 rounded-full text-xs font-semibold {{ $v->sudah_jatuh_tempo ? 'bg-[#E62C37]/10 text-[#E62C37]' : 'bg-green-500/10 text-green-600' }}">
-                                    {{ $v->sudah_jatuh_tempo ? 'Perlu vaksin ulang' : 'Masih terlindungi' }}
+                                    {{ $v->sudah_jatuh_tempo ? 'Perlu ulang' : 'Terlindungi' }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-right">
-                                <button onclick='bukaModalHapus({{ $v->id }}, "{{ addslashes($v->jenis) }}", "{{ addslashes($v->burung->nama) }}")'
-                                    class="px-3 py-1.5 text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg hover:bg-red-500/20 hover:border-red-500/40 transition-colors">
-                                    Hapus
-                                </button>
+                                <div class="flex items-center justify-end gap-2">
+                                    <button onclick='bukaModalHapus({{ $v->id }}, "{{ addslashes($v->jenis) }}", "{{ addslashes($v->burung->nama) }}")'
+                                        class="px-3 py-1.5 text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg hover:bg-red-500/20 hover:border-red-500/40 transition-colors">
+                                        Hapus
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">Belum ada catatan vaksinasi. Klik "+ Catat Vaksin" untuk memulai.</td>
+                            <td colspan="7" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">Belum ada catatan. Klik "+ Catat" atau buka card kandang.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -94,68 +181,88 @@
         </div>
     </div>
 
-    {{-- ==================== MODAL CATAT VAKSIN ==================== --}}
-    <div id="modalTambah" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
+    {{-- ==================== MODAL DETAIL KANDANG ==================== --}}
+    <div id="modalKandang" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
         <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Catat Vaksinasi</h3>
-                <button onclick="tutupModal('modalTambah')" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Kandang <span id="kandang_label" class="text-[#E62C37]"></span></h3>
+                <button onclick="tutupModal('modalKandang')" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                     <x-tabler-x class="w-5 h-5" />
                 </button>
             </div>
-            <form id="formTambah" onsubmit="submitTambah(event)" class="space-y-4" novalidate>
+            <div id="kandang_burung_list" class="space-y-2 mb-4"></div>
+            <button type="button" id="btnCatatSemua"
+                class="w-full px-4 py-2.5 text-sm font-semibold text-white bg-[#E62C37] hover:bg-[#c5242d] rounded-xl transition-colors">
+                Catat untuk semua burung di kandang ini
+            </button>
+        </div>
+    </div>
+
+    {{-- ==================== MODAL CATAT (tunggal / massal) ==================== --}}
+    <div id="modalCatat" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Catat Obat / Vaksin</h3>
+                <button onclick="tutupModal('modalCatat')" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                    <x-tabler-x class="w-5 h-5" />
+                </button>
+            </div>
+            <p id="catat_target" class="text-xs text-gray-500 mb-4"></p>
+            <form id="formCatat" onsubmit="submitCatat(event)" class="space-y-4" novalidate>
                 @csrf
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Burung</label>
-                    <select name="burung_id" id="tambah_burung"
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Jenis</label>
+                    <select name="jenis_pilih" id="catat_jenis_pilih" onchange="ubahJenis()"
                         class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
-                        <option value="">- Pilih burung -</option>
-                        @php
-                            $tertempatkan = $burungList->filter(fn ($b) => $b->kandang)->groupBy(fn ($b) => $b->kandang->label)->sortKeysUsing('strnatcasecmp');
-                        @endphp
-                        @foreach ($tertempatkan as $label => $grup)
-                            @php
-                                $tipeKandang = $grup->first()->kandang->tipe;
-                            @endphp
-                            <optgroup label="{{ $tipeKandang === 'aviary' ? $label : 'Kandang '.$label }}">
-                                @foreach ($grup as $b)
-                                    <option value="{{ $b->id }}">{{ $b->nama }} - {{ $b->spesies }} ({{ $b->fase_label }}){{ $b->gender_label ? ' - '.$b->gender_label : '' }}</option>
-                                @endforeach
-                            </optgroup>
+                        @foreach (\App\Models\Vaksinasi::JENIS_STANDAR as $j)
+                            <option value="{{ $j }}">{{ $j }}</option>
                         @endforeach
-                        @if (($belumDitempatkan = $burungList->filter(fn ($b) => ! $b->kandang))->isNotEmpty())
-                            <optgroup label="Belum ditempatkan">
-                                @foreach ($belumDitempatkan as $b)
-                                    <option value="{{ $b->id }}">{{ $b->nama }} - {{ $b->spesies }} ({{ $b->fase_label }}){{ $b->gender_label ? ' - '.$b->gender_label : '' }}</option>
-                                @endforeach
-                            </optgroup>
-                        @endif
+                        <option value="Lainnya">Lainnya (tulis sendiri)</option>
                     </select>
-                    <p class="text-xs text-red-400 mt-1 hidden" id="err_tambah_burung"></p>
+                    <input type="text" name="jenis" id="catat_jenis" placeholder="Tulis nama obat/vaksin..."
+                        class="hidden w-full mt-2 bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:outline-none">
+                    <p class="text-xs text-red-400 mt-1 hidden" id="err_catat_jenis"></p>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Jenis Vaksin</label>
-                    <input type="text" name="jenis" id="tambah_jenis" placeholder="Contoh: NDV (Newcastle) / Avian Influenza"
-                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
-                    <p class="text-xs text-red-400 mt-1 hidden" id="err_tambah_jenis"></p>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Metode</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="flex items-start gap-2 p-3 bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl cursor-pointer hover:border-[#E62C37]/50 has-checked:border-[#E62C37]">
+                            <input type="radio" name="metode" value="suntik" checked class="mt-1 accent-[#E62C37]">
+                            <span>
+                                <span class="block text-sm font-semibold text-gray-900 dark:text-white">Suntik</span>
+                                <span class="block text-xs text-gray-500">1x per tahun (semua burung)</span>
+                            </span>
+                        </label>
+                        <label class="flex items-start gap-2 p-3 bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl cursor-pointer hover:border-[#E62C37]/50 has-checked:border-[#E62C37]">
+                            <input type="radio" name="metode" value="oral" class="mt-1 accent-[#E62C37]">
+                            <span>
+                                <span class="block text-sm font-semibold text-gray-900 dark:text-white">Oral</span>
+                                <span class="block text-xs text-gray-500">Tiap 3 bulan (campur makanan/minuman)</span>
+                            </span>
+                        </label>
+                    </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Tanggal Vaksin</label>
-                    <input type="date" name="tanggal_vaksin" id="tambah_tanggal" max="{{ now('Asia/Jakarta')->toDateString() }}"
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Tanggal Pemberian</label>
+                    <input type="date" name="tanggal_vaksin" id="catat_tanggal" max="{{ now('Asia/Jakarta')->toDateString() }}"
                         class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
-                    <p class="text-xs text-red-400 mt-1 hidden" id="err_tambah_tanggal"></p>
+                    <p class="text-xs text-red-400 mt-1 hidden" id="err_catat_tanggal"></p>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Dosis (opsional, per burung)</label>
+                    <div id="catat_dosis_rows" class="space-y-2"></div>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Catatan (opsional)</label>
-                    <textarea name="catatan" id="tambah_catatan" rows="2" placeholder="Dosis, dokter hewan, reaksi..."
+                    <textarea name="catatan" id="catat_catatan" rows="2" placeholder="Dokter hewan, reaksi, dll..."
                         class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none"></textarea>
                 </div>
                 <div class="flex justify-end gap-3 pt-2">
-                    <button type="button" onclick="tutupModal('modalTambah')"
+                    <button type="button" onclick="tutupModal('modalCatat')"
                         class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
                         Batal
                     </button>
-                    <button type="submit" id="btnTambah"
+                    <button type="submit" id="btnCatat"
                         class="px-4 py-2.5 text-sm font-semibold text-white bg-[#E62C37] hover:bg-[#c5242d] rounded-xl transition-colors">
                         Simpan
                     </button>
@@ -168,11 +275,11 @@
     <div id="modalHapus" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
         <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6">
             <div class="flex items-center gap-3 mb-4">
-                <div class="w-10 h-10 rounded-full bg-[#E62C37]/10 flex items-center justify-center">
+                <div class="w-10 h-10 rounded-full bg-[#E62C37]/10 flex items-center justify-center shrink-0">
                     <x-tabler-alert-triangle class="w-5 h-5 text-[#E62C37]" />
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Hapus Catatan Vaksinasi</h3>
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Hapus Catatan</h3>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Hapus "<span id="hapus_jenis" class="font-semibold text-gray-700 dark:text-gray-200"></span>" milik <span id="hapus_burung" class="font-semibold text-gray-700 dark:text-gray-200"></span>?</p>
                 </div>
             </div>
@@ -190,27 +297,55 @@
     </div>
 
     @php
-        // Data ekspor Excel (seluruh riwayat, server-side — tanpa N+1)
+        // Data papan untuk JS: satu kandang = daftar burung + catatan terakhirnya.
+        $papanData = [];
+        foreach ($perKandang as $grupKandang) {
+            foreach ($grupKandang as $item) {
+                $papanData[$item['kandang']->id] = [
+                    'label' => $item['kandang']->label,
+                    'burung' => $item['burung']->map(function ($b) use ($terakhirPerBurung) {
+                        $terakhir = $terakhirPerBurung->get($b->id);
+
+                        return [
+                            'id' => $b->id,
+                            'nama' => $b->nama,
+                            'spesies' => $b->spesies,
+                            'terakhir' => $terakhir ? [
+                                'jenis' => $terakhir->jenis,
+                                'metode' => $terakhir->metode,
+                                'dosis' => $terakhir->dosis,
+                                'tanggal' => $terakhir->tanggal_vaksin->translatedFormat('d M Y'),
+                                'jatuh_tempo' => $terakhir->sudah_jatuh_tempo,
+                            ] : null,
+                        ];
+                    })->values()->all(),
+                ];
+            }
+        }
         $dataEkspor = $riwayat->map(fn ($v) => [
             $v->burung->nama,
             $v->burung->spesies,
             $v->jenis,
+            $v->metode === 'oral' ? 'Oral' : 'Suntik',
+            $v->dosis ?? '',
             $v->tanggal_vaksin->translatedFormat('d M Y'),
-            $v->sudah_jatuh_tempo ? 'Perlu vaksin ulang' : 'Masih terlindungi',
+            $v->sudah_jatuh_tempo ? 'Perlu ulang' : 'Terlindungi',
         ])->values()->all();
     @endphp
     <script>
         var CSRF = document.querySelector('meta[name="csrf-token"]').content;
-        {{-- Hex-escape: input admin tak boleh bisa memutus konteks <script> --}}
-        var DATA_EKSPOR = @json($dataEkspor, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+        {{-- Hex-escape: input admin (dosis/catatan) tak boleh memutus konteks script --}}
+        var PAPAN = @json($papanData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+        var DATA_EKSPOR = @json($dataEkspor, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
         var sedangBusy = false;
         var hapusTargetId = null;
+        var catatTargetIds = [];
 
         function setBusy(on) {
             sedangBusy = on;
-            document.querySelectorAll('#btnTambah, #btnHapus').forEach(btn => {
+            document.querySelectorAll('#btnCatat, #btnHapus, #btnCatatSemua').forEach(btn => {
                 btn.disabled = on;
-                btn.classList.toggle('opacity-60', on);
+                btn.classList.toggle('opacity-50', on);
                 btn.classList.toggle('cursor-not-allowed', on);
             });
         }
@@ -227,16 +362,89 @@
             m.classList.add('flex');
         }
 
-        function bukaModalTambah() {
-            bersihkanError(document.getElementById('formTambah'));
-            bukaModal('modalTambah');
+        // ===== Modal detail kandang =====
+        function bukaModalKandang(kandangId) {
+            const data = PAPAN[kandangId];
+            if (!data) return;
+            document.getElementById('kandang_label').textContent = data.label;
+            const wrap = document.getElementById('kandang_burung_list');
+            wrap.innerHTML = '';
+            data.burung.forEach(function (b) {
+                const aman = b.terakhir && !b.terakhir.jatuh_tempo;
+                const baris = document.createElement('div');
+                baris.className = 'flex items-center justify-between gap-3 p-3 bg-gray-50 dark:bg-[#151a22] rounded-xl';
+                baris.innerHTML =
+                    '<div class="min-w-0">' +
+                        '<p class="text-sm font-semibold text-gray-900 dark:text-white truncate">' + b.nama + ' <span class="text-xs text-gray-500">· ' + b.spesies + '</span></p>' +
+                        '<p class="text-xs text-gray-500">' + (b.terakhir
+                            ? b.terakhir.jenis + ' (' + (b.terakhir.metode === 'oral' ? 'Oral' : 'Suntik') + ') · ' + b.terakhir.tanggal + (b.terakhir.dosis ? ' · ' + b.terakhir.dosis : '')
+                            : 'Belum ada catatan') + '</p>' +
+                    '</div>' +
+                    '<span class="shrink-0 text-[10px] font-bold uppercase px-2 py-1 rounded-full ' + (aman ? 'text-green-600 bg-green-600/10' : 'text-[#E62C37] bg-[#E62C37]/10') + '">' + (aman ? 'Aman' : 'Perlu') + '</span>';
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'shrink-0 px-3 py-1.5 text-xs font-bold text-white bg-[#E62C37] hover:bg-[#c5242d] rounded-lg transition-colors';
+                btn.textContent = 'Catat';
+                btn.addEventListener('click', function () { bukaModalCatat([b.id]); });
+                baris.appendChild(btn);
+                wrap.appendChild(baris);
+            });
+            document.getElementById('btnCatatSemua').onclick = function () {
+                bukaModalCatat(data.burung.map(function (b) { return b.id; }));
+            };
+            bukaModal('modalKandang');
         }
 
-        function tandaiError(inputId, errId, pesan) {
-            document.getElementById(inputId).classList.add('border-red-400');
-            const err = document.getElementById(errId);
-            err.textContent = pesan;
-            err.classList.remove('hidden');
+        // ===== Modal catat (tunggal / massal) =====
+        function ubahJenis() {
+            const pilih = document.getElementById('catat_jenis_pilih');
+            const input = document.getElementById('catat_jenis');
+            const lainnya = pilih.value === 'Lainnya';
+            input.classList.toggle('hidden', !lainnya);
+            if (!lainnya) input.value = '';
+        }
+
+        function bukaModalCatat(ids) {
+            catatTargetIds = ids;
+            const wrap = document.getElementById('catat_dosis_rows');
+            wrap.innerHTML = '';
+            let label;
+            if (ids.length === 0) {
+                // Pilih manual dari dropdown semua burung
+                label = 'Pilih burung di bawah (satu catatan per burung).';
+                const sel = document.createElement('select');
+                sel.id = 'catat_burung_manual';
+                sel.className = 'w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:outline-none';
+                sel.innerHTML = '<option value="">- Pilih burung -</option>' + Object.values(PAPAN).flatMap(function (k) {
+                    return k.burung.map(function (b) {
+                        return '<option value="' + b.id + '">' + b.nama + ' — ' + k.label + '</option>';
+                    });
+                }).join('');
+                wrap.appendChild(sel);
+            } else {
+                label = ids.length === 1 ? 'Target: 1 burung.' : 'Target: ' + ids.length + ' burung (catatan massal — satu klik).';
+                const data = {};
+                Object.values(PAPAN).forEach(function (k) {
+                    k.burung.forEach(function (b) { data[b.id] = b; });
+                });
+                ids.forEach(function (id) {
+                    const b = data[id];
+                    if (!b) return;
+                    const baris = document.createElement('div');
+                    baris.className = 'flex items-center gap-2';
+                    baris.innerHTML =
+                        '<span class="text-xs font-semibold text-gray-700 dark:text-gray-200 w-28 truncate">' + b.nama + '</span>' +
+                        '<input type="text" data-dosis="' + id + '" placeholder="Dosis (opsional)" class="flex-1 bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-3 py-2 text-xs text-gray-900 dark:text-white focus:border-[#E62C37] focus:outline-none">';
+                    wrap.appendChild(baris);
+                });
+            }
+            document.getElementById('catat_target').textContent = label;
+            bersihkanError(document.getElementById('formCatat'));
+            document.getElementById('catat_tanggal').value = '';
+            document.getElementById('catat_catatan').value = '';
+            document.getElementById('catat_jenis_pilih').value = '{{ \App\Models\Vaksinasi::JENIS_STANDAR[0] }}';
+            ubahJenis();
+            bukaModal('modalCatat');
         }
 
         function bersihkanError(form) {
@@ -244,16 +452,31 @@
             form.querySelectorAll('.text-red-400').forEach(p => p.classList.add('hidden'));
         }
 
-        async function submitTambah(e) {
-            e.preventDefault();
-            const form = document.getElementById('formTambah');
-            bersihkanError(form);
+        function tandaiError(inputId, errId, pesan) {
+            const input = document.getElementById(inputId);
+            if (input) input.classList.add('border-red-400');
+            const err = document.getElementById(errId);
+            if (err) { err.textContent = pesan; err.classList.remove('hidden'); }
+        }
 
+        async function submitCatat(e) {
+            e.preventDefault();
+            const form = e.target;
+            bersihkanError(form);
             let valid = true;
-            if (!form.burung_id.value) { tandaiError('tambah_burung', 'err_tambah_burung', 'Pilih burung terlebih dahulu.'); valid = false; }
-            if (!form.jenis.value.trim()) { tandaiError('tambah_jenis', 'err_tambah_jenis', 'Jenis vaksin wajib diisi.'); valid = false; }
-            if (!form.tanggal_vaksin.value) { tandaiError('tambah_tanggal', 'err_tambah_tanggal', 'Tanggal vaksin wajib diisi.'); valid = false; }
+            const pilih = document.getElementById('catat_jenis_pilih');
+            const jenis = pilih.value === 'Lainnya' ? document.getElementById('catat_jenis').value.trim() : pilih.value;
+            if (!jenis) { tandaiError('catat_jenis', 'err_catat_jenis', 'Nama obat/vaksin wajib diisi.'); valid = false; }
+            const tanggal = document.getElementById('catat_tanggal').value;
+            if (!tanggal) { tandaiError('catat_tanggal', 'err_catat_tanggal', 'Tanggal wajib diisi.'); valid = false; }
             if (!valid) return;
+
+            const ids = catatTargetIds.length > 0 ? catatTargetIds : [document.getElementById('catat_burung_manual')?.value];
+            if (!ids[0]) { showToast('error', 'Pilih burung dulu', 'Target catatan belum ada.'); return; }
+            const dosis = {};
+            form.querySelectorAll('[data-dosis]').forEach(inp => {
+                if (inp.value.trim()) dosis[inp.dataset.dosis] = inp.value.trim();
+            });
 
             setBusy(true);
             try {
@@ -261,27 +484,31 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
                     body: JSON.stringify({
-                        burung_id: Number(form.burung_id.value),
-                        jenis: form.jenis.value.trim(),
-                        tanggal_vaksin: form.tanggal_vaksin.value,
-                        catatan: form.catatan.value.trim() || null,
+                        burung_ids: ids,
+                        jenis: jenis,
+                        metode: form.metode.value,
+                        tanggal_vaksin: tanggal,
+                        dosis: dosis,
+                        catatan: document.getElementById('catat_catatan').value.trim() || null,
                     })
                 });
                 const data = await res.json();
                 if (!res.ok || !data.ok) {
-                    showToast('error', 'Gagal', data.message || 'Gagal mencatat vaksinasi.');
+                    showToast('error', 'Gagal', data.message || 'Gagal mencatat. Coba lagi.');
+                    setBusy(false);
                     return;
                 }
-                showToast('success', 'Berhasil', data.message);
-                tutupModal('modalTambah');
+                showToast('success', 'Tersimpan', data.message);
+                tutupModal('modalCatat');
+                tutupModal('modalKandang');
                 window.location.reload();
             } catch (err) {
                 showToast('error', 'Gagal', 'Tidak dapat terhubung ke server.');
-            } finally {
                 setBusy(false);
             }
         }
 
+        // ===== Hapus =====
         function bukaModalHapus(id, jenis, burung) {
             hapusTargetId = id;
             document.getElementById('hapus_jenis').textContent = jenis;
@@ -300,16 +527,34 @@
                 const data = await res.json();
                 if (!res.ok || !data.ok) {
                     showToast('error', 'Gagal', data.message || 'Gagal menghapus catatan.');
+                    setBusy(false);
                     return;
                 }
-                showToast('success', 'Berhasil', data.message);
+                showToast('success', 'Terhapus', data.message);
                 tutupModal('modalHapus');
                 window.location.reload();
             } catch (err) {
                 showToast('error', 'Gagal', 'Tidak dapat terhubung ke server.');
-            } finally {
                 setBusy(false);
             }
+        });
+
+        // ===== Search papan (sembunyikan card & section tanpa hasil) =====
+        document.getElementById('vaksin_search').addEventListener('input', function () {
+            const q = this.value.toLowerCase().trim();
+            document.querySelectorAll('.kandang-card').forEach(function (card) {
+                const cocok = !q || card.dataset.label.toLowerCase().includes(q) ||
+                    (PAPAN[card.dataset.kandangId] || { burung: [] }).burung.some(function (b) {
+                        return b.nama.toLowerCase().includes(q);
+                    });
+                card.style.display = cocok ? '' : 'none';
+            });
+            document.querySelectorAll('section').forEach(function (sec) {
+                const cards = sec.querySelectorAll('.kandang-card');
+                if (cards.length === 0) return;
+                const ada = Array.from(cards).some(function (c) { return c.style.display !== 'none'; });
+                sec.style.display = ada ? '' : 'none';
+            });
         });
     </script>
 @endsection

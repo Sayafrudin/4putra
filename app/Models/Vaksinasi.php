@@ -7,7 +7,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Vaksinasi extends Model
 {
-    protected $fillable = ['burung_id', 'jenis', 'tanggal_vaksin', 'catatan'];
+    /** Metode pemberian: 'suntik' (1x/tahun) | 'oral' (tiap 3 bulan, campur makanan/minuman). */
+    public const METODE = ['suntik', 'oral'];
+
+    /** Siklus ulang per metode (bulan) — aturan dokter hewan. */
+    public const SIKLUS_BULAN = ['suntik' => 12, 'oral' => 3];
+
+    protected $fillable = ['burung_id', 'jenis', 'metode', 'dosis', 'tanggal_vaksin', 'catatan'];
 
     protected $casts = ['tanggal_vaksin' => 'date'];
 
@@ -16,20 +22,32 @@ class Vaksinasi extends Model
         return $this->belongsTo(Burung::class);
     }
 
+    /** Nama obat/vaksin standar + opsi Lainnya (input teks bebas). */
+    public const JENIS_STANDAR = ['Obat Cacing', 'NDV', 'Avian Influenza', 'Cemvac', 'Vitamin'];
+
     /**
-     * Vaksin terakhir tiap burung, beserta status jatuh tempo (booster bulanan).
+     * Catatan terakhir tiap burung (semua metode), beserta status jatuh tempo
+     * yang dihitung dari siklus metode masing-masing.
      */
-    public static function vaksinTerakhirPerBurung()
+    public static function catatanTerakhirPerBurung()
     {
         return static::with('burung')
             ->orderByDesc('tanggal_vaksin')
+            ->orderByDesc('id')
             ->get()
             ->unique('burung_id')
             ->values();
     }
 
+    /** Jatuh tempo = tanggal terakhir + siklus metode sudah terlewat. */
     public function getSudahJatuhTempoAttribute(): bool
     {
-        return $this->tanggal_vaksin->copy()->addMonth()->isPast();
+        return $this->tanggal_vaksin->copy()->addMonths(self::SIKLUS_BULAN[$this->metode] ?? 12)->isPast();
+    }
+
+    /** Tanggal jatuh tempo berikutnya. */
+    public function getJatuhTempoAttribute()
+    {
+        return $this->tanggal_vaksin->copy()->addMonths(self::SIKLUS_BULAN[$this->metode] ?? 12);
     }
 }

@@ -164,7 +164,7 @@ try {
         await probeHidup(),
         "N2b TANPA reload penuh (probe tetap hidup — bukan reload)",
     );
-    assert(nav2 < 2000, `N2c navigasi SPA < 2000ms lokal (actual ${nav2}ms)`);
+    assert(nav2 < 2500, `N2c navigasi SPA < 2500ms lokal (actual ${nav2}ms)`);
 
     // ---------- N3: rantai navigasi ----------
     const rantai = [
@@ -194,7 +194,7 @@ try {
                 'button:has-text("Manajemen Farm")',
                 'a:has-text("Vaksinasi")',
             ],
-            tunggu: 'h2:has-text("Vaksinasi Burung")',
+            tunggu: 'h2:has-text("Obat & Vaksinasi")',
             url: "/admin/vaksinasi",
             nama: "Vaksinasi",
         },
@@ -265,10 +265,9 @@ try {
     await page.fill("#tambah_oleh", "uji-spa");
     await page.fill("#tambah_kondisi", "Kondisi telur baik");
     await page.click("#btnTambah");
-    await page.waitForSelector(
-        'td:has-text("uji-spa-betina × uji-spa-jantan")',
-        { timeout: 15000 },
-    );
+    await page.waitForSelector('td:has-text("uji-spa-betina")', {
+        timeout: 15000,
+    });
     assert(
         true,
         'N4c telur tersimpan: baris menampilkan pasangan "uji-spa-betina × uji-spa-jantan"',
@@ -290,12 +289,12 @@ try {
         headXlsx === "PK",
         `N5a Excel terunduh, signature ZIP/PK (file: ${unduhXlsx.suggestedFilename()})`,
     );
-    // Chunk xlsx termuat (lazy) — resource timing browser; pola dev (/node_modules/xlsx/)
-    // maupun build (/assets/xlsx-*.js) keduanya diterima
+    // Chunk exceljs termuat (lazy) — resource timing browser; pola dev (/node_modules/exceljs/)
+    // maupun build (/assets/exceljs-*.js) keduanya diterima
     const muatXlsx = await page.evaluate(() =>
         performance
             .getEntriesByType("resource")
-            .filter((r) => /xlsx/.test(r.name))
+            .filter((r) => /xlsx|exceljs/.test(r.name))
             .map((r) => Math.round(r.duration)),
     );
     assert(

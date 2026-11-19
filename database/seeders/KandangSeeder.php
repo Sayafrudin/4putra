@@ -7,7 +7,7 @@ use Illuminate\Database\Seeder;
 
 /**
  * Struktur kandang aviary 4Putra (data nyata, idempotent):
- * Blok A 15 kandang kecil, B 14 kecil, C 13 kecil, D 20 medium, E 20 medium.
+ * Blok A 15 kandang kecil, B 14 kecil, C 12 kecil, D 20 medium, E 20 medium.
  */
 class KandangSeeder extends Seeder
 {
@@ -16,7 +16,7 @@ class KandangSeeder extends Seeder
         $kandang = [
             'A' => ['jumlah' => 15, 'tipe' => 'macaw'],
             'B' => ['jumlah' => 14, 'tipe' => 'macaw'],
-            'C' => ['jumlah' => 13, 'tipe' => 'macaw'],
+            'C' => ['jumlah' => 12, 'tipe' => 'macaw'],
             'D' => ['jumlah' => 20, 'tipe' => 'medium'],
             'E' => ['jumlah' => 20, 'tipe' => 'medium'],
         ];
@@ -33,5 +33,8 @@ class KandangSeeder extends Seeder
         // Aviary (kandang besar pra-breeding): 2 unit, isi tanpa batas
         Kandang::updateOrCreate(['blok' => 'V', 'nomor' => 1], ['tipe' => 'aviary']);
         Kandang::updateOrCreate(['blok' => 'V', 'nomor' => 2], ['tipe' => 'aviary']);
+
+        // Blok C ternyata hanya 12 kandang di lapangan — C-13 tidak ada.
+        Kandang::where('blok', 'C')->where('nomor', 13)->delete();
     }
 }

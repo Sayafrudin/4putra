@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
- * Vaksinasi burung: CRUD + deteksi jatuh tempo (vaksin ulang tiap 1 bulan).
+ * Obat & Vaksinasi burung: CRUD + deteksi jatuh tempo per metode
+ * (suntik = 1x/tahun, oral = tiap 3 bulan) + catat massal per kandang.
  */
 class VaksinasiTest extends TestCase
 {
@@ -47,7 +48,7 @@ class VaksinasiTest extends TestCase
             ['email' => 'user-vaksin-test@4putra.test'],
             ['name' => 'Role User', 'password' => bcrypt('password123'), 'role' => 'user']
         );
-        // Role user boleh memantau vaksinasi (full akses menu monitoring).
+        // Role user boleh memantau obat & vaksinasi (akses menu monitoring).
         $this->actingAs($roleUser)->get('/admin/vaksinasi')->assertOk();
         $this->actingAs($this->admin)->get('/admin/vaksinasi')->assertOk();
     }
@@ -65,14 +66,31 @@ class VaksinasiTest extends TestCase
             ->postJson('/admin/vaksinasi', [
                 'burung_id' => $burung->id,
                 'jenis' => 'uji-vaksin-baru',
+                'metode' => 'suntik',
+                'dosis' => [(string) $burung->id => '0.5 ml'],
                 'tanggal_vaksin' => '2026-11-01',
             ])->assertOk();
 
         $this->assertDatabaseHas('vaksinasis', [
             'burung_id' => $burung->id,
             'jenis' => 'uji-vaksin-baru',
+            'metode' => 'suntik',
+            'dosis' => '0.5 ml',
             'tanggal_vaksin' => '2026-11-01',
         ]);
+    }
+
+    public function test_metode_wajib_valid(): void
+    {
+        $burung = $this->burungUji();
+
+        $this->actingAs($this->admin)
+            ->postJson('/admin/vaksinasi', [
+                'burung_id' => $burung->id,
+                'jenis' => 'uji-vaksin-baru',
+                'metode' => 'tablet', // bukan suntik/oral
+                'tanggal_vaksin' => '2026-11-01',
+            ])->assertStatus(422);
     }
 
     public function test_tanggal_hari_ini_diterima_pada_dini_hari_wib(): void
@@ -88,6 +106,7 @@ class VaksinasiTest extends TestCase
                 ->postJson('/admin/vaksinasi', [
                     'burung_id' => $burung->id,
                     'jenis' => 'uji-vaksin-baru',
+                    'metode' => 'oral',
                     'tanggal_vaksin' => '2026-11-18',
                 ])->assertOk();
 
@@ -98,30 +117,52 @@ class VaksinasiTest extends TestCase
         }
     }
 
-    public function test_burung_vaksin_lama_muncul_jatuh_tempo_dan_yang_baru_tidak(): void
+    public function test_jatuh_tempo_mengikuti_siklus_metode(): void
     {
-        $burungLama = Burung::create(['nama' => 'uji-vaksin-lamaA', 'spesies' => 'Macaw', 'fase' => 'dewasa']);
-        $burungBaru = Burung::create(['nama' => 'uji-vaksin-baruB', 'spesies' => 'Macaw', 'fase' => 'dewasa']);
+        $oralLama = Burung::create(['nama' => 'uji-vaksin-lamaA', 'spesies' => 'Macaw', 'fase' => 'dewasa']);
+        $suntikBaru = Burung::create(['nama' => 'uji-vaksin-baruB', 'spesies' => 'Macaw', 'fase' => 'dewasa']);
 
-        // Vaksin 2 bulan lalu → jatuh tempo
+        // Oral 4 bulan lalu → jatuh tempo (siklus 3 bulan)
         Vaksinasi::create([
-            'burung_id' => $burungLama->id,
+            'burung_id' => $oralLama->id,
             'jenis' => 'uji-vaksin-lama',
-            'tanggal_vaksin' => now()->subMonths(2)->toDateString(),
+            'metode' => 'oral',
+            'tanggal_vaksin' => now()->subMonths(4)->toDateString(),
         ]);
-        // Vaksin minggu lalu → tidak jatuh tempo
+        // Suntik 2 bulan lalu → masih terlindungi (siklus 12 bulan)
         Vaksinasi::create([
-            'burung_id' => $burungBaru->id,
+            'burung_id' => $suntikBaru->id,
             'jenis' => 'uji-vaksin-baru',
-            'tanggal_vaksin' => now()->subWeek()->toDateString(),
+            'metode' => 'suntik',
+            'tanggal_vaksin' => now()->subMonths(2)->toDateString(),
         ]);
 
         $res = $this->actingAs($this->admin)->get('/admin/vaksinasi');
         $res->assertOk();
-        $res->assertSee('uji-vaksin-lamaA', false);   // masuk daftar jatuh tempo
-        $res->assertSee('uji-vaksin-baruB', false);   // tetap tampil di riwayat
+        $res->assertSee('uji-vaksin-lamaA', false);   // jatuh tempo (panel + badge merah)
+        $res->assertSee('uji-vaksin-baruB', false);   // masih terlindungi
 
-        DB::table('vaksinasis')->whereIn('jenis', ['uji-vaksin-lama', 'uji-vaksin-baru'])->delete();
+        $this->assertTrue(Vaksinasi::where('burung_id', $oralLama->id)->first()->sudah_jatuh_tempo);
+        $this->assertFalse(Vaksinasi::where('burung_id', $suntikBaru->id)->first()->sudah_jatuh_tempo);
+    }
+
+    public function test_catat_massal_untuk_beberapa_burung(): void
+    {
+        $b1 = Burung::create(['nama' => 'uji-vaksin-massal1', 'spesies' => 'Macaw', 'fase' => 'dewasa']);
+        $b2 = Burung::create(['nama' => 'uji-vaksin-massal2', 'spesies' => 'Macaw', 'fase' => 'dewasa']);
+
+        $this->actingAs($this->admin)
+            ->postJson('/admin/vaksinasi', [
+                'burung_ids' => [$b1->id, $b2->id],
+                'jenis' => 'Obat Cacing',
+                'metode' => 'oral',
+                'dosis' => [(string) $b1->id => '1 tablet', (string) $b2->id => '2 tablet'],
+                'tanggal_vaksin' => '2026-11-01',
+            ])->assertOk();
+
+        $this->assertSame(2, DB::table('vaksinasis')->where('jenis', 'Obat Cacing')->count());
+        $this->assertSame('1 tablet', DB::table('vaksinasis')->where('burung_id', $b1->id)->where('jenis', 'Obat Cacing')->value('dosis'));
+        $this->assertSame('2 tablet', DB::table('vaksinasis')->where('burung_id', $b2->id)->where('jenis', 'Obat Cacing')->value('dosis'));
     }
 
     public function test_hapus_vaksinasi(): void
@@ -130,6 +171,7 @@ class VaksinasiTest extends TestCase
         $vaksin = Vaksinasi::create([
             'burung_id' => $burung->id,
             'jenis' => 'uji-vaksin-baru',
+            'metode' => 'suntik',
             'tanggal_vaksin' => '2026-11-01',
         ]);
 

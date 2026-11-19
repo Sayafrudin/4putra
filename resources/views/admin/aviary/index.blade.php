@@ -141,6 +141,11 @@
                             <option value="betina">Betina</option>
                         </select>
                     </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Nomor Ring (opsional)</label>
+                        <input type="text" name="nomor_ring" id="tambah_ring" placeholder="Nomor ring kaki burung..."
+                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                    </div>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Catatan (opsional)</label>
@@ -234,6 +239,11 @@
                         <input type="text" name="nomor_dna" id="edit_dna" placeholder="Nomor sertifikat DNA"
                             class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                     </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Nomor Ring</label>
+                        <input type="text" name="nomor_ring" id="edit_ring" placeholder="Nomor ring kaki burung..."
+                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                    </div>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Catatan (opsional)</label>
@@ -318,6 +328,7 @@
                         spesies: spesies,
                         fase: form.fase.value,
                         gender: form.gender.value || null,
+                        nomor_ring: form.nomor_ring.value.trim() || null,
                         catatan: form.catatan.value.trim() || null,
                     })
                 });
@@ -517,7 +528,7 @@
             }
         });
 
-        // ---- Edit burung (nama, spesies, fase, gender DNA, catatan) ----
+        // ---- Edit burung (nama, spesies, fase, gender DNA, ring, catatan) ----
         document.addEventListener('click', function (e) {
             const btn = e.target.closest('.edit-burung');
             if (!btn || sedangBusy) return;
@@ -527,6 +538,7 @@
             document.getElementById('edit_fase').value = btn.dataset.fase;
             document.getElementById('edit_gender').value = btn.dataset.gender || '';
             document.getElementById('edit_dna').value = btn.dataset.nomorDna || '';
+            document.getElementById('edit_ring').value = btn.dataset.nomorRing || '';
             document.getElementById('edit_catatan').value = btn.dataset.catatan || '';
             bukaModal('modalEdit');
         });
@@ -551,6 +563,7 @@
                         fase: form.fase.value,
                         gender: form.gender.value || null,
                         nomor_dna: form.nomor_dna.value.trim() || null,
+                        nomor_ring: form.nomor_ring.value.trim() || null,
                         catatan: form.catatan.value.trim() || null,
                     })
                 });

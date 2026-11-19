@@ -69,7 +69,19 @@
         })
             .then(function (res) {
                 if (res.status === 401 || res.status === 419) {
-                    return { expired: true };
+                    // 401 bisa dua rasa: sesi idle habis ATAU digantikan login
+                    // baru di perangkat lain (SingleSession) — bedakan pesannya.
+                    return res
+                        .json()
+                        .catch(function () {
+                            return null;
+                        })
+                        .then(function (body) {
+                            if (body && body.sesi_digantikan) {
+                                return { expired: true, kicked: true };
+                            }
+                            return { expired: true };
+                        });
                 }
                 var ct = res.headers.get("content-type") || "";
                 if (res.ok && ct.indexOf("application/json") !== -1) {
@@ -195,7 +207,7 @@
      * Jangan redirect paksa & jangan auto-submit logout — biarkan user menyalin
      * data form panjang terlebih dahulu, lalu arahkan manual ke halaman login.
      */
-    function showExpiredState() {
+    function showExpiredState(kicked) {
         if (logoutTimer) {
             clearInterval(logoutTimer); // hentikan auto-logout paksa
             logoutTimer = null;
@@ -213,23 +225,46 @@
         var extendBtn = document.getElementById("session-extend-btn");
         var logoutBtn = document.getElementById("session-logout-btn");
 
-        if (titleEl) {
-            titleEl.textContent = "Sesi Anda Telah Habis";
-        }
-        if (paragraphs.length > 0) {
-            paragraphs[0].textContent =
-                "Anda telah ter-logout karena sesi berakhir. Silakan login kembali untuk melanjutkan.";
-        }
-        if (paragraphs.length > 1) {
-            paragraphs[1].textContent =
-                "Data pada form tidak terkirim — salin teks penting terlebih dahulu bila diperlukan. Setelah login ulang, Anda dikembalikan otomatis ke halaman ini.";
+        if (kicked) {
+            // Sesi digantikan login baru di perangkat lain (sesi tunggal)
+            if (titleEl) {
+                titleEl.textContent = "Sesi Anda Telah Digantikan";
+            }
+            if (paragraphs.length > 0) {
+                paragraphs[0].textContent =
+                    "Akun Anda telah login di perangkat lain. Sesi ini diakhiri otomatis.";
+            }
+            if (paragraphs.length > 1) {
+                paragraphs[1].textContent =
+                    "Data pada form tidak terkirim — salin teks penting terlebih dahulu bila diperlukan. Silakan login kembali di perangkat ini.";
+            }
+        } else {
+            if (titleEl) {
+                titleEl.textContent = "Sesi Anda Telah Habis";
+            }
+            if (paragraphs.length > 0) {
+                paragraphs[0].textContent =
+                    "Anda telah ter-logout karena sesi berakhir. Silakan login kembali untuk melanjutkan.";
+            }
+            if (paragraphs.length > 1) {
+                paragraphs[1].textContent =
+                    "Data pada form tidak terkirim — salin teks penting terlebih dahulu bila diperlukan. Setelah login ulang, Anda dikembalikan otomatis ke halaman ini.";
+            }
         }
 
         if (extendBtn) {
             var reloadBtn = extendBtn.cloneNode(true); // clone tanpa listener lama
-            reloadBtn.textContent = "Muat Ulang Halaman";
+            reloadBtn.textContent = kicked
+                ? "Ke Halaman Login"
+                : "Muat Ulang Halaman";
             extendBtn.parentNode.replaceChild(reloadBtn, extendBtn);
             reloadBtn.addEventListener("click", function () {
+                if (kicked) {
+                    // Sesi sudah di-logout paksa di server — remember-me ikut
+                    // dihapus, reload hanya memutar balik. Menuju login langsung.
+                    window.location.href = "/login";
+                    return;
+                }
                 // Reload URL sekarang: dengan remember → kembali langsung tanpa
                 // login; tanpa remember → login singkat lalu balik ke halaman ini
                 // (URL intended dipertahankan server).
@@ -301,7 +336,7 @@
             setExtending(false);
             if (data && data.expired) {
                 // Sesi benar-benar habis di server → arahkan ke login
-                showExpiredState();
+                showExpiredState(data.kicked);
                 return;
             }
             if (data && data.failed) {
@@ -406,7 +441,7 @@
         }
         requestPing().then(function (data) {
             if (data && data.expired) {
-                showExpiredState(); // jujur sejak awal, sebelum user klik apa pun
+                showExpiredState(data.kicked); // jujur sejak awal, sebelum user klik apa pun
                 return;
             }
             if (data && data.ok) {

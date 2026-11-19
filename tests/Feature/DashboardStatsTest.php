@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Support\AdminMenus;
 use App\Support\DashboardStats;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
@@ -45,6 +46,38 @@ class DashboardStatsTest extends TestCase
         $this->assertArrayHasKey('telur', $stats);
         $this->assertArrayHasKey('vaksin', $stats);
         $this->assertArrayHasKey('aktivitasTerbaru', $stats);
+        $this->assertArrayHasKey('pasangan', $stats['burung']);
+        $this->assertIsInt($stats['burung']['pasangan']);
+    }
+
+    public function test_pasangan_dihitung_dari_kandang_biasa_berisi_tepat_dua_dewasa(): void
+    {
+        // DB bersama + cache 60 detik: pakai baseline, bukan angka pasti.
+        Cache::forget('dashboard.stats');
+        $dasar = DashboardStats::untuk($this->buatUser('dash-admin@4putra.test', 'admin', null))['burung']['pasangan'];
+
+        $kandang = \App\Models\Kandang::create(['blok' => 'C', 'nomor' => 9901, 'tipe' => 'biasa']);
+        $aviary = \App\Models\Kandang::create(['blok' => 'C', 'nomor' => 9902, 'tipe' => 'aviary']);
+
+        // Kandang biasa + 2 dewasa = 1 pair terhitung.
+        \App\Models\Burung::create(['nama' => 'Uji Pair J', 'spesies' => 'Macaw', 'fase' => 'dewasa', 'gender' => 'jantan', 'kandang_id' => $kandang->id]);
+        \App\Models\Burung::create(['nama' => 'Uji Pair B', 'spesies' => 'Macaw', 'fase' => 'dewasa', 'gender' => 'betina', 'kandang_id' => $kandang->id]);
+
+        // Aviary walaupun berisi 2 dewasa TIDAK dihitung pair.
+        \App\Models\Burung::create(['nama' => 'Uji Avi J', 'spesies' => 'Macaw', 'fase' => 'dewasa', 'gender' => 'jantan', 'kandang_id' => $aviary->id]);
+        \App\Models\Burung::create(['nama' => 'Uji Avi B', 'spesies' => 'Macaw', 'fase' => 'dewasa', 'gender' => 'betina', 'kandang_id' => $aviary->id]);
+
+        // Kandang 1 dewasa saja = belum pair.
+        \App\Models\Burung::create(['nama' => 'Uji Sendiri', 'spesies' => 'Macaw', 'fase' => 'dewasa', 'gender' => 'jantan', 'kandang_id' => null]);
+
+        Cache::forget('dashboard.stats');
+        $stats = DashboardStats::untuk($this->buatUser('dash-admin@4putra.test', 'admin', null));
+
+        $this->assertSame($dasar + 1, $stats['burung']['pasangan']);
+
+        \App\Models\Burung::whereIn('nama', ['Uji Pair J', 'Uji Pair B', 'Uji Avi J', 'Uji Avi B', 'Uji Sendiri'])->delete();
+        \App\Models\Kandang::whereIn('id', [$kandang->id, $aviary->id])->delete();
+        Cache::forget('dashboard.stats');
     }
 
     public function test_data_keuangan_tidak_pernah_keluar_dari_pintu(): void

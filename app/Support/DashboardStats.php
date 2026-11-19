@@ -51,6 +51,16 @@ class DashboardStats
 
         $telurStatus = Telur::query()->selectRaw('status, COUNT(*) c')->groupBy('status')->pluck('c', 'status');
 
+        // Pair = kandang biasa berisi TEPAT 2 induk dewasa (definisi sama dgn dropdown Catat Telur).
+        $pasangan = Burung::query()
+            ->selectRaw('burungs.kandang_id, COUNT(*) c')
+            ->join('kandangs', 'kandangs.id', '=', 'burungs.kandang_id')
+            ->where('burungs.fase', 'dewasa')
+            ->where('kandangs.tipe', '!=', 'aviary')
+            ->groupBy('burungs.kandang_id')
+            ->havingRaw('COUNT(*) = 2')
+            ->get()->count();
+
         $vaksin = \App\Models\Vaksinasi::catatanTerakhirPerBurung()
             ->filter(fn ($v) => $v->sudah_jatuh_tempo)
             ->count();
@@ -67,6 +77,7 @@ class DashboardStats
                 'total' => (int) array_sum($burungFase->all()),
                 'dewasa' => (int) ($burungFase['dewasa'] ?? 0),
                 'anakan' => (int) ($burungFase['anakan'] ?? 0),
+                'pasangan' => (int) $pasangan,
                 'spesies' => $burungSpesies->all(),
                 'spesiesLainnya' => $burungLainnya,
             ],

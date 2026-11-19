@@ -106,7 +106,14 @@
                 <tbody data-admin-list class="divide-y divide-gray-200 dark:divide-gray-800">
                     @forelse ($telurs as $t)
                         <tr class="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#262d3a] transition-colors">
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{{ $t->induk_label }}</td>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                                {{ $t->induk_label }}
+                                @if ($t->burung?->kandang)
+                                    <span class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-500/10 text-gray-500 dark:text-gray-400">
+                                        <x-tabler-home class="w-3 h-3" /> {{ $t->burung->kandang->label }}
+                                    </span>
+                                @endif
+                            </td>
                             <td class="px-6 py-4 text-sm tabular-nums">{{ $t->sesi }}</td>
                             <td class="px-6 py-4 text-sm tabular-nums whitespace-nowrap">{{ $t->butir_ke }}/{{ $t->jumlah }}</td>
                             <td class="px-6 py-4 text-sm">

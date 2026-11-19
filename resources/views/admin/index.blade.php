@@ -14,12 +14,17 @@
     </div>
 
     {{-- ==================== KARTU RINGKASAN ==================== --}}
-    <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
+    <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
         @if (isset($stats['burung']))
             <div class="p-4 bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-xl">
                 <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Total Burung</p>
                 <p class="text-2xl font-bold text-gray-900 dark:text-white tabular-nums mt-1">{{ number_format($stats['burung']['total']) }}</p>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Dewasa {{ number_format($stats['burung']['dewasa']) }} · Baby {{ number_format($stats['burung']['anakan']) }}</p>
+            </div>
+            <div class="p-4 bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-xl">
+                <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Pasangan Induk</p>
+                <p class="text-2xl font-bold text-pink-500 tabular-nums mt-1">{{ number_format($stats['burung']['pasangan']) }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">kandang terisi pair dewasa</p>
             </div>
         @endif
         @if (isset($stats['stok']))

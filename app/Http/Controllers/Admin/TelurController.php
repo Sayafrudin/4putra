@@ -43,7 +43,7 @@ class TelurController extends Controller
         // ID yang tak ada di koleksi (bukan dewasa / tanpa kandang) di-fetch 1 query.
         $perlu = $telurs->flatMap(fn ($t) => [$t->burung_id, $t->burung_pasangan_id])
             ->filter()->unique()->diff($burungDewasa->pluck('id'));
-        $ekstra = $perlu->isEmpty() ? collect() : Burung::findMany($perlu)->keyBy('id');
+        $ekstra = $perlu->isEmpty() ? collect() : Burung::with('kandang:id,blok,nomor,tipe')->findMany($perlu)->keyBy('id');
         $indeks = $burungDewasa->keyBy('id')->union($ekstra);
         $telurs->each(function ($t) use ($indeks) {
             $t->setRelation('burung', $indeks[$t->burung_id] ?? null);

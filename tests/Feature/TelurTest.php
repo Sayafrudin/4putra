@@ -286,4 +286,40 @@ class TelurTest extends TestCase
         $this->actingAs($this->admin)->deleteJson("/admin/telur/{$telur->id}")->assertOk();
         $this->assertDatabaseMissing('telurs', ['id' => $telur->id]);
     }
+
+    public function test_data_ekspor_excel_konsisten_dengan_header(): void
+    {
+        // Penjaga desinkron kolom: DATA_EKSPOR dirender server-side, sedangkan file xlsx
+        // dibentuk client-side dari tombol Export Excel. E2E hanya memeriksa unduhan,
+        // jadi di sini dipastikan tiap baris berpanjang sama dengan header dan
+        // isi kolom berada pada posisi yang benar.
+        [$kandang, $jantan, $betina] = $this->kandangPasanganUji();
+        Telur::create([
+            'burung_id' => $betina->id,
+            'burung_pasangan_id' => $jantan->id,
+            'sesi' => 1,
+            'jumlah' => 1,
+            'tanggal_diambil' => now()->subDays(10)->toDateString(),
+            'diambil_oleh' => 'uji-pekerja-telur',
+            'kondisi' => 'Kondisi telur baik',
+        ]);
+
+        $html = $this->actingAs($this->admin)->get('/admin/telur')->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('/var DATA_EKSPOR = (\[.*?\]);/s', $html, $m), 'Variabel DATA_EKSPOR tidak ditemukan di HTML telur.');
+        $baris = json_decode($m[1], true);
+        $this->assertIsArray($baris);
+        $this->assertNotEmpty($baris);
+
+        $jumlahHeader = 9; // headers: Induk, Kandang, Sesi, Butir, Diambil, Diambil Oleh, Usia/Keterangan, Kondisi, Status
+        foreach ($baris as $sel) {
+            $this->assertCount($jumlahHeader, $sel);
+        }
+
+        // Posisi kolom mengikuti urutan header: Kandang indeks 1, Sesi indeks 2, Induk indeks 0.
+        $barisKita = array_values(array_filter($baris, fn ($r) => ($r[1] ?? null) === 'A-990'));
+        $this->assertNotEmpty($barisKita, 'Baris ekspor kandang uji tidak ditemukan.');
+        $this->assertStringContainsString('uji-telur', $barisKita[0][0]);
+        $this->assertSame(1, (int) $barisKita[0][2]);
+    }
 }

@@ -73,10 +73,10 @@
                         <button type="button" onclick="bukaModalKandang({{ $kandang->id }})"
                             class="kandang-card text-left bg-white dark:bg-[#1e2530] border {{ $perlu > 0 ? 'border-[#E62C37]/40' : 'border-gray-700' }} rounded-xl p-3 hover:border-[#E62C37]/60 transition-colors"
                             data-kandang-id="{{ $kandang->id }}" data-label="{{ $kandang->label }}">
-                            <div class="flex items-center justify-between mb-2">
+                            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
                                 <span class="text-sm font-bold text-gray-900 dark:text-white">{{ $kandang->label }}</span>
-                                <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full {{ $perlu > 0 ? 'text-[#E62C37] bg-[#E62C37]/10' : 'text-green-600 bg-green-600/10' }}">
-                                    {{ $perlu > 0 ? $perlu.' perlu ulang' : 'Aman' }}
+                                <span class="whitespace-nowrap text-[10px] font-bold uppercase px-2 py-0.5 rounded-full {{ $perlu > 0 ? 'text-[#E62C37] bg-[#E62C37]/10' : 'text-green-600 bg-green-600/10' }}">
+                                    {{ $perlu > 0 ? $perlu.' perlu obat/vaksin' : 'Aman' }}
                                 </span>
                             </div>
                             <div class="flex flex-col gap-1.5">
@@ -225,7 +225,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Metode</label>
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <label class="flex items-start gap-2 p-3 bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl cursor-pointer hover:border-[#E62C37]/50 has-checked:border-[#E62C37]">
                             <input type="radio" name="metode" value="suntik" checked class="mt-1 accent-[#E62C37]">
                             <span>

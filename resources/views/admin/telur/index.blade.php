@@ -7,7 +7,7 @@
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Sesi bertelur, perebut, usia harian, sampai siap dilepas (±3 bulan)</p>
         </div>
         <div class="flex gap-3 flex-wrap">
-            <button onclick="eksporExcel(this, { namaFile: 'laporan_telur_incubator_{{ now()->toDateString() }}.xlsx', judul: 'Laporan Telur', headers: ['Induk (Pasangan)', 'Sesi', 'Butir', 'Diambil', 'Diambil Oleh', 'Usia/Keterangan', 'Kondisi', 'Status'], rows: DATA_EKSPOR })"
+            <button onclick="eksporExcel(this, { namaFile: 'laporan_telur_incubator_{{ now()->toDateString() }}.xlsx', judul: 'Laporan Telur', headers: ['Induk (Pasangan)', 'Kandang', 'Sesi', 'Butir', 'Diambil', 'Diambil Oleh', 'Usia/Keterangan', 'Kondisi', 'Status'], rows: DATA_EKSPOR })"
                 class="px-4 py-2.5 text-sm font-semibold text-white bg-green-600 hover:bg-green-700 rounded-xl transition-colors">
                 Export Excel
             </button>
@@ -61,7 +61,7 @@
                     @endphp
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-gray-50 dark:bg-[#151a22] rounded-xl">
                         <div class="min-w-0">
-                            <p class="text-sm font-bold text-gray-900 dark:text-white">{{ $telurPertama->induk_label }} <span class="text-xs font-semibold text-gray-500">· {{ $sesiGrup->sum('jumlah') }} butir ({{ $sesiGrup->count() }} sesi)</span></p>
+                            <p class="text-sm font-bold text-gray-900 dark:text-white">{{ $telurPertama->induk_label }} <span class="text-xs font-semibold text-gray-500">· {{ $sesiGrup->sum('jumlah') }} butir ({{ $sesiGrup->count() }} sesi)</span> <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-500/10 text-gray-500 dark:text-gray-400">{{ $telurPertama->burung?->kandang?->label ?? '-' }}</span></p>
                             <p class="text-xs text-gray-500 dark:text-gray-400">
                                 @foreach ($sesiGrup as $t)
                                     Sesi {{ $t->sesi }}: {{ $t->usia_hari }} hari ({{ $t->kondisi }})@if (! $loop->last) · @endif
@@ -317,6 +317,7 @@
         // Data ekspor Excel (seluruh catatan telur, 1 baris = 1 butir, server-side)
         $dataEkspor = $telurs->map(fn ($t) => [
             $t->induk_label,
+            $t->burung?->kandang?->label ?? '-',
             (int) $t->sesi,
             $t->butir_label,
             $t->tanggal_diambil->translatedFormat('d M Y'),

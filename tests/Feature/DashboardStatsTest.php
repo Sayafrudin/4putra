@@ -12,7 +12,9 @@ use Tests\TestCase;
  * Dashboard profesional + PINTU TUNGGAL angka agregat:
  * - DashboardStats::untuk() menyarikan per hak akses menu (tanpa kunci = tanpa data).
  * - Halaman dashboard tidak boleh memuat angka yang berada di luar hak akses.
- * - Agregasi keuangan hanya boleh lewat pintu (test penjaga arsitektur).
+ * - Data keuangan (saldo kas, arus kas, transaksi) SENGAJA dihapus dari dashboard
+ *   (terlalu sensitif) — guard memastikan tidak pernah ikut payload.
+ * - Agregasi keuangan hanya boleh di controller/view resminya (test penjaga arsitektur).
  */
 class DashboardStatsTest extends TestCase
 {
@@ -39,13 +41,23 @@ class DashboardStatsTest extends TestCase
         $stats = DashboardStats::untuk($admin);
 
         $this->assertArrayHasKey('burung', $stats);
-        $this->assertArrayHasKey('keuangan', $stats);
-        $this->assertArrayHasKey('kas30', $stats);
         $this->assertArrayHasKey('stok', $stats);
         $this->assertArrayHasKey('telur', $stats);
         $this->assertArrayHasKey('vaksin', $stats);
-        $this->assertArrayHasKey('transaksiTerbaru', $stats);
         $this->assertArrayHasKey('aktivitasTerbaru', $stats);
+    }
+
+    public function test_data_keuangan_tidak_pernah_keluar_dari_pintu(): void
+    {
+        // Data keuangan terlalu sensitif untuk dashboard — dihapus total:
+        // bahkan admin penuh TIDAK boleh menerima kunci keuangan dari pintu.
+        $admin = $this->buatUser('dash-admin@4putra.test', 'admin', null);
+
+        $stats = DashboardStats::untuk($admin);
+
+        $this->assertArrayNotHasKey('keuangan', $stats, 'Saldo kas tidak boleh masuk dashboard');
+        $this->assertArrayNotHasKey('kas30', $stats, 'Arus kas 30 hari tidak boleh masuk dashboard');
+        $this->assertArrayNotHasKey('transaksiTerbaru', $stats, 'Transaksi terbaru tidak boleh masuk dashboard');
     }
 
     public function test_role_user_tanpa_akses_keuangan_tidak_menerima_data_keuangan(): void
@@ -57,7 +69,6 @@ class DashboardStatsTest extends TestCase
 
         $this->assertArrayHasKey('burung', $stats);
         $this->assertArrayNotHasKey('keuangan', $stats, 'Data keuangan tidak boleh keluar pintu untuk role tanpa akses');
-        $this->assertArrayNotHasKey('kas30', $stats);
         $this->assertArrayNotHasKey('stok', $stats);
         $this->assertArrayNotHasKey('telur', $stats);
         $this->assertArrayNotHasKey('vaksin', $stats);
@@ -75,13 +86,27 @@ class DashboardStatsTest extends TestCase
         $res->assertSee('Total Burung', false);
     }
 
+    public function test_halaman_dashboard_tidak_menampilkan_data_keuangan_untuk_siapapun(): void
+    {
+        // Data keuangan dihapus dari dashboard total — bahkan admin penuh
+        // tidak boleh melihat saldo kas / arus kas / transaksi terbaru di dashboard.
+        $admin = $this->buatUser('dash-admin@4putra.test', 'admin', null);
+
+        $res = $this->actingAs($admin)->get('/admin')->assertOk();
+
+        $res->assertDontSee('Saldo Kas Umum', false);
+        $res->assertDontSee('Arus Kas 30 Hari', false);
+        $res->assertDontSee('Transaksi Terbaru', false);
+    }
+
     public function test_agregasi_keuangan_hanya_boleh_lewat_pintu_tunggal(): void
     {
         // Test penjaga arsitektur: agregasi tabel keuangans (sum/pluck/avg/raw)
-        // HANYA boleh di pintu (DashboardStats) & controller/view resminya.
-        // Pelanggaran = suite merah; menonaktifkan penjaga ini = perubahan yang
-        // terlihat jelas di review.
-        $diizinkan = ['KeuanganController.php', 'FinancialTab.php', 'DashboardStats.php'];
+        // HANYA boleh di controller & model resminya. DashboardStats sengaja
+        // tidak lagi memuat keuangan (data sensitif dihapus dari dashboard) —
+        // jadi pintu ini DIKUNCI: bila kelak ada agregasi keuangan di
+        // DashboardStats, test ini merah dan perubahan terlihat di review.
+        $diizinkan = ['KeuanganController.php', 'FinancialTab.php'];
         $polaLarangan = [
             '/Keuangan\s*::\s*(sum|avg|min|max|pluck)\s*\(/i',
             "/DB\s*::\s*table\s*\(\s*['\"]keuangans['\"]/i",

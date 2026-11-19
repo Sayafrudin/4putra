@@ -66,7 +66,7 @@ function initChatWidget(currentUser) {
 
         widgetContainer.innerHTML =
             // Chat toggle button
-            '<div id="chat-toggle" class="fixed bottom-6 right-6 z-[9998] cursor-pointer">' +
+            '<div id="chat-toggle" class="fixed bottom-6 right-6 z-40 cursor-pointer">' +
             '<div class="flex items-center gap-2 bg-[#E62C37] hover:bg-[#c5242d] text-white px-4 py-3 rounded-full shadow-lg transition-all duration-200">' +
             '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>' +
             '<span class="text-sm font-semibold">' +
@@ -76,7 +76,7 @@ function initChatWidget(currentUser) {
             "</div>" +
             "</div>" +
             // Chat panel — mobile: lembar hampir layar penuh (w-96 + right-6 terpotong di viewport HP)
-            '<div id="chat-panel" class="hidden fixed bottom-20 left-3 right-3 z-[9999] w-auto bg-[#151a22] rounded-xl shadow-2xl border border-gray-700 overflow-hidden sm:left-auto sm:w-96" style="height:min(520px,70vh);">' +
+            '<div id="chat-panel" class="hidden fixed bottom-20 left-3 right-3 z-[60] w-auto bg-[#151a22] rounded-xl shadow-2xl border border-gray-700 overflow-hidden sm:left-auto sm:w-96" style="height:min(520px,70vh);">' +
             // Contact list view
             '<div id="chat-contact-list" class="h-full flex flex-col">' +
             '<div class="bg-[#E62C37] text-white px-4 py-3 flex items-center justify-between shrink-0">' +
@@ -128,7 +128,7 @@ function initChatWidget(currentUser) {
             "</div>" +
             "</div>" +
             // Context menu
-            '<div id="chat-context-menu" class="hidden fixed z-[10000] bg-[#151a22] rounded-lg shadow-xl border border-gray-700 py-1 min-w-[140px]">' +
+            '<div id="chat-context-menu" class="hidden fixed z-[70] bg-[#151a22] rounded-lg shadow-xl border border-gray-700 py-1 min-w-[140px]">' +
             '<button data-action="reply" class="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-800 flex items-center gap-2">' +
             '<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"/></svg>Balas</button>' +
             '<button data-action="copy" class="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-800 flex items-center gap-2">' +

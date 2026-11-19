@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Monitoring telur: sesi bertelur, perebut, usia harian, menetas → incubator → siap dilepas.
+ * 1 baris = 1 butir: jumlah=N membuat N baris (butir_ke 1..N) — tiap butir punya
+ * status & tanggal menetas sendiri sehingga menetasnya bisa berbeda per butir.
  */
 class TelurController extends Controller
 {
@@ -17,15 +19,17 @@ class TelurController extends Controller
 
     public function index()
     {
-        $telurs = Telur::with(['burung', 'pasangan'])->orderByDesc('tanggal_diambil')->orderByDesc('id')->get();
+        $telurs = Telur::orderByDesc('tanggal_diambil')->orderByDesc('id')->get();
 
         // Dropdown = kandang BIASA berisi TEPAT 2 induk dewasa (pasangan).
         // Aviary dikecualikan (pra-breeding, bukan kandang pasangan). Satu query + operasi koleksi, tanpa N+1.
-        $kandangPasangan = Burung::with('kandang:id,blok,nomor,tipe')
+        $burungDewasa = Burung::with('kandang:id,blok,nomor,tipe')
             ->where('fase', 'dewasa')
             ->whereNotNull('kandang_id')
             ->orderBy('nama')
-            ->get(['id', 'nama', 'spesies', 'gender', 'kandang_id'])
+            ->get(['id', 'nama', 'spesies', 'gender', 'kandang_id']);
+
+        $kandangPasangan = $burungDewasa
             ->groupBy('kandang_id')
             ->filter(fn ($grup) => $grup->count() === 2 && $grup->first()->kandang->tipe !== 'aviary')
             ->map(fn ($grup) => [
@@ -34,6 +38,17 @@ class TelurController extends Controller
             ])
             ->sortBy('label', SORT_NATURAL | SORT_FLAG_CASE)
             ->values();
+
+        // Relasi induk telur dari koleksi yang sudah dimuat (hemat 2 round-trip TiDB);
+        // ID yang tak ada di koleksi (bukan dewasa / tanpa kandang) di-fetch 1 query.
+        $perlu = $telurs->flatMap(fn ($t) => [$t->burung_id, $t->burung_pasangan_id])
+            ->filter()->unique()->diff($burungDewasa->pluck('id'));
+        $ekstra = $perlu->isEmpty() ? collect() : Burung::findMany($perlu)->keyBy('id');
+        $indeks = $burungDewasa->keyBy('id')->union($ekstra);
+        $telurs->each(function ($t) use ($indeks) {
+            $t->setRelation('burung', $indeks[$t->burung_id] ?? null);
+            $t->setRelation('pasangan', $indeks[$t->burung_pasangan_id] ?? null);
+        });
 
         return view('admin.telur.index', compact('telurs', 'kandangPasangan'));
     }
@@ -80,10 +95,17 @@ class TelurController extends Controller
         }
 
         try {
-            $telur = Telur::create($data);
+            // 1 baris = 1 butir: jumlah=N membuat N baris terpisah (butir_ke 1..N),
+            // tanggal diambil sama, tapi tiap butir punya status & tanggal menetas sendiri.
+            $now = now();
+            $rows = [];
+            for ($i = 1; $i <= (int) $data['jumlah']; $i++) {
+                $rows[] = array_merge($data, ['butir_ke' => $i, 'created_at' => $now, 'updated_at' => $now]);
+            }
+            Telur::insert($rows);
             $this->logActivity($request, 'tambah_telur', 'Mencatat telur '.$data['jumlah'].' butir dari pasangan #'.$data['burung_id'].' × #'.$data['burung_pasangan_id'].' (sesi '.$data['sesi'].', diambil oleh '.$data['diambil_oleh'].')');
 
-            return response()->json(['ok' => true, 'message' => 'Telur sesi '.$data['sesi'].' dicatat.']);
+            return response()->json(['ok' => true, 'message' => 'Telur sesi '.$data['sesi'].' ('.$data['jumlah'].' butir) dicatat — tiap butir termonitor sendiri.']);
         } catch (\Throwable $e) {
             Log::error('Gagal catat telur', ['error' => $e->getMessage()]);
 

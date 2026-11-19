@@ -9,8 +9,8 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // Widget monitoring farm: burung yang perlu vaksin ulang (booster bulanan)
-        $vaksinJatuhTempo = \App\Models\Vaksinasi::vaksinTerakhirPerBurung()
+        // Widget monitoring farm: burung yang perlu obat/vaksin ulang (siklus per metode)
+        $vaksinJatuhTempo = \App\Models\Vaksinasi::catatanTerakhirPerBurung()
             ->filter(fn ($v) => $v->sudah_jatuh_tempo);
 
         // Pintu tunggal angka agregat (tersaring per hak akses + cache 60 detik)

@@ -19,6 +19,7 @@ class User extends Authenticatable
         'google_id',
         'role',
         'menu_access',
+        'active_session_token',
         'last_login_at',
         'last_active_at',
     ];
@@ -26,6 +27,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'active_session_token',
     ];
 
     protected function casts(): array
@@ -42,6 +44,20 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    /**
+     * Sesi tunggal: login baru (perangkat apa pun) menggantikan tiket sesi
+     * teraktif. Perangkat lama otomatis ter-logout oleh middleware SingleSession.
+     * Token disimpan di DB (pembanding) dan session (pemilik).
+     */
+    public function terbitkanTiketSesi(): string
+    {
+        $token = bin2hex(random_bytes(20));
+        $this->forceFill(['active_session_token' => $token])->save();
+        session(['sesi_token' => $token]);
+
+        return $token;
     }
 
     // Login dashboard memakai username; bila dibuat tanpa username, turunkan

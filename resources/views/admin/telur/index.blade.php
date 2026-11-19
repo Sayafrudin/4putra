@@ -7,7 +7,7 @@
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Sesi bertelur, perebut, usia harian, sampai siap dilepas (±3 bulan)</p>
         </div>
         <div class="flex gap-3 flex-wrap">
-            <button onclick="eksporExcel(this, { namaFile: 'laporan_telur_incubator_{{ now()->toDateString() }}.xlsx', judul: 'Laporan Telur', headers: ['Induk (Pasangan)', 'Sesi', 'Jumlah Butir', 'Diambil', 'Diambil Oleh', 'Usia/Keterangan', 'Kondisi', 'Status'], rows: DATA_EKSPOR })"
+            <button onclick="eksporExcel(this, { namaFile: 'laporan_telur_incubator_{{ now()->toDateString() }}.xlsx', judul: 'Laporan Telur', headers: ['Induk (Pasangan)', 'Sesi', 'Butir', 'Diambil', 'Diambil Oleh', 'Usia/Keterangan', 'Kondisi', 'Status'], rows: DATA_EKSPOR })"
                 class="px-4 py-2.5 text-sm font-semibold text-white bg-green-600 hover:bg-green-700 rounded-xl transition-colors">
                 Export Excel
             </button>
@@ -30,15 +30,15 @@
         $perInduk = $diinkubasi->groupBy(fn ($t) => $t->pasangan ? 'p-'.$t->burung_id.'-'.$t->burung_pasangan_id : 's-'.$t->burung_id);
     @endphp
 
-    {{-- Ringkasan --}}
+    {{-- Ringkasan (1 baris = 1 butir, jadi jumlah baris = jumlah butir) --}}
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <div class="p-4 bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-xl">
             <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Telur Diinkubasi</p>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white tabular-nums mt-1">{{ $diinkubasi->sum('jumlah') }} <span class="text-sm font-semibold text-gray-500">butir ({{ $diinkubasi->count() }} catatan)</span></p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white tabular-nums mt-1">{{ $diinkubasi->count() }} <span class="text-sm font-semibold text-gray-500">butir</span></p>
         </div>
         <div class="p-4 bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-xl">
             <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Menetas (Incubator)</p>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white tabular-nums mt-1">{{ $menetas->count() }} <span class="text-sm font-semibold text-gray-500">catatan</span></p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white tabular-nums mt-1">{{ $menetas->count() }} <span class="text-sm font-semibold text-gray-500">butir</span></p>
         </div>
         <div class="p-4 bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-xl">
             <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Siap Dilepas (±90 hari)</p>
@@ -55,20 +55,22 @@
             <div class="p-4 space-y-3">
                 @foreach ($perInduk as $grup)
                     @php
-                        $telurPertama = $grup->sortBy('tanggal_diambil')->first();
+                        // 1 baris = 1 butir: dedupe per sesi agar laporan tidak dobel.
+                        $sesiGrup = $grup->sortBy('tanggal_diambil')->unique('sesi')->values();
+                        $telurPertama = $sesiGrup->first();
                     @endphp
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-gray-50 dark:bg-[#151a22] rounded-xl">
                         <div class="min-w-0">
-                            <p class="text-sm font-bold text-gray-900 dark:text-white">{{ $telurPertama->induk_label }} <span class="text-xs font-semibold text-gray-500">· {{ $grup->sum('jumlah') }} butir ({{ $grup->count() }} sesi)</span></p>
+                            <p class="text-sm font-bold text-gray-900 dark:text-white">{{ $telurPertama->induk_label }} <span class="text-xs font-semibold text-gray-500">· {{ $sesiGrup->sum('jumlah') }} butir ({{ $sesiGrup->count() }} sesi)</span></p>
                             <p class="text-xs text-gray-500 dark:text-gray-400">
-                                @foreach ($grup->sortBy('tanggal_diambil') as $t)
+                                @foreach ($sesiGrup as $t)
                                     Sesi {{ $t->sesi }}: {{ $t->usia_hari }} hari ({{ $t->kondisi }})@if (! $loop->last) · @endif
                                 @endforeach
                             </p>
                         </div>
                         <button type="button" onclick='salinLaporan(this)'
                             data-nama='{{ $telurPertama->induk_label }}'
-                            data-rows='{{ json_encode($grup->sortBy("tanggal_diambil")->map(fn ($t) => ["sesi" => $t->sesi, "kondisi" => $t->kondisi, "usia" => $t->usia_hari])->values()) }}'
+                            data-rows='{{ json_encode($sesiGrup->map(fn ($t) => ["sesi" => $t->sesi, "kondisi" => $t->kondisi, "usia" => $t->usia_hari])->values()) }}'
                             class="self-start px-3 py-2 text-xs font-semibold text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg hover:bg-blue-500/20 hover:border-blue-500/40 transition-colors">
                             Salin laporan WA
                         </button>
@@ -93,7 +95,7 @@
                     <tr class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-white dark:bg-[#151a22] border-b border-gray-200 dark:border-gray-800">
                         <th class="px-6 py-4">Induk</th>
                         <th class="px-6 py-4 w-16">Sesi</th>
-                        <th class="px-6 py-4 w-16">Butir</th>
+                        <th class="px-6 py-4 w-20">Butir</th>
                         <th class="px-6 py-4 w-36">Diambil</th>
                         <th class="px-6 py-4 w-24">Usia / Umur</th>
                         <th class="px-6 py-4">Kondisi</th>
@@ -106,7 +108,7 @@
                         <tr class="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#262d3a] transition-colors">
                             <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{{ $t->induk_label }}</td>
                             <td class="px-6 py-4 text-sm tabular-nums">{{ $t->sesi }}</td>
-                            <td class="px-6 py-4 text-sm tabular-nums">{{ $t->jumlah }}</td>
+                            <td class="px-6 py-4 text-sm tabular-nums whitespace-nowrap">{{ $t->butir_ke }}/{{ $t->jumlah }}</td>
                             <td class="px-6 py-4 text-sm">
                                 <span class="block tabular-nums">{{ $t->tanggal_diambil->translatedFormat('d M Y') }}</span>
                                 <span class="text-xs text-gray-500 dark:text-gray-400">oleh {{ $t->diambil_oleh }}</span>
@@ -305,11 +307,11 @@
 
     @php
         // Daftar kandang pasangan (server-side): [{label, burung: [{id,nama,spesies,gender} × 2]}]
-        // Data ekspor Excel (seluruh catatan telur, server-side)
+        // Data ekspor Excel (seluruh catatan telur, 1 baris = 1 butir, server-side)
         $dataEkspor = $telurs->map(fn ($t) => [
             $t->induk_label,
             (int) $t->sesi,
-            (int) $t->jumlah,
+            $t->butir_label,
             $t->tanggal_diambil->translatedFormat('d M Y'),
             $t->diambil_oleh,
             $t->status === 'menetas' && $t->tanggal_menetas

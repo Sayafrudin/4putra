@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Burung extends Model
 {
-    protected $fillable = ['nama', 'spesies', 'fase', 'gender', 'nomor_dna', 'kandang_id', 'catatan'];
+    protected $fillable = ['nama', 'spesies', 'fase', 'gender', 'nomor_dna', 'nomor_ring', 'kandang_id', 'catatan'];
 
     public function kandang(): BelongsTo
     {

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Telur extends Model
 {
     protected $fillable = [
-        'burung_id', 'burung_pasangan_id', 'sesi', 'jumlah', 'tanggal_diambil', 'diambil_oleh',
+        'burung_id', 'burung_pasangan_id', 'sesi', 'jumlah', 'butir_ke', 'tanggal_diambil', 'diambil_oleh',
         'kondisi', 'status', 'tanggal_menetas', 'catatan',
     ];
 
@@ -54,5 +54,11 @@ class Telur extends Model
         return $this->status === 'menetas'
             && $this->tanggal_menetas !== null
             && $this->tanggal_menetas->diffInDays(now()) >= 90;
+    }
+
+    /** Label butir: "Butir 1/2" (1 baris = 1 butir). */
+    public function getButirLabelAttribute(): string
+    {
+        return 'Butir '.$this->butir_ke.'/'.$this->jumlah;
     }
 }

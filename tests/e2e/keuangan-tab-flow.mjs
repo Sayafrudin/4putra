@@ -142,13 +142,6 @@ try {
     }
     assert(tercapai, "Total Budget = target 200.000");
 
-
-
-
-
-
-    );
-
     // 4. Tambah biaya tambahan 50.000 → total 250.000
     await page.fill("#biaya_nama", "e2e-biaya-material");
     await page.fill("#biaya_nominal", "50000");

@@ -55,6 +55,9 @@ class GoogleController extends Controller
         // Update last_login_at langsung ke database
         User::where('id', $user->id)->update(['last_login_at' => now()]);
 
+        // Sesi tunggal: tiket baru menggantikan tiket lama (perangkat lama dikick)
+        $user->terbitkanTiketSesi();
+
         // Non-admin diarahkan ke beranda, bukan /admin (jebakan 403).
         if (! $user->isAdmin()) {
             return redirect('/');

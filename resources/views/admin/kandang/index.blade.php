@@ -92,18 +92,23 @@
                 <input type="text" id="pindah_search" placeholder="Cari kandang tujuan..."
                     class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:outline-none">
             </div>
-            <div id="pindahCageList" class="grid grid-cols-2 gap-2 max-h-72 overflow-y-auto">
-                @foreach ($kandangs as $kandangBlok)
-                    @foreach ($kandangBlok as $k)
-                        @php($isiKandang = $k->burungs->count())
-                        <button type="button" class="pindah-ke flex items-center justify-between gap-2 px-3 py-2.5 text-sm font-semibold rounded-xl border transition-colors {{ $isiKandang >= 2 ? 'border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:border-[#E62C37] hover:bg-[#E62C37]/10' }}"
-                            data-id="{{ $k->id }}" data-label="{{ $k->label }}" @if ($isiKandang >= 2) disabled @endif>
-                            <span>{{ $k->label }}</span>
-                            <span class="text-[10px] font-bold uppercase {{ $isiKandang === 0 ? 'text-gray-400 dark:text-gray-500' : ($isiKandang >= 2 ? 'text-[#E62C37]' : 'text-green-600') }}">
-                                {{ $isiKandang === 0 ? 'Kosong' : $isiKandang.'/2'.($isiKandang >= 2 ? ' Penuh' : '') }}
-                            </span>
-                        </button>
-                    @endforeach
+            <div id="pindahCageList" class="max-h-72 overflow-y-auto pr-1 space-y-3">
+                @foreach ($kandangs as $blok => $kandangBlok)
+                    <div class="pindah-blok">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Blok {{ $blok }}</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            @foreach ($kandangBlok as $k)
+                                @php($isiKandang = $k->burungs->count())
+                                <button type="button" class="pindah-ke flex items-center justify-between gap-2 px-3 py-2.5 text-sm font-semibold rounded-xl border transition-colors {{ $isiKandang >= 2 ? 'border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:border-[#E62C37] hover:bg-[#E62C37]/10' }}"
+                                    data-id="{{ $k->id }}" data-label="{{ $k->label }}" @if ($isiKandang >= 2) disabled @endif>
+                                    <span>{{ $k->label }}</span>
+                                    <span class="text-[10px] font-bold uppercase {{ $isiKandang === 0 ? 'text-gray-400 dark:text-gray-500' : ($isiKandang >= 2 ? 'text-[#E62C37]' : 'text-green-600') }}">
+                                        {{ $isiKandang === 0 ? 'Kosong' : $isiKandang.'/2'.($isiKandang >= 2 ? ' Penuh' : '') }}
+                                    </span>
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
                 @endforeach
             </div>
             <button type="button" id="btnKeluarkan" class="hidden w-full mt-4 px-4 py-2.5 text-sm font-semibold text-[#E62C37] border border-[#E62C37]/40 bg-[#E62C37]/10 rounded-xl hover:bg-[#E62C37]/20 transition-colors">
@@ -158,6 +163,12 @@
                             <option value="jantan">Jantan</option>
                             <option value="betina">Betina</option>
                         </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Nomor Ring (opsional)</label>
+                        <input type="text" name="nomor_ring" id="tambah_ring" placeholder="Nomor ring kaki burung..."
+                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                        <p class="text-xs text-red-400 mt-1 hidden" id="err_tambah_ring"></p>
                     </div>
                 </div>
                 <div>
@@ -252,6 +263,11 @@
                         <input type="text" name="nomor_dna" id="edit_dna" placeholder="Nomor sertifikat DNA"
                             class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                     </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Nomor Ring</label>
+                        <input type="text" name="nomor_ring" id="edit_ring" placeholder="Nomor ring kaki burung..."
+                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                    </div>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Catatan (opsional)</label>
@@ -336,6 +352,7 @@
                         spesies: spesies,
                         fase: form.fase.value,
                         gender: form.gender.value || null,
+                        nomor_ring: form.nomor_ring.value.trim() || null,
                         catatan: form.catatan.value.trim() || null,
                     })
                 });
@@ -556,7 +573,7 @@
             }
         });
 
-        // ---- Edit burung (nama, spesies, fase, gender DNA, catatan) ----
+        // ---- Edit burung (nama, spesies, fase, gender DNA, ring, catatan) ----
         document.addEventListener('click', function (e) {
             const btn = e.target.closest('.edit-burung');
             if (!btn || sedangBusy) return;
@@ -566,6 +583,7 @@
             document.getElementById('edit_fase').value = btn.dataset.fase;
             document.getElementById('edit_gender').value = btn.dataset.gender || '';
             document.getElementById('edit_dna').value = btn.dataset.nomorDna || '';
+            document.getElementById('edit_ring').value = btn.dataset.nomorRing || '';
             document.getElementById('edit_catatan').value = btn.dataset.catatan || '';
             bukaModal('modalEdit');
         });
@@ -590,6 +608,7 @@
                         fase: form.fase.value,
                         gender: form.gender.value || null,
                         nomor_dna: form.nomor_dna.value.trim() || null,
+                        nomor_ring: form.nomor_ring.value.trim() || null,
                         catatan: form.catatan.value.trim() || null,
                     })
                 });
@@ -667,13 +686,19 @@
             });
         }
 
-        // Search modal pindah kandang
+        // Search modal pindah kandang (section blok kosong ikut disembunyikan)
         const pindahSearch = document.getElementById('pindah_search');
         if (pindahSearch) {
             pindahSearch.addEventListener('input', function () {
                 const query = this.value.toLowerCase().trim();
-                document.querySelectorAll('#pindahCageList .pindah-ke').forEach(btn => {
-                    btn.style.display = btn.textContent.toLowerCase().includes(query) ? '' : 'none';
+                document.querySelectorAll('#pindahCageList .pindah-blok').forEach(section => {
+                    let ada = false;
+                    section.querySelectorAll('.pindah-ke').forEach(btn => {
+                        const tampil = btn.textContent.toLowerCase().includes(query);
+                        btn.style.display = tampil ? '' : 'none';
+                        if (tampil) ada = true;
+                    });
+                    section.style.display = ada ? '' : 'none';
                 });
             });
         }

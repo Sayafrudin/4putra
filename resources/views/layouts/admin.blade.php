@@ -22,13 +22,18 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/admin-export.js', 'resources/js/dashboard-charts.js'])
 
-    {{-- Layout admin tidak pernah scroll di level body (scroll terjadi di dalam <main>).
-         Inline agar berlaku SEBELUM CSS Vite selesai dimuat — mencegah scrollbar sekilas
-         saat pindah halaman. --}}
+    {{-- Layout admin tidak pernah scroll di level body PADA LAYAR BESAR (scroll
+         terjadi di dalam <main>). Di mobile, body yang scroll — syarat gestur
+         pull-to-refresh Chrome Android jalan (elemen <main> tak memicunya).
+         Inline agar berlaku SEBELUM CSS Vite selesai dimuat — mencegah scrollbar
+         sekilas saat pindah halaman. --}}
     <style>
-        html,
-        body {
-            overflow: hidden;
+        @media (min-width: 1024px) {
+
+            html,
+            body {
+                overflow: hidden;
+            }
         }
     </style>
 
@@ -56,7 +61,7 @@
 </head>
 
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
-    <div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: false }">
+    <div class="flex min-h-screen lg:h-screen lg:overflow-hidden" x-data="{ sidebarOpen: false }">
         {{-- Overlay mobile --}}
         <div x-cloak x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300"
             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
@@ -68,7 +73,7 @@
         <x-admin.sidebar />
 
         <div class="flex flex-col flex-1 w-full">
-            <header class="z-10 py-3 px-4 bg-white shadow-md dark:bg-gray-800 lg:py-4 lg:px-6">
+            <header class="sticky top-0 z-20 py-3 px-4 bg-white shadow-md dark:bg-gray-800 lg:static lg:py-4 lg:px-6">
                 <div class="flex items-center justify-between h-full">
                     {{-- Hamburger mobile --}}
                     <button @click="sidebarOpen = !sidebarOpen"
@@ -102,7 +107,7 @@
                 </div>
             </header>
 
-            <main class="h-full overflow-y-auto bg-gray-50 dark:bg-gray-900">
+            <main class="bg-gray-50 dark:bg-gray-900 lg:h-full lg:overflow-y-auto">
                 {{-- pb-24 (mobile): beri ruang di bawah agar tombol terakhir bisa di-scroll
                      di atas FAB chat yang selalu mengapung pojok kanan bawah --}}
                 <div class="container px-4 pt-4 pb-24 mx-auto lg:px-6 lg:pt-6 lg:pb-8 lg:grid">

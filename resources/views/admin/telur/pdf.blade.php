@@ -48,15 +48,15 @@
     <div class="summary">
         <div class="summary-card">
             <div class="label">Telur Diinkubasi</div>
-            <div class="value">{{ $diinkubasi->sum('jumlah') }} butir ({{ $diinkubasi->count() }} catatan)</div>
+            <div class="value">{{ $diinkubasi->count() }} butir</div>
         </div>
         <div class="summary-card">
             <div class="label">Menetas (Incubator)</div>
-            <div class="value purple">{{ $menetas->count() }} catatan</div>
+            <div class="value purple">{{ $menetas->count() }} butir</div>
         </div>
         <div class="summary-card">
             <div class="label">Siap Dilepas (±90 hari)</div>
-            <div class="value green">{{ $siapDilepas->count() }}</div>
+            <div class="value green">{{ $siapDilepas->count() }} butir</div>
         </div>
     </div>
 
@@ -80,7 +80,7 @@
                         <td>{{ $i + 1 }}</td>
                         <td style="font-weight: 600;">{{ $t->induk_label }}</td>
                         <td>{{ $t->sesi }}</td>
-                        <td>{{ $t->jumlah }}</td>
+                        <td>{{ $t->butir_ke }}/{{ $t->jumlah }}</td>
                         <td>{{ $t->tanggal_diambil->format('d/m/Y') }} <span style="color:#888; font-size:10px;">oleh {{ $t->diambil_oleh }}</span></td>
                         <td>
                             @if ($t->status === 'menetas' && $t->tanggal_menetas)

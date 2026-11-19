@@ -14,6 +14,9 @@ class LogoutController extends Controller
 
         if ($user) {
             $user->last_login_at = null;
+            // Sesi tunggal: tiket dibatalkan (sentinel 'revoked' — bukan null,
+            // supaya sesi lain yang masih hidup TIDAK bisa mengklaim tiket kembali).
+            $user->active_session_token = 'revoked';
             $user->save();
         }
 

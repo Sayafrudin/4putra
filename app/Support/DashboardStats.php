@@ -4,17 +4,18 @@ namespace App\Support;
 
 use App\Models\Burung;
 use App\Models\DailyActivity;
-use App\Models\Keuangan;
 use App\Models\StokMakanan;
 use App\Models\Telur;
 use Illuminate\Support\Facades\Cache;
 
 /**
  * PINTU TUNGGAL angka agregat dashboard. Semua perhitungan ringkasan farm
- * (burung, kas, stok, telur, aktivitas) hanya boleh lewat sini — hasil otomatis
+ * (burung, stok, telur, aktivitas) hanya boleh lewat sini — hasil otomatis
  * disaring sesuai hak akses menu pemanggil, jadi halaman lain yang kelak
  * memakai angka ini tidak bisa lupa memfilter role. Agregat dibungkus cache
- * 60 detik (satu payload); titik tulis keuangan memanggil Cache::forget.
+ * 60 detik (satu payload); titik tulis memanggil Cache::forget.
+ * CATATAN: data keuangan (saldo kas, arus kas, transaksi) SENGAJA tidak ada
+ * di sini — angka kas terlalu sensitif untuk dashboard; lihat menu Keuangan.
  */
 class DashboardStats
 {
@@ -35,11 +36,6 @@ class DashboardStats
         if (AdminMenus::boleh($user, 'stok')) {
             $hasil['stok'] = $data['stok'];
         }
-        if (AdminMenus::boleh($user, 'keuangan')) {
-            $hasil['keuangan'] = $data['keuangan'];
-            $hasil['kas30'] = $data['kas30'];
-            $hasil['transaksiTerbaru'] = $data['transaksiTerbaru'];
-        }
         if (AdminMenus::boleh($user, 'daily-activities')) {
             $hasil['aktivitasTerbaru'] = $data['aktivitasTerbaru'];
         }
@@ -55,31 +51,11 @@ class DashboardStats
 
         $telurStatus = Telur::query()->selectRaw('status, COUNT(*) c')->groupBy('status')->pluck('c', 'status');
 
-        $vaksin = \App\Models\Vaksinasi::vaksinTerakhirPerBurung()
+        $vaksin = \App\Models\Vaksinasi::catatanTerakhirPerBurung()
             ->filter(fn ($v) => $v->sudah_jatuh_tempo)
             ->count();
 
         $stok = (float) StokMakanan::query()->sum('jumlah_stok');
-
-        // Saldo Kas Umum + bucket 30 hari (window terbatas, kolom tanggal ber-index)
-        $saldoKas = (float) Keuangan::query()->whereNull('financial_tab_id')
-            ->selectRaw("COALESCE(SUM(CASE WHEN tipe = 'masuk' THEN jumlah ELSE -jumlah END), 0) AS s")->value('s');
-        $kas30 = Keuangan::query()->whereNull('financial_tab_id')
-            ->where('tanggal', '>=', now('Asia/Jakarta')->subDays(29)->toDateString())
-            ->selectRaw("tanggal, SUM(CASE WHEN tipe = 'masuk' THEN jumlah ELSE 0 END) AS masuk, SUM(CASE WHEN tipe = 'keluar' THEN jumlah ELSE 0 END) AS keluar")
-            ->groupBy('tanggal')->orderBy('tanggal')
-            ->get()
-            ->map(fn ($r) => ['tanggal' => (string) $r->tanggal, 'masuk' => (float) $r->masuk, 'keluar' => (float) $r->keluar])
-            ->all();
-
-        $transaksiTerbaru = Keuangan::query()->orderByDesc('id')->limit(5)
-            ->get(['id', 'tipe', 'kategori', 'jumlah', 'tanggal'])
-            ->map(fn ($t) => [
-                'tipe' => $t->tipe,
-                'kategori' => $t->kategori,
-                'jumlah' => (float) $t->jumlah,
-                'tanggal' => $t->tanggal->translatedFormat('d M Y'),
-            ])->all();
 
         $aktivitasTerbaru = DailyActivity::query()->orderByDesc('activity_date')->limit(5)
             ->get(['id', 'title', 'activity_date'])
@@ -100,9 +76,6 @@ class DashboardStats
             ],
             'vaksin' => $vaksin,
             'stok' => $stok,
-            'keuangan' => ['saldoKas' => $saldoKas],
-            'kas30' => $kas30,
-            'transaksiTerbaru' => $transaksiTerbaru,
             'aktivitasTerbaru' => $aktivitasTerbaru,
         ];
     }

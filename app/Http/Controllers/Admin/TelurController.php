@@ -56,7 +56,7 @@ class TelurController extends Controller
     public function exportPdf(Request $request)
     {
         try {
-            $telurs = Telur::with(['burung', 'pasangan'])->orderByDesc('tanggal_diambil')->orderByDesc('id')->get();
+            $telurs = Telur::with(['burung.kandang', 'pasangan.kandang'])->orderByDesc('tanggal_diambil')->orderByDesc('id')->get();
 
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.telur.pdf', compact('telurs'))
                 ->setPaper('a4', 'portrait');

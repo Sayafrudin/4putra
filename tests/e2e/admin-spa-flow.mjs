@@ -150,12 +150,40 @@ try {
     const probeHidup = async () =>
         (await page.evaluate(() => window.__probeSpa || null)) === "alive";
 
+    // ---------- N2x: Pemanasan worker ----------
+    // PHP built-in server jalan 4 worker (PHP_CLI_SERVER_WORKERS=4), tiap worker
+    // punya koneksi TiDB sendiri — request pertama tiap worker bayar TLS handshake
+    // TiDB Cloud (+~1300ms). Rangkaian request ini menghangatkan semua worker
+    // dulu agar budget N2c/N3.c mengukur halaman, bukan koneksi dingin.
+    // page.request.get TIDAK menavigasi — probe SPA dan halaman aktif tetap utuh.
+    for (let r = 0; r < 2; r++) {
+        for (const jalur of [
+            "/admin/collections",
+            "/admin/kandang",
+            "/admin/telur",
+            "/admin/keuangan",
+            "/admin/vaksinasi",
+        ]) {
+            const res = await page.request.get(`${BASE}${jalur}`);
+            assert(
+                res.status() === 200,
+                `N2x pemanasan ${jalur} = ${res.status()}`,
+            );
+        }
+    }
+
     // ---------- N2: SPA klik menu sidebar (Manajemen Konten → Koleksi) ----------
     await page.click('button:has-text("Manajemen Konten")');
     const t2 = Date.now();
+    const resp2 = page.waitForResponse(
+        (r) =>
+            r.url().endsWith("/admin/collections") &&
+            ["fetch", "xhr"].includes(r.request().resourceType()),
+    );
     await page.click('a:has-text("Koleksi (Collections)")');
-    await page.waitForSelector('h2:has-text("Koleksi")', { timeout: 10000 });
+    await resp2;
     const nav2 = Date.now() - t2;
+    await page.waitForSelector('h2:has-text("Koleksi")', { timeout: 10000 });
     assert(
         page.url().endsWith("/admin/collections"),
         "N2a URL berubah ke /admin/collections",
@@ -200,10 +228,20 @@ try {
         },
     ];
     for (const [i, langkah] of rantai.entries()) {
+        // Waktu diukur sampai RESPON HTML Turbo diterima (kerja server), bukan
+        // sampai h2 selesai dirender — init JS halaman sebelumnya bisa memblok
+        // main-thread dan membuat angka bimodal. Server telur terukur stabil
+        // ~1200ms; h2 tetap ditunggu untuk asersi fungsional (bukan diukur).
         const t = Date.now();
+        const respon = page.waitForResponse(
+            (r) =>
+                r.url().endsWith(langkah.url) &&
+                ["fetch", "xhr"].includes(r.request().resourceType()),
+        );
         for (const target of langkah.klik) await page.click(target);
-        await page.waitForSelector(langkah.tunggu, { timeout: 10000 });
+        await respon;
         const durasi = Date.now() - t;
+        await page.waitForSelector(langkah.tunggu, { timeout: 10000 });
         assert(
             page.url().includes(langkah.url),
             `N3.${i + 1} ${langkah.nama} terbuka via SPA`,

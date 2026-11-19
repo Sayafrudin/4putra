@@ -66,6 +66,7 @@
                 <tr>
                     <th>No</th>
                     <th>Induk (Pasangan)</th>
+                    <th>Kandang</th>
                     <th>Sesi</th>
                     <th>Butir</th>
                     <th>Diambil</th>
@@ -79,6 +80,7 @@
                     <tr>
                         <td>{{ $i + 1 }}</td>
                         <td style="font-weight: 600;">{{ $t->induk_label }}</td>
+                        <td>{{ $t->burung?->kandang?->label ?? '-' }}</td>
                         <td>{{ $t->sesi }}</td>
                         <td>{{ $t->butir_ke }}/{{ $t->jumlah }}</td>
                         <td>{{ $t->tanggal_diambil->format('d/m/Y') }} <span style="color:#888; font-size:10px;">oleh {{ $t->diambil_oleh }}</span></td>
@@ -93,7 +95,7 @@
                         <td style="font-weight: 600;">{{ ucfirst($t->status) }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="8" style="text-align: center; padding: 30px; color: #888;">Belum ada catatan telur</td></tr>
+                    <tr><td colspan="9" style="text-align: center; padding: 30px; color: #888;">Belum ada catatan telur</td></tr>
                 @endforelse
             </tbody>
         </table>

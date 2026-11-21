@@ -4,7 +4,7 @@
     <div class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-5">
         <div>
             <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">Telur & Incubator</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Sesi bertelur, perebut, usia harian, sampai siap dilepas (±3 bulan)</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Sesi bertelur, perebut, usia harian, sampai siap diloloh (±1 bulan)</p>
         </div>
         <div class="flex gap-3 flex-wrap">
             <button onclick="eksporExcel(this, { namaFile: 'laporan_telur_incubator_{{ now()->toDateString() }}.xlsx', judul: 'Laporan Telur', headers: ['Induk (Pasangan)', 'Kandang', 'Sesi', 'Butir', 'Diambil', 'Diambil Oleh', 'Usia/Keterangan', 'Kondisi', 'Status'], rows: DATA_EKSPOR })"
@@ -41,7 +41,7 @@
             <p class="text-2xl font-bold text-gray-900 dark:text-white tabular-nums mt-1">{{ $menetas->count() }} <span class="text-sm font-semibold text-gray-500">butir</span></p>
         </div>
         <div class="p-4 bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-xl">
-            <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Siap Dilepas (±90 hari)</p>
+            <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Siap Diloloh (±1 bulan)</p>
             <p class="text-2xl font-bold {{ $siapDilepas->isNotEmpty() ? 'text-green-600' : 'text-gray-900 dark:text-white' }} tabular-nums mt-1">{{ $siapDilepas->count() }}</p>
         </div>
     </div>
@@ -121,10 +121,10 @@
                                 <span class="text-xs text-gray-500 dark:text-gray-400">oleh {{ $t->diambil_oleh }}</span>
                             </td>
                             <td class="px-6 py-4 text-sm tabular-nums">
-                                @if ($t->status === 'menetas' && $t->tanggal_menetas)
-                                    {{ $t->usia_menetas_hari }} hari
-                                    @if ($t->siap_dilepas)
-                                        <span class="block text-xs font-bold text-green-600">Siap dilepas</span>
+                                @if (in_array($t->status, ['menetas', 'dilepas']) && $t->tanggal_menetas)
+                                    {{ $t->usia_menetas_label }}
+                                    @if ($t->status === 'menetas' && $t->siap_dilepas)
+                                        <span class="block text-xs font-bold text-green-600">Siap diloloh</span>
                                     @endif
                                 @else
                                     {{ $t->usia_hari }} hari
@@ -181,13 +181,13 @@
                 @csrf
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Kandang (pasangan induk - 2 burung otomatis tercatat)</label>
-                    <select name="kandang_pasangan" id="tambah_kandang" onchange="tampilkanPasangan()"
-                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
-                        <option value="">- Pilih kandang -</option>
-                        @foreach ($kandangPasangan as $i => $kp)
-                            <option value="{{ $i }}">Kandang {{ $kp['label'] }}</option>
-                        @endforeach
-                    </select>
+                    <x-admin.select-search name="kandang_pasangan" id="tambah_kandang"
+                        placeholder="- Pilih kandang -"
+                        :options="$kandangPasangan->map(fn ($kp, $i) => [
+                            'value' => (string) $i,
+                            'label' => 'Kandang '.$kp['label'].' — '.$kp['burung'][0]['nama'].' ('.$kp['burung'][0]['spesies'].($kp['burung'][0]['gender'] ? ' - '.$kp['burung'][0]['gender'] : '').') × '.$kp['burung'][1]['nama'].' ('.$kp['burung'][1]['spesies'].($kp['burung'][1]['gender'] ? ' - '.$kp['burung'][1]['gender'] : '').')',
+                        ])->values()->all()"
+                    />
                     <p class="text-xs text-red-400 mt-1 hidden" id="err_tambah_burung"></p>
                     <div id="info_pasangan" class="hidden mt-2 px-3 py-2 text-sm rounded-xl bg-blue-500/10 border border-blue-500/20 text-gray-900 dark:text-white">
                         <span class="text-xs font-bold uppercase tracking-wider text-blue-500 mr-2">Pasangan</span>
@@ -266,7 +266,7 @@
                             class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                             <option value="diinkubasi">Diinkubasi</option>
                             <option value="menetas">Menetas (masuk incubator)</option>
-                            <option value="dilepas">Sudah dilepas</option>
+                            <option value="dilepas">Baby usia matang (loloh)</option>
                         </select>
                     </div>
                     <div id="edit_menetas_wrap" class="hidden">
@@ -286,7 +286,7 @@
                             <p class="text-xs text-red-400 mt-1 hidden" id="err_baby_nama"></p>
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">No Ring</label>
+                            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">No Ring (opsional)</label>
                             <input type="text" name="baby_ring" id="baby_ring"
                                 class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                             <p class="text-xs text-red-400 mt-1 hidden" id="err_baby_ring"></p>
@@ -362,7 +362,7 @@
             $t->tanggal_diambil->translatedFormat('d M Y'),
             $t->diambil_oleh,
             $t->status === 'menetas' && $t->tanggal_menetas
-                ? $t->usia_menetas_hari.' hari'.($t->siap_dilepas ? ' (siap dilepas)' : '')
+                ? $t->usia_menetas_label.($t->siap_dilepas ? ' (siap diloloh)' : '')
                 : $t->usia_hari.' hari',
             $t->kondisi,
             ucfirst($t->status),
@@ -414,12 +414,17 @@
 
         function bukaModalTambah() {
             bersihkanError(document.getElementById('formTambah'));
+            window.__ss?.kandang_pasangan?.kosongkan();
             document.getElementById('tambah_kandang').value = '';
             document.getElementById('info_pasangan').classList.add('hidden');
             bukaModal('modalTambah');
         }
 
-        // Pilih kandang → 2 induk di dalamnya otomatis tampil (keduanya langsung tercatat saat simpan)
+        // Pilih kandang → 2 induk di dalamnya otomatis tampil (keduanya langsung tercatat saat simpan).
+        // Hook sinkron dari komponen select-search (bukan event — lihat komponen).
+        window.__ssHook = window.__ssHook || {};
+        window.__ssHook.kandang_pasangan = () => tampilkanPasangan();
+
         function tampilkanPasangan() {
             const idx = document.getElementById('tambah_kandang').value;
             const info = document.getElementById('info_pasangan');
@@ -519,10 +524,9 @@
             bersihkanError(form);
             if (!form.kondisi.value.trim()) { tandaiError('edit_kondisi', 'err_edit_kondisi', 'Kondisi wajib diisi.'); return; }
 
-            // Status "Sudah dilepas" pada butir menetas = konversi ke Baby (data baby wajib).
+                            // Status "Baby usia matang (loloh)" pada butir menetas = konversi ke Baby (nama wajib, ring opsional).
             if (dapatBaby && form.status.value === 'dilepas') {
                 if (!form.baby_nama.value.trim()) { tandaiError('baby_nama', 'err_baby_nama', 'Nama baby wajib diisi.'); return; }
-                if (!form.baby_ring.value.trim()) { tandaiError('baby_ring', 'err_baby_ring', 'No ring wajib diisi.'); return; }
                 setBusy(true);
                 try {
                     const res = await fetch('{{ route('admin.telur.ke-baby', ':id') }}'.replace(':id', editTargetId), {

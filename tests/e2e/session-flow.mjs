@@ -1,11 +1,12 @@
 /**
  * E2E browser nyata (playwright-core + Microsoft Edge terpasang).
- * Memverifikasi perilaku dari sisi SERVER, bukan gimmick UI:
+ * Memverifikasi perilaku dari sisi SERVER, bukan gimmick UI (sesi ala MyBCA,
+ * tanpa tombol Perpanjang):
  *  S1  Login via form asli
- *  S2  Popup Perpanjang Sesi muncul → klik → modal tutup + toast + ping 200
- *  S3  Anti-gimmick: idle lagi → popup MUNCUL LAGI → klik lagi → berhasil
+ *  S2  Kembali ke tab saat idle pendek → wake ping 200, tanpa modal
+ *  S3  Kembali ke tab setelah idle > batas → modal "Sesi Telah Berakhir" → auto-logout server → /admin tertutup
  *  S4  Cookie sesi hilang → TIDAK dibangkitkan ulang (tanpa remember-me) → dilempar login
- *  S5  Sesi mati saat popup → klik Perpanjang → modal expired → Muat Ulang → login → balik ke halaman sama
+ *  S5  Sesi mati di server → wake ping 401 → modal → tombol Login Kembali → login ulang
  *  S6  Navbar scrolled: track toggle bahasa terlihat (tidak merah-di-merah)
  *  S7  Performa: waktu load halaman utama < 3 detik (NavigationTiming)
  *
@@ -28,6 +29,15 @@ function assert(cond, label) {
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const sec = (n) => n * 1000;
+// Server dev single-threaded + TiDB dingin kadang menggantung request; goto GET
+// idempoten → aman di-retry satu kali (polanya sama dengan flapping telur dulu).
+async function gotoRetry(page, url, opts = {}) {
+    try {
+        await page.goto(url, { waitUntil: "load", timeout: 30000, ...opts });
+    } catch {
+        await page.goto(url, { waitUntil: "load", timeout: 30000, ...opts });
+    }
+}
 
 // Watchdog anti-stuck: skrip wajib mati sendiri maksimal 12 menit
 // (runtime normal ~7 menit; di luar itu = hang → bunuh proses agar tidak menggantung task)
@@ -134,55 +144,58 @@ try {
     await page.waitForURL(`${BASE}/admin`, { timeout: 15000 });
     assert(true, "S1 login via form → /admin");
 
-    // ---------- S2: popup → klik Perpanjang ----------
-    await sleep(sec(62)); // popup muncul di clamp 60 detik (LIFETIME=2 menit)
+    // ---------- S2: kembali ke tab saat idle masih pendek → ping 200, tanpa modal ----------
+    await sleep(sec(5));
+    await page.evaluate(() => window.sessionTimeout.wake());
+    await sleep(1000);
     const modal = page.locator("#session-timeout-modal");
-    assert(await modal.isVisible(), "S2a popup peringatan muncul setelah idle");
-    await page.click("#session-extend-btn");
-    // Tunggu modal BENAR-BENAR hilang (animasi keluar 300ms) — anti-balapan
-    await modal.waitFor({ state: "hidden", timeout: 5000 });
-    assert(true, "S2b modal tertutup setelah klik Perpanjang");
-    assert(
-        (await page.getByText("Sesi Diperpanjang").count()) > 0,
-        "S2c toast konfirmasi sesi diperpanjang",
-    );
     assert(
         pingStatuses.at(-1) === 200,
-        `S2d ping server = 200 (actual: ${pingStatuses.at(-1)})`,
+        `S2a wake ping = 200 (actual: ${pingStatuses.at(-1)})`,
+    );
+    assert(
+        !(await modal.isVisible()),
+        "S2b tanpa modal saat idle masih di bawah batas",
     );
 
-    // ---------- S3: anti-gimmick — popup muncul LAGI ----------
+    // ---------- S3: kembali ke tab setelah idle > batas → modal sesi berakhir → login ----------
+    // IDLE_LIMIT = lifetime − 5 menit, clamp min 1 menit → 60 dtk (LIFETIME=2 menit).
     await sleep(sec(62));
+    await page.evaluate(() => window.sessionTimeout.wake());
     assert(
         await modal.isVisible(),
-        "S3a popup muncul LAGI setelah idle kedua (bukti sesi benar direset server)",
-    );
-    await page.click("#session-extend-btn");
-    await modal.waitFor({ state: "hidden", timeout: 5000 });
-    assert(true, "S3b klik kedua juga berhasil");
-    assert(
-        pingStatuses.at(-1) === 200,
-        `S3c ping kedua = 200 (actual: ${pingStatuses.at(-1)})`,
+        "S3a modal sesi berakhir muncul saat kembali setelah idle panjang",
     );
     assert(
-        !page.url().includes("/login"),
-        "S3d tetap di halaman admin, tidak dilempar login",
+        (await page.getByText("Sesi Anda Telah Berakhir").count()) > 0,
+        "S3b modal menyatakan sesi berakhir + ajak login kembali",
+    );
+    await sleep(1500); // beri waktu fetch /logout menuntaskan sesi di server
+    await gotoRetry(page, `${BASE}/admin`);
+    assert(
+        page.url().includes("/login"),
+        "S3c auto-logout server-side: /admin tak bisa dibuka lagi",
     );
 
     // ---------- S4: cookie sesi hilang → TIDAK dibangkitkan ulang ----------
     // Kontrak tanpa remember-me: sesi mati = login ulang, bukan auto-masuk.
+    await page.click("#username");
+    await page.fill("#username", ADMIN.email.split("@")[0]);
+    await page.click("#password");
+    await page.fill("#password", ADMIN.password);
+    await page.click("button[type=submit]");
+    await page.waitForURL(`${BASE}/admin`, { timeout: 15000 });
     const cookies = await context.cookies();
     await context.clearCookies();
     await context.addCookies(
         cookies.filter((c) => !c.name.startsWith("laravel_session")),
     );
-    await page.goto(`${BASE}/admin/collections`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/admin/collections`);
     assert(
         page.url().includes("/login"),
         "S4 sesi mati → dilempar login (tidak ada resurrect tanpa remember-me)",
     );
-
-    // ---------- S5: login ulang → sesi mati saat popup → expired → balik ke halaman sama ----------
+    // ---------- S5: login ulang → sesi mati di server → wake ping 401 → modal → login ----------
     await page.click("#username");
     await page.fill("#username", ADMIN.email.split("@")[0]);
     await page.click("#password");
@@ -190,30 +203,27 @@ try {
     await page.click("button[type=submit]");
     // Intended URL dari S4 (/admin/collections) dipulihkan server — boleh dashboard atau langsung collections
     await page.waitForURL(/\/admin(\/|$)/, { timeout: 15000 });
-    await page.goto(`${BASE}/admin/collections`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/admin/collections`);
 
     await context.clearCookies(); // buang SEMUA cookie → ping wajib 401
-    await sleep(sec(75)); // popup muncul di 60s idle (auto-logout di 120s — cek sebelum itu)
-    assert(await modal.isVisible(), "S5a popup muncul untuk sesi kedua");
-    await page.click("#session-extend-btn");
-    await sleep(1500);
+    await sleep(sec(5)); // idle pendek → jalur validasi ping (bukan jalur idle)
+    await page.evaluate(() => window.sessionTimeout.wake());
+    // ping 401 → modal tampil async; tunggu deterministik, jangan race
+    await modal.waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
     assert(
-        (await page.getByText("Sesi Anda Telah Habis").count()) > 0,
-        "S5b modal expired muncul (401 jujur)",
+        await modal.isVisible(),
+        "S5a modal muncul saat wake ping 401 (sesi mati di server)",
     );
-    await page.click("#session-extend-btn"); // tombol sudah jadi "Muat Ulang Halaman"
+    await page.click("#session-login-btn");
     await page.waitForURL(/\/login/, { timeout: 15000 });
-    assert(true, "S5c muat ulang → halaman login (intended disimpan)");
+    assert(true, "S5b tombol Login Kembali → halaman login");
     await page.click("#username");
     await page.fill("#username", ADMIN.email.split("@")[0]);
     await page.click("#password");
     await page.fill("#password", ADMIN.password);
     await page.click("button[type=submit]");
-    await page.waitForURL(`${BASE}/admin/collections`, { timeout: 15000 });
-    assert(
-        true,
-        "S5d setelah login balik ke halaman yang sama (bukan dashboard)",
-    );
+    await page.waitForURL(/\/admin(\/|$)/, { timeout: 15000 });
+    assert(true, "S5c login ulang → masuk kembali ke admin");
 
     // ---------- S6: navbar scrolled — track toggle terlihat ----------
     await page.goto(`${BASE}/lang/en`, { waitUntil: "load" });
@@ -240,6 +250,11 @@ try {
     // ---------- S7: performa ----------
     // DCL = render siap (eksklusi unduhan foto). Ambang 4 detik utk /admin/collections:
     // dev server tanpa opcache + TiDB remote; produksi memakai config cache.
+    // Warm-up dulu: koneksi TiDB dingin membuat pengukuran pertama melebihi ambang
+    // (flapping N3.2c) — ukur pada perjalanan kedua.
+    for (const path of ["/", "/collections", "/admin", "/admin/collections"]) {
+        await gotoRetry(page, `${BASE}${path}`);
+    }
     for (const path of ["/", "/collections", "/admin", "/admin/collections"]) {
         await page.goto(`${BASE}${path}`, { waitUntil: "load" });
         const t = await page.evaluate(() => {

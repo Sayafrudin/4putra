@@ -125,8 +125,8 @@ try {
     const sidebar = page.locator("[data-admin-sidebar]");
     await sidebar.waitFor({ state: "attached", timeout: 10000 });
     assert(
-        (await sidebar.getByText("Manajemen Farm").count()) > 0,
-        "R2b menu Manajemen Farm tampil",
+        (await sidebar.getByText("Management Farm Baru").count()) > 0,
+        "R2b menu Management Farm Baru tampil",
     );
     assert(
         (await sidebar.getByText("Keuangan").count()) > 0,

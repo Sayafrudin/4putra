@@ -249,12 +249,18 @@ Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'menu.access']
 
     // Aviary (kandang besar pra-breeding, semua role: menu monitoring)
     Route::get('/aviary', [AviaryController::class, 'index'])->name('admin.aviary.index');
+    Route::get('/aviary/export/pdf', [KandangController::class, 'exportPdf'])->name('admin.aviary.export-pdf');
 
     // Kandang & penempatan burung individu (semua role: menu monitoring)
     Route::get('/kandang', [KandangController::class, 'index'])->name('admin.kandang.index');
+    // Papan kandang farm lama (lokasi='lama') — fitur sama persis dengan farm baru
+    Route::get('/kandang-lama', [KandangController::class, 'indexLama'])->name('admin.kandang.lama');
+    Route::post('/kandang', [KandangController::class, 'storeKandang'])->name('admin.kandang.store');
+    Route::get('/kandang/export/pdf/{lokasi?}', [KandangController::class, 'exportPdf'])->name('admin.kandang.export-pdf');
     Route::post('/burung', [KandangController::class, 'storeBurung'])->name('admin.burung.store');
     Route::post('/burung/{burung}/letakkan', [KandangController::class, 'letakkan'])->name('admin.burung.letakkan');
     Route::post('/burung/{burung}/kosongkan', [KandangController::class, 'kosongkan'])->name('admin.burung.kosongkan');
+    Route::get('/burung/{burung}/riwayat', [KandangController::class, 'riwayatPindah'])->name('admin.burung.riwayat');
     Route::put('/burung/{burung}', [KandangController::class, 'updateBurung'])->name('admin.burung.update');
     Route::delete('/burung/{burung}', [KandangController::class, 'destroyBurung'])->name('admin.burung.destroy');
 

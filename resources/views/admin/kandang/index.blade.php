@@ -3,10 +3,22 @@
 @section('content')
     <div class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-5">
         <div>
-            <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">Kandang & Penempatan Burung</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Geser atau klik kartu burung untuk menempatkannya ({{ $terpasang }}/{{ $total }} burung terpasang)</p>
+            <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">{{ $lokasi === 'lama' ? 'Kandang Farm Lama' : 'Kandang & Penempatan Burung' }}</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Geser atau klik kartu burung untuk menempatkannya ({{ $terpasang }}/{{ $total }} burung terpasang){{ $lokasi === 'lama' ? ' - pool burung sama dengan farm baru' : '' }}</p>
         </div>
-        <div class="flex gap-3">
+        <div class="flex flex-wrap gap-3">
+            <button onclick="bukaModalTambahKandang()"
+                class="px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                + Tambah Kandang
+            </button>
+            <button onclick="eksporExcel(this, { namaFile: '{{ $lokasi === 'lama' ? 'laporan_kandang_farm_lama' : 'laporan_kandang' }}_{{ now()->toDateString() }}.xlsx', judul: '{{ $lokasi === 'lama' ? 'Laporan Kandang Farm Lama' : 'Laporan Kandang & Penempatan Burung' }}', headers: ['Blok', 'Kandang', 'Nama Burung', 'Spesies', 'Fase', 'Gender', 'No. Ring', 'No. DNA', 'Catatan'], rows: DATA_EKSPOR })"
+                class="px-4 py-2.5 text-sm font-semibold text-white bg-green-600 hover:bg-green-700 rounded-xl transition-colors">
+                Export Excel
+            </button>
+            <a href="{{ route('admin.kandang.export-pdf', $lokasi) }}"
+                class="px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                Export PDF
+            </a>
             <button onclick="bukaModalTambah()"
                 class="px-4 py-2.5 text-sm font-semibold text-white bg-[#E62C37] hover:bg-[#c5242d] rounded-xl transition-colors">
                 + Tambah Burung
@@ -190,6 +202,54 @@
         </div>
     </div>
 
+    {{-- ==================== MODAL TAMBAH KANDANG ==================== --}}
+    <div id="modalTambahKandang" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
+        <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Tambah Kandang</h3>
+                <button onclick="tutupModal('modalTambahKandang')" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                    <x-tabler-x class="w-5 h-5" />
+                </button>
+            </div>
+            <form id="formTambahKandang" onsubmit="submitTambahKandang(event)" class="space-y-4" novalidate>
+                @csrf
+                <input type="hidden" name="lokasi" value="{{ $lokasi }}">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Blok</label>
+                        <input type="text" name="blok" id="tambahk_blok" maxlength="1" placeholder="Contoh: Z"
+                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white uppercase focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                        <p class="text-xs text-red-400 mt-1 hidden" id="err_tambahk_blok"></p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Nomor</label>
+                        <input type="number" name="nomor" id="tambahk_nomor" min="1" max="999" placeholder="Contoh: 1"
+                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                        <p class="text-xs text-red-400 mt-1 hidden" id="err_tambahk_nomor"></p>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Tipe</label>
+                    <select name="tipe" id="tambahk_tipe"
+                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:outline-none">
+                        <option value="kecil">Kecil (maks 2 burung)</option>
+                        <option value="medium">Medium (maks 2 burung)</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="tutupModal('modalTambahKandang')"
+                        class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" id="btnTambahKandang"
+                        class="px-4 py-2.5 text-sm font-semibold text-white bg-[#E62C37] hover:bg-[#c5242d] rounded-xl transition-colors">
+                        Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     {{-- ==================== MODAL HAPUS BURUNG ==================== --}}
     <div id="modalHapus" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
         <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6">
@@ -274,8 +334,16 @@
                     <textarea name="catatan" id="edit_catatan" rows="2"
                         class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none"></textarea>
                 </div>
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-3">
+                    <button type="button" id="btnRiwayat" onclick="muatRiwayat()"
+                        class="w-full px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-500 transition-colors flex items-center justify-center gap-2">
+                        <x-tabler-history class="w-4 h-4" />
+                        Riwayat Perpindahan
+                    </button>
+                    <div id="riwayatList" class="hidden mt-3 max-h-40 overflow-y-auto text-xs text-gray-600 dark:text-gray-400 space-y-1.5"></div>
+                </div>
                 <div class="flex justify-end gap-3 pt-2">
-                    <button type="button" onclick="tutupModal('modalEdit')"
+                    <button type="button" onclick="tutupModal('modalEdit')""
                         class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
                         Batal
                     </button>
@@ -315,6 +383,69 @@
         }
 
         function bukaModalTambah() { bukaModal('modalTambah'); }
+        function bukaModalTambahKandang() { bukaModal('modalTambahKandang'); }
+
+        async function submitTambahKandang(e) {
+            e.preventDefault();
+            const form = document.getElementById('formTambahKandang');
+            bersihkanError(form);
+            const blok = form.blok.value.trim().toUpperCase();
+            const nomor = form.nomor.value;
+            let valid = true;
+            if (!blok) { tandaiError('tambahk_blok', 'err_tambahk_blok', 'Blok wajib diisi (1 huruf).'); valid = false; }
+            if (!nomor || Number(nomor) < 1) { tandaiError('tambahk_nomor', 'err_tambahk_nomor', 'Nomor wajib diisi (angka).'); valid = false; }
+            if (!valid) return;
+
+            setBusy(true);
+            try {
+                const res = await fetch('{{ route('admin.kandang.store') }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                    body: JSON.stringify({ blok: blok, nomor: Number(nomor), tipe: form.tipe.value, lokasi: form.lokasi.value })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    showToast('error', 'Gagal', data.message || 'Gagal menyimpan kandang.');
+                    return;
+                }
+                showToast('success', 'Berhasil', data.message);
+                tutupModal('modalTambahKandang');
+                window.location.reload();
+            } catch (err) {
+                showToast('error', 'Gagal', 'Tidak dapat terhubung ke server.');
+            } finally {
+                setBusy(false);
+            }
+        }
+
+        async function muatRiwayat() {
+            if (!editTargetId) return;
+            const list = document.getElementById('riwayatList');
+            list.classList.remove('hidden');
+            list.innerHTML = '<p class="text-gray-400">Memuat...</p>';
+            try {
+                const res = await fetch('{{ route('admin.burung.riwayat', ':id') }}'.replace(':id', editTargetId), {
+                    headers: { 'Accept': 'application/json' }
+                });
+                const data = await res.json();
+                if (!res.ok || !data.ok) throw new Error();
+                list.innerHTML = '';
+                if (!data.riwayat.length) {
+                    const p = document.createElement('p');
+                    p.className = 'text-gray-400 italic';
+                    p.textContent = 'Belum ada riwayat perpindahan.';
+                    list.appendChild(p);
+                    return;
+                }
+                data.riwayat.forEach(r => {
+                    const p = document.createElement('p');
+                    p.textContent = r.waktu + ' - ' + r.keterangan;
+                    list.appendChild(p);
+                });
+            } catch (err) {
+                list.innerHTML = '<p class="text-red-400">Gagal memuat riwayat.</p>';
+            }
+        }
 
         // ---- Validasi kustom (tanpa HTML5 default) ----
         function tandaiError(inputId, errId, pesan) {
@@ -585,6 +716,9 @@
             document.getElementById('edit_dna').value = btn.dataset.nomorDna || '';
             document.getElementById('edit_ring').value = btn.dataset.nomorRing || '';
             document.getElementById('edit_catatan').value = btn.dataset.catatan || '';
+            const riwayatList = document.getElementById('riwayatList');
+            riwayatList.classList.add('hidden');
+            riwayatList.innerHTML = '';
             bukaModal('modalEdit');
         });
 
@@ -658,18 +792,25 @@
                 setBusy(false);
             }
         });
-        // ==================== SEARCH KANDANG (desktop + mobile) ====================
+        // ==================== SEARCH KANDANG (dataset chip: nama, spesies, ring, DNA, fase, gender) ====================
         const kandangSearch = document.getElementById('kandang_search');
         const kandangEmpty = document.getElementById('kandang_search_empty');
 
         if (kandangSearch) {
             kandangSearch.addEventListener('input', function () {
                 const query = this.value.toLowerCase().trim();
-                const cards = document.querySelectorAll('.kandang-drop');
                 let visibleCount = 0;
 
-                cards.forEach(card => {
-                    const isMatch = card.textContent.toLowerCase().includes(query);
+                // Pool ikut difilter — chip dicocokkan dari dataset (ring, DNA, fase, gender) + teks
+                document.querySelectorAll('#poolList .burung-chip').forEach(chip => {
+                    chip.style.display = chipCocok(chip, query) ? '' : 'none';
+                });
+
+                // Kartu kandang: tampil jika label kandang cocok ATAU ada chip cocok di dalamnya
+                document.querySelectorAll('.kandang-drop').forEach(card => {
+                    const labelCocok = (card.dataset.kandangLabel || '').toLowerCase().includes(query);
+                    const adaChip = Array.from(card.querySelectorAll('.burung-chip')).some(chip => chipCocok(chip, query));
+                    const isMatch = labelCocok || adaChip;
                     card.style.display = isMatch ? '' : 'none';
                     if (isMatch) visibleCount++;
                 });
@@ -684,6 +825,19 @@
                     kandangEmpty.classList.toggle('hidden', visibleCount > 0 || query === '');
                 }
             });
+        }
+
+        function chipCocok(chip, query) {
+            if (!query) return true;
+            const hay = [
+                chip.dataset.nama,
+                chip.dataset.ring,
+                chip.dataset.dna,
+                chip.dataset.fase,
+                chip.dataset.gender,
+                chip.textContent,
+            ].join(' ').toLowerCase();
+            return hay.includes(query);
         }
 
         // Search modal pindah kandang (section blok kosong ikut disembunyikan)

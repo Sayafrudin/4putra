@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Kandang extends Model
 {
-    protected $fillable = ['blok', 'nomor', 'tipe'];
+    protected $fillable = ['blok', 'nomor', 'tipe', 'lokasi'];
 
     protected $casts = ['nomor' => 'integer'];
 

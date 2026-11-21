@@ -31,6 +31,26 @@ class AviaryController extends Controller
         $total = Burung::count();
         $terpasang = $aviaries->sum(fn ($a) => $a->burungs->count());
 
-        return view('admin.aviary.index', compact('aviaries', 'pool', 'total', 'terpasang'));
+        return view('admin.aviary.index', compact('aviaries', 'pool', 'total', 'terpasang') + ['dataEkspor' => $this->barisEkspor($aviaries, $pool)]);
+    }
+
+    /** Baris export Excel aviary: satu baris per burung + aviary kosong + pool. */
+    private function barisEkspor($aviaries, $pool)
+    {
+        $baris = [];
+        foreach ($aviaries as $k) {
+            if ($k->burungs->isEmpty()) {
+                $baris[] = [$k->blok, $k->label, '(kosong)', '', '', '', '', '', ''];
+                continue;
+            }
+            foreach ($k->burungs as $b) {
+                $baris[] = [$k->blok, $k->label, $b->nama, $b->spesies, $b->fase_label, $b->gender_label ?: '-', $b->nomor_ring ?: '-', $b->nomor_dna ?: '-', $b->catatan ?: '-'];
+            }
+        }
+        foreach ($pool as $b) {
+            $baris[] = ['-', 'Belum ditempatkan', $b->nama, $b->spesies, $b->fase_label, $b->gender_label ?: '-', $b->nomor_ring ?: '-', $b->nomor_dna ?: '-', $b->catatan ?: '-'];
+        }
+
+        return $baris;
     }
 }

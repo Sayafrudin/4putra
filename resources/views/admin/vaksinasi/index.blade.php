@@ -30,7 +30,7 @@
             @forelse ($jatuhTempo as $v)
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 py-2.5 border-b border-gray-800 last:border-0">
                     <div class="min-w-0">
-                        <p class="text-sm font-semibold text-gray-200">{{ $v->burung->nama }} <span class="text-xs font-medium text-gray-500">· {{ $v->burung->spesies }}</span></p>
+                        <p class="text-sm font-semibold text-gray-200">{{ $v->burung->nama }} @if ($v->burung->nomor_ring)<span class="text-xs text-gray-500">· {{ $v->burung->label_ring }}</span>@endif <span class="text-xs font-medium text-gray-500">· {{ $v->burung->spesies }}</span></p>
                         <p class="text-xs text-gray-500">terakhir "{{ $v->jenis }}" ({{ $v->metode === 'oral' ? 'Oral' : 'Suntik' }}) pada {{ $v->tanggal_vaksin->translatedFormat('d M Y') }}</p>
                     </div>
                     <span class="text-xs font-bold text-[#E62C37] bg-[#E62C37]/10 px-2.5 py-1 rounded-lg self-start">Jatuh tempo</span>
@@ -83,8 +83,13 @@
                                     @endphp
                                     <div class="flex items-center gap-2 text-xs">
                                         <span class="w-2 h-2 rounded-full shrink-0 {{ $aman ? 'bg-green-600' : 'bg-[#E62C37]' }}"></span>
-                                        <span class="font-semibold text-gray-800 dark:text-gray-200 truncate">{{ $b->nama }}</span>
-                                        <span class="text-gray-500 truncate">{{ $terakhir?->jenis ?? 'belum dicatat' }}</span>
+                                        <span role="button" tabindex="0" onclick="event.preventDefault(); bukaDetailBurung({{ $b->id }})"
+                                            class="font-semibold text-gray-800 dark:text-gray-200 truncate cursor-pointer hover:text-[#E62C37] transition-colors"
+                                            title="Lihat identitas burung">{{ $b->nama }}</span>
+                                        @if ($b->nomor_ring)
+                                            <span class="shrink-0 text-gray-400 dark:text-gray-500">{{ $b->label_ring }}</span>
+                                        @endif
+                                        <span class="text-gray-500 truncate ml-auto">{{ $terakhir?->jenis ?? 'belum dicatat' }}</span>
                                     </div>
                                 @endforeach
                             </div>
@@ -106,7 +111,12 @@
                             @endphp
                             <div class="flex items-center gap-2 text-xs">
                                 <span class="w-2 h-2 rounded-full shrink-0 {{ $aman ? 'bg-green-600' : 'bg-[#E62C37]' }}"></span>
-                                <span class="font-semibold text-gray-800 dark:text-gray-200">{{ $b->nama }}</span>
+                                <span role="button" tabindex="0" onclick="bukaDetailBurung({{ $b->id }})"
+                                    class="font-semibold text-gray-800 dark:text-gray-200 cursor-pointer hover:text-[#E62C37] transition-colors"
+                                    title="Lihat identitas burung">{{ $b->nama }}</span>
+                                @if ($b->nomor_ring)
+                                    <span class="shrink-0 text-gray-400 dark:text-gray-500">{{ $b->label_ring }}</span>
+                                @endif
                                 <span class="text-gray-500 truncate">{{ $b->spesies }} · {{ $terakhir?->jenis ?? 'belum dicatat' }}</span>
                                 <button onclick='bukaModalCatat([{{ $b->id }}])'
                                     class="ml-auto shrink-0 px-3 py-1.5 text-[11px] font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg hover:bg-blue-500/20 hover:border-blue-500/40 transition-colors">
@@ -147,6 +157,9 @@
                         <tr class="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#262d3a] transition-colors">
                             <td class="px-6 py-4 text-sm">
                                 <span class="font-semibold text-gray-900 dark:text-white">{{ $v->burung->nama }}</span>
+                                @if ($v->burung->nomor_ring)
+                                    <span class="text-xs text-gray-500">· {{ $v->burung->label_ring }}</span>
+                                @endif
                                 <span class="block text-xs text-gray-500">{{ $v->burung->spesies }}</span>
                             </td>
                             <td class="px-6 py-4 text-sm">{{ $v->jenis }}</td>
@@ -279,6 +292,9 @@
         </div>
     </div>
 
+    {{-- Modal identitas burung (klik nama burung di card/chip/tabel) --}}
+    <x-admin.detail-burung :burungs="$burungSemua" />
+
     @php
         // Data papan untuk JS: satu kandang = daftar burung + catatan terakhirnya.
         $papanData = [];
@@ -289,6 +305,8 @@
                 'id' => $b->id,
                 'nama' => $b->nama,
                 'spesies' => $b->spesies,
+                'ring' => $b->nomor_ring,
+                'gender' => $b->gender_label,
                 'terakhir' => $terakhir ? [
                     'jenis' => $terakhir->jenis,
                     'metode' => $terakhir->metode,
@@ -311,7 +329,7 @@
             $papanData[0] = ['label' => 'Belum Ditempatkan', 'burung' => $tanpaKandang->map($mapBurung)->values()->all()];
         }
         $dataEkspor = $riwayat->map(fn ($v) => [
-            $v->burung->nama,
+            $v->burung->nama_ring,
             $v->burung->spesies,
             $v->jenis,
             $v->metode === 'oral' ? 'Oral' : 'Suntik',
@@ -328,6 +346,14 @@
         var sedangBusy = false;
         var hapusTargetId = null;
         var catatTargetIds = [];
+
+        // Identitas burung utk label: "Nama (Ring X) · Jantan" — bagian opsional
+        // hilang bila kosong (konvensi identitas burung).
+        function labelBurung(b) {
+            let t = b.nama + (b.ring ? ' (Ring ' + b.ring + ')' : '');
+            if (b.gender) t += ' · ' + b.gender;
+            return t;
+        }
 
         function setBusy(on) {
             sedangBusy = on;
@@ -370,11 +396,12 @@
                 const sel = document.createElement('select');
                 sel.id = 'catat_burung_manual';
                 sel.className = 'w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:outline-none';
-                sel.innerHTML = '<option value="">- Pilih burung -</option>' + Object.values(PAPAN).flatMap(function (k) {
-                    return k.burung.map(function (b) {
-                        return '<option value="' + b.id + '">' + b.nama + ' — ' + k.label + '</option>';
+                sel.innerHTML = '<option value="">- Pilih burung -</option>';
+                Object.values(PAPAN).forEach(function (k) {
+                    k.burung.forEach(function (b) {
+                        sel.add(new Option(labelBurung(b) + ' — ' + k.label, b.id));
                     });
-                }).join('');
+                });
                 wrap.appendChild(sel);
             } else {
                 label = ids.length === 1 ? 'Target: 1 burung.' : 'Target: ' + ids.length + ' burung (catatan massal — satu klik).';
@@ -387,9 +414,16 @@
                     if (!b) return;
                     const baris = document.createElement('div');
                     baris.className = 'flex items-center gap-2';
-                    baris.innerHTML =
-                        '<span class="text-xs font-semibold text-gray-700 dark:text-gray-200 w-28 truncate">' + b.nama + '</span>' +
-                        '<input type="text" data-dosis="' + id + '" placeholder="Dosis (opsional)" class="flex-1 bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-3 py-2 text-xs text-gray-900 dark:text-white focus:border-[#E62C37] focus:outline-none">';
+                    const label = document.createElement('span');
+                    label.className = 'text-xs font-semibold text-gray-700 dark:text-gray-200 w-44 truncate';
+                    label.title = labelBurung(b);
+                    label.textContent = labelBurung(b);
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.dataset.dosis = id;
+                    input.placeholder = 'Dosis (opsional)';
+                    input.className = 'flex-1 bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-3 py-2 text-xs text-gray-900 dark:text-gray-200 focus:border-[#E62C37] focus:outline-none';
+                    baris.append(label, input);
                     wrap.appendChild(baris);
                 });
             }

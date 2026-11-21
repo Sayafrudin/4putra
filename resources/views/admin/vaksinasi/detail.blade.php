@@ -34,10 +34,12 @@
             <div class="bg-white dark:bg-[#1e2530] border {{ $aman ? 'border-gray-200 dark:border-gray-800' : 'border-[#E62C37]/40' }} rounded-xl p-3">
                 <div class="flex items-center gap-2 mb-1.5">
                     <span class="w-2 h-2 rounded-full shrink-0 {{ $aman ? 'bg-green-600' : 'bg-[#E62C37]' }}"></span>
-                    <p class="text-sm font-bold text-gray-900 dark:text-white truncate">{{ $b->nama }}</p>
+                    <span role="button" tabindex="0" onclick="bukaDetailBurung({{ $b->id }})"
+                        class="text-sm font-bold text-gray-900 dark:text-white truncate cursor-pointer hover:text-[#E62C37] transition-colors"
+                        title="Lihat identitas burung">{{ $b->nama }}</span>
                     <span class="ml-auto px-2 py-0.5 rounded-full text-[10px] font-bold uppercase {{ $aman ? 'text-green-600 bg-green-600/10' : 'text-[#E62C37] bg-[#E62C37]/10' }}">{{ $aman ? 'Aman' : 'Perlu' }}</span>
                 </div>
-                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ $b->spesies }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ $b->spesies }}@if ($b->nomor_ring) · {{ $b->label_ring }}@endif</p>
                 <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
                     {{ $terakhir ? $terakhir->jenis.' ('.($terakhir->metode === 'oral' ? 'Oral' : 'Suntik').') · '.$terakhir->tanggal_vaksin->translatedFormat('d M Y') : 'Belum ada catatan' }}
                 </p>
@@ -77,7 +79,12 @@
                 <tbody data-admin-list class="divide-y divide-gray-200 dark:divide-gray-800">
                     @forelse ($riwayat as $v)
                         <tr class="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#262d3a] transition-colors">
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{{ $v->burung?->nama ?? '-' }}</td>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                                {{ $v->burung?->nama ?? '-' }}
+                                @if ($v->burung?->nomor_ring)
+                                    <span class="text-xs font-normal text-gray-500">· {{ $v->burung->label_ring }}</span>
+                                @endif
+                            </td>
                             <td class="px-6 py-4 text-sm">{{ $v->jenis }}</td>
                             <td class="px-6 py-4 text-sm">{{ $v->metode === 'oral' ? 'Oral' : 'Suntik' }}</td>
                             <td class="px-6 py-4 text-sm">{{ $v->dosis ?? '—' }}</td>
@@ -193,9 +200,12 @@
         </div>
     </div>
 
+    {{-- Modal identitas burung (klik nama burung di card) --}}
+    <x-admin.detail-burung :burungs="$burungList" />
+
     @php
         $dataEkspor = $riwayat->map(fn ($v) => [
-            $v->burung?->nama ?? '-',
+            $v->burung?->nama_ring ?? '-',
             $v->jenis,
             $v->metode === 'oral' ? 'Oral' : 'Suntik',
             $v->dosis ?? '',
@@ -208,11 +218,24 @@
         // PENTING: data nama burung dirender dengan direktif json khusus (bukan
         // kurung-kurawal ganda) — escaping HTML di dalam <script> = syntax error,
         // seluruh fungsi modal mati (bug tombol Catat tidak beraksi).
-        var NAMA_BURUNG = @json($burungList->pluck('nama', 'id'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+        @php
+            $infoBurung = $burungList->mapWithKeys(fn ($b) => [
+                $b->id => ['nama' => $b->nama, 'ring' => $b->nomor_ring, 'gender' => $b->gender_label],
+            ])->all();
+        @endphp
+        var BURUNG_INFO = @json($infoBurung, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
         var DATA_EKSPOR = @json($dataEkspor, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
         var sedangBusy = false;
         var catatTargetIds = [];
         var hapusTargetId = null;
+
+        // Identitas burung utk label: "Nama (Ring X) · Jantan" — bagian opsional
+        // hilang bila kosong (konvensi identitas burung).
+        function labelBurung(b) {
+            let t = b.nama + (b.ring ? ' (Ring ' + b.ring + ')' : '');
+            if (b.gender) t += ' · ' + b.gender;
+            return t;
+        }
 
         function setBusy(on) {
             sedangBusy = on;
@@ -264,10 +287,19 @@
             const wrap = document.getElementById('catat_dosis_rows');
             wrap.innerHTML = '';
             ids.forEach(function (id) {
+                const b = BURUNG_INFO[id] || { nama: '#' + id, ring: null, gender: null };
                 const baris = document.createElement('div');
                 baris.className = 'flex items-center gap-2';
-                baris.innerHTML = '<span class="text-xs font-semibold text-gray-600 dark:text-gray-300 w-28 truncate">' + (NAMA_BURUNG[id] || ('#' + id)) + '</span>' +
-                    '<input type="text" data-dosis="' + id + '" placeholder="dosis..." class="flex-1 bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] outline-none">';
+                const label = document.createElement('span');
+                label.className = 'text-xs font-semibold text-gray-600 dark:text-gray-300 w-44 truncate';
+                label.title = labelBurung(b);
+                label.textContent = labelBurung(b);
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.dataset.dosis = id;
+                input.placeholder = 'dosis...';
+                input.className = 'flex-1 bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] outline-none';
+                baris.append(label, input);
                 wrap.appendChild(baris);
             });
             bukaModal('modalCatat');

@@ -164,7 +164,8 @@ class VaksinasiTest extends TestCase
                 'tanggal_vaksin' => '2026-11-01',
             ])->assertOk();
 
-        $this->assertSame(2, DB::table('vaksinasis')->where('jenis', 'Obat Cacing')->count());
+        // Hitung hanya baris burung uji sendiri — jenis standar bisa dipakai data asli.
+        $this->assertSame(2, DB::table('vaksinasis')->whereIn('burung_id', [$b1->id, $b2->id])->where('jenis', 'Obat Cacing')->count());
         $this->assertSame('1 tablet', DB::table('vaksinasis')->where('burung_id', $b1->id)->where('jenis', 'Obat Cacing')->value('dosis'));
         $this->assertSame('2 tablet', DB::table('vaksinasis')->where('burung_id', $b2->id)->where('jenis', 'Obat Cacing')->value('dosis'));
     }

@@ -51,7 +51,7 @@
                 @forelse ($riwayat as $v)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
-                        <td>{{ $v->burung?->nama ?? '-' }}</td>
+                        <td>{{ $v->burung?->nama_ring ?? '-' }}</td>
                         <td>{{ $v->jenis }}</td>
                         <td>{{ $v->metode === 'oral' ? 'Oral' : 'Suntik' }}</td>
                         <td>{{ $v->dosis ?? '—' }}</td>

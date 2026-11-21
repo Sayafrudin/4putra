@@ -185,7 +185,8 @@
                         placeholder="- Pilih kandang -"
                         :options="$kandangPasangan->map(fn ($kp, $i) => [
                             'value' => (string) $i,
-                            'label' => 'Kandang '.$kp['label'].' — '.$kp['burung'][0]['nama'].' ('.$kp['burung'][0]['spesies'].($kp['burung'][0]['gender'] ? ' - '.$kp['burung'][0]['gender'] : '').') × '.$kp['burung'][1]['nama'].' ('.$kp['burung'][1]['spesies'].($kp['burung'][1]['gender'] ? ' - '.$kp['burung'][1]['gender'] : '').')',
+                            'grup' => 'Blok '.$kp['blok'],
+                            'label' => $kp['label_pasangan'],
                         ])->values()->all()"
                     />
                     <p class="text-xs text-red-400 mt-1 hidden" id="err_tambah_burung"></p>
@@ -430,7 +431,9 @@
             const info = document.getElementById('info_pasangan');
             const kp = PASANGAN[idx];
             if (!kp) { info.classList.add('hidden'); return; }
-            document.getElementById('pasangan_label').textContent = kp.burung[0].nama + ' (' + kp.burung[0].spesies + (kp.burung[0].gender ? ' - ' + kp.burung[0].gender : '') + ') × ' + kp.burung[1].nama + ' (' + kp.burung[1].spesies + (kp.burung[1].gender ? ' - ' + kp.burung[1].gender : '') + ')';
+            // Identitas pasangan: "Nama (Spesies - Gender, Ring N)" — ring tampil bila terisi.
+            const sisi = (b) => b.nama + ' (' + b.spesies + (b.gender ? ' - ' + b.gender : '') + (b.ring ? ', Ring ' + b.ring : '') + ')';
+            document.getElementById('pasangan_label').textContent = sisi(kp.burung[0]) + ' × ' + sisi(kp.burung[1]);
             info.classList.remove('hidden');
         }
 

@@ -73,7 +73,7 @@
                     <tr>
                         <td>{{ $i + 1 }}</td>
                         <td>
-                            <div style="font-weight: 600;">{{ $v->burung->nama }}</div>
+                            <div style="font-weight: 600;">{{ $v->burung->nama }}{{ $v->burung->nomor_ring ? ' (Ring '.$v->burung->nomor_ring.')' : '' }}</div>
                             <div style="color: #888; font-size: 10px;">{{ $v->burung->spesies }}{{ $v->burung->kandang ? ' · Kandang '.$v->burung->kandang->label : '' }}</div>
                         </td>
                         <td>{{ $v->jenis }}</td>

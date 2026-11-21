@@ -10,6 +10,7 @@
 import { chromium } from "playwright-core";
 import { spawn, execSync } from "node:child_process";
 import http from "node:http";
+import { gotoRetry } from './helpers.mjs';
 
 const PORT = 8024;
 const BASE = `http://127.0.0.1:${PORT}`;
@@ -31,13 +32,6 @@ function assert(cond, label) {
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // Server dev + TiDB remote kadang menggantung request; goto GET idempoten → aman di-retry.
-async function gotoRetry(page, url, opts = {}) {
-    try {
-        await page.goto(url, { waitUntil: "load", timeout: 30000, ...opts });
-    } catch {
-        await page.goto(url, { waitUntil: "load", timeout: 30000, ...opts });
-    }
-}
 const MOBILE = {
     viewport: { width: 390, height: 844 },
     hasTouch: true,

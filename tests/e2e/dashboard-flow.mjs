@@ -9,6 +9,7 @@
 import { chromium } from "playwright-core";
 import { spawn, execSync } from "node:child_process";
 import http from "node:http";
+import { gotoRetry } from "./helpers.mjs";
 
 const PORT = 8033;
 const BASE = `http://127.0.0.1:${PORT}`;
@@ -86,7 +87,7 @@ try {
     const pageErrors = [];
     page.on("pageerror", (e) => pageErrors.push(e.message));
 
-    await page.goto(`${BASE}/login`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/login`, { waitUntil: "load" });
     await page.click("#username");
     await page.fill("#username", ADMIN.email.split("@")[0]);
     await page.click("#password");
@@ -96,7 +97,10 @@ try {
 
     // ---------- D1: dashboard admin ----------
     const awal = Date.now();
-    await page.goto(`${BASE}/admin`, { waitUntil: "load", timeout: 30000 });
+    await gotoRetry(page, `${BASE}/admin`, {
+        waitUntil: "load",
+        timeout: 30000,
+    });
     const durasi = Date.now() - awal;
     assert(durasi < 3000, `D0 render dashboard ${durasi}ms (< 3000ms)`);
 
@@ -135,7 +139,7 @@ try {
     );
 
     // ---------- U1: form user role-aware ----------
-    await page.goto(`${BASE}/admin/users/create`, {
+    await gotoRetry(page, `${BASE}/admin/users/create`, {
         waitUntil: "load",
         timeout: 30000,
     });
@@ -192,7 +196,7 @@ try {
         viewport: { width: 1440, height: 900 },
     });
     const page2 = await ctx2.newPage();
-    await page2.goto(`${BASE}/login`, { waitUntil: "load" });
+    await gotoRetry(page2, `${BASE}/login`, { waitUntil: "load" });
     await page2.click("#username");
     await page2.fill("#username", "e2e-dash-user");
     await page2.click("#password");
@@ -200,7 +204,10 @@ try {
     await page2.click("button[type=submit]");
     // Non-admin diarahkan ke beranda publik setelah login (desain existing), lalu buka dashboard
     await page2.waitForURL(`${BASE}/`, { timeout: 15000 });
-    await page2.goto(`${BASE}/admin`, { waitUntil: "load", timeout: 30000 });
+    await gotoRetry(page2, `${BASE}/admin`, {
+        waitUntil: "load",
+        timeout: 30000,
+    });
     assert(
         !(await page2.isVisible("text=Saldo Kas Umum")),
         "D2a kartu Saldo Kas Umum tidak tampil untuk role terbatas",

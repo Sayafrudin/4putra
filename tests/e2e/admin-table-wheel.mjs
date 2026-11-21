@@ -13,6 +13,7 @@
 import { chromium } from "playwright-core";
 import { spawn, execSync } from "node:child_process";
 import http from "node:http";
+import { gotoRetry } from "./helpers.mjs";
 
 const PORT = 8026;
 const BASE = `http://127.0.0.1:${PORT}`;
@@ -98,7 +99,7 @@ try {
     const page = await ctx.newPage();
 
     // Login admin (field readonly+onfocus: klik dulu agar readonly hilang)
-    await page.goto(`${BASE}/login`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/login`, { waitUntil: "load" });
     await page.click("#username");
     await page.fill("#username", ADMIN.email.split("@")[0]);
     await page.click("#password");
@@ -111,7 +112,7 @@ try {
 
     // Cari container tabel admin yang benar-benar overflow
     async function findTableScroll(path) {
-        await page.goto(`${BASE}${path}`, { waitUntil: "load" });
+        await gotoRetry(page, `${BASE}${path}`, { waitUntil: "load" });
         const idx = await page.evaluate(() =>
             [...document.querySelectorAll(".overflow-x-auto")].findIndex(
                 (el) => el.scrollWidth > el.clientWidth,

@@ -15,6 +15,7 @@
 import { chromium } from "playwright-core";
 import { spawn, execSync } from "node:child_process";
 import http from "node:http";
+import { gotoRetry } from "./helpers.mjs";
 
 const PORT = 8021;
 const BASE = `http://127.0.0.1:${PORT}`;
@@ -116,7 +117,7 @@ try {
     const page = await context.newPage();
 
     // ---------- Login via form asli ----------
-    await page.goto(`${BASE}/login`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/login`, { waitUntil: "load" });
     await page.click("#username");
     await page.fill("#username", ADMIN.email.split("@")[0]);
     await page.click("#password");
@@ -126,7 +127,7 @@ try {
     assert(true, "K0 login via form → /admin");
 
     // ---------- K1: papan kandang dirender ----------
-    await page.goto(`${BASE}/admin/kandang`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/admin/kandang`, { waitUntil: "load" });
     assert(
         (await page.locator('h3:has-text("Blok A")').count()) > 0,
         "K1a Blok A tersedia",
@@ -255,7 +256,7 @@ try {
     );
 
     // BUKTI SERVER: reload → burung benar di kandang tujuan, pool berkurang
-    await page.goto(`${BASE}/admin/kandang`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/admin/kandang`, { waitUntil: "load" });
     assert(
         (await page
             .locator(
@@ -290,7 +291,7 @@ try {
     await poolEmptyBenar(
         "K4c teks kosong pool konsisten setelah chip kembali (tanpa reload)",
     );
-    await page.goto(`${BASE}/admin/kandang`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/admin/kandang`, { waitUntil: "load" });
     assert(
         (await page
             .locator(`#poolList .burung-chip:has-text("${BURUNG}")`)
@@ -313,7 +314,7 @@ try {
     await page.click("#btnHapus");
     await respK5;
     await sleep(300);
-    await page.goto(`${BASE}/admin/kandang`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/admin/kandang`, { waitUntil: "load" });
     assert(
         (await page.locator(`.burung-chip:has-text("${BURUNG}")`).count()) ===
             0,
@@ -323,7 +324,7 @@ try {
     // ---------- Sisi-sisi tampilan bebas error konsol ----------
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
-    await page.goto(`${BASE}/admin/kandang`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/admin/kandang`, { waitUntil: "load" });
     assert(errors.length === 0, "K6 tanpa error konsol di papan kandang");
 
     // ---------- K7: kapasitas maksimal 2 burung per kandang ----------
@@ -434,7 +435,7 @@ try {
         !!respDua && respDua.ok(),
         `K7a fetch letakkan Dua merespons ${respDua ? respDua.status() : "null"}`,
     );
-    await page.goto(`${BASE}/admin/kandang`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/admin/kandang`, { waitUntil: "load" });
     assert(
         (await page
             .locator(
@@ -452,7 +453,7 @@ try {
         !!respTiga && respTiga.ok(),
         `K7c fetch letakkan Tiga merespons ${respTiga ? respTiga.status() : "null"}`,
     );
-    await page.goto(`${BASE}/admin/kandang`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/admin/kandang`, { waitUntil: "load" });
     assert(
         (await page
             .locator(
@@ -469,7 +470,7 @@ try {
     );
 
     // BUKTI SERVER: burung ketiga tetap di pool
-    await page.goto(`${BASE}/admin/kandang`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/admin/kandang`, { waitUntil: "load" });
     assert(
         (await page
             .locator('#poolList .burung-chip:has-text("E2E Kandang Empat")')
@@ -478,7 +479,7 @@ try {
     );
 
     // ---------- K11: Aviary — teks kosong pool akurat via drag nyata ----------
-    await page.goto(`${BASE}/admin/aviary`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/admin/aviary`, { waitUntil: "load" });
     await buatBurung("E2E Kandang Aviary", "jantan");
     const respK11a = await drag(
         "E2E Kandang Aviary",
@@ -505,14 +506,14 @@ try {
         viewport: { width: 375, height: 812 },
     });
     const mobile = await mobCtx.newPage();
-    await mobile.goto(`${BASE}/login`, { waitUntil: "load" });
+    await gotoRetry(mobile, `${BASE}/login`, { waitUntil: "load" });
     await mobile.click("#username");
     await mobile.fill("#username", ADMIN.email.split("@")[0]);
     await mobile.click("#password");
     await mobile.fill("#password", ADMIN.password);
     await mobile.click("button[type=submit]");
     await mobile.waitForURL(`${BASE}/admin`, { timeout: 15000 });
-    await mobile.goto(`${BASE}/admin/kandang`, { waitUntil: "load" });
+    await gotoRetry(mobile, `${BASE}/admin/kandang`, { waitUntil: "load" });
 
     const overflow = await mobile.evaluate(
         () => document.scrollingElement.scrollWidth - window.innerWidth,
@@ -546,14 +547,14 @@ try {
 
     // Sesi tunggal: login di context mobile menggantikan tiket halaman utama →
     // perangkat utama di-kick. Re-login dulu sebelum lanjut (perilaku sesi tunggal).
-    await page.goto(`${BASE}/login`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/login`, { waitUntil: "load" });
     await page.click("#username");
     await page.fill("#username", ADMIN.email.split("@")[0]);
     await page.click("#password");
     await page.fill("#password", ADMIN.password);
     await page.click("button[type=submit]");
     await page.waitForURL(`${BASE}/admin`, { timeout: 15000 });
-    await page.goto(`${BASE}/admin/kandang`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/admin/kandang`, { waitUntil: "load" });
 
     // ---------- K9: tap/klik chip → modal pindah kandang (alternatif DnD di HP) ----------
     await buatBurung("E2E Kandang Lima", null);
@@ -563,14 +564,14 @@ try {
         hasTouch: true,
     });
     const touch = await touchCtx.newPage();
-    await touch.goto(`${BASE}/login`, { waitUntil: "load" });
+    await gotoRetry(touch, `${BASE}/login`, { waitUntil: "load" });
     await touch.click("#username");
     await touch.fill("#username", ADMIN.email.split("@")[0]);
     await touch.click("#password");
     await touch.fill("#password", ADMIN.password);
     await touch.click("button[type=submit]");
     await touch.waitForURL(`${BASE}/admin`, { timeout: 15000 });
-    await touch.goto(`${BASE}/admin/kandang`, { waitUntil: "load" });
+    await gotoRetry(touch, `${BASE}/admin/kandang`, { waitUntil: "load" });
 
     // K9a tap chip di pool → modal pindah terbuka (sentuhan asli, bukan klik mouse)
     await touch.tap(`#poolList .burung-chip:has-text("E2E Kandang Lima")`);
@@ -674,7 +675,7 @@ try {
 
     // Sesi tunggal: login touch context menggantikan tiket lagi → re-login main page
     // sebelum K10 (cookie main page dipakai context tanpa JS).
-    await page.goto(`${BASE}/login`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/login`, { waitUntil: "load" });
     await page.click("#username");
     await page.fill("#username", ADMIN.email.split("@")[0]);
     await page.click("#password");
@@ -689,7 +690,7 @@ try {
     await noJsCtx.addCookies(await context.cookies());
     await noJsCtx.route(/\/build\/assets\/.+\.js/, (route) => route.abort());
     const noJs = await noJsCtx.newPage();
-    await noJs.goto(`${BASE}/admin/kandang`, { waitUntil: "load" });
+    await gotoRetry(noJs, `${BASE}/admin/kandang`, { waitUntil: "load" });
     const posisiMobile = await noJs.evaluate(() =>
         document.querySelector("aside").getBoundingClientRect(),
     );
@@ -722,7 +723,7 @@ try {
         route.abort(),
     );
     const noJsDesk = await noJsDeskCtx.newPage();
-    await noJsDesk.goto(`${BASE}/admin/kandang`, { waitUntil: "load" });
+    await gotoRetry(noJsDesk, `${BASE}/admin/kandang`, { waitUntil: "load" });
     const posisiDesktop = await noJsDesk.evaluate(() =>
         document.querySelector("aside").getBoundingClientRect(),
     );

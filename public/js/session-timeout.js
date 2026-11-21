@@ -90,6 +90,40 @@
             });
     }
 
+    // ===== Interceptor fetch: AJAX admin yang kena 401/419 = sesi mati =====
+    // Tanpa popup Perpanjang, tab yang TIDAK PERNAH tersembunyi tak pernah
+    // kena validasi wake — satu-satunya tanda sesi mati baginya adalah request
+    // gagal. Alih-alih toast "Gagal", lempar langsung ke alur sesiBerakhir
+    // (modal + auto-logout), persis perilaku myBCA.
+    var fetchAsli = window.fetch;
+    window.fetch = function (input) {
+        var url =
+            typeof input === "string"
+                ? input
+                : input && input.url
+                  ? String(input.url)
+                  : "";
+        var lewati =
+            selesai ||
+            url.indexOf("/admin/ping") !== -1 || // ping menangani dirinya sendiri
+            url.indexOf("/logout") !== -1; // hindari loop auto-logout
+        var respons = fetchAsli.apply(this, arguments);
+        if (lewati) return respons;
+        return respons.then(function (res) {
+            if (res.status !== 401 && res.status !== 419) return res;
+            // clone(): pemanggil asli tetap bisa membaca body responsnya
+            res.clone()
+                .json()
+                .catch(function () {
+                    return null;
+                })
+                .then(function (body) {
+                    sesiBerakhir(!!(body && body.sesi_digantikan));
+                });
+            return res;
+        });
+    };
+
     function buatModal(kicked) {
         // Turbo menukar body saat navigasi: modal menempel di body lama bisa
         // lepas dari DOM — bangun ulang, jangan pakai referensi basi.

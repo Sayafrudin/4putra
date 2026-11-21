@@ -23,7 +23,7 @@
     "isDynamicEntry": true
   },
   "resources/css/app.css": {
-    "file": "assets/app-BYxNpWlQ.css",
+    "file": "assets/app-bARn5j5Y.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
@@ -40,7 +40,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-D6WpYBg2.js",
+    "file": "assets/app-CD7ujqE9.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -54,7 +54,7 @@
     ]
   },
   "resources/js/chat.js": {
-    "file": "assets/chat-BIv2rbhw.js",
+    "file": "assets/chat-D4MbLxiW.js",
     "name": "chat",
     "src": "resources/js/chat.js",
     "isDynamicEntry": true,

@@ -7,6 +7,7 @@
  *  S3  Kembali ke tab setelah idle > batas → modal "Sesi Telah Berakhir" → auto-logout server → /admin tertutup
  *  S4  Cookie sesi hilang → TIDAK dibangkitkan ulang (tanpa remember-me) → dilempar login
  *  S5  Sesi mati di server → wake ping 401 → modal → tombol Login Kembali → login ulang
+ *  S5d AJAX 401 saat tab tak pernah tersembunyi → interceptor fetch → modal sesi
  *  S6  Navbar scrolled: track toggle bahasa terlihat (tidak merah-di-merah)
  *  S7  Performa: waktu load halaman utama < 3 detik (NavigationTiming)
  *
@@ -15,6 +16,7 @@
 import { chromium } from "playwright-core";
 import { spawn, execSync } from "node:child_process";
 import http from "node:http";
+import { gotoRetry } from "./helpers.mjs";
 
 const PORT = 8020;
 const BASE = `http://127.0.0.1:${PORT}`;
@@ -30,14 +32,6 @@ function assert(cond, label) {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const sec = (n) => n * 1000;
 // Server dev single-threaded + TiDB dingin kadang menggantung request; goto GET
-// idempoten → aman di-retry satu kali (polanya sama dengan flapping telur dulu).
-async function gotoRetry(page, url, opts = {}) {
-    try {
-        await page.goto(url, { waitUntil: "load", timeout: 30000, ...opts });
-    } catch {
-        await page.goto(url, { waitUntil: "load", timeout: 30000, ...opts });
-    }
-}
 
 // Watchdog anti-stuck: skrip wajib mati sendiri maksimal 12 menit
 // (runtime normal ~7 menit; di luar itu = hang → bunuh proses agar tidak menggantung task)
@@ -134,7 +128,7 @@ try {
     });
 
     // ---------- S1: Login via form asli ----------
-    await page.goto(`${BASE}/login`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/login`, { waitUntil: "load" });
     // Field login memakai readonly+onfocus (anti-autofill): klik dulu agar readonly hilang
     await page.click("#username");
     await page.fill("#username", ADMIN.email.split("@")[0]);
@@ -225,9 +219,29 @@ try {
     await page.waitForURL(/\/admin(\/|$)/, { timeout: 15000 });
     assert(true, "S5c login ulang → masuk kembali ke admin");
 
+    // ---------- S5d: AJAX 401 (sesi mati) → interceptor menampilkan modal sesi ----------
+    // Tab tak pernah tersembunyi = tak ada wake; satu-satunya tanda sesi mati
+    // adalah request gagal → interceptor wajib membawa modal, bukan toast.
+    await context.clearCookies();
+    await sleep(500);
+    await page.evaluate(() =>
+        fetch("/admin/telur/export/pdf", {
+            headers: { Accept: "application/json" },
+        }).catch(() => {}),
+    );
+    await modal.waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
+    assert(
+        await modal.isVisible(),
+        "S5d AJAX 401 → interceptor fetch menampilkan modal sesi",
+    );
+    assert(
+        (await page.getByText("Sesi Anda Telah Berakhir").count()) > 0,
+        "S5e modal interceptor memakai pesan sesi berakhir",
+    );
+
     // ---------- S6: navbar scrolled — track toggle terlihat ----------
-    await page.goto(`${BASE}/lang/en`, { waitUntil: "load" });
-    await page.goto(`${BASE}/`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/lang/en`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/`, { waitUntil: "load" });
     const track = page.locator("#lang-toggle + div");
     await page.evaluate(() => window.scrollTo(0, 300));
     await sleep(700);
@@ -245,7 +259,7 @@ try {
         ),
         "S6b di posisi atas track kembali merah",
     );
-    await page.goto(`${BASE}/lang/id`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/lang/id`, { waitUntil: "load" });
 
     // ---------- S7: performa ----------
     // DCL = render siap (eksklusi unduhan foto). Ambang 4 detik utk /admin/collections:
@@ -256,7 +270,7 @@ try {
         await gotoRetry(page, `${BASE}${path}`);
     }
     for (const path of ["/", "/collections", "/admin", "/admin/collections"]) {
-        await page.goto(`${BASE}${path}`, { waitUntil: "load" });
+        await gotoRetry(page, `${BASE}${path}`, { waitUntil: "load" });
         const t = await page.evaluate(() => {
             const nav = performance.getEntriesByType("navigation")[0];
             return {

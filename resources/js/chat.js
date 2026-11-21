@@ -239,7 +239,11 @@ function initChatWidget(currentUser) {
         container.innerHTML =
             '<div class="flex items-center justify-center h-full"><div class="animate-spin w-6 h-6 border-2 border-[#E62C37] border-t-transparent rounded-full"></div></div>';
         try {
-            var response = await fetch("/admin/chat/contacts");
+            // Accept JSON: sesi mati wajib 401 (bukan 302 guest — 302 meracuni
+            // url.intended dan login berikutnya mendarat di endpoint JSON mentah).
+            var response = await fetch("/admin/chat/contacts", {
+                headers: { Accept: "application/json" },
+            });
             contacts = await response.json();
             renderContacts();
         } catch (e) {

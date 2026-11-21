@@ -11,6 +11,7 @@
 import { chromium } from "playwright-core";
 import { spawn, execSync } from "node:child_process";
 import http from "node:http";
+import { gotoRetry } from "./helpers.mjs";
 
 const PORT = 8021;
 const BASE = `http://127.0.0.1:${PORT}`;
@@ -107,7 +108,7 @@ try {
     const page = await context.newPage();
 
     // ---------- R1: login role user via form asli ----------
-    await page.goto(`${BASE}/login`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/login`, { waitUntil: "load" });
     await page.click("#username");
     await page.fill("#username", ROLE_USER.email.split("@")[0]);
     await page.click("#password");
@@ -117,7 +118,7 @@ try {
     assert(true, "R1 login role user → beranda publik (host lokal)");
 
     // ---------- R2: dashboard admin terbuka, menu sensitif tidak dirender ----------
-    await page.goto(`${BASE}/admin`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/admin`, { waitUntil: "load" });
     assert(
         page.url().replace(/\/$/, "") === `${BASE}/admin`,
         "R2a role user masuk /admin (bukan 403)",
@@ -142,7 +143,7 @@ try {
     );
 
     // ---------- R3: 403 di route terlarang → tombol tunggal → /login ----------
-    await page.goto(`${BASE}/admin/users`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/admin/users`, { waitUntil: "load" });
     assert(
         (await page.getByText("Akses Ditolak").count()) > 0,
         "R3a /admin/users membalas 403 Akses Ditolak",
@@ -157,7 +158,7 @@ try {
 
     // ---------- R4: sesi benar-benar mati di server ----------
     await sleep(500);
-    await page.goto(`${BASE}/admin`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/admin`, { waitUntil: "load" });
     assert(
         page.url().includes("/login"),
         "R4a setelah tombol 403 diklik, /admin dilempar ke /login (sesi mati server-side)",

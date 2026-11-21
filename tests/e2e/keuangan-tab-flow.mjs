@@ -8,6 +8,7 @@
 import { chromium } from "playwright-core";
 import { spawn, execSync } from "node:child_process";
 import http from "node:http";
+import { gotoRetry } from "./helpers.mjs";
 
 const PORT = 8029;
 const BASE = `http://127.0.0.1:${PORT}`;
@@ -88,7 +89,7 @@ try {
     const pageErrors = [];
     page.on("pageerror", (e) => pageErrors.push(e.message));
 
-    await page.goto(`${BASE}/login`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/login`, { waitUntil: "load" });
     await page.click("#username");
     await page.fill("#username", ADMIN.email.split("@")[0]);
     await page.click("#password");
@@ -96,7 +97,7 @@ try {
     await page.click("button[type=submit]");
     await page.waitForURL(`${BASE}/admin`, { timeout: 15000 });
 
-    await page.goto(`${BASE}/admin/keuangan`, {
+    await gotoRetry(page, `${BASE}/admin/keuangan`, {
         waitUntil: "load",
         timeout: 30000,
     });

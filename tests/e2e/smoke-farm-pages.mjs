@@ -9,6 +9,7 @@
 import { chromium } from "playwright-core";
 import { spawn, execSync } from "node:child_process";
 import http from "node:http";
+import { gotoRetry } from "./helpers.mjs";
 
 const PORT = 8023;
 const BASE = `http://127.0.0.1:${PORT}`;
@@ -99,7 +100,7 @@ try {
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
 
-    await page.goto(`${BASE}/login`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/login`, { waitUntil: "load" });
     await page.fill("#username", ADMIN.email.split("@")[0]);
     await page.click("#password");
     await page.fill("#password", ADMIN.password);
@@ -114,14 +115,16 @@ try {
         ["/admin/kandang", "Kandang &amp; Penempatan"],
         ["/admin", "Dashboard"],
     ]) {
-        const res = await page.goto(`${BASE}${url}`, { waitUntil: "load" });
+        const res = await gotoRetry(page, `${BASE}${url}`, {
+            waitUntil: "load",
+        });
         assert(res.status() === 200, `S1 ${url} = ${res.status()}`);
         const html = await page.content();
         assert(html.includes(needle), `S2 ${url} memuat "${needle}"`);
     }
 
     // ---------- Vaksinasi: modal catat dengan jenis standar + metode ----------
-    await page.goto(`${BASE}/admin/vaksinasi`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/admin/vaksinasi`, { waitUntil: "load" });
     const vaksinUi = await page.evaluate(() => ({
         jenisOpsi: [
             ...(document.querySelector("#catat_jenis_pilih")?.options ?? []),
@@ -142,7 +145,7 @@ try {
         vaksinUi.metode.includes("suntik") && vaksinUi.metode.includes("oral"),
         `S3a metode catat = suntik + oral [${vaksinUi.metode.join(", ")}]`,
     );
-    await page.goto(`${BASE}/admin/telur`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/admin/telur`, { waitUntil: "load" });
     // Telur kini berbasis KANDANG (pasangan 2 induk otomatis) — bukan dropdown induk per optgroup
     const optTelur = await page.evaluate(() =>
         [...document.querySelectorAll("#tambah_kandang option")].map(
@@ -159,7 +162,7 @@ try {
     );
 
     // ---------- Stok makanan: satuan dropdown + badge ----------
-    await page.goto(`${BASE}/admin/stok-makanan`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/admin/stok-makanan`, { waitUntil: "load" });
     const satuanUi = await page.evaluate(() => ({
         jenisTambah: document.querySelector("#tambah_satuan")?.tagName,
         opsi: [

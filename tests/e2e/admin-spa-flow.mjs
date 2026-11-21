@@ -17,6 +17,7 @@ import { chromium } from "playwright-core";
 import { spawn, execSync } from "node:child_process";
 import http from "node:http";
 import fs from "node:fs";
+import { gotoRetry } from "./helpers.mjs";
 
 const PORT = 8021;
 const BASE = `http://127.0.0.1:${PORT}`;
@@ -121,7 +122,7 @@ try {
     });
 
     // ---------- N1: Login ----------
-    await page.goto(`${BASE}/login`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/login`, { waitUntil: "load" });
     await page.click("#username");
     await page.fill("#username", ADMIN.email.split("@")[0]);
     await page.click("#password");
@@ -131,7 +132,7 @@ try {
     assert(true, "N1 login via form → /admin");
 
     // Load awal diukur NavigationTiming (beban penuh halaman, tanpa overhead browser start)
-    await page.goto(`${BASE}/admin`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/admin`, { waitUntil: "load" });
     const loadMs = await page.evaluate(() =>
         Math.round(
             performance.timing.loadEventEnd -
@@ -198,7 +199,7 @@ try {
     const rantai = [
         {
             klik: [
-                'button:has-text("Manajemen Farm")',
+                'button:has-text("Management Farm Baru")',
                 'a:has-text("Kandang")',
             ],
             tunggu: 'h2:has-text("Kandang")',
@@ -219,7 +220,7 @@ try {
         },
         {
             klik: [
-                'button:has-text("Manajemen Farm")',
+                'button:has-text("Management Farm Baru")',
                 'a:has-text("Vaksinasi")',
             ],
             tunggu: 'h2:has-text("Obat & Vaksinasi")',
@@ -402,7 +403,7 @@ try {
     await page.evaluate(() => {
         window.__probeSpa = "alive";
     });
-    await page.click('button:has-text("Manajemen Farm")');
+    await page.click('button:has-text("Management Farm Baru")');
     await page.click('a:has-text("Telur & Incubator")');
     await page.waitForSelector("h2:has-text('Telur & Incubator')", {
         timeout: 10000,

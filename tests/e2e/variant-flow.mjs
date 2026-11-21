@@ -8,6 +8,7 @@
 import { chromium } from "playwright-core";
 import { execSync, spawn } from "node:child_process";
 import http from "node:http";
+import { gotoRetry } from "./helpers.mjs";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const PORT = 8023;
@@ -174,7 +175,7 @@ try {
     const page = await browser.newPage();
 
     // Login via form asli
-    await page.goto(`${BASE}/login`, { waitUntil: "load" });
+    await gotoRetry(page, `${BASE}/login`, { waitUntil: "load" });
     await page.click("#username");
     await page.fill("#username", ADMIN.email.split("@")[0]);
     await page.click("#password");
@@ -184,7 +185,7 @@ try {
 
     // Performa: load halaman koleksi < 3 detik
     const navStart = Date.now();
-    await page.goto(`${BASE}/admin/collections`, {
+    await gotoRetry(page, `${BASE}/admin/collections`, {
         waitUntil: "domcontentloaded",
     });
     const navMs = Date.now() - navStart;

@@ -32,8 +32,18 @@ class BabyController extends Controller
         $aviaries = Kandang::with('burungs:id,nama,spesies,fase,gender,nomor_ring,kandang_id')
             ->where('tipe', 'aviary')->orderBy('blok')->orderBy('nomor')->get();
 
+        return view('admin.baby.index', compact('babies', 'kandangs', 'aviaries'));
+    }
+
+    /** Halaman Penjualan Baby: catat penjualan + riwayat ber-filter periode. */
+    public function penjualan()
+    {
         // Dropdown jual: semua burung beserta lokasinya (dewasa wajib dikeluarkan dari kandang dulu).
-        $burungSemua = Burung::with('kandang:id,blok,nomor,tipe')->orderBy('nama')->get();
+        // Diurutkan per blok lalu nama — opsi dropdown ber-grup harus kontigu per grup,
+        // kalau selang-seling header grup tampil-hilang acak (bug reorder x-for).
+        $burungSemua = Burung::with('kandang:id,blok,nomor,tipe')->get()
+            ->sortBy(fn ($b) => ($b->kandang?->blok ?? '~').'|'.$b->nama, SORT_NATURAL | SORT_FLAG_CASE)
+            ->values();
 
         // Riwayat penjualan + filter periode (server-side).
         $now = now('Asia/Jakarta');
@@ -53,7 +63,7 @@ class BabyController extends Controller
         }
         $penjualans = $penjualans->get();
 
-        return view('admin.baby.index', compact('babies', 'kandangs', 'aviaries', 'burungSemua', 'penjualans', 'filter'));
+        return view('admin.baby.penjualan', compact('burungSemua', 'penjualans', 'filter'));
     }
 
     public function update(Request $request, Burung $burung)

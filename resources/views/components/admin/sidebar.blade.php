@@ -96,13 +96,13 @@
                 {{-- Menu Management Farm Baru (data burung); tiap anak difilter hak akses menu --}}
                 @if (\App\Support\AdminMenus::boleh(Auth::user(), 'aviary') || \App\Support\AdminMenus::boleh(Auth::user(), 'kandang') || \App\Support\AdminMenus::boleh(Auth::user(), 'vaksinasi') || \App\Support\AdminMenus::boleh(Auth::user(), 'telur') || \App\Support\AdminMenus::boleh(Auth::user(), 'baby') || \App\Support\AdminMenus::boleh(Auth::user(), 'stok'))
                 <li class="relative px-6 py-3"
-                    x-data="{ openFarm: {{ request()->routeIs('admin.aviary*') || request()->routeIs('admin.kandang.index') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.baby*') || request()->routeIs('admin.stok*') ? 'true' : 'false' }} }">
-                    @if (request()->routeIs('admin.aviary*') || request()->routeIs('admin.kandang.index') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.baby*') || request()->routeIs('admin.stok*'))
+                    x-data="{ openFarm: {{ request()->routeIs('admin.aviary*') || request()->routeIs('admin.kandang.index') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.baby*') || request()->routeIs('admin.stok*') || request()->routeIs('admin.penjualan-baby*') ? 'true' : 'false' }} }">
+                    @if (request()->routeIs('admin.aviary*') || request()->routeIs('admin.kandang.index') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.baby*') || request()->routeIs('admin.stok*') || request()->routeIs('admin.penjualan-baby*'))
                         <span class="absolute inset-y-0 left-0 w-1 bg-[#E62C37] rounded-tr-lg rounded-br-lg"
                             aria-hidden="true"></span>
                     @endif
                     <button @click="openFarm = !openFarm"
-                        class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.aviary*') || request()->routeIs('admin.kandang.index') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.baby*') || request()->routeIs('admin.stok*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
+                        class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.aviary*') || request()->routeIs('admin.kandang.index') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.baby*') || request()->routeIs('admin.stok*') || request()->routeIs('admin.penjualan-baby*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
                         <span class="inline-flex items-center">
                             <x-tabler-building-warehouse class="w-5 h-5" />
                             <span class="ml-4 text-left">Management Farm Baru</span>
@@ -149,6 +149,13 @@
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.baby*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <x-tabler-eggs class="w-4 h-4 mr-2" />
                             Baby
+                        </a>
+                        @endif
+                        @if (\App\Support\AdminMenus::boleh(Auth::user(), 'penjualan-baby'))
+                        <a href="{{ route('admin.penjualan-baby.index') }}" data-turbo="true" @click="sidebarOpen = false"
+                            class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.penjualan-baby*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
+                            <x-tabler-shopping-cart class="w-4 h-4 mr-2" />
+                            Penjualan Baby
                         </a>
                         @endif
                         @if (\App\Support\AdminMenus::boleh(Auth::user(), 'stok'))

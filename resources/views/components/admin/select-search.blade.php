@@ -30,17 +30,15 @@
         <div class="max-h-60 overflow-y-auto py-1">
             <template x-for="baris in tampilan" :key="baris.key">
                 <div>
-                    <template x-if="baris.header">
-                        {{-- Pembatas grup: header blok, non-klik, menempel saat scroll --}}
-                        <p class="sticky top-0 px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-[#151a22] border-b border-gray-100 dark:border-gray-800"
-                            x-text="baris.header"></p>
-                    </template>
-                    <template x-if="baris.op">
-                        <button type="button" @click="pilihOpsi(baris.op)"
-                            class="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-[#E62C37]/10 hover:text-[#E62C37] transition-colors"
-                            :class="pilih && String(pilih.value) === String(baris.op.value) ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : ''"
-                            x-text="baris.op.label"></button>
-                    </template>
+                    {{-- Pembatas grup: header blok, non-klik, menempel saat scroll.
+                        x-show (bukan x-if) — x-if di dalam x-for memicu bug anchor Alpine. --}}
+                    <p x-show="baris.header"
+                        class="sticky top-0 px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-[#151a22] border-b border-gray-100 dark:border-gray-800"
+                        x-text="baris.header"></p>
+                    <button type="button" x-show="baris.op" @click="pilihOpsi(baris.op)"
+                        class="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-[#E62C37]/10 hover:text-[#E62C37] transition-colors"
+                        :class="pilih && baris.op && String(pilih.value) === String(baris.op.value) ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : ''"
+                        x-text="baris.op ? baris.op.label : ''"></button>
                 </div>
             </template>
             <p x-show="tersaring.length === 0" class="px-4 py-3 text-sm text-gray-400 italic">Tidak ada hasil.</p>

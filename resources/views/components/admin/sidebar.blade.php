@@ -155,7 +155,7 @@
                         <a href="{{ route('admin.penjualan-baby.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.penjualan-baby*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <x-tabler-shopping-cart class="w-4 h-4 mr-2" />
-                            Penjualan Baby
+                            Penjualan Burung
                         </a>
                         @endif
                         @if (\App\Support\AdminMenus::boleh(Auth::user(), 'stok'))

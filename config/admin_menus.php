@@ -58,7 +58,7 @@ return [
             'patterns' => ['admin.telur.*'],
         ],
         'penjualan-baby' => [
-            'label' => 'Penjualan Baby',
+            'label' => 'Penjualan Burung',
             'akses' => 'semua',
             // Endpoint simpan jual tetap admin.baby.jual — terikat menu ini, bukan Baby.
             // Harus di atas 'baby' agar pencocokan pertama menang.

@@ -20,10 +20,11 @@ class AviaryController extends Controller
             ->orderBy('nomor')
             ->get();
 
-        // Pool = hanya burung bebas. Burung kandang breeding tidak ditawarkan —
-        // aturan: breeding → aviary ditolak server-side (keluarkan dulu).
+        // Pool = hanya burung bebas yang BUKAN baby (fase anakan) — baby punya domain sendiri di menu Baby.
+        // Burung kandang breeding tidak ditawarkan — aturan: breeding → aviary ditolak server-side.
         $pool = Burung::with('kandang:id,blok,nomor,tipe')
             ->whereNull('kandang_id')
+            ->where('fase', '!=', 'anakan')
             ->orderByDesc('created_at')
             ->get();
 

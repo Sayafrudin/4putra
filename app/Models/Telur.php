@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Telur extends Model
 {
@@ -54,6 +55,12 @@ class Telur extends Model
         return $this->status === 'menetas'
             && $this->tanggal_menetas !== null
             && $this->tanggal_menetas->diffInDays(now()) >= 90;
+    }
+
+    /** Baby hasil konversi butir ini (1 baby per butir, via burungs.telur_id). */
+    public function baby(): HasOne
+    {
+        return $this->hasOne(Burung::class);
     }
 
     /** Label butir: "Butir 1/2" (1 baris = 1 butir). */

@@ -7,17 +7,33 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Burung extends Model
 {
-    protected $fillable = ['nama', 'spesies', 'fase', 'gender', 'nomor_dna', 'nomor_ring', 'kandang_id', 'catatan'];
+    protected $fillable = [
+        'nama', 'spesies', 'fase', 'gender', 'nomor_dna', 'nomor_ring', 'kandang_id', 'catatan',
+        'telur_id', 'tanggal_lahir', 'induk_label', 'asal_label',
+    ];
+
+    protected $casts = ['tanggal_lahir' => 'date'];
 
     public function kandang(): BelongsTo
     {
         return $this->belongsTo(Kandang::class);
     }
 
+    public function telur(): BelongsTo
+    {
+        return $this->belongsTo(Telur::class);
+    }
+
     // Istilah antarmuka wajib "Baby", database tetap 'anakan'
     public function getFaseLabelAttribute(): string
     {
         return $this->fase === 'anakan' ? 'Baby' : 'Dewasa';
+    }
+
+    /** Umur realtime baby (hari sejak tanggal lahir); null untuk burung tanpa tanggal lahir. */
+    public function getUsiaHariAttribute(): ?int
+    {
+        return $this->tanggal_lahir ? (int) $this->tanggal_lahir->diffInDays(now()) : null;
     }
 
     public function getGenderLabelAttribute(): ?string

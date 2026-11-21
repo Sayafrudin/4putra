@@ -145,7 +145,9 @@
                                         "kondisi" => $t->kondisi,
                                         "status" => $t->status,
                                         "tanggal_menetas" => $t->tanggal_menetas?->toDateString(),
-                                    ]) }})'
+                                        "dapat_baby" => $t->status === 'menetas' && $t->tanggal_menetas !== null,
+                                        "asal" => $t->burung?->kandang?->label,
+                                    ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) }})'
                                         class="px-3 py-1.5 text-xs font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg hover:bg-blue-500/20 hover:border-blue-500/40 transition-colors">
                                         Update
                                     </button>
@@ -273,6 +275,43 @@
                             class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
                     </div>
                 </div>
+                <div id="edit_baby_wrap" class="hidden col-span-full rounded-xl bg-purple-500/5 border border-purple-500/20 p-4 space-y-3">
+                    <p class="text-xs font-bold uppercase tracking-wider text-purple-500">Konversi ke Baby</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Baby dibuat otomatis di menu Baby: induk <span id="baby_induk" class="font-semibold text-gray-900 dark:text-white">-</span>, tanggal lahir <span id="baby_lahir" class="font-semibold text-gray-900 dark:text-white">-</span>, asal kandang <span id="baby_asal" class="font-semibold text-gray-900 dark:text-white">-</span>. Data telur tetap tersimpan untuk monitoring.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Nama Baby</label>
+                            <input type="text" name="baby_nama" id="baby_nama"
+                                class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                            <p class="text-xs text-red-400 mt-1 hidden" id="err_baby_nama"></p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">No Ring</label>
+                            <input type="text" name="baby_ring" id="baby_ring"
+                                class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none">
+                            <p class="text-xs text-red-400 mt-1 hidden" id="err_baby_ring"></p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Gender</label>
+                            <select name="baby_gender" id="baby_gender"
+                                class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] outline-none">
+                                <option value="">- Belum DNA -</option>
+                                <option value="jantan">Jantan</option>
+                                <option value="betina">Betina</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">No DNA</label>
+                            <input type="text" name="baby_dna" id="baby_dna"
+                                class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Catatan</label>
+                        <textarea name="baby_catatan" id="baby_catatan" rows="2"
+                            class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] outline-none"></textarea>
+                    </div>
+                </div>
                 <div class="flex justify-end gap-3 pt-2">
                     <button type="button" onclick="tutupModal('modalEdit')"
                         class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
@@ -338,6 +377,7 @@
         var sedangBusy = false;
         var editTargetId = null;
         var hapusTargetId = null;
+        var dapatBaby = false;
 
         function setBusy(on) {
             sedangBusy = on;
@@ -454,11 +494,15 @@
 
         function bukaModalEdit(data) {
             editTargetId = data.id;
+            dapatBaby = data.dapat_baby === true;
             bersihkanError(document.getElementById('formEdit'));
             document.getElementById('edit_induk_label').textContent = data.induk + ' (sesi ' + data.sesi + ')';
             document.getElementById('edit_kondisi').value = data.kondisi;
             document.getElementById('edit_status').value = data.status;
             document.getElementById('edit_menetas').value = data.tanggal_menetas || '';
+            document.getElementById('baby_induk').textContent = data.induk;
+            document.getElementById('baby_lahir').textContent = data.tanggal_menetas || '-';
+            document.getElementById('baby_asal').textContent = data.asal || '-';
             toggleMenetas();
             bukaModal('modalEdit');
         }
@@ -466,6 +510,7 @@
         function toggleMenetas() {
             const status = document.getElementById('edit_status').value;
             document.getElementById('edit_menetas_wrap').classList.toggle('hidden', status !== 'menetas');
+            document.getElementById('edit_baby_wrap').classList.toggle('hidden', !(status === 'dilepas' && dapatBaby));
         }
 
         async function submitEdit(e) {
@@ -473,6 +518,36 @@
             const form = document.getElementById('formEdit');
             bersihkanError(form);
             if (!form.kondisi.value.trim()) { tandaiError('edit_kondisi', 'err_edit_kondisi', 'Kondisi wajib diisi.'); return; }
+
+            // Status "Sudah dilepas" pada butir menetas = konversi ke Baby (data baby wajib).
+            if (dapatBaby && form.status.value === 'dilepas') {
+                if (!form.baby_nama.value.trim()) { tandaiError('baby_nama', 'err_baby_nama', 'Nama baby wajib diisi.'); return; }
+                if (!form.baby_ring.value.trim()) { tandaiError('baby_ring', 'err_baby_ring', 'No ring wajib diisi.'); return; }
+                setBusy(true);
+                try {
+                    const res = await fetch('{{ route('admin.telur.ke-baby', ':id') }}'.replace(':id', editTargetId), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                        body: JSON.stringify({
+                            baby_nama: form.baby_nama.value.trim(),
+                            baby_ring: form.baby_ring.value.trim(),
+                            baby_gender: form.baby_gender.value || null,
+                            baby_dna: form.baby_dna.value.trim() || null,
+                            baby_catatan: form.baby_catatan.value.trim() || null,
+                        })
+                    });
+                    const data = await res.json();
+                    if (!res.ok || !data.ok) { showToast('error', 'Gagal', data.message || 'Gagal mengonversi telur ke baby.'); return; }
+                    showToast('success', 'Berhasil', data.message);
+                    tutupModal('modalEdit');
+                    window.location.reload();
+                } catch (err) {
+                    showToast('error', 'Gagal', 'Tidak dapat terhubung ke server.');
+                } finally {
+                    setBusy(false);
+                }
+                return;
+            }
 
             setBusy(true);
             try {

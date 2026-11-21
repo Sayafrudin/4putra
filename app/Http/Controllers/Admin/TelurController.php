@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Burung;
 use App\Models\Telur;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -123,6 +125,12 @@ class TelurController extends Controller
         ]);
 
         try {
+            // Butir menetas yang dilepas WAJIB lewat konversi ke Baby (dibuat otomatis di menu Baby) —
+            // mencegah status dilepas tanpa jejak baby.
+            if ($data['status'] === 'dilepas' && $telur->status === 'menetas' && $telur->tanggal_menetas) {
+                return response()->json(['ok' => false, 'message' => 'Butir menetas harus dikonversi ke Baby dulu — isi data baby di form ini.'], 422);
+            }
+
             $telur->update([
                 'kondisi' => $data['kondisi'],
                 'status' => $data['status'],
@@ -136,6 +144,56 @@ class TelurController extends Controller
             Log::error('Gagal update telur', ['id' => $telur->id, 'error' => $e->getMessage()]);
 
             return response()->json(['ok' => false, 'message' => 'Gagal memperbarui data telur. Coba lagi.'], 500);
+        }
+    }
+
+    /** Konversi butir menetas (umur ≥30 hari) → baby di menu Baby + telur jadi 'dilepas'. Baris telur tetap tersimpan. */
+    public function keBaby(Request $request, Telur $telur)
+    {
+        $data = $request->validate([
+            'baby_nama' => ['required', 'string', 'max:100'],
+            'baby_ring' => ['required', 'string', 'max:50'],
+            'baby_gender' => ['nullable', 'in:jantan,betina'],
+            'baby_dna' => ['nullable', 'string', 'max:50'],
+            'baby_catatan' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        if ($telur->status !== 'menetas' || ! $telur->tanggal_menetas) {
+            return response()->json(['ok' => false, 'message' => 'Hanya butir berstatus menetas yang bisa dikonversi ke baby.'], 422);
+        }
+        if ($telur->baby) {
+            return response()->json(['ok' => false, 'message' => 'Butir ini sudah dikonversi ke baby.'], 422);
+        }
+        if ($telur->usia_menetas_hari < 30) {
+            return response()->json(['ok' => false, 'message' => 'Baby belum cukup umur — konversi boleh setelah 30 hari sejak menetas (sekarang '.$telur->usia_menetas_hari.' hari).'], 422);
+        }
+
+        try {
+            $telur->load('burung.kandang');
+            DB::transaction(function () use ($telur, $data) {
+                Burung::create([
+                    'nama' => $data['baby_nama'],
+                    'spesies' => $telur->burung?->spesies ?? 'Belum diidentifikasi',
+                    'fase' => 'anakan',
+                    'gender' => $data['baby_gender'] ?? null,
+                    'nomor_ring' => $data['baby_ring'],
+                    'nomor_dna' => $data['baby_dna'] ?? null,
+                    'catatan' => $data['baby_catatan'] ?? null,
+                    'telur_id' => $telur->id,
+                    'tanggal_lahir' => $telur->tanggal_menetas,
+                    'induk_label' => $telur->induk_label,
+                    'asal_label' => $telur->burung?->kandang?->label,
+                ]);
+                $telur->update(['status' => 'dilepas']);
+                Cache::forget('dashboard.stats');
+            });
+            $this->logActivity($request, 'konversi_baby', 'Konversi telur #'.$telur->id.' ('.$telur->induk_label.') menjadi baby "'.$data['baby_nama'].'" (ring '.$data['baby_ring'].')');
+
+            return response()->json(['ok' => true, 'message' => 'Baby "'.$data['baby_nama'].'" dibuat — cek menu Baby.']);
+        } catch (\Throwable $e) {
+            Log::error('Gagal konversi telur ke baby', ['id' => $telur->id, 'error' => $e->getMessage()]);
+
+            return response()->json(['ok' => false, 'message' => 'Gagal mengonversi telur ke baby. Coba lagi.'], 500);
         }
     }
 

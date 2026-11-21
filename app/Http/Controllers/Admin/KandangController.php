@@ -29,10 +29,12 @@ class KandangController extends Controller
             ->get()
             ->groupBy('blok');
 
-        // Pool = hanya burung bebas. Burung aviary tidak ditawarkan di sini —
+        // Pool = hanya burung bebas yang BUKAN baby (fase anakan) — baby punya domain
+        // sendiri di menu Baby. Burung aviary tidak ditawarkan di sini —
         // kandang & aviary saling eksklusif: keluarkan dari aviary dulu.
         $pool = Burung::with('kandang:id,blok,nomor,tipe')
             ->whereNull('kandang_id')
+            ->where('fase', '!=', 'anakan')
             ->orderByDesc('created_at')
             ->get();
 

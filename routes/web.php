@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AdminDailyActivityController;
 use App\Http\Controllers\Admin\AdminFacilityController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AviaryController;
+use App\Http\Controllers\Admin\BabyController;
 use App\Http\Controllers\Admin\ChatbotController;
 use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -268,7 +269,14 @@ Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'menu.access']
     Route::get('/telur/export/pdf', [TelurController::class, 'exportPdf'])->name('admin.telur.export-pdf');
     Route::post('/telur', [TelurController::class, 'store'])->name('admin.telur.store');
     Route::put('/telur/{telur}', [TelurController::class, 'update'])->name('admin.telur.update');
+    Route::post('/telur/{telur}/ke-baby', [TelurController::class, 'keBaby'])->name('admin.telur.ke-baby');
     Route::delete('/telur/{telur}', [TelurController::class, 'destroy'])->name('admin.telur.destroy');
+
+    // Baby (loloh) & penjualan (semua role: menu monitoring); pindah baby memakai admin.burung.*
+    Route::get('/baby', [BabyController::class, 'index'])->name('admin.baby.index');
+    Route::put('/baby/{burung}', [BabyController::class, 'update'])->name('admin.baby.update');
+    Route::delete('/baby/{burung}', [BabyController::class, 'destroy'])->name('admin.baby.destroy');
+    Route::post('/baby/jual', [BabyController::class, 'jual'])->name('admin.baby.jual');
 
     // Keuangan farm (semua role: menu monitoring)
     Route::get('/keuangan', [KeuanganController::class, 'index'])->name('admin.keuangan.index');

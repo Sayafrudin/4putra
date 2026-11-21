@@ -57,6 +57,12 @@ return [
             'akses' => 'semua',
             'patterns' => ['admin.telur.*'],
         ],
+        'baby' => [
+            'label' => 'Baby',
+            'akses' => 'semua',
+            // Pindah baby ke kandang/aviary memakai endpoint admin.burung.* (sama dengan papan kandang)
+            'patterns' => ['admin.baby.*', 'admin.burung.*'],
+        ],
         'stok' => [
             'label' => 'Stok Makanan',
             'akses' => 'semua',

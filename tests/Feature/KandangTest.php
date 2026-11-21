@@ -69,7 +69,8 @@ class KandangTest extends TestCase
     {
         $kandang = $this->kandangUji();
         $burung = $this->burungUji(['kandang_id' => $kandang->id]);
-        $pool = $this->burungUji(); // belum ditempatkan
+        // Pool kandang hanya burung bukan-baby (fase dewasa) — baby punya menu sendiri.
+        $pool = $this->burungUji(['fase' => 'dewasa']); // belum ditempatkan
 
         $response = $this->actingAs($this->admin)->get('/admin/kandang');
 

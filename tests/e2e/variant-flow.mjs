@@ -8,12 +8,11 @@
 import { chromium } from "playwright-core";
 import { execSync, spawn } from "node:child_process";
 import http from "node:http";
-import { gotoRetry } from "./helpers.mjs";
+import { gotoRetry, loginAdmin } from "./helpers.mjs";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const PORT = 8023;
 const BASE = `http://127.0.0.1:${PORT}`;
-const ADMIN = { email: "e2e-variant@4putra.test", password: "E2eVariant123!" };
 const PARENT = "E2E Induk Varian Uji";
 const V1 = "E2E Varian Uji 1";
 const V2 = "E2E Varian Uji 2";
@@ -52,8 +51,7 @@ function seed() {
             `echo $c->id;`,
     );
     tinker(
-        `App\\Models\\User::updateOrCreate(['email'=>'${ADMIN.email}'],['name'=>'E2E Variant','password'=>bcrypt('${ADMIN.password}'),'role'=>'admin']); ` +
-            `Illuminate\\Support\\Facades\\Cache::forget('admin.collections'); ` +
+        `Illuminate\\Support\\Facades\\Cache::forget('admin.collections'); ` +
             `Illuminate\\Support\\Facades\\Cache::forget('public.collections.v2'); echo 'ok';`,
     );
     return id;
@@ -61,7 +59,6 @@ function seed() {
 function cleanupDb() {
     execSync(
         `php artisan tinker --execute="App\\Models\\Collection::whereIn('name',['${PARENT}','${V1}','${V2}'])->delete(); ` +
-            `App\\Models\\User::where('email','${ADMIN.email}')->delete(); ` +
             `Illuminate\\Support\\Facades\\Cache::forget('admin.collections'); ` +
             `Illuminate\\Support\\Facades\\Cache::forget('public.collections.v2'); echo 'bersih';"`,
         { stdio: "ignore", timeout: 60000 },
@@ -174,14 +171,8 @@ try {
     browser = await chromium.launch({ channel: "msedge", headless: true });
     const page = await browser.newPage();
 
-    // Login via form asli
-    await gotoRetry(page, `${BASE}/login`, { waitUntil: "load" });
-    await page.click("#username");
-    await page.fill("#username", ADMIN.email.split("@")[0]);
-    await page.click("#password");
-    await page.fill("#password", ADMIN.password);
-    await page.click("button[type=submit]");
-    await page.waitForURL("**/admin**", { timeout: 15000 });
+    // Login via form asli (akun admin bersama)
+    await loginAdmin(page, BASE);
 
     // Performa: load halaman koleksi < 3 detik
     const navStart = Date.now();

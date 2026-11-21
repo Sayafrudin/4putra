@@ -6,11 +6,10 @@
 import { chromium } from "playwright-core";
 import { spawn, execSync } from "node:child_process";
 import http from "node:http";
-import { gotoRetry } from './helpers.mjs';
+import { gotoRetry, loginAdmin } from "./helpers.mjs";
 
 const PORT = 8023;
 const BASE = `http://127.0.0.1:${PORT}`;
-const ADMIN = { email: "e2e-mobile@4putra.test", password: "E2eMobile123!" };
 
 const PAGES = [
     ["/admin", "Dashboard"],
@@ -69,23 +68,10 @@ function waitForServer(retries = 30) {
     });
 }
 
-function cleanupDb() {
-    execSync(
-        `php artisan tinker --execute="$u=App\\Models\\User::where('email','${ADMIN.email}')->first(); if($u){Illuminate\\Support\\Facades\\DB::table('sessions')->where('user_id',$u->id)->delete(); $u->delete();} echo 'bersih';"`,
-        { stdio: "ignore", timeout: 60000 },
-    );
-}
-
 let server = null;
 let browser = null;
 
 try {
-    cleanupDb();
-    execSync(
-        `php artisan tinker --execute="App\\Models\\User::updateOrCreate(['email'=>'${ADMIN.email}'],['name'=>'E2E Mobile','password'=>bcrypt('${ADMIN.password}'),'role'=>'admin']); echo 'user siap';"`,
-        { stdio: "ignore", timeout: 60000 },
-    );
-
     server = spawn(
         "php",
         ["artisan", "serve", "--host=127.0.0.1", `--port=${PORT}`],
@@ -102,13 +88,7 @@ try {
     });
     const page = await context.newPage();
 
-    await gotoRetry(page, `${BASE}/login`, { waitUntil: "load" });
-    await page.click("#username");
-    await page.fill("#username", ADMIN.email.split("@")[0]);
-    await page.click("#password");
-    await page.fill("#password", ADMIN.password);
-    await page.click("button[type=submit]");
-    await page.waitForURL(`${BASE}/admin`, { timeout: 15000 });
+    await loginAdmin(page, BASE);
 
     for (const [path, label] of PAGES) {
         const errors = [];
@@ -144,7 +124,6 @@ try {
     process.exitCode = 1;
 } finally {
     if (browser) await browser.close();
-    cleanupDb();
     if (server) {
         try {
             execSync(`taskkill /pid ${server.pid} /T /F`, { stdio: "ignore" });

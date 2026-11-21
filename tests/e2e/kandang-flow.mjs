@@ -15,11 +15,10 @@
 import { chromium } from "playwright-core";
 import { spawn, execSync } from "node:child_process";
 import http from "node:http";
-import { gotoRetry } from "./helpers.mjs";
+import { gotoRetry, loginAdmin } from "./helpers.mjs";
 
 const PORT = 8021;
 const BASE = `http://127.0.0.1:${PORT}`;
-const ADMIN = { email: "e2e-kandang@4putra.test", password: "E2eKandang123!" };
 const BURUNG = "E2E Kandang";
 
 let failures = 0;
@@ -70,7 +69,7 @@ function tinker(code) {
 
 function cleanupDb() {
     execSync(
-        `php artisan tinker --execute="$u=App\\Models\\User::where('email','${ADMIN.email}')->first(); if($u){Illuminate\\Support\\Facades\\DB::table('sessions')->where('user_id',$u->id)->delete(); $u->delete();} App\\Models\\Burung::where('nama','like','${BURUNG}%')->delete(); echo 'bersih';"`,
+        `php artisan tinker --execute="App\\Models\\Burung::where('nama','like','${BURUNG}%')->delete(); echo 'bersih';"`,
         { stdio: "ignore", timeout: 60000 },
     );
 }
@@ -95,9 +94,6 @@ function matikanServer() {
 try {
     cleanupDb();
     tinker(
-        `App\\Models\\User::updateOrCreate(['email'=>'${ADMIN.email}'],['name'=>'E2E Kandang','password'=>bcrypt('${ADMIN.password}'),'role'=>'admin']); echo 'user siap';`,
-    );
-    tinker(
         `if(App\\Models\\Kandang::count()===0){ (new Database\\Seeders\\KandangSeeder)->run(); } echo 'kandang siap';`,
     );
 
@@ -116,14 +112,8 @@ try {
     const context = await browser.newContext();
     const page = await context.newPage();
 
-    // ---------- Login via form asli ----------
-    await gotoRetry(page, `${BASE}/login`, { waitUntil: "load" });
-    await page.click("#username");
-    await page.fill("#username", ADMIN.email.split("@")[0]);
-    await page.click("#password");
-    await page.fill("#password", ADMIN.password);
-    await page.click("button[type=submit]");
-    await page.waitForURL(`${BASE}/admin`, { timeout: 15000 });
+    // ---------- Login via form asli (akun admin bersama) ----------
+    await loginAdmin(page, BASE);
     assert(true, "K0 login via form → /admin");
 
     // ---------- K1: papan kandang dirender ----------
@@ -506,13 +496,7 @@ try {
         viewport: { width: 375, height: 812 },
     });
     const mobile = await mobCtx.newPage();
-    await gotoRetry(mobile, `${BASE}/login`, { waitUntil: "load" });
-    await mobile.click("#username");
-    await mobile.fill("#username", ADMIN.email.split("@")[0]);
-    await mobile.click("#password");
-    await mobile.fill("#password", ADMIN.password);
-    await mobile.click("button[type=submit]");
-    await mobile.waitForURL(`${BASE}/admin`, { timeout: 15000 });
+    await loginAdmin(mobile, BASE);
     await gotoRetry(mobile, `${BASE}/admin/kandang`, { waitUntil: "load" });
 
     const overflow = await mobile.evaluate(
@@ -547,13 +531,7 @@ try {
 
     // Sesi tunggal: login di context mobile menggantikan tiket halaman utama →
     // perangkat utama di-kick. Re-login dulu sebelum lanjut (perilaku sesi tunggal).
-    await gotoRetry(page, `${BASE}/login`, { waitUntil: "load" });
-    await page.click("#username");
-    await page.fill("#username", ADMIN.email.split("@")[0]);
-    await page.click("#password");
-    await page.fill("#password", ADMIN.password);
-    await page.click("button[type=submit]");
-    await page.waitForURL(`${BASE}/admin`, { timeout: 15000 });
+    await loginAdmin(page, BASE);
     await gotoRetry(page, `${BASE}/admin/kandang`, { waitUntil: "load" });
 
     // ---------- K9: tap/klik chip → modal pindah kandang (alternatif DnD di HP) ----------
@@ -564,13 +542,7 @@ try {
         hasTouch: true,
     });
     const touch = await touchCtx.newPage();
-    await gotoRetry(touch, `${BASE}/login`, { waitUntil: "load" });
-    await touch.click("#username");
-    await touch.fill("#username", ADMIN.email.split("@")[0]);
-    await touch.click("#password");
-    await touch.fill("#password", ADMIN.password);
-    await touch.click("button[type=submit]");
-    await touch.waitForURL(`${BASE}/admin`, { timeout: 15000 });
+    await loginAdmin(touch, BASE);
     await gotoRetry(touch, `${BASE}/admin/kandang`, { waitUntil: "load" });
 
     // K9a tap chip di pool → modal pindah terbuka (sentuhan asli, bukan klik mouse)
@@ -675,13 +647,7 @@ try {
 
     // Sesi tunggal: login touch context menggantikan tiket lagi → re-login main page
     // sebelum K10 (cookie main page dipakai context tanpa JS).
-    await gotoRetry(page, `${BASE}/login`, { waitUntil: "load" });
-    await page.click("#username");
-    await page.fill("#username", ADMIN.email.split("@")[0]);
-    await page.click("#password");
-    await page.fill("#password", ADMIN.password);
-    await page.click("button[type=submit]");
-    await page.waitForURL(`${BASE}/admin`, { timeout: 15000 });
+    await loginAdmin(page, BASE);
 
     // ---------- K10: tanpa JS (Alpine diblokir) sidebar mobile tetap tersembunyi ----------
     const noJsCtx = await browser.newContext({

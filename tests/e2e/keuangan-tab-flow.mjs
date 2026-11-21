@@ -8,11 +8,10 @@
 import { chromium } from "playwright-core";
 import { spawn, execSync } from "node:child_process";
 import http from "node:http";
-import { gotoRetry } from "./helpers.mjs";
+import { gotoRetry, loginAdmin } from "./helpers.mjs";
 
 const PORT = 8029;
 const BASE = `http://127.0.0.1:${PORT}`;
-const ADMIN = { email: "e2e-keutab@4putra.test", password: "E2eKeuTab123!" };
 const NAMA_TAB = "E2E Proyek Uji";
 
 let failures = 0;
@@ -55,8 +54,8 @@ function waitForServer(retries = 30) {
 function cleanupDb() {
     execSync(
         // Sapu pasangan transfer berdasarkan transfer_id (kedua sisi sekaligus),
-        // baris uji berketerangan e2e-tab-uji%, lalu tab uji & akun E2E.
-        `php artisan tinker --execute="App\\Models\\Keuangan::where(function ($q) { $q->whereIn('transfer_id', function ($s) { $s->from('keuangans')->select('transfer_id')->where('keterangan','like','%E2E Proyek Uji%')->whereNotNull('transfer_id'); })->orWhere('keterangan','like','%E2E Proyek Uji%'); })->orWhere('keterangan','like','e2e-tab-uji%')->delete(); App\\Models\\FinancialTab::where('nama','${NAMA_TAB}')->orWhere('nama','${NAMA_TAB} 2')->delete(); $u=App\\Models\\User::where('email','${ADMIN.email}')->first(); if($u){Illuminate\\Support\\Facades\\DB::table('sessions')->where('user_id',$u->id)->delete(); $u->delete();} echo 'bersih';"`,
+        // baris uji berketerangan e2e-tab-uji%, lalu tab uji.
+        `php artisan tinker --execute="App\\Models\\Keuangan::where(function ($q) { $q->whereIn('transfer_id', function ($s) { $s->from('keuangans')->select('transfer_id')->where('keterangan','like','%E2E Proyek Uji%')->whereNotNull('transfer_id'); })->orWhere('keterangan','like','%E2E Proyek Uji%'); })->orWhere('keterangan','like','e2e-tab-uji%')->delete(); App\\Models\\FinancialTab::where('nama','${NAMA_TAB}')->orWhere('nama','${NAMA_TAB} 2')->delete(); echo 'bersih';"`,
         { stdio: "ignore", timeout: 90000 },
     );
 }
@@ -66,10 +65,6 @@ let browser = null;
 
 try {
     cleanupDb();
-    execSync(
-        `php artisan tinker --execute="App\\Models\\User::updateOrCreate(['email'=>'${ADMIN.email}'],['name'=>'E2E KeuTab','password'=>bcrypt('${ADMIN.password}'),'role'=>'admin']); echo 'user siap';"`,
-        { stdio: "ignore", timeout: 60000 },
-    );
 
     server = spawn(
         "php",
@@ -89,13 +84,7 @@ try {
     const pageErrors = [];
     page.on("pageerror", (e) => pageErrors.push(e.message));
 
-    await gotoRetry(page, `${BASE}/login`, { waitUntil: "load" });
-    await page.click("#username");
-    await page.fill("#username", ADMIN.email.split("@")[0]);
-    await page.click("#password");
-    await page.fill("#password", ADMIN.password);
-    await page.click("button[type=submit]");
-    await page.waitForURL(`${BASE}/admin`, { timeout: 15000 });
+    await loginAdmin(page, BASE);
 
     await gotoRetry(page, `${BASE}/admin/keuangan`, {
         waitUntil: "load",

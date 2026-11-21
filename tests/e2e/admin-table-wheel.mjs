@@ -13,11 +13,10 @@
 import { chromium } from "playwright-core";
 import { spawn, execSync } from "node:child_process";
 import http from "node:http";
-import { gotoRetry } from "./helpers.mjs";
+import { gotoRetry, loginAdmin } from "./helpers.mjs";
 
 const PORT = 8026;
 const BASE = `http://127.0.0.1:${PORT}`;
-const ADMIN = { email: "e2e-wheel@4putra.test", password: "E2eWheel123!" };
 
 // Watchdog anti-stuck: proses wajib mati sendiri maksimal 5 menit
 setTimeout(
@@ -77,11 +76,6 @@ function matikanServer() {
 }
 
 try {
-    // Buat user uji (tidak bergantung user nyata)
-    execSync(
-        `php artisan tinker --execute="App\\Models\\User::updateOrCreate(['email'=>'${ADMIN.email}'],['name'=>'E2E Wheel','password'=>bcrypt('${ADMIN.password}'),'role'=>'admin']); echo 'user siap';"`,
-        { stdio: "ignore", timeout: 60000 },
-    );
     server = spawn(
         "php",
         ["artisan", "serve", "--host=127.0.0.1", `--port=${PORT}`],
@@ -98,16 +92,8 @@ try {
     });
     const page = await ctx.newPage();
 
-    // Login admin (field readonly+onfocus: klik dulu agar readonly hilang)
-    await gotoRetry(page, `${BASE}/login`, { waitUntil: "load" });
-    await page.click("#username");
-    await page.fill("#username", ADMIN.email.split("@")[0]);
-    await page.click("#password");
-    await page.fill("#password", ADMIN.password);
-    await page.click('button[type="submit"]');
-    await page.waitForURL(`${BASE.replace(/\/$/, "")}/admin`, {
-        timeout: 15000,
-    });
+    // Login admin (akun bersama via helper)
+    await loginAdmin(page, BASE);
     assert(true, "A0 login admin → /admin");
 
     // Cari container tabel admin yang benar-benar overflow
@@ -262,14 +248,6 @@ try {
         } catch {
             /* sudah tertutup */
         }
-    }
-    try {
-        execSync(
-            `php artisan tinker --execute="$u=App\\Models\\User::where('email','${ADMIN.email}')->first(); if($u){Illuminate\\Support\\Facades\\DB::table('sessions')->where('user_id',$u->id)->delete(); $u->delete();} echo 'bersih';"`,
-            { stdio: "ignore", timeout: 60000 },
-        );
-    } catch {
-        /* best effort */
     }
     matikanServer();
 }

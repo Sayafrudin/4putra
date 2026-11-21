@@ -16,12 +16,11 @@
 import { chromium } from "playwright-core";
 import { spawn, execSync } from "node:child_process";
 import http from "node:http";
-import { gotoRetry } from "./helpers.mjs";
+import { gotoRetry, loginAdmin } from "./helpers.mjs";
 
 const PORT = 8020;
 const BASE = `http://127.0.0.1:${PORT}`;
 const LIFETIME_MIN = 2; // SESSION_LIFETIME dev server
-const ADMIN = { email: "e2e-flow@4putra.test", password: "E2eFlow123!" };
 
 let failures = 0;
 function assert(cond, label) {
@@ -67,13 +66,6 @@ function waitForServer(retries = 30) {
     });
 }
 
-function cleanupDb() {
-    execSync(
-        `php artisan tinker --execute="$u=App\\Models\\User::where('email','${ADMIN.email}')->first(); if($u){Illuminate\\Support\\Facades\\DB::table('sessions')->where('user_id',$u->id)->delete(); $u->delete();} echo 'bersih';"`,
-        { stdio: "ignore", timeout: 60000 },
-    );
-}
-
 let server = null;
 let browser = null;
 
@@ -94,12 +86,6 @@ function matikanServer() {
 }
 
 try {
-    cleanupDb();
-    execSync(
-        `php artisan tinker --execute="App\\Models\\User::updateOrCreate(['email'=>'${ADMIN.email}'],['name'=>'E2E Flow','password'=>bcrypt('${ADMIN.password}'),'role'=>'admin']); echo 'user siap';"`,
-        { stdio: "ignore", timeout: 60000 },
-    );
-
     server = spawn(
         "php",
         ["artisan", "serve", `--host=127.0.0.1`, `--port=${PORT}`],
@@ -127,15 +113,8 @@ try {
         if (res.url().includes("/admin/ping")) pingStatuses.push(res.status());
     });
 
-    // ---------- S1: Login via form asli ----------
-    await gotoRetry(page, `${BASE}/login`, { waitUntil: "load" });
-    // Field login memakai readonly+onfocus (anti-autofill): klik dulu agar readonly hilang
-    await page.click("#username");
-    await page.fill("#username", ADMIN.email.split("@")[0]);
-    await page.click("#password");
-    await page.fill("#password", ADMIN.password);
-    await page.click("button[type=submit]");
-    await page.waitForURL(`${BASE}/admin`, { timeout: 15000 });
+    // ---------- S1: Login via form asli (akun admin bersama) ----------
+    await loginAdmin(page, BASE);
     assert(true, "S1 login via form → /admin");
 
     // ---------- S2: kembali ke tab saat idle masih pendek → ping 200, tanpa modal ----------
@@ -173,12 +152,7 @@ try {
 
     // ---------- S4: cookie sesi hilang → TIDAK dibangkitkan ulang ----------
     // Kontrak tanpa remember-me: sesi mati = login ulang, bukan auto-masuk.
-    await page.click("#username");
-    await page.fill("#username", ADMIN.email.split("@")[0]);
-    await page.click("#password");
-    await page.fill("#password", ADMIN.password);
-    await page.click("button[type=submit]");
-    await page.waitForURL(`${BASE}/admin`, { timeout: 15000 });
+    await loginAdmin(page, BASE);
     const cookies = await context.cookies();
     await context.clearCookies();
     await context.addCookies(
@@ -190,13 +164,7 @@ try {
         "S4 sesi mati → dilempar login (tidak ada resurrect tanpa remember-me)",
     );
     // ---------- S5: login ulang → sesi mati di server → wake ping 401 → modal → login ----------
-    await page.click("#username");
-    await page.fill("#username", ADMIN.email.split("@")[0]);
-    await page.click("#password");
-    await page.fill("#password", ADMIN.password);
-    await page.click("button[type=submit]");
-    // Intended URL dari S4 (/admin/collections) dipulihkan server — boleh dashboard atau langsung collections
-    await page.waitForURL(/\/admin(\/|$)/, { timeout: 15000 });
+    await loginAdmin(page, BASE);
     await gotoRetry(page, `${BASE}/admin/collections`);
 
     await context.clearCookies(); // buang SEMUA cookie → ping wajib 401
@@ -211,12 +179,7 @@ try {
     await page.click("#session-login-btn");
     await page.waitForURL(/\/login/, { timeout: 15000 });
     assert(true, "S5b tombol Login Kembali → halaman login");
-    await page.click("#username");
-    await page.fill("#username", ADMIN.email.split("@")[0]);
-    await page.click("#password");
-    await page.fill("#password", ADMIN.password);
-    await page.click("button[type=submit]");
-    await page.waitForURL(/\/admin(\/|$)/, { timeout: 15000 });
+    await loginAdmin(page, BASE);
     assert(true, "S5c login ulang → masuk kembali ke admin");
 
     // ---------- S5d: AJAX 401 (sesi mati) → interceptor menampilkan modal sesi ----------
@@ -298,11 +261,6 @@ try {
         }
     }
     matikanServer();
-    try {
-        cleanupDb();
-    } catch {
-        /* cleanup best-effort */
-    }
 }
 
 console.log("=".repeat(50));

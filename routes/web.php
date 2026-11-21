@@ -261,6 +261,8 @@ Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'menu.access']
     // Vaksinasi burung + deteksi booster bulanan (semua role: menu monitoring)
     Route::get('/vaksinasi', [VaksinasiController::class, 'index'])->name('admin.vaksinasi.index');
     Route::get('/vaksinasi/export/pdf', [VaksinasiController::class, 'exportPdf'])->name('admin.vaksinasi.export-pdf');
+    Route::get('/vaksinasi/{kandang}', [VaksinasiController::class, 'detail'])->name('admin.vaksinasi.detail');
+    Route::get('/vaksinasi/{kandang}/export/pdf', [VaksinasiController::class, 'exportDetailPdf'])->name('admin.vaksinasi.detail-pdf');
     Route::post('/vaksinasi', [VaksinasiController::class, 'store'])->name('admin.vaksinasi.store');
     Route::delete('/vaksinasi/{vaksinasi}', [VaksinasiController::class, 'destroy'])->name('admin.vaksinasi.destroy');
 

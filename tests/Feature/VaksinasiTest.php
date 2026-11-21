@@ -3,9 +3,12 @@
 namespace Tests\Feature;
 
 use App\Models\Burung;
+use App\Models\Kandang;
 use App\Models\User;
 use App\Models\Vaksinasi;
+use App\Support\DashboardStats;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
@@ -30,6 +33,7 @@ class VaksinasiTest extends TestCase
     {
         DB::table('vaksinasis')->whereIn('jenis', ['uji-vaksin-lama', 'uji-vaksin-baru'])->delete();
         Burung::where('nama', 'like', 'uji-vaksin%')->delete();
+        Kandang::where('blok', 'Z')->where('nomor', '>=', 900)->delete();
         User::where('email', 'admin-vaksin-test@4putra.test')->delete();
         User::where('email', 'user-vaksin-test@4putra.test')->delete();
         parent::tearDown();
@@ -177,5 +181,42 @@ class VaksinasiTest extends TestCase
 
         $this->actingAs($this->admin)->deleteJson("/admin/vaksinasi/{$vaksin->id}")->assertOk();
         $this->assertDatabaseMissing('vaksinasis', ['id' => $vaksin->id]);
+    }
+
+    public function test_detail_kandang_riwayat_dan_export_pdf(): void
+    {
+        $kandang = Kandang::create(['blok' => 'Z', 'nomor' => 900, 'tipe' => 'kecil']);
+        $burung = Burung::create(['nama' => 'uji-vaksin-detail', 'spesies' => 'Macaw', 'fase' => 'dewasa', 'kandang_id' => $kandang->id]);
+        Vaksinasi::create([
+            'burung_id' => $burung->id,
+            'jenis' => 'uji-vaksin-baru',
+            'metode' => 'suntik',
+            'tanggal_vaksin' => '2026-11-01',
+        ]);
+        $burungLain = Burung::create(['nama' => 'uji-vaksin-detail2', 'spesies' => 'Macaw', 'fase' => 'dewasa']); // kandang lain (tanpa kandang)
+
+        $this->actingAs($this->admin)->get("/admin/vaksinasi/{$kandang->id}")
+            ->assertOk()
+            ->assertSee('uji-vaksin-detail', false)
+            ->assertDontSee('uji-vaksin-detail2', false);
+
+        $this->actingAs($this->admin)->get("/admin/vaksinasi/{$kandang->id}/export/pdf")->assertOk();
+    }
+
+    public function test_dashboard_stats_memuat_terlindung_dan_pernah_dicatat(): void
+    {
+        Cache::forget('dashboard.stats');
+        $burung = $this->burungUji();
+        Vaksinasi::create([
+            'burung_id' => $burung->id,
+            'jenis' => 'uji-vaksin-baru',
+            'metode' => 'suntik',
+            'tanggal_vaksin' => now('Asia/Jakarta')->toDateString(),
+        ]);
+
+        $stats = DashboardStats::untuk($this->admin);
+        $this->assertGreaterThanOrEqual(1, $stats['vaksinLindung']);
+        $this->assertGreaterThanOrEqual(1, $stats['vaksinPernah']);
+        Cache::forget('dashboard.stats');
     }
 }

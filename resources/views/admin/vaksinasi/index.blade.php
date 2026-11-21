@@ -55,7 +55,7 @@
         <div class="flex items-center gap-4 mt-3 text-xs text-gray-500">
             <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-green-600 inline-block"></span> Masih terlindungi</span>
             <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#E62C37] inline-block"></span> Jatuh tempo / belum dicatat</span>
-            <span class="hidden sm:inline text-gray-600">Klik card kandang untuk catat per burung atau massal.</span>
+            <span class="hidden sm:inline text-gray-600">Klik card kandang untuk detail riwayat &amp; catat per burung atau massal.</span>
         </div>
     </div>
 
@@ -70,8 +70,8 @@
                             $burungList = $item['burung'];
                             $perlu = $burungList->filter(fn ($b) => !$terakhirPerBurung->has($b->id) || $terakhirPerBurung[$b->id]->sudah_jatuh_tempo)->count();
                         @endphp
-                        <button type="button" onclick="bukaModalKandang({{ $kandang->id }})"
-                            class="kandang-card text-left bg-white dark:bg-[#1e2530] border {{ $perlu > 0 ? 'border-[#E62C37]/40' : 'border-gray-700' }} rounded-xl p-3 hover:border-[#E62C37]/60 transition-colors"
+                        <a href="{{ route('admin.vaksinasi.detail', $kandang) }}"
+                            class="kandang-card block text-left bg-white dark:bg-[#1e2530] border {{ $perlu > 0 ? 'border-[#E62C37]/40' : 'border-gray-700' }} rounded-xl p-3 hover:border-[#E62C37]/60 transition-colors"
                             data-kandang-id="{{ $kandang->id }}" data-label="{{ $kandang->label }}">
                             <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
                                 <span class="text-sm font-bold text-gray-900 dark:text-white">{{ $kandang->label }}</span>
@@ -92,7 +92,7 @@
                                     </div>
                                 @endforeach
                             </div>
-                        </button>
+                        </a>
                     @endforeach
                 </div>
             </section>
@@ -178,23 +178,6 @@
                     @endforelse
                 </tbody>
             </table>
-        </div>
-    </div>
-
-    {{-- ==================== MODAL DETAIL KANDANG ==================== --}}
-    <div id="modalKandang" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85">
-        <div class="bg-white dark:bg-[#1e2530] border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Kandang <span id="kandang_label" class="text-[#E62C37]"></span></h3>
-                <button onclick="tutupModal('modalKandang')" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-                    <x-tabler-x class="w-5 h-5" />
-                </button>
-            </div>
-            <div id="kandang_burung_list" class="space-y-2 mb-4"></div>
-            <button type="button" id="btnCatatSemua"
-                class="w-full px-4 py-2.5 text-sm font-semibold text-white bg-[#E62C37] hover:bg-[#c5242d] rounded-xl transition-colors">
-                Catat untuk semua burung di kandang ini
-            </button>
         </div>
     </div>
 
@@ -299,28 +282,33 @@
     @php
         // Data papan untuk JS: satu kandang = daftar burung + catatan terakhirnya.
         $papanData = [];
+        $mapBurung = function ($b) use ($terakhirPerBurung) {
+            $terakhir = $terakhirPerBurung->get($b->id);
+
+            return [
+                'id' => $b->id,
+                'nama' => $b->nama,
+                'spesies' => $b->spesies,
+                'terakhir' => $terakhir ? [
+                    'jenis' => $terakhir->jenis,
+                    'metode' => $terakhir->metode,
+                    'dosis' => $terakhir->dosis,
+                    'tanggal' => $terakhir->tanggal_vaksin->translatedFormat('d M Y'),
+                    'jatuh_tempo' => $terakhir->sudah_jatuh_tempo,
+                ] : null,
+            ];
+        };
         foreach ($perKandang as $grupKandang) {
             foreach ($grupKandang as $item) {
                 $papanData[$item['kandang']->id] = [
                     'label' => $item['kandang']->label,
-                    'burung' => $item['burung']->map(function ($b) use ($terakhirPerBurung) {
-                        $terakhir = $terakhirPerBurung->get($b->id);
-
-                        return [
-                            'id' => $b->id,
-                            'nama' => $b->nama,
-                            'spesies' => $b->spesies,
-                            'terakhir' => $terakhir ? [
-                                'jenis' => $terakhir->jenis,
-                                'metode' => $terakhir->metode,
-                                'dosis' => $terakhir->dosis,
-                                'tanggal' => $terakhir->tanggal_vaksin->translatedFormat('d M Y'),
-                                'jatuh_tempo' => $terakhir->sudah_jatuh_tempo,
-                            ] : null,
-                        ];
-                    })->values()->all(),
+                    'burung' => $item['burung']->map($mapBurung)->values()->all(),
                 ];
             }
+        }
+        // Burung tanpa kandang ikut dropdown manual catat (grup "Belum Ditempatkan")
+        if ($tanpaKandang->isNotEmpty()) {
+            $papanData[0] = ['label' => 'Belum Ditempatkan', 'burung' => $tanpaKandang->map($mapBurung)->values()->all()];
         }
         $dataEkspor = $riwayat->map(fn ($v) => [
             $v->burung->nama,
@@ -343,7 +331,7 @@
 
         function setBusy(on) {
             sedangBusy = on;
-            document.querySelectorAll('#btnCatat, #btnHapus, #btnCatatSemua').forEach(btn => {
+            document.querySelectorAll('#btnCatat, #btnHapus').forEach(btn => {
                 btn.disabled = on;
                 btn.classList.toggle('opacity-50', on);
                 btn.classList.toggle('cursor-not-allowed', on);
@@ -360,39 +348,6 @@
             const m = document.getElementById(id);
             m.classList.remove('hidden');
             m.classList.add('flex');
-        }
-
-        // ===== Modal detail kandang =====
-        function bukaModalKandang(kandangId) {
-            const data = PAPAN[kandangId];
-            if (!data) return;
-            document.getElementById('kandang_label').textContent = data.label;
-            const wrap = document.getElementById('kandang_burung_list');
-            wrap.innerHTML = '';
-            data.burung.forEach(function (b) {
-                const aman = b.terakhir && !b.terakhir.jatuh_tempo;
-                const baris = document.createElement('div');
-                baris.className = 'flex items-center justify-between gap-3 p-3 bg-gray-50 dark:bg-[#151a22] rounded-xl';
-                baris.innerHTML =
-                    '<div class="min-w-0">' +
-                        '<p class="text-sm font-semibold text-gray-900 dark:text-white truncate">' + b.nama + ' <span class="text-xs text-gray-500">· ' + b.spesies + '</span></p>' +
-                        '<p class="text-xs text-gray-500">' + (b.terakhir
-                            ? b.terakhir.jenis + ' (' + (b.terakhir.metode === 'oral' ? 'Oral' : 'Suntik') + ') · ' + b.terakhir.tanggal + (b.terakhir.dosis ? ' · ' + b.terakhir.dosis : '')
-                            : 'Belum ada catatan') + '</p>' +
-                    '</div>' +
-                    '<span class="shrink-0 text-[10px] font-bold uppercase px-2 py-1 rounded-full ' + (aman ? 'text-green-600 bg-green-600/10' : 'text-[#E62C37] bg-[#E62C37]/10') + '">' + (aman ? 'Aman' : 'Perlu') + '</span>';
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'shrink-0 px-3 py-1.5 text-xs font-bold text-white bg-[#E62C37] hover:bg-[#c5242d] rounded-lg transition-colors';
-                btn.textContent = 'Catat';
-                btn.addEventListener('click', function () { bukaModalCatat([b.id]); });
-                baris.appendChild(btn);
-                wrap.appendChild(baris);
-            });
-            document.getElementById('btnCatatSemua').onclick = function () {
-                bukaModalCatat(data.burung.map(function (b) { return b.id; }));
-            };
-            bukaModal('modalKandang');
         }
 
         // ===== Modal catat (tunggal / massal) =====
@@ -500,7 +455,6 @@
                 }
                 showToast('success', 'Tersimpan', data.message);
                 tutupModal('modalCatat');
-                tutupModal('modalKandang');
                 window.location.reload();
             } catch (err) {
                 showToast('error', 'Gagal', 'Tidak dapat terhubung ke server.');

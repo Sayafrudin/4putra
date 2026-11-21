@@ -84,15 +84,20 @@
                         <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                             @foreach ($kandangBlok as $k)
                                 @php($isi = $k->burungs->count())
-                                <div class="target-drop bg-white dark:bg-[#151a22] border {{ $isi >= 2 ? 'border-[#E62C37]/40' : 'border-gray-200 dark:border-gray-700' }} rounded-xl p-2.5"
+                                {{-- Kandang penuh: diblok gradien merah + tulisan PENUH; detail isi tetap terbaca. --}}
+                                <div class="target-drop border rounded-xl p-2.5 {{ $isi >= 2 ? 'border-red-500/60 bg-gradient-to-br from-red-500/20 to-red-500/5 dark:from-red-500/15' : 'bg-white dark:bg-[#151a22] border-gray-200 dark:border-gray-700' }}"
                                     data-kandang-id="{{ $k->id }}" data-kandang-label="{{ $k->label }}"
                                     @if ($isi >= 2) data-penuh="1" @endif>
                                     <div class="flex items-center justify-between text-[10px] font-bold mb-1">
                                         <span class="text-gray-600 dark:text-gray-300">{{ $k->label }}</span>
-                                        <span class="{{ $isi >= 2 ? 'text-[#E62C37]' : 'text-gray-400' }}">{{ $isi }}/2</span>
+                                        @if ($isi >= 2)
+                                            <span class="text-white bg-red-500/80 px-1.5 py-0.5 rounded">{{ $isi }}/2 PENUH</span>
+                                        @else
+                                            <span class="text-gray-400">{{ $isi }}/2</span>
+                                        @endif
                                     </div>
-                                    <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-snug truncate" title="{{ $k->burungs->pluck('nama')->implode(', ') }}">
-                                        {{ $k->burungs->pluck('nama')->implode(', ') ?: 'Kosong' }}
+                                    <p class="text-[11px] text-gray-600 dark:text-gray-300 leading-snug truncate" title="{{ $k->burungs->map(fn ($b) => $b->nama_ring)->implode(', ') }}">
+                                        {{ $k->burungs->map(fn ($b) => $b->nama_ring)->implode(', ') ?: 'Kosong' }}
                                     </p>
                                 </div>
                             @endforeach
@@ -111,8 +116,8 @@
                             <span class="text-gray-600 dark:text-gray-300">{{ $k->label }}</span>
                             <span class="text-gray-400">{{ $k->burungs->count() }} burung</span>
                         </div>
-                        <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-snug truncate" title="{{ $k->burungs->pluck('nama')->implode(', ') }}">
-                            {{ $k->burungs->pluck('nama')->implode(', ') ?: 'Kosong' }}
+                        <p class="text-[11px] text-gray-600 dark:text-gray-300 leading-snug truncate" title="{{ $k->burungs->map(fn ($b) => $b->nama_ring)->implode(', ') }}">
+                            {{ $k->burungs->map(fn ($b) => $b->nama_ring)->implode(', ') ?: 'Kosong' }}
                         </p>
                     </div>
                 @endforeach
@@ -271,7 +276,8 @@
                     <x-admin.select-search name="burung_id" id="jual_burung" placeholder="- Pilih burung -"
                         :options="$burungSemua->map(fn ($b) => [
                             'value' => (string) $b->id,
-                            'label' => $b->nama.' ('.$b->fase_label.($b->kandang ? ' · di '.$b->kandang->label : '').')',
+                            'grup' => $b->kandang ? 'Blok '.$b->kandang->blok : 'Belum Ditempatkan',
+                            'label' => $b->nama.' ('.$b->fase_label.($b->nomor_ring ? ' · '.$b->label_ring : '').($b->kandang ? ' · di '.$b->kandang->label : '').')',
                             'ring' => $b->nomor_ring,
                             'induk' => $b->induk_label,
                             'usia' => $b->umur_label,
@@ -335,6 +341,7 @@
                     <x-admin.select-search name="kandang_id" id="pindah_target" placeholder="- Pilih kandang / aviary -"
                         :options="($kandangs->flatten()->merge($aviaries))->map(fn ($k) => [
                             'value' => (string) $k->id,
+                            'grup' => $k->tipe === 'aviary' ? 'Aviary' : 'Blok '.$k->blok,
                             'label' => $k->label.($k->tipe !== 'aviary' ? ' ('.$k->burungs->count().'/2)' : ' ('.$k->burungs->count().' burung)'),
                             'penuh' => ($k->burungs->count() >= 2 && $k->tipe !== 'aviary') ? 1 : 0,
                             'labelKandang' => $k->label,
@@ -664,18 +671,19 @@
             target.addEventListener('dragover', e => {
                 e.preventDefault();
                 if (target.dataset.penuh !== '1') {
-                    target.classList.add('ring-2', 'ring-[#E62C37]/50');
+                    // Highlight kuat agar jelas di card kecil: ring penuh + border merah + latar merah tipis
+                    target.classList.add('ring-2', 'ring-[#E62C37]', 'border-[#E62C37]', 'bg-[#E62C37]/10');
                     target.classList.remove('border-gray-200', 'dark:border-gray-700');
                 }
             });
-            target.addEventListener('dragleave', () => {
-                target.classList.remove('ring-2', 'ring-[#E62C37]/50');
+            const lepasHighlight = () => {
+                target.classList.remove('ring-2', 'ring-[#E62C37]', 'border-[#E62C37]', 'bg-[#E62C37]/10');
                 target.classList.add('border-gray-200', 'dark:border-gray-700');
-            });
+            };
+            target.addEventListener('dragleave', lepasHighlight);
             target.addEventListener('drop', async e => {
                 e.preventDefault();
-                target.classList.remove('ring-2', 'ring-[#E62C37]/50');
-                target.classList.add('border-gray-200', 'dark:border-gray-700');
+                lepasHighlight();
                 if (target.dataset.penuh === '1') { showToast('error', 'Gagal', target.dataset.kandangLabel + ' sudah penuh (maksimal 2 burung).'); return; }
                 const id = e.dataTransfer.getData('text/plain');
                 if (!id) return;

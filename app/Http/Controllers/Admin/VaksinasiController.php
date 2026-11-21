@@ -52,13 +52,15 @@ class VaksinasiController extends Controller
             ->sortBy('tanggal_vaksin')
             ->values();
 
-        return view('admin.vaksinasi.index', compact('perKandang', 'tanpaKandang', 'terakhirPerBurung', 'jatuhTempo', 'riwayat'));
+        // $burungSemua ikut ke view: modal identitas burung (klik nama) butuh peta data.
+        return view('admin.vaksinasi.index', compact('perKandang', 'tanpaKandang', 'terakhirPerBurung', 'jatuhTempo', 'riwayat', 'burungSemua'));
     }
 
     /** Halaman detail satu kandang: chip burung + dot status, catat per burung/massal, riwayat lengkap kandang ini. */
     public function detail(Kandang $kandang)
     {
-        $burungList = $kandang->burungs()->orderBy('nama')->get();
+        // with() kandang: modal identitas burung butuh lokasi tanpa N+1.
+        $burungList = $kandang->burungs()->with('kandang:id,blok,nomor,tipe')->orderBy('nama')->get();
         $terakhirPerBurung = Vaksinasi::catatanTerakhirPerBurung()->keyBy('burung_id');
         $riwayat = Vaksinasi::with('burung')
             ->whereIn('burung_id', $burungList->pluck('id'))

@@ -46,4 +46,24 @@ class Burung extends Model
     {
         return $this->gender ? ($this->gender === 'jantan' ? 'Jantan' : 'Betina') : null;
     }
+
+    /** "Ring X" bila terisi; null bila kosong — field opsional tampil hanya bila terisi. */
+    public function getLabelRingAttribute(): ?string
+    {
+        return $this->nomor_ring ? 'Ring '.$this->nomor_ring : null;
+    }
+
+    /** Identitas singkat: "Nama — Jantan · Ring X"; bagian opsional hilang bila kosong. */
+    public function getIdentitasSingkatAttribute(): string
+    {
+        $bagian = array_filter([$this->gender_label, $this->label_ring]);
+
+        return $bagian ? $this->nama.' — '.implode(' · ', $bagian) : $this->nama;
+    }
+
+    /** "Nama (Ring X)" untuk tabel/dropdown; tanpa "(...)" bila ring kosong. */
+    public function getNamaRingAttribute(): string
+    {
+        return $this->nomor_ring ? $this->nama.' (Ring '.$this->nomor_ring.')' : $this->nama;
+    }
 }

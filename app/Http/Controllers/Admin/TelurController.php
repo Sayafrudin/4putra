@@ -31,15 +31,23 @@ class TelurController extends Controller
             ->where('fase', 'dewasa')
             ->whereNotNull('kandang_id')
             ->orderBy('nama')
-            ->get(['id', 'nama', 'spesies', 'gender', 'kandang_id']);
+            ->get(['id', 'nama', 'spesies', 'gender', 'nomor_ring', 'kandang_id']);
 
         $kandangPasangan = $burungDewasa
             ->groupBy('kandang_id')
             ->filter(fn ($grup) => $grup->count() === 2 && $grup->first()->kandang->tipe !== 'aviary')
-            ->map(fn ($grup) => [
-                'label' => $grup->first()->kandang->label,
-                'burung' => $grup->map(fn ($b) => ['id' => $b->id, 'nama' => $b->nama, 'spesies' => $b->spesies, 'gender' => $b->gender_label])->values()->all(),
-            ])
+            ->map(function ($grup) {
+                $pasangan = $grup->sortBy('nama')->values();
+                $kandang = $pasangan->first()->kandang;
+
+                return [
+                    'label' => $kandang->label,
+                    'blok' => $kandang->blok,
+                    // Label dropdown: pasangan ber-identitas (spesies, gender, ring bila terisi).
+                    'label_pasangan' => 'Kandang '.$kandang->label.' — '.$this->sisiLabel($pasangan[0]).' × '.$this->sisiLabel($pasangan[1]),
+                    'burung' => $pasangan->map(fn ($b) => ['id' => $b->id, 'nama' => $b->nama, 'spesies' => $b->spesies, 'gender' => $b->gender_label, 'ring' => $b->nomor_ring])->values()->all(),
+                ];
+            })
             ->sortBy('label', SORT_NATURAL | SORT_FLAG_CASE)
             ->values();
 
@@ -186,12 +194,21 @@ class TelurController extends Controller
         }
     }
 
+    /** Satu sisi pasangan: "Nama (Spesies - Gender, Ring N)" — bagian opsional hilang bila kosong. */
+    private function sisiLabel(?Burung $b): string
+    {
+        if (! $b) {
+            return '?';
+        }
+
+        return $b->nama.' ('.$b->spesies.($b->gender_label ? ' - '.$b->gender_label : '').($b->nomor_ring ? ', Ring '.$b->nomor_ring : '').')';
+    }
+
     /** Silsilah lengkap: nama + spesies + gender + ring tiap induk, "X (..) × Y (..)". */
     private function silsilahLabel(Telur $telur): string
     {
-        $sisi = fn ($b) => $b ? $b->nama.' ('.$b->spesies.($b->gender_label ? ' - '.$b->gender_label : '').($b->nomor_ring ? ', Ring '.$b->nomor_ring : '').')' : '?';
-        $induk = $sisi($telur->burung);
-        $pasangan = $sisi($telur->pasangan);
+        $induk = $this->sisiLabel($telur->burung);
+        $pasangan = $this->sisiLabel($telur->pasangan);
 
         return $telur->pasangan ? $induk.' × '.$pasangan : (string) $induk;
     }

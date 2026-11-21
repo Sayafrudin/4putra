@@ -64,6 +64,7 @@ jalankan dua terminal terpisah.
 - Wajib gunakan validasi form kustom JavaScript. Dilarang mengandalkan validasi bawaan HTML5.
 - Design System: Gunakan `rounded-xl`, `border-gray-700`, latar belakang gelap `#151a22`. Tombol aksi menggunakan padding `px-4 py-2.5 text-sm font-semibold`.
 - Terminologi: Gunakan "Baby" untuk tampilan antarmuka menggantikan kata "Anakan". Database tetap menggunakan `anakan`.
+- Identitas Burung: Permukaan apa pun yang berkorelasi dengan burung (chip, dropdown, tabel, ekspor) wajib menampilkan identitas detail (no ring, gender, dll). Field opsional tampil hanya bila sudah diisi — pakai aksesor `Burung` (`label_ring`, `nama_ring`, `identitas_singkat`).
 - Tombol Aksi Tabel: Wajib menggunakan elemen button dengan styling warna spesifik (edit biru, hapus merah). Dilarang menggunakan tautan teks polos.
 
 ## Konvensi Format Kode (Prettier) — Wajib

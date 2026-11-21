@@ -28,11 +28,20 @@
                 class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-[#E62C37] focus:outline-none">
         </div>
         <div class="max-h-60 overflow-y-auto py-1">
-            <template x-for="op in tersaring" :key="String(op.value)">
-                <button type="button" @click="pilihOpsi(op)"
-                    class="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-[#E62C37]/10 hover:text-[#E62C37] transition-colors"
-                    :class="pilih && String(pilih.value) === String(op.value) ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : ''"
-                    x-text="op.label"></button>
+            <template x-for="baris in tampilan" :key="baris.key">
+                <div>
+                    <template x-if="baris.header">
+                        {{-- Pembatas grup: header blok, non-klik, menempel saat scroll --}}
+                        <p class="sticky top-0 px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-[#151a22] border-b border-gray-100 dark:border-gray-800"
+                            x-text="baris.header"></p>
+                    </template>
+                    <template x-if="baris.op">
+                        <button type="button" @click="pilihOpsi(baris.op)"
+                            class="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-[#E62C37]/10 hover:text-[#E62C37] transition-colors"
+                            :class="pilih && String(pilih.value) === String(baris.op.value) ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : ''"
+                            x-text="baris.op.label"></button>
+                    </template>
+                </div>
             </template>
             <p x-show="tersaring.length === 0" class="px-4 py-3 text-sm text-gray-400 italic">Tidak ada hasil.</p>
         </div>
@@ -66,6 +75,21 @@
                     return this.daftar.filter((op) =>
                         op.label.toLowerCase().includes(q),
                     );
+                },
+                // Baris tampil: sisipkan header grup (non-klik) sebelum opsi pertama
+                // tiap grup — opsi membawa kunci "grup" berisi judul utuh ("Blok A").
+                get tampilan() {
+                    const out = [];
+                    let grup = null;
+                    this.tersaring.forEach((op) => {
+                        const g = op.grup || null;
+                        if (g && g !== grup) {
+                            out.push({ header: g, key: "h:" + g });
+                            grup = g;
+                        }
+                        out.push({ op: op, key: String(op.value) });
+                    });
+                    return out;
                 },
                 pilihOpsi(op) {
                     this.pilih = op;

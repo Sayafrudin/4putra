@@ -288,7 +288,7 @@
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Tanggal Pelaksanaan</label>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div>
-                            <input type="date" id="create-input-date" name="date" placeholder="Mulai"
+                            <input type="date" id="create-input-date" data-isi-hari-ini name="date" placeholder="Mulai"
                                 class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37] cursor-pointer dark:[color-scheme:dark]">
                             <span class="text-[10px] text-gray-500 mt-0.5 block">Tanggal Mulai</span>
                         </div>
@@ -435,7 +435,7 @@
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Tanggal Pelaksanaan</label>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div>
-                            <input type="date" name="date" id="edit-date" placeholder="Mulai"
+                            <input type="date" name="date" id="edit-date" data-isi-hari-ini placeholder="Mulai"
                                 class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-amber-500 cursor-pointer dark:[color-scheme:dark]">
                             <span class="text-[10px] text-gray-500 mt-0.5 block">Tanggal Mulai</span>
                         </div>

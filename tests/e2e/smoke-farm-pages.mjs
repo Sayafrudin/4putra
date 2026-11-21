@@ -92,7 +92,7 @@ try {
     for (const [url, needle] of [
         ["/admin/vaksinasi", "Obat &amp; Vaksinasi"],
         ["/admin/telur", "Telur &amp; Incubator"],
-        ["/admin/penjualan-baby", "Penjualan Baby"],
+        ["/admin/penjualan-baby", "Penjualan Burung"],
         ["/admin/stok-makanan", "Stok Makanan Burung"],
         ["/admin/kandang", "Kandang &amp; Penempatan"],
         ["/admin", "Dashboard"],

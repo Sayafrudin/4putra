@@ -140,7 +140,7 @@
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Tanggal
                     Aktivitas</label>
-                <input type="date" id="create-input-date" name="activity_date"
+                <input type="date" id="create-input-date" data-isi-hari-ini name="activity_date"
                     class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-[#E62C37] cursor-pointer dark:[color-scheme:dark]">
                 <span id="error-create-date" class="hidden text-xs font-semibold text-[#E62C37] mt-1">Tanggal aktivitas
                     wajib dipilih</span>
@@ -230,7 +230,7 @@
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Tanggal
                     Aktivitas</label>
-                <input type="date" name="activity_date" id="edit-date"
+                <input type="date" name="activity_date" id="edit-date" data-isi-hari-ini
                     class="w-full p-2.5 text-sm bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-amber-500 cursor-pointer dark:[color-scheme:dark]">
                 <span id="error-edit-date" class="hidden text-xs font-semibold text-[#E62C37] mt-1">Tanggal aktivitas
                     wajib dipilih</span>

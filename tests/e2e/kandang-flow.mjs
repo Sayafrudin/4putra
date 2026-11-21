@@ -144,7 +144,7 @@ try {
     await page.click("text=+ Tambah Burung");
     await page.fill("#tambah_nama", BURUNG);
     await page.fill("#tambah_spesies", "African Grey");
-    await page.selectOption("#tambah_fase", "anakan");
+    await page.selectOption("#tambah_fase", "dewasa");
     await Promise.all([
         page.waitForNavigation({ waitUntil: "load" }),
         page.click("#btnTambah"),
@@ -331,7 +331,7 @@ try {
         await page.click("text=+ Tambah Burung");
         await page.fill("#tambah_nama", nama);
         await page.fill("#tambah_spesies", "African Grey");
-        await page.selectOption("#tambah_fase", "anakan");
+        await page.selectOption("#tambah_fase", "dewasa");
         if (gender) await page.selectOption("#tambah_gender", gender);
         const respB = page
             .waitForResponse(

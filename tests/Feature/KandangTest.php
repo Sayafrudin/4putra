@@ -29,6 +29,7 @@ class KandangTest extends TestCase
         Burung::where('nama', 'like', 'uji-kandang%')->delete();
         Kandang::where('blok', 'Z')->delete();
         User::where('email', 'admin-kandang-test@4putra.test')->delete();
+        User::where('email', 'user-kandang-test@4putra.test')->delete();
         parent::tearDown();
     }
 
@@ -69,7 +70,8 @@ class KandangTest extends TestCase
     {
         $kandang = $this->kandangUji();
         $burung = $this->burungUji(['kandang_id' => $kandang->id]);
-        $pool = $this->burungUji(); // belum ditempatkan
+        // Pool kandang hanya burung bukan-baby (fase dewasa) — baby punya menu sendiri.
+        $pool = $this->burungUji(['fase' => 'dewasa']); // belum ditempatkan
 
         $response = $this->actingAs($this->admin)->get('/admin/kandang');
 
@@ -184,5 +186,76 @@ class KandangTest extends TestCase
         $this->actingAs($this->admin)->delete("/admin/burung/{$burung->id}")->assertOk();
 
         $this->assertDatabaseMissing('burungs', ['id' => $burung->id]);
+    }
+
+    public function test_tambah_kandang_farm_baru_dan_lama(): void
+    {
+        $this->actingAs($this->admin)
+            ->postJson('/admin/kandang', [
+                'blok' => 'Z',
+                'nomor' => 91,
+                'tipe' => 'kecil',
+                'lokasi' => 'baru',
+            ])->assertOk()
+            ->assertJsonFragment(['ok' => true]);
+        $this->assertDatabaseHas('kandangs', ['blok' => 'Z', 'nomor' => 91, 'lokasi' => 'baru']);
+
+        $this->actingAs($this->admin)
+            ->postJson('/admin/kandang', [
+                'blok' => 'Z',
+                'nomor' => 92,
+                'tipe' => 'medium',
+                'lokasi' => 'lama',
+            ])->assertOk();
+        $this->assertDatabaseHas('kandangs', ['blok' => 'Z', 'nomor' => 92, 'lokasi' => 'lama']);
+    }
+
+    public function test_kandang_duplikat_ditolak(): void
+    {
+        $this->kandangUji(); // Z-1 sudah ada
+
+        $this->actingAs($this->admin)
+            ->postJson('/admin/kandang', [
+                'blok' => 'Z',
+                'nomor' => 1,
+                'tipe' => 'kecil',
+                'lokasi' => 'baru',
+            ])->assertStatus(422)
+            ->assertJsonFragment(['ok' => false]);
+    }
+
+    public function test_papan_farm_lama_terpisah_dari_farm_baru(): void
+    {
+        $baru = Kandang::create(['blok' => 'Z', 'nomor' => 81, 'tipe' => 'kecil', 'lokasi' => 'baru']);
+        $lama = Kandang::create(['blok' => 'Z', 'nomor' => 82, 'tipe' => 'kecil', 'lokasi' => 'lama']);
+
+        $this->actingAs($this->admin)->get('/admin/kandang')
+            ->assertOk()
+            ->assertSee('Z-81', false)
+            ->assertDontSee('Z-82', false);
+        $this->actingAs($this->admin)->get('/admin/kandang-lama')
+            ->assertOk()
+            ->assertSee('Z-82', false)
+            ->assertDontSee('Z-81', false);
+    }
+
+    public function test_riwayat_pindah_tercatat_saat_letakkan_dan_kosongkan(): void
+    {
+        $kandang = $this->kandangUji();
+        $burung = $this->burungUji();
+
+        $this->actingAs($this->admin)
+            ->postJson("/admin/burung/{$burung->id}/letakkan", ['kandang_id' => $kandang->id])->assertOk();
+        $this->actingAs($this->admin)
+            ->postJson("/admin/burung/{$burung->id}/kosongkan")->assertOk();
+
+        $res = $this->actingAs($this->admin)
+            ->getJson("/admin/burung/{$burung->id}/riwayat")->assertOk();
+
+        $riwayat = $res->json('riwayat');
+        $this->assertCount(2, $riwayat);
+        $this->assertSame('dikeluarkan', $riwayat[0]['aksi']);
+        $this->assertSame('ditempatkan', $riwayat[1]['aksi']);
+        $this->assertSame('Z-1', $riwayat[1]['kandang']);
     }
 }

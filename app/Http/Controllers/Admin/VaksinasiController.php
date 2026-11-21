@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Burung;
+use App\Models\Kandang;
 use App\Models\Vaksinasi;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -51,6 +53,40 @@ class VaksinasiController extends Controller
             ->values();
 
         return view('admin.vaksinasi.index', compact('perKandang', 'tanpaKandang', 'terakhirPerBurung', 'jatuhTempo', 'riwayat'));
+    }
+
+    /** Halaman detail satu kandang: chip burung + dot status, catat per burung/massal, riwayat lengkap kandang ini. */
+    public function detail(Kandang $kandang)
+    {
+        $burungList = $kandang->burungs()->orderBy('nama')->get();
+        $terakhirPerBurung = Vaksinasi::catatanTerakhirPerBurung()->keyBy('burung_id');
+        $riwayat = Vaksinasi::with('burung')
+            ->whereIn('burung_id', $burungList->pluck('id'))
+            ->orderByDesc('tanggal_vaksin')->orderByDesc('id')->get();
+
+        return view('admin.vaksinasi.detail', compact('kandang', 'burungList', 'terakhirPerBurung', 'riwayat'));
+    }
+
+    /** PDF riwayat satu kandang (dipakai tombol Export PDF di halaman detail). */
+    public function exportDetailPdf(Request $request, Kandang $kandang)
+    {
+        try {
+            $burungList = $kandang->burungs()->orderBy('nama')->get();
+            $riwayat = Vaksinasi::with('burung')
+                ->whereIn('burung_id', $burungList->pluck('id'))
+                ->orderByDesc('tanggal_vaksin')->orderByDesc('id')->get();
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.vaksinasi.detail-pdf', compact('kandang', 'burungList', 'riwayat'))
+                ->setPaper('a4', 'portrait');
+
+            $this->logActivity($request, 'ekspor_vaksinasi_pdf', 'Mengekspor riwayat obat & vaksinasi kandang '.$kandang->label.' PDF ('.$riwayat->count().' catatan)');
+
+            return $pdf->download('riwayat_vaksinasi_'.$kandang->label.'_'.date('Y-m-d').'.pdf');
+        } catch (\Throwable $e) {
+            Log::error('Gagal ekspor PDF vaksinasi kandang', ['kandang' => $kandang->id, 'error' => $e->getMessage()]);
+
+            return redirect()->route('admin.vaksinasi.detail', $kandang)->with('error', 'Gagal membuat PDF. Coba lagi.');
+        }
     }
 
     public function exportPdf(Request $request)
@@ -107,6 +143,7 @@ class VaksinasiController extends Controller
                 ];
             }
             Vaksinasi::insert($baris);
+            Cache::forget('dashboard.stats');
 
             $label = count($ids) === 1 ? 'burung #'.$ids[0] : count($ids).' burung (massal)';
             $this->logActivity($request, 'tambah_vaksinasi', 'Mencatat '.$data['jenis'].' ('.$data['metode'].') untuk '.$label);
@@ -123,8 +160,10 @@ class VaksinasiController extends Controller
     {
         try {
             $jenis = $vaksinasi->jenis;
+            $burungId = $vaksinasi->burung_id;
             $vaksinasi->delete();
-            $this->logActivity($request, 'hapus_vaksinasi', 'Menghapus catatan '.$jenis.' burung #'.$vaksinasi->burung_id);
+            Cache::forget('dashboard.stats');
+            $this->logActivity($request, 'hapus_vaksinasi', 'Menghapus catatan '.$jenis.' burung #'.$burungId);
 
             return response()->json(['ok' => true, 'message' => 'Catatan "'.$jenis.'" dihapus.']);
         } catch (\Throwable $e) {

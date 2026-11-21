@@ -29,6 +29,8 @@ class DashboardStats
 
         if (AdminMenus::boleh($user, 'vaksinasi')) {
             $hasil['vaksin'] = $data['vaksin'];
+            $hasil['vaksinLindung'] = $data['vaksinLindung'];
+            $hasil['vaksinPernah'] = $data['vaksinPernah'];
         }
         if (AdminMenus::boleh($user, 'telur')) {
             $hasil['telur'] = $data['telur'];
@@ -61,9 +63,8 @@ class DashboardStats
             ->havingRaw('COUNT(*) = 2')
             ->get()->count();
 
-        $vaksin = \App\Models\Vaksinasi::catatanTerakhirPerBurung()
-            ->filter(fn ($v) => $v->sudah_jatuh_tempo)
-            ->count();
+        $terakhirPerBurung = \App\Models\Vaksinasi::catatanTerakhirPerBurung();
+        $vaksin = $terakhirPerBurung->filter(fn ($v) => $v->sudah_jatuh_tempo)->count();
 
         $stok = (float) StokMakanan::query()->sum('jumlah_stok');
 
@@ -86,6 +87,8 @@ class DashboardStats
                 'menetas' => (int) ($telurStatus['menetas'] ?? 0),
             ],
             'vaksin' => $vaksin,
+            'vaksinLindung' => $terakhirPerBurung->filter(fn ($v) => ! $v->sudah_jatuh_tempo)->count(),
+            'vaksinPernah' => $terakhirPerBurung->count(),
             'stok' => $stok,
             'aktivitasTerbaru' => $aktivitasTerbaru,
         ];

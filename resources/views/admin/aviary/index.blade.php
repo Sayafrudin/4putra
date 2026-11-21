@@ -6,11 +6,19 @@
             <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">Aviary (Kandang Besar)</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Penampungan pra-breeding - isi tanpa batas, geser atau klik kartu burung untuk menempatkannya</p>
         </div>
-        <div class="flex gap-3">
+        <div class="flex gap-3 flex-wrap">
             <button onclick="bukaModalTambah()"
                 class="px-4 py-2.5 text-sm font-semibold text-white bg-[#E62C37] hover:bg-[#c5242d] rounded-xl transition-colors">
                 + Tambah Burung
             </button>
+            <button onclick="eksporExcel(this, { namaFile: 'laporan_aviary_{{ now()->toDateString() }}.xlsx', judul: 'Laporan Aviary', headers: ['Blok', 'Aviary', 'Nama Burung', 'Spesies', 'Fase', 'Gender', 'No. Ring', 'No. DNA', 'Catatan'], rows: DATA_EKSPOR })"
+                class="px-4 py-2.5 text-sm font-semibold text-white bg-green-600 hover:bg-green-700 rounded-xl transition-colors">
+                Export Excel
+            </button>
+            <a href="{{ route('admin.aviary.export-pdf') }}"
+                class="px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                Export PDF
+            </a>
         </div>
     </div>
 
@@ -250,6 +258,14 @@
                     <textarea name="catatan" id="edit_catatan" rows="2"
                         class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] focus:ring-1 focus:ring-[#E62C37]/50 outline-none"></textarea>
                 </div>
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-3">
+                    <button type="button" id="btnRiwayat" onclick="muatRiwayat()"
+                        class="w-full px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-500 transition-colors flex items-center justify-center gap-2">
+                        <x-tabler-history class="w-4 h-4" />
+                        Riwayat Perpindahan
+                    </button>
+                    <div id="riwayatList" class="hidden mt-3 max-h-40 overflow-y-auto text-xs text-gray-600 dark:text-gray-400 space-y-1.5"></div>
+                </div>
                 <div class="flex justify-end gap-3 pt-2">
                     <button type="button" onclick="tutupModal('modalEdit')"
                         class="px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
@@ -291,6 +307,35 @@
         }
 
         function bukaModalTambah() { bukaModal('modalTambah'); }
+
+        async function muatRiwayat() {
+            if (!editTargetId) return;
+            const list = document.getElementById('riwayatList');
+            list.classList.remove('hidden');
+            list.innerHTML = '<p class="text-gray-400">Memuat...</p>';
+            try {
+                const res = await fetch('{{ route('admin.burung.riwayat', ':id') }}'.replace(':id', editTargetId), {
+                    headers: { 'Accept': 'application/json' }
+                });
+                const data = await res.json();
+                if (!res.ok || !data.ok) throw new Error();
+                list.innerHTML = '';
+                if (!data.riwayat.length) {
+                    const p = document.createElement('p');
+                    p.className = 'text-gray-400 italic';
+                    p.textContent = 'Belum ada riwayat perpindahan.';
+                    list.appendChild(p);
+                    return;
+                }
+                data.riwayat.forEach(r => {
+                    const p = document.createElement('p');
+                    p.textContent = r.waktu + ' - ' + r.keterangan;
+                    list.appendChild(p);
+                });
+            } catch (err) {
+                list.innerHTML = '<p class="text-red-400">Gagal memuat riwayat.</p>';
+            }
+        }
 
         // ---- Validasi kustom (tanpa HTML5 default) ----
         function tandaiError(inputId, errId, pesan) {
@@ -540,6 +585,9 @@
             document.getElementById('edit_dna').value = btn.dataset.nomorDna || '';
             document.getElementById('edit_ring').value = btn.dataset.nomorRing || '';
             document.getElementById('edit_catatan').value = btn.dataset.catatan || '';
+            const riwayatList = document.getElementById('riwayatList');
+            riwayatList.classList.add('hidden');
+            riwayatList.innerHTML = '';
             bukaModal('modalEdit');
         });
 
@@ -614,31 +662,46 @@
             }
         });
 
-        // ==================== SEARCH AVIARY (desktop + mobile) ====================
+        // ==================== SEARCH AVIARY (dataset chip: nama, spesies, ring, DNA, fase, gender) ====================
         const kandangSearch = document.getElementById('kandang_search');
         const kandangEmpty = document.getElementById('kandang_search_empty');
 
         if (kandangSearch) {
             kandangSearch.addEventListener('input', function () {
                 const query = this.value.toLowerCase().trim();
-                const cards = document.querySelectorAll('.kandang-drop');
                 let visibleCount = 0;
 
-                cards.forEach(card => {
-                    const isMatch = card.textContent.toLowerCase().includes(query);
-                    card.style.display = isMatch ? '' : 'none';
-                    if (isMatch) visibleCount++;
+                // Pool ikut difilter: chip dicocokkan dari dataset (ring, DNA, fase, gender) + teks
+                document.querySelectorAll('#poolList .burung-chip').forEach(chip => {
+                    chip.style.display = chipCocok(chip, query) ? '' : 'none';
                 });
 
-                // Pool ikut difilter: chip burung yang cocok tetap terlihat
-                document.querySelectorAll('#poolList .burung-chip').forEach(chip => {
-                    chip.style.display = chip.textContent.toLowerCase().includes(query) ? '' : 'none';
+                // Kartu aviary: tampil jika label cocok ATAU ada chip cocok di dalamnya
+                document.querySelectorAll('.kandang-drop').forEach(card => {
+                    const labelCocok = (card.dataset.kandangLabel || '').toLowerCase().includes(query);
+                    const adaChip = Array.from(card.querySelectorAll('.burung-chip')).some(chip => chipCocok(chip, query));
+                    const isMatch = labelCocok || adaChip;
+                    card.style.display = isMatch ? '' : 'none';
+                    if (isMatch) visibleCount++;
                 });
 
                 if (kandangEmpty) {
                     kandangEmpty.classList.toggle('hidden', visibleCount > 0 || query === '');
                 }
             });
+        }
+
+        function chipCocok(chip, query) {
+            if (!query) return true;
+            const hay = [
+                chip.dataset.nama,
+                chip.dataset.ring,
+                chip.dataset.dna,
+                chip.dataset.fase,
+                chip.dataset.gender,
+                chip.textContent,
+            ].join(' ').toLowerCase();
+            return hay.includes(query);
         }
 
         // Search modal pindah aviary

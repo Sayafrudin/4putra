@@ -43,9 +43,9 @@
         @endif
         @if (isset($stats['vaksin']))
             <a href="{{ route('admin.vaksinasi.index') }}" class="p-4 bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-xl hover:border-[#E62C37]/50 transition-colors">
-                <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Butuh Obat/Vaksin Ulang</p>
-                <p class="text-2xl font-bold tabular-nums mt-1 {{ $stats['vaksin'] > 0 ? 'text-[#E62C37]' : 'text-green-600' }}">{{ number_format($stats['vaksin']) }}</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">burung jatuh tempo</p>
+                <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Burung Terlindung</p>
+                <p class="text-2xl font-bold tabular-nums mt-1 {{ $stats['vaksinLindung'] > 0 ? 'text-green-600' : 'text-gray-900 dark:text-white' }}">{{ number_format($stats['vaksinLindung']) }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ $stats['vaksin'] > 0 ? $stats['vaksin'].' perlu ulang' : 'aman' }} · {{ $stats['vaksinPernah'] }} pernah dicatat</p>
             </a>
         @endif
         <div class="p-4 bg-white dark:bg-[#1e2530] border border-gray-200 dark:border-gray-800 rounded-xl">

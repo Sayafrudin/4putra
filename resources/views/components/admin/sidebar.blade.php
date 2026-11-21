@@ -93,19 +93,19 @@
                 </li>
                 @endif
 
-                {{-- Menu Manajemen Farm (data burung, bukan urusan chatbot); tiap anak difilter hak akses menu --}}
-                @if (\App\Support\AdminMenus::boleh(Auth::user(), 'aviary') || \App\Support\AdminMenus::boleh(Auth::user(), 'kandang') || \App\Support\AdminMenus::boleh(Auth::user(), 'vaksinasi') || \App\Support\AdminMenus::boleh(Auth::user(), 'telur') || \App\Support\AdminMenus::boleh(Auth::user(), 'stok'))
+                {{-- Menu Management Farm Baru (data burung); tiap anak difilter hak akses menu --}}
+                @if (\App\Support\AdminMenus::boleh(Auth::user(), 'aviary') || \App\Support\AdminMenus::boleh(Auth::user(), 'kandang') || \App\Support\AdminMenus::boleh(Auth::user(), 'vaksinasi') || \App\Support\AdminMenus::boleh(Auth::user(), 'telur') || \App\Support\AdminMenus::boleh(Auth::user(), 'baby') || \App\Support\AdminMenus::boleh(Auth::user(), 'stok'))
                 <li class="relative px-6 py-3"
-                    x-data="{ openFarm: {{ request()->routeIs('admin.aviary*') || request()->routeIs('admin.kandang*') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.stok*') ? 'true' : 'false' }} }">
-                    @if (request()->routeIs('admin.aviary*') || request()->routeIs('admin.kandang*') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.stok*'))
+                    x-data="{ openFarm: {{ request()->routeIs('admin.aviary*') || request()->routeIs('admin.kandang.index') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.baby*') || request()->routeIs('admin.stok*') ? 'true' : 'false' }} }">
+                    @if (request()->routeIs('admin.aviary*') || request()->routeIs('admin.kandang.index') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.baby*') || request()->routeIs('admin.stok*'))
                         <span class="absolute inset-y-0 left-0 w-1 bg-[#E62C37] rounded-tr-lg rounded-br-lg"
                             aria-hidden="true"></span>
                     @endif
                     <button @click="openFarm = !openFarm"
-                        class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.aviary*') || request()->routeIs('admin.kandang*') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.stok*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
+                        class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.aviary*') || request()->routeIs('admin.kandang.index') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.baby*') || request()->routeIs('admin.stok*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
                         <span class="inline-flex items-center">
                             <x-tabler-building-warehouse class="w-5 h-5" />
-                            <span class="ml-4">Manajemen Farm</span>
+                            <span class="ml-4">Management Farm Baru</span>
                         </span>
                         <x-tabler-chevron-down class="w-4 h-4 transition-transform duration-200" />
                     </button>
@@ -125,7 +125,7 @@
                         @endif
                         @if (\App\Support\AdminMenus::boleh(Auth::user(), 'kandang'))
                         <a href="{{ route('admin.kandang.index') }}" data-turbo="true" @click="sidebarOpen = false"
-                            class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.kandang*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
+                            class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.kandang.index') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
                             <x-tabler-home-2 class="w-4 h-4 mr-2" />
                             Kandang
                         </a>
@@ -144,6 +144,13 @@
                             Telur & Incubator
                         </a>
                         @endif
+                        @if (\App\Support\AdminMenus::boleh(Auth::user(), 'baby'))
+                        <a href="{{ route('admin.baby.index') }}" data-turbo="true" @click="sidebarOpen = false"
+                            class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.baby*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
+                            <x-tabler-eggs class="w-4 h-4 mr-2" />
+                            Baby
+                        </a>
+                        @endif
                         @if (\App\Support\AdminMenus::boleh(Auth::user(), 'stok'))
                         <a href="{{ route('admin.stok.index') }}" data-turbo="true" @click="sidebarOpen = false"
                             class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.stok*') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
@@ -151,6 +158,38 @@
                             Stok Makanan
                         </a>
                         @endif
+                    </div>
+                </li>
+                @endif
+
+                {{-- Menu Management Farm Lama (papan kandang terpisah, fitur sama farm baru) --}}
+                @if (\App\Support\AdminMenus::boleh(Auth::user(), 'kandang'))
+                <li class="relative px-6 py-3"
+                    x-data="{ openFarmLama: {{ request()->routeIs('admin.kandang.lama') ? 'true' : 'false' }} }">
+                    @if (request()->routeIs('admin.kandang.lama'))
+                        <span class="absolute inset-y-0 left-0 w-1 bg-[#E62C37] rounded-tr-lg rounded-br-lg"
+                            aria-hidden="true"></span>
+                    @endif
+                    <button @click="openFarmLama = !openFarmLama"
+                        class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.kandang.lama') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
+                        <span class="inline-flex items-center">
+                            <x-tabler-home-2 class="w-5 h-5" />
+                            <span class="ml-4">Management Farm Lama</span>
+                        </span>
+                        <x-tabler-chevron-down class="w-4 h-4 transition-transform duration-200" />
+                    </button>
+
+                    <div x-show="openFarmLama" x-transition:enter="transition ease-out duration-100"
+                        x-transition:enter-start="opacity-0 -translate-y-1"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-75"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 -translate-y-1" class="mt-2 ml-4 space-y-1">
+                        <a href="{{ route('admin.kandang.lama') }}" data-turbo="true" @click="sidebarOpen = false"
+                            class="flex items-center px-3 py-2 text-sm rounded transition-colors duration-150 {{ request()->routeIs('admin.kandang.lama') ? 'bg-[#E62C37]/10 text-[#E62C37] font-semibold' : 'hover:text-gray-800 dark:hover:text-gray-200' }}">
+                            <x-tabler-home-2 class="w-4 h-4 mr-2" />
+                            Kandang
+                        </a>
                     </div>
                 </li>
                 @endif

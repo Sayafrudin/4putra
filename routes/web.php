@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AdminDailyActivityController;
 use App\Http\Controllers\Admin\AdminFacilityController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AviaryController;
+use App\Http\Controllers\Admin\BabyController;
 use App\Http\Controllers\Admin\ChatbotController;
 use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -248,18 +249,26 @@ Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'menu.access']
 
     // Aviary (kandang besar pra-breeding, semua role: menu monitoring)
     Route::get('/aviary', [AviaryController::class, 'index'])->name('admin.aviary.index');
+    Route::get('/aviary/export/pdf', [KandangController::class, 'exportPdf'])->name('admin.aviary.export-pdf');
 
     // Kandang & penempatan burung individu (semua role: menu monitoring)
     Route::get('/kandang', [KandangController::class, 'index'])->name('admin.kandang.index');
+    // Papan kandang farm lama (lokasi='lama') — fitur sama persis dengan farm baru
+    Route::get('/kandang-lama', [KandangController::class, 'indexLama'])->name('admin.kandang.lama');
+    Route::post('/kandang', [KandangController::class, 'storeKandang'])->name('admin.kandang.store');
+    Route::get('/kandang/export/pdf/{lokasi?}', [KandangController::class, 'exportPdf'])->name('admin.kandang.export-pdf');
     Route::post('/burung', [KandangController::class, 'storeBurung'])->name('admin.burung.store');
     Route::post('/burung/{burung}/letakkan', [KandangController::class, 'letakkan'])->name('admin.burung.letakkan');
     Route::post('/burung/{burung}/kosongkan', [KandangController::class, 'kosongkan'])->name('admin.burung.kosongkan');
+    Route::get('/burung/{burung}/riwayat', [KandangController::class, 'riwayatPindah'])->name('admin.burung.riwayat');
     Route::put('/burung/{burung}', [KandangController::class, 'updateBurung'])->name('admin.burung.update');
     Route::delete('/burung/{burung}', [KandangController::class, 'destroyBurung'])->name('admin.burung.destroy');
 
     // Vaksinasi burung + deteksi booster bulanan (semua role: menu monitoring)
     Route::get('/vaksinasi', [VaksinasiController::class, 'index'])->name('admin.vaksinasi.index');
     Route::get('/vaksinasi/export/pdf', [VaksinasiController::class, 'exportPdf'])->name('admin.vaksinasi.export-pdf');
+    Route::get('/vaksinasi/{kandang}', [VaksinasiController::class, 'detail'])->name('admin.vaksinasi.detail');
+    Route::get('/vaksinasi/{kandang}/export/pdf', [VaksinasiController::class, 'exportDetailPdf'])->name('admin.vaksinasi.detail-pdf');
     Route::post('/vaksinasi', [VaksinasiController::class, 'store'])->name('admin.vaksinasi.store');
     Route::delete('/vaksinasi/{vaksinasi}', [VaksinasiController::class, 'destroy'])->name('admin.vaksinasi.destroy');
 
@@ -268,7 +277,14 @@ Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'menu.access']
     Route::get('/telur/export/pdf', [TelurController::class, 'exportPdf'])->name('admin.telur.export-pdf');
     Route::post('/telur', [TelurController::class, 'store'])->name('admin.telur.store');
     Route::put('/telur/{telur}', [TelurController::class, 'update'])->name('admin.telur.update');
+    Route::post('/telur/{telur}/ke-baby', [TelurController::class, 'keBaby'])->name('admin.telur.ke-baby');
     Route::delete('/telur/{telur}', [TelurController::class, 'destroy'])->name('admin.telur.destroy');
+
+    // Baby (loloh) & penjualan (semua role: menu monitoring); pindah baby memakai admin.burung.*
+    Route::get('/baby', [BabyController::class, 'index'])->name('admin.baby.index');
+    Route::put('/baby/{burung}', [BabyController::class, 'update'])->name('admin.baby.update');
+    Route::delete('/baby/{burung}', [BabyController::class, 'destroy'])->name('admin.baby.destroy');
+    Route::post('/baby/jual', [BabyController::class, 'jual'])->name('admin.baby.jual');
 
     // Keuangan farm (semua role: menu monitoring)
     Route::get('/keuangan', [KeuanganController::class, 'index'])->name('admin.keuangan.index');

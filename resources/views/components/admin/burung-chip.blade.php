@@ -8,6 +8,10 @@
     data-burung-id="{{ $burung->id }}"
     data-nama="{{ $burung->nama }}"
     data-kandang-id="{{ $burung->kandang_id }}"
+    data-ring="{{ $burung->nomor_ring ?? '' }}"
+    data-dna="{{ $burung->nomor_dna ?? '' }}"
+    data-fase="{{ $burung->fase }}"
+    data-gender="{{ $burung->gender ?? '' }}"
     title="{{ $burung->nama }} - {{ $burung->spesies }} ({{ $burung->fase_label }}){{ $burung->gender_label ? ' · '.$burung->gender_label : '' }}{{ $burung->nomor_ring ? ' · Ring '.$burung->nomor_ring : '' }}{{ $burung->catatan ? ' · '.$burung->catatan : '' }}">
     <span class="w-2 h-2 rounded-full bg-[#E62C37] shrink-0"></span>
     <div class="min-w-0 grow">

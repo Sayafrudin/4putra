@@ -282,6 +282,7 @@ Route::prefix('admin')->middleware(['admin.domain', 'admin.auth', 'menu.access']
 
     // Baby (loloh) & penjualan (semua role: menu monitoring); pindah baby memakai admin.burung.*
     Route::get('/baby', [BabyController::class, 'index'])->name('admin.baby.index');
+    Route::get('/penjualan-baby', [BabyController::class, 'penjualan'])->name('admin.penjualan-baby.index');
     Route::put('/baby/{burung}', [BabyController::class, 'update'])->name('admin.baby.update');
     Route::delete('/baby/{burung}', [BabyController::class, 'destroy'])->name('admin.baby.destroy');
     Route::post('/baby/jual', [BabyController::class, 'jual'])->name('admin.baby.jual');

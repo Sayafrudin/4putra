@@ -9,11 +9,10 @@
 import { chromium } from "playwright-core";
 import { spawn, execSync } from "node:child_process";
 import http from "node:http";
-import { gotoRetry } from "./helpers.mjs";
+import { gotoRetry, loginAdmin } from "./helpers.mjs";
 
 const PORT = 8033;
 const BASE = `http://127.0.0.1:${PORT}`;
-const ADMIN = { email: "e2e-dash@4putra.test", password: "E2eDash123!" };
 
 let failures = 0;
 function assert(cond, label) {
@@ -54,7 +53,7 @@ function waitForServer(retries = 30) {
 
 function cleanupDb() {
     execSync(
-        `php artisan tinker --execute="$u=App\\Models\\User::whereIn('email',['${ADMIN.email}','e2e-dash-user@4putra.test'])->get(); if($u){Illuminate\\Support\\Facades\\DB::table('sessions')->whereIn('user_id',$u->pluck('id'))->delete(); $u->each(fn($x)=>$x->delete());} echo 'bersih';"`,
+        `php artisan tinker --execute="$u=App\\Models\\User::where('email','e2e-dash-user@4putra.test')->first(); if($u){Illuminate\\Support\\Facades\\DB::table('sessions')->where('user_id',$u->id)->delete(); $u->delete();} echo 'bersih';"`,
         { stdio: "ignore", timeout: 60000 },
     );
 }
@@ -63,12 +62,6 @@ let server = null;
 let browser = null;
 
 try {
-    cleanupDb();
-    execSync(
-        `php artisan tinker --execute="App\\Models\\User::updateOrCreate(['email'=>'${ADMIN.email}'],['name'=>'E2E Dash','username'=>'e2e-dash','password'=>bcrypt('${ADMIN.password}'),'role'=>'admin','menu_access'=>null]); echo 'user siap';"`,
-        { stdio: "ignore", timeout: 60000 },
-    );
-
     server = spawn(
         "php",
         ["artisan", "serve", "--host=127.0.0.1", `--port=${PORT}`],
@@ -87,13 +80,7 @@ try {
     const pageErrors = [];
     page.on("pageerror", (e) => pageErrors.push(e.message));
 
-    await gotoRetry(page, `${BASE}/login`, { waitUntil: "load" });
-    await page.click("#username");
-    await page.fill("#username", ADMIN.email.split("@")[0]);
-    await page.click("#password");
-    await page.fill("#password", ADMIN.password);
-    await page.click("button[type=submit]");
-    await page.waitForURL(`${BASE}/admin`, { timeout: 15000 });
+    await loginAdmin(page, BASE);
 
     // ---------- D1: dashboard admin ----------
     const awal = Date.now();
@@ -189,7 +176,7 @@ try {
 
     // ---------- D2: role user terbatas tidak melihat keuangan ----------
     execSync(
-        `php artisan tinker --execute="App\\Models\\User::updateOrCreate(['email'=>'e2e-dash-user@4putra.test'],['name'=>'E2E Dash User','username'=>'e2e-dash-user','password'=>bcrypt('${ADMIN.password}'),'role'=>'user','menu_access'=>['kandang']]); echo 'user terbatas siap';"`,
+        `php artisan tinker --execute="App\\Models\\User::updateOrCreate(['email'=>'e2e-dash-user@4putra.test'],['name'=>'E2E Dash User','username'=>'e2e-dash-user','password'=>bcrypt('E2eDash123!'),'role'=>'user','menu_access'=>['kandang']]); echo 'user terbatas siap';"`,
         { stdio: "ignore", timeout: 60000 },
     );
     const ctx2 = await browser.newContext({
@@ -200,7 +187,7 @@ try {
     await page2.click("#username");
     await page2.fill("#username", "e2e-dash-user");
     await page2.click("#password");
-    await page2.fill("#password", ADMIN.password);
+    await page2.fill("#password", "E2eDash123!");
     await page2.click("button[type=submit]");
     // Non-admin diarahkan ke beranda publik setelah login (desain existing), lalu buka dashboard
     await page2.waitForURL(`${BASE}/`, { timeout: 15000 });

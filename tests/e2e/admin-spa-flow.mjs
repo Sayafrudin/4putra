@@ -413,7 +413,8 @@ try {
     );
 
     // ---------- N6: pencarian tabel di halaman hasil reload (hal. Users punya input search) ----------
-    await page.fill(".table-search-input", "e2e-spa");
+    // Cari akun admin bersama sendiri — suite tak lagi membuat user uji sendiri.
+    await page.fill(".table-search-input", "admin");
     await sleep(300);
     const barisTampak = await page
         .locator("[data-admin-list] tr:visible")

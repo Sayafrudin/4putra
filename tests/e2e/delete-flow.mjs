@@ -7,12 +7,11 @@
 import { chromium } from "playwright-core";
 import { execSync, spawn } from "node:child_process";
 import http from "node:http";
-import { gotoRetry } from "./helpers.mjs";
+import { gotoRetry, loginAdmin } from "./helpers.mjs";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const PORT = 8022;
 const BASE = `http://127.0.0.1:${PORT}`;
-const ADMIN = { email: "e2e-delete@4putra.test", password: "E2eDelete123!" };
 const N1 = "E2E Hapus Uji 1";
 const N2 = "E2E Hapus Uji 2";
 
@@ -42,14 +41,14 @@ function dbCount(name) {
 
 function seed() {
     execSync(
-        `php artisan tinker --execute="App\\Models\\Collection::firstOrCreate(['name'=>'${N1}'],['category'=>'Uji','sort_order'=>9999]); App\\Models\\Collection::firstOrCreate(['name'=>'${N2}'],['category'=>'Uji','sort_order'=>9998]); App\\Models\\User::updateOrCreate(['email'=>'${ADMIN.email}'],['name'=>'E2E Delete','password'=>bcrypt('${ADMIN.password}'),'role'=>'admin']); Illuminate\\Support\\Facades\\Cache::forget('admin.collections'); Illuminate\\Support\\Facades\\Cache::forget('public.collections.v2'); echo 'seed ok';"`,
+        `php artisan tinker --execute="App\\Models\\Collection::firstOrCreate(['name'=>'${N1}'],['category'=>'Uji','sort_order'=>9999]); App\\Models\\Collection::firstOrCreate(['name'=>'${N2}'],['category'=>'Uji','sort_order'=>9998]); Illuminate\\Support\\Facades\\Cache::forget('admin.collections'); Illuminate\\Support\\Facades\\Cache::forget('public.collections.v2'); echo 'seed ok';"`,
         { stdio: "pipe", timeout: 60000 },
     );
 }
 
 function cleanupDb() {
     execSync(
-        `php artisan tinker --execute="App\\Models\\Collection::whereIn('name',['${N1}','${N2}'])->delete(); App\\Models\\User::where('email','${ADMIN.email}')->delete(); Illuminate\\Support\\Facades\\Cache::forget('admin.collections'); Illuminate\\Support\\Facades\\Cache::forget('public.collections.v2'); echo 'bersih';"`,
+        `php artisan tinker --execute="App\\Models\\Collection::whereIn('name',['${N1}','${N2}'])->delete(); Illuminate\\Support\\Facades\\Cache::forget('admin.collections'); Illuminate\\Support\\Facades\\Cache::forget('public.collections.v2'); echo 'bersih';"`,
         { stdio: "ignore", timeout: 60000 },
     );
 }
@@ -117,15 +116,8 @@ try {
     browser = await chromium.launch({ channel: "msedge", headless: true });
     const page = await browser.newPage();
 
-    // Login via form asli
-    await gotoRetry(page, `${BASE}/login`, { waitUntil: "load" });
-    // Field login memakai readonly+onfocus (anti-autofill): klik dulu agar readonly hilang
-    await page.click("#username");
-    await page.fill("#username", ADMIN.email.split("@")[0]);
-    await page.click("#password");
-    await page.fill("#password", ADMIN.password);
-    await page.click("button[type=submit]");
-    await page.waitForURL("**/admin**", { timeout: 15000 });
+    // Login via form asli (akun admin bersama)
+    await loginAdmin(page, BASE);
 
     // Performa: load halaman koleksi < 3 detik
     const navStart = Date.now();

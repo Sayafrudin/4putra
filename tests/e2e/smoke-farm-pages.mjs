@@ -146,18 +146,20 @@ try {
         `S3a metode catat = suntik + oral [${vaksinUi.metode.join(", ")}]`,
     );
     await gotoRetry(page, `${BASE}/admin/telur`, { waitUntil: "load" });
-    // Telur kini berbasis KANDANG (pasangan 2 induk otomatis) — bukan dropdown induk per optgroup
-    const optTelur = await page.evaluate(() =>
-        [...document.querySelectorAll("#tambah_kandang option")].map(
-            (o) => o.textContent,
-        ),
+    // Dropdown kandang pasangan kini komponen ber-search; opsi memuat detail
+    // pasangan (nama burung × pasangan), bukan nomor kandang saja.
+    const opTelur = await page.evaluate(() => {
+        const el = document.querySelector(
+            '[data-select-search="kandang_pasangan"]',
+        );
+        return el ? JSON.parse(el.dataset.options).map((o) => o.label) : [];
+    });
+    assert(
+        opTelur.some((l) => l.startsWith("Kandang ") && l.includes("×")),
+        `S4 dropdown telur = kandang pasangan ber-detail burung [${opTelur[0] ?? "-"}]`,
     );
     assert(
-        optTelur.some((l) => l.startsWith("Kandang ")),
-        `S4 dropdown telur = daftar kandang pasangan [${optTelur.join(", ")}]`,
-    );
-    assert(
-        optTelur.every((l) => l !== ""),
+        opTelur.every((l) => l !== ""),
         "S5 tidak ada option tanpa label",
     );
 

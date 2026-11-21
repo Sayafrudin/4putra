@@ -3,9 +3,10 @@
 @section('content')
     <div class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-5">
         <div>
-            <a href="{{ route('admin.vaksinasi.index') }}" class="text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-[#E62C37] transition-colors">← Kembali ke Obat &amp; Vaksinasi</a>
-            <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase mt-1">Obat &amp; Vaksinasi — {{ $kandang->label }}</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Riwayat pengobatan &amp; vaksinasi burung di kandang ini</p>
+            <button type="button" onclick="window.location.href='{{ route('admin.vaksinasi.index') }}'"
+                class="text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-[#E62C37] bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-1.5 transition-colors">← Kembali ke Obat & Vaksinasi</button>
+            <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase mt-1">Obat & Vaksinasi — {{ $kandang->label }}</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Riwayat pengobatan & vaksinasi burung di kandang ini</p>
         </div>
         <div class="flex gap-3 flex-wrap">
             <button onclick="eksporExcel(this, { namaFile: 'laporan_vaksinasi_{{ $kandang->label }}_{{ now()->toDateString() }}.xlsx', judul: 'Laporan Obat & Vaksinasi — {{ $kandang->label }}', headers: ['Burung', 'Jenis', 'Metode', 'Dosis', 'Tanggal', 'Status Ulang'], rows: DATA_EKSPOR })"
@@ -204,7 +205,10 @@
     @endphp
     <script>
         var CSRF = document.querySelector('meta[name="csrf-token"]').content;
-        var NAMA_BURUNG = {{ $burungList->pluck('nama', 'id')->toJson() }};
+        // PENTING: data nama burung dirender dengan direktif json khusus (bukan
+        // kurung-kurawal ganda) — escaping HTML di dalam <script> = syntax error,
+        // seluruh fungsi modal mati (bug tombol Catat tidak beraksi).
+        var NAMA_BURUNG = @json($burungList->pluck('nama', 'id'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
         var DATA_EKSPOR = @json($dataEkspor, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
         var sedangBusy = false;
         var catatTargetIds = [];

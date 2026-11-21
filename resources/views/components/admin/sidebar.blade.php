@@ -105,7 +105,7 @@
                         class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.aviary*') || request()->routeIs('admin.kandang.index') || request()->routeIs('admin.vaksinasi*') || request()->routeIs('admin.telur*') || request()->routeIs('admin.baby*') || request()->routeIs('admin.stok*') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
                         <span class="inline-flex items-center">
                             <x-tabler-building-warehouse class="w-5 h-5" />
-                            <span class="ml-4">Management Farm Baru</span>
+                            <span class="ml-4 text-left">Management Farm Baru</span>
                         </span>
                         <x-tabler-chevron-down class="w-4 h-4 transition-transform duration-200" />
                     </button>
@@ -174,7 +174,7 @@
                         class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 {{ request()->routeIs('admin.kandang.lama') ? 'text-gray-900 dark:text-white font-bold' : '' }}">
                         <span class="inline-flex items-center">
                             <x-tabler-home-2 class="w-5 h-5" />
-                            <span class="ml-4">Management Farm Lama</span>
+                            <span class="ml-4 text-left">Management Farm Lama</span>
                         </span>
                         <x-tabler-chevron-down class="w-4 h-4 transition-transform duration-200" />
                     </button>

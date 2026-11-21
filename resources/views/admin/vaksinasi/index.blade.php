@@ -15,11 +15,7 @@
                 class="px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200 border border-gray-600 rounded-xl hover:border-gray-400 transition-colors">
                 Export PDF
             </a>
-            <button onclick="bukaModalCatat([])"
-                class="px-4 py-2.5 text-sm font-semibold text-white bg-[#E62C37] hover:bg-[#c5242d] rounded-xl transition-colors">
-                + Catat
-            </button>
-        </div>
+    </div>
     </div>
 
     {{-- Panel jatuh tempo: siklus per metode (suntik 12 bulan, oral 3 bulan) --}}
@@ -111,7 +107,11 @@
                             <div class="flex items-center gap-2 text-xs">
                                 <span class="w-2 h-2 rounded-full shrink-0 {{ $aman ? 'bg-green-600' : 'bg-[#E62C37]' }}"></span>
                                 <span class="font-semibold text-gray-800 dark:text-gray-200">{{ $b->nama }}</span>
-                                <span class="text-gray-500">{{ $b->spesies }} · {{ $terakhir?->jenis ?? 'belum dicatat' }}</span>
+                                <span class="text-gray-500 truncate">{{ $b->spesies }} · {{ $terakhir?->jenis ?? 'belum dicatat' }}</span>
+                                <button onclick='bukaModalCatat([{{ $b->id }}])'
+                                    class="ml-auto shrink-0 px-3 py-1.5 text-[11px] font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg hover:bg-blue-500/20 hover:border-blue-500/40 transition-colors">
+                                    Catat
+                                </button>
                             </div>
                         @endforeach
                     </div>

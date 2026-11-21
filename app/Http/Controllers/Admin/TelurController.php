@@ -21,6 +21,8 @@ class TelurController extends Controller
 
     public function index()
     {
+        $this->autoKonversiBaby();
+
         $telurs = Telur::orderByDesc('tanggal_diambil')->orderByDesc('id')->get();
 
         // Dropdown = kandang BIASA berisi TEPAT 2 induk dewasa (pasangan).
@@ -53,6 +55,43 @@ class TelurController extends Controller
         });
 
         return view('admin.telur.index', compact('telurs', 'kandangPasangan'));
+    }
+
+    /** Baby ≥1 bulan muncul otomatis: butir menetas yang belum dikonversi manual dibuatkan baby bawaan. */
+    private function autoKonversiBaby(): void
+    {
+        $siap = Telur::with('burung.kandang', 'pasangan')
+            ->where('status', 'menetas')
+            ->whereNotNull('tanggal_menetas')
+            ->whereDate('tanggal_menetas', '<=', now('Asia/Jakarta')->subDays(30)->toDateString())
+            ->whereDoesntHave('baby')
+            ->get();
+
+        foreach ($siap as $telur) {
+            try {
+                $telur->load('burung.kandang');
+                DB::transaction(function () use ($telur) {
+                    $kandang = $telur->burung?->kandang;
+                    Burung::create([
+                        'nama' => 'Baby '.($telur->burung?->spesies ?? 'burung').' '.($kandang?->label ?? '?').' b'.$telur->butir_ke,
+                        'spesies' => $telur->burung?->spesies ?? 'Belum diidentifikasi',
+                        'fase' => 'anakan',
+                        'telur_id' => $telur->id,
+                        'tanggal_lahir' => $telur->tanggal_menetas,
+                        'induk_label' => $this->silsilahLabel($telur),
+                        'asal_label' => $this->asalLabel($telur),
+                        'catatan' => 'Diloloh otomatis usia 1 bulan — nama & ring bisa diedit di menu Baby.',
+                    ]);
+                    $telur->update(['status' => 'dilepas']);
+                });
+            } catch (\Illuminate\Database\QueryException $e) {
+                // unique telur_id: burung sudah dibuat oleh request lain → lewati butir ini
+                continue;
+            }
+        }
+        if ($siap->isNotEmpty()) {
+            Cache::forget('dashboard.stats');
+        }
     }
 
     public function exportPdf(Request $request)
@@ -147,12 +186,30 @@ class TelurController extends Controller
         }
     }
 
-    /** Konversi butir menetas (umur ≥30 hari) → baby di menu Baby + telur jadi 'dilepas'. Baris telur tetap tersimpan. */
+    /** Silsilah lengkap: nama + spesies + gender + ring tiap induk, "X (..) × Y (..)". */
+    private function silsilahLabel(Telur $telur): string
+    {
+        $sisi = fn ($b) => $b ? $b->nama.' ('.$b->spesies.($b->gender_label ? ' - '.$b->gender_label : '').($b->nomor_ring ? ', Ring '.$b->nomor_ring : '').')' : '?';
+        $induk = $sisi($telur->burung);
+        $pasangan = $sisi($telur->pasangan);
+
+        return $telur->pasangan ? $induk.' × '.$pasangan : (string) $induk;
+    }
+
+    /** Asal kandang induk: "Blok A · Kandang A-1". */
+    private function asalLabel(Telur $telur): ?string
+    {
+        $kandang = $telur->burung?->kandang;
+
+        return $kandang ? 'Blok '.$kandang->blok.' · Kandang '.$kandang->label : null;
+    }
+
+    /** Konversi butir menetas → baby di menu Baby (ring/gender/DNA opsional, diedit belakangan). */
     public function keBaby(Request $request, Telur $telur)
     {
         $data = $request->validate([
             'baby_nama' => ['required', 'string', 'max:100'],
-            'baby_ring' => ['required', 'string', 'max:50'],
+            'baby_ring' => ['nullable', 'string', 'max:50'],
             'baby_gender' => ['nullable', 'in:jantan,betina'],
             'baby_dna' => ['nullable', 'string', 'max:50'],
             'baby_catatan' => ['nullable', 'string', 'max:500'],
@@ -164,9 +221,6 @@ class TelurController extends Controller
         if ($telur->baby) {
             return response()->json(['ok' => false, 'message' => 'Butir ini sudah dikonversi ke baby.'], 422);
         }
-        if ($telur->usia_menetas_hari < 30) {
-            return response()->json(['ok' => false, 'message' => 'Baby belum cukup umur — konversi boleh setelah 30 hari sejak menetas (sekarang '.$telur->usia_menetas_hari.' hari).'], 422);
-        }
 
         try {
             $telur->load('burung.kandang');
@@ -176,18 +230,18 @@ class TelurController extends Controller
                     'spesies' => $telur->burung?->spesies ?? 'Belum diidentifikasi',
                     'fase' => 'anakan',
                     'gender' => $data['baby_gender'] ?? null,
-                    'nomor_ring' => $data['baby_ring'],
+                    'nomor_ring' => $data['baby_ring'] ?? null,
                     'nomor_dna' => $data['baby_dna'] ?? null,
                     'catatan' => $data['baby_catatan'] ?? null,
                     'telur_id' => $telur->id,
                     'tanggal_lahir' => $telur->tanggal_menetas,
-                    'induk_label' => $telur->induk_label,
-                    'asal_label' => $telur->burung?->kandang?->label,
+                    'induk_label' => $this->silsilahLabel($telur),
+                    'asal_label' => $this->asalLabel($telur),
                 ]);
                 $telur->update(['status' => 'dilepas']);
                 Cache::forget('dashboard.stats');
             });
-            $this->logActivity($request, 'konversi_baby', 'Konversi telur #'.$telur->id.' ('.$telur->induk_label.') menjadi baby "'.$data['baby_nama'].'" (ring '.$data['baby_ring'].')');
+            $this->logActivity($request, 'konversi_baby', 'Konversi telur #'.$telur->id.' ('.$telur->induk_label.') menjadi baby "'.$data['baby_nama'].'"'.($data['baby_ring'] ? ' (ring '.$data['baby_ring'].')' : ''));
 
             return response()->json(['ok' => true, 'message' => 'Baby "'.$data['baby_nama'].'" dibuat — cek menu Baby.']);
         } catch (\Throwable $e) {

@@ -49,12 +49,18 @@ class Telur extends Model
         return $this->tanggal_menetas ? (int) $this->tanggal_menetas->diffInDays(now()) : null;
     }
 
-    /** Anak boleh dilepas setelah ±90 hari (bulu tumbuh lengkap). */
+    /** Umur anak sejak menetas dalam format "1 bulan 4 hari" — sinkron dengan menu Baby. */
+    public function getUsiaMenetasLabelAttribute(): ?string
+    {
+        return \App\Support\Umur::label($this->usia_menetas_hari);
+    }
+
+    /** Anak siap diloloh setelah ±1 bulan (30 hari sejak menetas). */
     public function getSiapDilepasAttribute(): bool
     {
         return $this->status === 'menetas'
             && $this->tanggal_menetas !== null
-            && $this->tanggal_menetas->diffInDays(now()) >= 90;
+            && $this->tanggal_menetas->diffInDays(now()) >= 30;
     }
 
     /** Baby hasil konversi butir ini (1 baby per butir, via burungs.telur_id). */

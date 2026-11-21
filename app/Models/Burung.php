@@ -36,6 +36,12 @@ class Burung extends Model
         return $this->tanggal_lahir ? (int) $this->tanggal_lahir->diffInDays(now()) : null;
     }
 
+    /** Umur baby dalam format "1 bulan 4 hari" (sama dengan menu Telur). */
+    public function getUmurLabelAttribute(): ?string
+    {
+        return \App\Support\Umur::label($this->usia_hari);
+    }
+
     public function getGenderLabelAttribute(): ?string
     {
         return $this->gender ? ($this->gender === 'jantan' ? 'Jantan' : 'Betina') : null;

@@ -4,7 +4,7 @@
     <div class="my-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-5">
         <div>
             <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">Baby</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Baby (loloh) umur ≥1 bulan — siap dijual atau dipindah ke kandang/aviary</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Baby (loloh) umur ≥1 bulan — siap dijual atau dipindah ke kandang/aviary (geser kartu baby)</p>
         </div>
         <div class="flex gap-3 flex-wrap">
             <button onclick="bukaModalJual()"
@@ -24,7 +24,7 @@
                         <p class="text-sm font-bold text-gray-900 dark:text-white truncate">{{ $b->nama }}</p>
                         <p class="text-xs text-gray-500 dark:text-gray-400">{{ $b->spesies }} · <span class="text-purple-500 font-semibold">Baby</span></p>
                     </div>
-                    <span class="shrink-0 px-2 py-0.5 rounded-full text-xs font-bold bg-purple-500/10 text-purple-500 tabular-nums">{{ $b->usia_hari !== null ? $b->usia_hari.' hari' : '-' }}</span>
+                    <span class="shrink-0 px-2 py-0.5 rounded-full text-xs font-bold bg-purple-500/10 text-purple-500 tabular-nums">{{ $b->umur_label ?? '-' }}</span>
                 </div>
                 <div class="flex flex-wrap gap-1.5 text-xs mb-2">
                     @if ($b->nomor_ring)
@@ -41,7 +41,7 @@
                     <p class="text-xs text-gray-500 dark:text-gray-400 mb-1"><span class="font-semibold">Induk:</span> {{ $b->induk_label }}</p>
                 @endif
                 @if ($b->asal_label)
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1"><span class="font-semibold">Asal:</span> {{ $b->asal_label }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1"><span class="font-semibold">Asal kandang:</span> {{ $b->asal_label }}</p>
                 @endif
                 @if ($b->catatan)
                     <p class="text-xs text-amber-500/90 mb-1">{{ $b->catatan }}</p>
@@ -268,15 +268,16 @@
                 @csrf
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Burung yang Dijual</label>
-                    <select name="burung_id" id="jual_burung" onchange="isiJual()"
-                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] outline-none">
-                        <option value="">- Pilih burung -</option>
-                        @foreach ($burungSemua as $b)
-                            <option value="{{ $b->id }}"
-                                data-ring="{{ $b->nomor_ring }}" data-induk="{{ $b->induk_label }}" data-usia="{{ $b->usia_hari }}"
-                                data-lokasi="{{ $b->kandang?->label }}">{{ $b->nama }} ({{ $b->fase_label }}{{ $b->kandang ? ' · di '.$b->kandang->label : '' }})</option>
-                        @endforeach
-                    </select>
+                    <x-admin.select-search name="burung_id" id="jual_burung" placeholder="- Pilih burung -"
+                        :options="$burungSemua->map(fn ($b) => [
+                            'value' => (string) $b->id,
+                            'label' => $b->nama.' ('.$b->fase_label.($b->kandang ? ' · di '.$b->kandang->label : '').')',
+                            'ring' => $b->nomor_ring,
+                            'induk' => $b->induk_label,
+                            'usia' => $b->umur_label,
+                            'lokasi' => $b->kandang?->label,
+                        ])->all()"
+                    />
                     <p class="text-xs text-red-400 mt-1 hidden" id="err_jual_burung"></p>
                 </div>
                 <div id="jual_info" class="hidden px-4 py-3 text-sm rounded-xl bg-gray-50 dark:bg-[#151a22] border border-gray-200 dark:border-gray-700 space-y-1 text-gray-600 dark:text-gray-300">
@@ -331,14 +332,14 @@
                 @csrf
                 <p class="text-sm text-gray-500 dark:text-gray-400">Pindahkan <span id="pindah_nama" class="font-semibold text-gray-900 dark:text-white"></span> ke:</p>
                 <div>
-                    <select name="kandang_id" id="pindah_target"
-                        class="w-full bg-white dark:bg-[#151a22] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#E62C37] outline-none">
-                        <option value="">- Pilih kandang / aviary -</option>
-                        @php($targetSemua = $kandangs->flatten()->merge($aviaries))
-                        @foreach ($targetSemua as $k)
-                            <option value="{{ $k->id }}" data-penuh="{{ $k->burungs->count() >= 2 && $k->tipe !== 'aviary' ? 1 : 0 }}">{{ $k->label }}{{ $k->tipe !== 'aviary' ? ' ('.$k->burungs->count().'/2)' : ' ('.$k->burungs->count().' burung)' }}</option>
-                        @endforeach
-                    </select>
+                    <x-admin.select-search name="kandang_id" id="pindah_target" placeholder="- Pilih kandang / aviary -"
+                        :options="($kandangs->flatten()->merge($aviaries))->map(fn ($k) => [
+                            'value' => (string) $k->id,
+                            'label' => $k->label.($k->tipe !== 'aviary' ? ' ('.$k->burungs->count().'/2)' : ' ('.$k->burungs->count().' burung)'),
+                            'penuh' => ($k->burungs->count() >= 2 && $k->tipe !== 'aviary') ? 1 : 0,
+                            'labelKandang' => $k->label,
+                        ])->all()"
+                    />
                 </div>
                 <div class="flex justify-end gap-3 pt-2">
                     <button type="button" onclick="tutupModal('modalPindah')"
@@ -419,6 +420,8 @@
         var editTargetId = null;
         var hapusTargetId = null;
         var pindahTargetId = null;
+        var pindahPenuh = null;
+        var pindahLabel = '';
 
         function setBusy(on) {
             sedangBusy = on;
@@ -511,24 +514,25 @@
             form.reset();
             document.getElementById('jual_info').classList.add('hidden');
             document.getElementById('jual_lokasi').classList.add('hidden');
+            window.__ss?.burung_id?.kosongkan();
             if (preselectId) {
-                form.burung_id.value = preselectId;
-                isiJual();
+                window.__ss?.burung_id?.set(preselectId); // set() menyebar event → panel info terisi
             }
             bukaModal('modalJual');
         }
 
-        function isiJual() {
-            const sel = document.getElementById('jual_burung');
-            const opt = sel.options[sel.selectedIndex];
+        // Pilihan burung (dropdown ber-search) → panel ring/induk/umur terisi otomatis.
+        // Hook sinkron dari komponen select-search (bukan event — lihat komponen).
+        window.__ssHook = window.__ssHook || {};
+        window.__ssHook.burung_id = (op) => {
             const info = document.getElementById('jual_info');
-            if (!opt || !opt.value) { info.classList.add('hidden'); return; }
+            if (!op || op.value === '') { info.classList.add('hidden'); return; }
             info.classList.remove('hidden');
-            document.getElementById('jual_ring').textContent = opt.dataset.ring || '-';
-            document.getElementById('jual_induk').textContent = opt.dataset.induk || '-';
-            document.getElementById('jual_usia').textContent = opt.dataset.usia ? opt.dataset.usia + ' hari' : '-';
-            document.getElementById('jual_lokasi').classList.toggle('hidden', !opt.dataset.lokasi);
-        }
+            document.getElementById('jual_ring').textContent = op.ring || '-';
+            document.getElementById('jual_induk').textContent = op.induk || '-';
+            document.getElementById('jual_usia').textContent = op.usia || '-';
+            document.getElementById('jual_lokasi').classList.toggle('hidden', !op.lokasi);
+        };
 
         async function submitJual(e) {
             e.preventDefault();
@@ -569,16 +573,25 @@
             pindahTargetId = id;
             document.getElementById('pindah_nama').textContent = nama;
             document.getElementById('formPindah').reset();
+            window.__ss?.kandang_id?.kosongkan();
+            pindahPenuh = null;
+            pindahLabel = '';
             bukaModal('modalPindah');
         }
+
+        // Pilihan target (dropdown ber-search) → simpan status penuh + label untuk toast.
+        // Hook sinkron dari komponen select-search (bukan event — lihat komponen).
+        window.__ssHook = window.__ssHook || {};
+        window.__ssHook.kandang_id = (op) => {
+            pindahPenuh = Number(op.penuh || 0);
+            pindahLabel = op.labelKandang || '';
+        };
 
         async function submitPindah(e) {
             e.preventDefault();
             const form = document.getElementById('formPindah');
-            const sel = document.getElementById('pindah_target');
             if (!form.kandang_id.value) { showToast('error', 'Gagal', 'Pilih kandang / aviary tujuan.'); return; }
-            const opt = sel.options[sel.selectedIndex];
-            if (opt.dataset.penuh === '1') { showToast('error', 'Gagal', opt.textContent.split(' (')[0] + ' sudah penuh (maksimal 2 burung).'); return; }
+            if (pindahPenuh === 1) { showToast('error', 'Gagal', pindahLabel + ' sudah penuh (maksimal 2 burung).'); return; }
 
             setBusy(true);
             try {
@@ -650,12 +663,19 @@
         document.querySelectorAll('.target-drop').forEach(target => {
             target.addEventListener('dragover', e => {
                 e.preventDefault();
-                if (target.dataset.penuh !== '1') target.classList.add('border-[#E62C37]', 'bg-[#E62C37]/5');
+                if (target.dataset.penuh !== '1') {
+                    target.classList.add('ring-2', 'ring-[#E62C37]/50');
+                    target.classList.remove('border-gray-200', 'dark:border-gray-700');
+                }
             });
-            target.addEventListener('dragleave', () => target.classList.remove('border-[#E62C37]', 'bg-[#E62C37]/5'));
+            target.addEventListener('dragleave', () => {
+                target.classList.remove('ring-2', 'ring-[#E62C37]/50');
+                target.classList.add('border-gray-200', 'dark:border-gray-700');
+            });
             target.addEventListener('drop', async e => {
                 e.preventDefault();
-                target.classList.remove('border-[#E62C37]', 'bg-[#E62C37]/5');
+                target.classList.remove('ring-2', 'ring-[#E62C37]/50');
+                target.classList.add('border-gray-200', 'dark:border-gray-700');
                 if (target.dataset.penuh === '1') { showToast('error', 'Gagal', target.dataset.kandangLabel + ' sudah penuh (maksimal 2 burung).'); return; }
                 const id = e.dataTransfer.getData('text/plain');
                 if (!id) return;

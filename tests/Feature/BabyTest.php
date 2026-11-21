@@ -94,7 +94,7 @@ class BabyTest extends TestCase
         $telur->burung->delete();
     }
 
-    public function test_konversi_ditolak_baby_belum_cukup_umur(): void
+    public function test_konversi_boleh_sebelum_30_hari_tanpa_batas_umur(): void
     {
         $telur = $this->telurMenetas(10);
 
@@ -102,8 +102,10 @@ class BabyTest extends TestCase
             ->postJson("/admin/telur/{$telur->id}/ke-baby", [
                 'baby_nama' => 'uji-baby-muda',
                 'baby_ring' => 'RG-UJI-002',
-            ])->assertStatus(422)
-            ->assertJsonFragment(['ok' => false]);
+            ])->assertOk();
+
+        // Ring kini opsional — baby tetap dibuat tanpa ring
+        $this->assertDatabaseHas('burungs', ['nama' => 'uji-baby-muda', 'nomor_ring' => 'RG-UJI-002']);
     }
 
     public function test_konversi_ditolak_bukan_butir_menetas(): void
@@ -127,6 +129,31 @@ class BabyTest extends TestCase
                 'kondisi' => 'Kondisi telur baik',
                 'status' => 'dilepas',
             ])->assertStatus(422);
+    }
+
+    public function test_baby_muncul_otomatis_setelah_1_bulan_saat_halaman_telur_dibuka(): void
+    {
+        // Butir menetas 31 hari, belum dikonversi manual → GET halaman telur
+        // otomatis membuat baby bawaan (nama otomatis, ring/gender kosong).
+        $telur = $this->telurMenetas(31);
+        $telur->load('burung.kandang');
+        $telur->burung->update([
+            'kandang_id' => Kandang::create(['blok' => 'Z', 'nomor' => 990, 'tipe' => 'kecil'])->id,
+            'nomor_ring' => 'RG-UJI-INDUK',
+        ]);
+
+        $this->actingAs($this->admin)->get('/admin/telur')->assertOk();
+
+        $baby = Burung::where('telur_id', $telur->id)->first();
+        $this->assertNotNull($baby, 'Baby otomatis harus dibuat');
+        $this->assertSame('anakan', $baby->fase);
+        $this->assertNull($baby->nomor_ring);
+        $this->assertStringContainsString('Baby', $baby->nama);
+        $this->assertStringContainsString('Blok Z', $baby->asal_label);
+        $this->assertStringContainsString('Ring', $baby->induk_label);
+        $this->assertSame('dilepas', $telur->fresh()->status);
+
+        $baby->delete();
     }
 
     public function test_jual_baby_uang_masuk_kas_umum_dan_snapshot_tersimpan(): void

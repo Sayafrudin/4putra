@@ -17,11 +17,10 @@ import { chromium } from "playwright-core";
 import { spawn, execSync } from "node:child_process";
 import http from "node:http";
 import fs from "node:fs";
-import { gotoRetry } from "./helpers.mjs";
+import { gotoRetry, loginAdmin } from "./helpers.mjs";
 
 const PORT = 8021;
 const BASE = `http://127.0.0.1:${PORT}`;
-const ADMIN = { email: "e2e-spa@4putra.test", password: "E2eSpa123!" };
 
 let failures = 0;
 function assert(cond, label) {
@@ -30,6 +29,20 @@ function assert(cond, label) {
     if (!ok) failures++;
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// Pilih opsi di komponen dropdown ber-search (x-admin.select-search): buka panel,
+// ketik kata kunci di search, klik opsi pertama yang cocok. Jeda kecil antar-langkah
+// memberi Alpine waktu x-model/x-for selesai (klik instan tanpa jeda kalah race — probe4).
+async function pilihKandangPasangan(page, teks) {
+    const root = page.locator('[data-select-search="kandang_pasangan"]');
+    await root.locator("> button").first().click();
+    await root.locator("[data-panel] input").fill(teks);
+    await sleep(150);
+    await root
+        .locator(`[data-panel] button:has-text("${teks}")`)
+        .first()
+        .click();
+    await sleep(150);
+}
 
 setTimeout(
     () => {
@@ -80,9 +93,10 @@ function matikanServer() {
 }
 
 // Tinker WAJIB satu baris (multi-baris gugur di cmd.exe Windows)
-const TINKER_CLEAN = `$u=App\\Models\\User::where('email','${ADMIN.email}')->first(); if($u){Illuminate\\Support\\Facades\\DB::table('sessions')->where('user_id',$u->id)->delete(); $u->delete();} Illuminate\\Support\\Facades\\DB::table('telurs')->where('diambil_oleh','uji-spa')->delete(); App\\Models\\Burung::where('nama','like','uji-spa-%')->delete(); App\\Models\\Kandang::where('blok','A')->where('nomor',991)->delete(); echo 'bersih';`;
+// Data uji dihapus: telur uji, burung uji-spa-*, kandang A-991. AKUN ADMIN TIDAK DISENTUH.
+const TINKER_CLEAN = `Illuminate\\Support\\Facades\\DB::table('telurs')->where('diambil_oleh','uji-spa')->delete(); App\\Models\\Burung::where('nama','like','uji-spa-%')->delete(); App\\Models\\Kandang::where('blok','A')->where('nomor',991)->delete(); echo 'bersih';`;
 
-const TINKER_SEED = `App\\Models\\User::updateOrCreate(['email'=>'${ADMIN.email}'],['name'=>'E2E Spa','password'=>bcrypt('${ADMIN.password}'),'role'=>'admin']); $k=App\\Models\\Kandang::updateOrCreate(['blok'=>'A','nomor'=>991],['tipe'=>'medium']); App\\Models\\Burung::updateOrCreate(['nama'=>'uji-spa-jantan'],['spesies'=>'BNG Macaw','fase'=>'dewasa','kandang_id'=>$k->id]); App\\Models\\Burung::updateOrCreate(['nama'=>'uji-spa-betina'],['spesies'=>'Military Macaw','fase'=>'dewasa','kandang_id'=>$k->id]); echo 'seed oke';`;
+const TINKER_SEED = `$k=App\\Models\\Kandang::updateOrCreate(['blok'=>'A','nomor'=>991],['tipe'=>'medium']); App\\Models\\Burung::updateOrCreate(['nama'=>'uji-spa-jantan'],['spesies'=>'BNG Macaw','fase'=>'dewasa','kandang_id'=>$k->id]); App\\Models\\Burung::updateOrCreate(['nama'=>'uji-spa-betina'],['spesies'=>'Military Macaw','fase'=>'dewasa','kandang_id'=>$k->id]); echo 'seed oke';`;
 
 try {
     execSync(`php artisan tinker --execute="${TINKER_CLEAN}"`, {
@@ -121,14 +135,8 @@ try {
             errorJs.push("console: " + m.text().slice(0, 160));
     });
 
-    // ---------- N1: Login ----------
-    await gotoRetry(page, `${BASE}/login`, { waitUntil: "load" });
-    await page.click("#username");
-    await page.fill("#username", ADMIN.email.split("@")[0]);
-    await page.click("#password");
-    await page.fill("#password", ADMIN.password);
-    await page.click("button[type=submit]");
-    await page.waitForURL(`${BASE}/admin`, { timeout: 15000 });
+    // ---------- N1: Login (akun admin asli, data uji buatan sendiri) ----------
+    await loginAdmin(page, BASE);
     assert(true, "N1 login via form → /admin");
 
     // Load awal diukur NavigationTiming (beban penuh halaman, tanpa overhead browser start)
@@ -268,25 +276,42 @@ try {
     const modal = page.locator("#modalTambah");
     assert(
         await modal.isVisible(),
-        "N4a modal Catat Telur terbuka (script inline dieksekusi ulang setelah Turbo)",
+        "N4a modal Catat Telur terbuka (script inline dieksekusi ulang setelah Turbo)" +
+            (errorJs.length
+                ? " — error JS: " + JSON.stringify(errorJs).slice(0, 300)
+                : ""),
     );
 
-    await page.selectOption("#tambah_kandang", { label: "Kandang A-991" });
+    await pilihKandangPasangan(page, "A-991");
     try {
-        await page.waitForSelector("#info_pasangan:not(.hidden)", {
-            timeout: 5000,
-        });
-    } catch {
-        console.log("DIAGNOSTIK error JS terkumpul:", JSON.stringify(errorJs));
-        console.log(
-            "DIAGNOSTIK PASANGAN:",
-            await page.evaluate(() =>
-                typeof PASANGAN !== "undefined"
-                    ? JSON.stringify(PASANGAN).slice(0, 120)
-                    : "TIDAK TERDEFINISI",
-            ),
+        // Kontrak fungsional: panel pasangan kehilangan class hidden (isi terisi otomatis).
+        // Arg options = parameter ke-3 (ke-2 adalah arg untuk fungsi).
+        await page.waitForFunction(
+            () => {
+                const info = document.getElementById("info_pasangan");
+                return info && !info.classList.contains("hidden");
+            },
+            undefined,
+            { timeout: 5000 },
         );
-        throw new Error("info_pasangan tidak muncul");
+    } catch (e) {
+        console.log(
+            "DIAGNOSTIK saat gagal:",
+            await page.evaluate(() => ({
+                modal: document
+                    .getElementById("modalTambah")
+                    .className.slice(0, 20),
+                hidden:
+                    document.getElementById("tambah_kandang")?.value ??
+                    "NO-INPUT",
+                info:
+                    document
+                        .getElementById("info_pasangan")
+                        ?.className.slice(0, 8) ?? "NO-INFO",
+                errorJs,
+            })),
+        );
+        throw e;
     }
     const pasanganTeks = await page.locator("#pasangan_label").textContent();
     assert(
@@ -412,7 +437,7 @@ try {
 
     // ---------- Cleanup: hapus data uji ----------
     await page.click('button:has-text("+ Catat Telur")');
-    await page.selectOption("#tambah_kandang", { label: "Kandang A-991" });
+    await pilihKandangPasangan(page, "A-991");
     await page.fill("#tambah_sesi", "2");
     await page.fill("#tambah_jumlah", "1");
     await page.fill("#tambah_tanggal", tanggal);
@@ -428,7 +453,7 @@ try {
         timeout: 60000,
     });
     const sisa = execSync(
-        `php artisan tinker --execute="echo App\\Models\\Burung::where('nama','like','uji-spa-%')->count().App\\Models\\Kandang::where('blok','A')->where('nomor',991)->count().Illuminate\\Support\\Facades\\DB::table('telurs')->where('diambil_oleh','uji-spa')->count(); App\\Models\\User::where('email','${ADMIN.email}')->delete(); echo 'cek';"`,
+        `php artisan tinker --execute="echo App\\Models\\Burung::where('nama','like','uji-spa-%')->count().App\\Models\\Kandang::where('blok','A')->where('nomor',991)->count().Illuminate\\Support\\Facades\\DB::table('telurs')->where('diambil_oleh','uji-spa')->count(); echo 'cek';"`,
         { timeout: 60000 },
     )
         .toString()

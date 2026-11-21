@@ -44,7 +44,7 @@ class TelurController extends Controller
                     'label' => $kandang->label,
                     'blok' => $kandang->blok,
                     // Label dropdown: pasangan ber-identitas (spesies, gender, ring bila terisi).
-                    'label_pasangan' => 'Kandang '.$kandang->label.' — '.$this->sisiLabel($pasangan[0]).' × '.$this->sisiLabel($pasangan[1]),
+                    'label_pasangan' => 'Kandang '.$kandang->label.' — '.\App\Support\Identitas::sisi($pasangan[0]).' × '.\App\Support\Identitas::sisi($pasangan[1]),
                     'burung' => $pasangan->map(fn ($b) => ['id' => $b->id, 'nama' => $b->nama, 'spesies' => $b->spesies, 'gender' => $b->gender_label, 'ring' => $b->nomor_ring])->values()->all(),
                 ];
             })
@@ -60,6 +60,10 @@ class TelurController extends Controller
         $telurs->each(function ($t) use ($indeks) {
             $t->setRelation('burung', $indeks[$t->burung_id] ?? null);
             $t->setRelation('pasangan', $indeks[$t->burung_pasangan_id] ?? null);
+            // Label induk live ber-ring (konvensi identitas) — fallback label tersimpan
+            // bila relasi tak lengkap. Menimpa atribut = semua permukaan (tabel, WA,
+            // ekspor, modal) ikut tanpa edit view.
+            $t->induk_label = \App\Support\Identitas::pasangan($t->burung, $t->pasangan, $t->induk_label);
         });
 
         return view('admin.telur.index', compact('telurs', 'kandangPasangan'));
@@ -194,23 +198,10 @@ class TelurController extends Controller
         }
     }
 
-    /** Satu sisi pasangan: "Nama (Spesies - Gender, Ring N)" — bagian opsional hilang bila kosong. */
-    private function sisiLabel(?Burung $b): string
-    {
-        if (! $b) {
-            return '?';
-        }
-
-        return $b->nama.' ('.$b->spesies.($b->gender_label ? ' - '.$b->gender_label : '').($b->nomor_ring ? ', Ring '.$b->nomor_ring : '').')';
-    }
-
-    /** Silsilah lengkap: nama + spesies + gender + ring tiap induk, "X (..) × Y (..)". */
+    /** Silsilah lengkap utk baby: "X (..) × Y (..)" — atau satu sisi bila tanpa pasangan. */
     private function silsilahLabel(Telur $telur): string
     {
-        $induk = $this->sisiLabel($telur->burung);
-        $pasangan = $this->sisiLabel($telur->pasangan);
-
-        return $telur->pasangan ? $induk.' × '.$pasangan : (string) $induk;
+        return \App\Support\Identitas::pasangan($telur->burung, $telur->pasangan);
     }
 
     /** Asal kandang induk: "Blok A · Kandang A-1". */
